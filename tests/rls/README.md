@@ -15,6 +15,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `04_anti_brute_force.sql` | `lier_compte_a_fiche()` verrouille après 5 échecs/heure, même avec de bons identifiants | C4 / ch. 5.8 |
 | `05_isolation_multi_tenant.sql` | Un membre ne voit que les données de ses propres établissements | multi-tenant |
 | `06_invitations.sql` | Une invitation nominative n'est acceptée que par son destinataire | ch. 5.2 |
+| `07_m5_isolation_structures.sql` | Isolation multi-tenant des structures M5 (périodes, classes, inscriptions, fiches) | M5 |
+| `08_m5_lien_parent.sql` | Liaison parent ↔ élève : double facteur, rôle requis, visibilité limitée à l'enfant | M5 |
+| `09_m5_affectations.sql` | Visibilité des affectations (enseignant, direction, élève exclu) | M5 |
 
 ## Prérequis
 
