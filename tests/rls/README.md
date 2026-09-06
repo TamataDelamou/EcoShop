@@ -18,6 +18,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `07_m5_isolation_structures.sql` | Isolation multi-tenant des structures M5 (périodes, classes, inscriptions, fiches) | M5 |
 | `08_m5_lien_parent.sql` | Liaison parent ↔ élève : double facteur, rôle requis, visibilité limitée à l'enfant | M5 |
 | `09_m5_affectations.sql` | Visibilité des affectations (enseignant, direction, élève exclu) | M5 |
+| `10_m6_notes_visibilite.sql` | Visibilité des notes/évaluations (élève, parent, personnel, étranger) | M6 |
+| `11_m6_saisie_notes.sql` | Saisie des notes : auteur, permission, non-auteur, clôture | M6 |
+| `12_m6_evaluations_ecriture.sql` | Création d'évaluations (affecté seulement) + moyenne pondérée | M6 |
 
 ## Prérequis
 
