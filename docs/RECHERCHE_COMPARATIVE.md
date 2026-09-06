@@ -132,3 +132,56 @@ Ce modèle est le même que celui documenté pour Figma (LWW par propriété).
 - Ouyang & Jiao — trois paradigmes IA-éducation (AI-directed / AI-supported / AI-empowered), 2021.
 - Shapiro et al. — « Conflict-Free Replicated Data Types », SSS 2011 (fondement CRDT, convergence).
 - UNESCO — « Guidance for generative AI in education and research », 2024 (éthique, formation des enseignants, protection des données).
+
+## 9. M7 — Vie scolaire & décrochage (recherche complémentaire)
+
+### 9.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M7 |
+|---|---|---|---|
+| S8 | https://en.wikipedia.org/wiki/Dropping_out | Encyclopédique | Facteurs de risque prédictifs (Rumberger : absentéisme, problèmes de comportement, désengagement) ; antécédents d'absentéisme/redoublement ; prévention par la dynamique familiale ; données UNESCO Amérique latine (finances, désintérêt) |
+| S9 | https://en.wikipedia.org/wiki/School_discipline | Encyclopédique | Formes non corporelles (retenue, conseil, suspension), discipline **restaurative** et responsabilisante, dérive des sanctions disproportionnées → virage non punitif |
+| S10 | https://en.wikipedia.org/wiki/Education_in_Guinea | Encyclopédique | Contexte : primaire obligatoire 6 ans ; HRMI : 60,7 % du droit à l'éducation satisfait, secondaire à 46,6 % → enjeu de rétention |
+
+### 9.2 Benchmark — modules de vie scolaire des LMS/SIS
+
+| Solution | Présences/retards | Sanctions/comportement | Alerte décrochage | Hors-ligne | IA |
+|---|---|---|---|---|---|
+| **Schoology** (PowerSchool) | Pointage par période | Non | Non (add-on) | Non | Faible |
+| **PowerSchool** | Pointage + justifications | Comportement + incidents | Early Warning System natif | Faible | Analytique |
+| **InfoSIS** (SIS générique) | Pointage par cours | Disciplinaire de base | Non | Non | Non |
+| **Pronote** | Absences/retards, motifs | Sanctions + commission éducative | Non | Non | Statistiques |
+| **Moodle** (plugin) | Pointage simple | Non | Non | Faible | Non |
+| **EcoShop (cible M7)** | Pointage demi-journée/cours + retards + justifications | Sanctions éducatives **validées humainement** | Alerte décrochage multi-facteurs (M6+M7) | **Fort** | **3 tiers, human-in-the-loop** |
+
+**Lecture** : seuls les SIS lourds (PowerSchool) proposent un Early Warning System, mais sans
+hors-ligne ni ancrage CEDEAO. Les solutions francophones (Pronote) couvrent les absences/retards
+mais pas le décrochage. Le créneau d'EcoShop reste l'intersection : **pointage hors-ligne +
+alerte décrochage multi-facteurs + sanction éducative validée**, adapté au contexte
+ouest-africain (S10).
+
+### 9.3 Détection de décrochage — études de cas
+
+- **Rumberger & Larson (S8)** : absentéisme modéré à élevé, problèmes de comportement et
+  absence d'activités extra-scolaires sont **fortement prédictifs** du décrochage ; les facteurs
+  académiques (antécédents d'absentéisme, redoublement, difficultés) s'y ajoutent.
+- **Modèle « ABC »** (Attendance, Behavior, Course performance — littérature Early Warning
+  Systems, Balfanz et al.) : croiser **assiduité + comportement + résultats** est le socle des
+  systèmes d'alerte précoce. C'est exactement le croisement M7 (présences/retards) × M6 (notes).
+- **UNESCO Amérique latine (S8)** : difficultés financières et désintérêt dominent ; 38 % des
+  15-17 ans citent l'étude comme motif — l'alerte doit donc inclure le **décrochage silencieux**
+  (désengagement) et pas seulement l'absentéisme.
+- **Guinée (S10)** : secondaire à 46,6 % du droit satisfait → la rétention en secondaire est la
+  cible prioritaire ; l'alerte précoce et l'engagement des familles (S8) sont les leviers.
+
+### 9.4 IA prédictive vs descriptive vs prescriptive (positionnement M7)
+
+| Approche | Définition | Application M7 |
+|---|---|---|
+| **Descriptive** | Ce qui s'est passé (tableaux de bord) | `analyse_comportement` : fréquences, motifs de retard, absences injustifiées |
+| **Prédictive** | Ce qui va arriver (probabilité) | `calculer_score_decrochage` (croisement absences/retards/moyennes) ; `predire_presence` (calendrier + événements) |
+| **Prescriptive** | Que faire (recommandation) | `recommander_sanction_educative` (non punitive, fondée sur l'historique et les règles) |
+
+**Règle éthique (S9, UNESCO 2024)** : les trois niveaux produisent des **signaux soumis à
+validation humaine** (direction, conseil de classe, parent). Aucune sanction ni alerte n'est
+appliquée automatiquement ; l'IA prescriptive propose, l'humain décide.

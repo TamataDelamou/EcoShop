@@ -21,6 +21,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `10_m6_notes_visibilite.sql` | Visibilité des notes/évaluations (élève, parent, personnel, étranger) | M6 |
 | `11_m6_saisie_notes.sql` | Saisie des notes : auteur, permission, non-auteur, clôture | M6 |
 | `12_m6_evaluations_ecriture.sql` | Création d'évaluations (affecté seulement) + moyenne pondérée | M6 |
+| `13_m7_presences_visibilite.sql` | Visibilité présences/retards/sanctions (élève, parent, personnel, étranger) | M7 |
+| `14_m7_pointage_droits.sql` | Droits de pointage (affecté/scolarité) + visibilité des alertes | M7 |
+| `15_m7_ia_fonctions.sql` | Fonctions IA : score décrochage, recommandation, prédiction de présence | M7 |
 
 ## Prérequis
 
