@@ -185,3 +185,51 @@ ouest-africain (S10).
 **Règle éthique (S9, UNESCO 2024)** : les trois niveaux produisent des **signaux soumis à
 validation humaine** (direction, conseil de classe, parent). Aucune sanction ni alerte n'est
 appliquée automatiquement ; l'IA prescriptive propose, l'humain décide.
+
+## 10. M8 — RH & Personnel (recherche complémentaire)
+
+### 10.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M8 |
+|---|---|---|---|
+| S11 | https://en.wikipedia.org/wiki/Teacher_attrition | Encyclopédique | Facteurs de rétention/départ des enseignants : conditions de travail, charge, rémunération, soutien administratif, épuisement ; « movers vs leavers » |
+| S12 | https://en.wikipedia.org/wiki/Payroll | Encyclopédique | Composantes de la paie : brut, primes, retenues, net ; fréquences — socle de la « paie légère » |
+| S13 | https://en.wikipedia.org/wiki/Education_in_Africa | Encyclopédique | Contexte : pénurie d'enseignants qualifiés, disparités — enjeu de gestion des personnels éducatifs |
+
+### 10.2 Benchmark — modules RH des SIS
+
+| Solution | Employés/contrats | Congés | Paie | Analytique RH | Hors-ligne |
+|---|---|---|---|---|---|
+| **PowerSchool** (ERP/SIS) | Fiches + contrats | Oui | Add-on | Oui | Non |
+| **InfoSIS** (SIS générique) | Basique | Partiel | Non | Non | Non |
+| **Odoo HR / OrangeHRM** (ERP générique) | **Complet** | Oui | Oui (paie) | Oui | Faible |
+| **Skolera** | Basique | Non | Non | Non | Non |
+| **EcoShop (cible M8)** | Employés + contrats + congés | Oui | Paie légère (brut/primes/retenues/net) | IA turn-over/formation/plannings | **Fort** |
+
+**Lecture** : les ERP génériques (Odoo/OrangeHRM) couvrent bien le RH mais sont déconnectés
+du pédagogique (affectations M5, absences M7, compétences M4) et ne ciblent pas l'établissement
+scolaire ouest-africain. Le créneau d'EcoShop est le **RH intégré à la scolarité** : contrat →
+affectation → absences → paie, dans un même tenant.
+
+### 10.3 Gestion des personnels éducatifs — études de cas
+
+- **Rétention (S11)** : les conditions de travail et la **charge de travail** sont les premières
+  causes de départ, devant la rémunération ; le soutien administratif et l'autonomie sont des
+  leviers de rétention. → le risque de turn-over doit croiser **absences (M7), ancienneté et
+  charge (heures/affectations M5)**.
+- **Contexte Afrique (S13)** : la pénurie d'enseignants qualifiés rend la **rétention et la
+  formation** prioritaires sur le recrutement.
+- **Paie légère (S12)** : modéliser `brut = base + primes − retenues = net`, sans fiscalité
+  complexe, suffit pour les établissements privés ; l'exactitude des composantes prime sur
+  l'exhaustivité réglementaire (délibérément hors périmètre).
+
+### 10.4 IA RH — trois niveaux (cohérent M6/M7)
+
+| Niveau | Application M8 | Données croisées |
+|---|---|---|
+| Descriptive | Tableau de bord effectifs, ancienneté, soldes de congés | `employes`, `contrats`, `conges` |
+| Prédictive | **Risque de turn-over** (score 0-1) | absences M7 + ancienneté + charge M5/M6 |
+| Prescriptive | Recommandation de formation (M4) ; optimisation des plannings (répartition des congés, remplacements) | compétences M4, affectations M5, historique |
+
+**Règle éthique maintenue** : le score de turn-over et les recommandations sont des **signaux
+d'aide à la décision** pour la direction ; aucune action RH n'est automatisée.
