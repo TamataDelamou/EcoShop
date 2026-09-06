@@ -1,8 +1,8 @@
-# Session de validation technique — Socle M0 → M8
+# Session de validation technique — Socle M0 → M9
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **à l'issue de M8** (ou dès que Docker est disponible).
+> disponible. À exécuter **à l'issue de M9** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -46,6 +46,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 7. `20260906000600_m6_notes_evaluations.sql` — M6 (évaluations, notes, bulletins)
 8. `20260906000700_m7_absences_vie_scolaire.sql` — M7 (présences, sanctions, alertes, IA)
 9. `20260906000800_m8_rh_personnel.sql` — M8 (employés, contrats, congés, paie légère, IA RH)
+10. `20260906000900_m9_communication_notifications.sql` — M9 (notifications, préférences canaux, logs, IA comm)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -53,7 +54,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 
 ## 4. Seeds complémentaires (ordre exact)
 
-Les seeds M4→M8 sont des fichiers séparés **non exécutés automatiquement**.
+Les seeds M4→M9 sont des fichiers séparés **non exécutés automatiquement**.
 Les appliquer dans l'ordre via psql :
 
 ```bash
@@ -63,18 +64,19 @@ psql "$DB" -f supabase/seed_administration_scolarite.sql    # M5
 psql "$DB" -f supabase/seed_notes_evaluations.sql           # M6
 psql "$DB" -f supabase/seed_vie_scolaire.sql                # M7
 psql "$DB" -f supabase/seed_rh_personnel.sql                # M8
+psql "$DB" -f supabase/seed_communication_notifications.sql # M9
 ```
 
-**Action recommandée** : consolider ces cinq fichiers dans `supabase/seed.sql`
+**Action recommandée** : consolider ces six fichiers dans `supabase/seed.sql`
 (ou un script `supabase/seed_all.sql` avec `\i`) pour un reset en une commande.
 
-## 5. Tests pgTAP (01 → 18)
+## 5. Tests pgTAP (01 → 21)
 
 ```bash
 pg_prove -d "$DB" tests/rls/*.sql
 ```
 
-Attendu : 18 fichiers, ~80 assertions, **zéro échec**. Couverture :
+Attendu : 21 fichiers, ~95 assertions, **zéro échec**. Couverture :
 
 - 01-03 : anti-élévation, récursion RLS, hook JWT
 - 04-06 : anti-brute-force, isolation multi-tenant, invitations
@@ -82,6 +84,7 @@ Attendu : 18 fichiers, ~80 assertions, **zéro échec**. Couverture :
 - 10-12 : M6 (visibilité notes, saisie, évaluations + moyenne)
 - 13-15 : M7 (visibilité vie scolaire, pointage, fonctions IA)
 - 16-18 : M8 (visibilité RH, congés & validation humaine, fonctions IA RH)
+- 19-21 : M9 (visibilité notifications, lecture/écriture, fonctions IA comm)
 
 ## 6. Vérification ciblée (helpers, fonctions, permissions)
 
@@ -116,6 +119,15 @@ select public.recommander_formation('<employe_ens1>', '<annee_2026-2027>');
 select public.optimiser_remplacements('<etab_lycee>', current_date);
 ```
 
+```sql
+-- Fonctions IA communication (M9) — substituer les UUID du seed
+select public.choisir_canal('<profile_parent>', 'note');          -- canal préféré
+select public.suggere_heure_envoi('<profile_parent>');            -- créneau d'envoi
+select public.selectionner_variante('<profile_parent>', 'note');  -- variante A/B
+select public.analyser_feedback('Merci, bien reçu');              -- sentiment
+select public.analyser_envois('<etab_lycee>', '2026-01-01', '2026-12-31'); -- taux de lecture
+```
+
 ## 7. Correctifs rapides (procédure)
 
 | Situation | Action |
@@ -135,14 +147,15 @@ select public.optimiser_remplacements('<etab_lycee>', current_date);
 ## Migrations
 - [liste] appliquées : OK / KO
 ## Seeds
-- M0 (auto) / M4 / M5 / M6 / M7 / M8 : OK / KO
+- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 : OK / KO
 ## Tests pgTAP
-- 01→18 : [X]/80 assertions, [n] échecs
+- 01→21 : [X]/95 assertions, [n] échecs
 - Échecs : [liste fichier → assertion → cause]
 ## Vérifications ciblées
 - Fonctions IA M7 : OK / KO
 - Moyennes M6 : OK / KO
 - Fonctions IA RH M8 (turnover, formation, remplacements) : OK / KO
+- Fonctions IA comm M9 (canal, timing, A/B, sentiment) : OK / KO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -161,7 +174,7 @@ flutter test
 ## 10. Critères de sortie
 
 - [ ] `supabase db reset` sans erreur
-- [ ] 5 seeds M4→M8 appliqués sans erreur
-- [ ] `pg_prove` 18/18 fichiers verts, 0 échec
+- [ ] 6 seeds M4→M9 appliqués sans erreur
+- [ ] `pg_prove` 21/21 fichiers verts, 0 échec
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé
