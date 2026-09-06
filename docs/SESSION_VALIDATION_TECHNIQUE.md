@@ -1,8 +1,8 @@
-# Session de validation technique — Socle M0 → M10
+# Session de validation technique — Socle M0 → M11
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **à l'issue de M10** (ou dès que Docker est disponible).
+> disponible. À exécuter **à l'issue de M11** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -48,6 +48,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 9. `20260906000800_m8_rh_personnel.sql` — M8 (employés, contrats, congés, paie légère, IA RH)
 10. `20260906000900_m9_communication_notifications.sql` — M9 (notifications, préférences canaux, logs, IA comm)
 11. `20260906001000_m10_rapports_statistiques.sql` — M10 (rapports, KPI, anomalies, recommandations, NLG)
+12. `20260906001100_m11_planification_agenda.sql` — M11 (emplois du temps, agenda, progression, contraintes, IA planification)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -55,7 +56,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 
 ## 4. Seeds complémentaires (ordre exact)
 
-Les seeds M4→M10 sont des fichiers séparés **non exécutés automatiquement**.
+Les seeds M4→M11 sont des fichiers séparés **non exécutés automatiquement**.
 Les appliquer dans l'ordre via psql :
 
 ```bash
@@ -67,18 +68,19 @@ psql "$DB" -f supabase/seed_vie_scolaire.sql                # M7
 psql "$DB" -f supabase/seed_rh_personnel.sql                # M8
 psql "$DB" -f supabase/seed_communication_notifications.sql # M9
 psql "$DB" -f supabase/seed_rapports_statistiques.sql      # M10
+psql "$DB" -f supabase/seed_planification_agenda.sql     # M11
 ```
 
-**Action recommandée** : consolider ces sept fichiers dans `supabase/seed.sql`
+**Action recommandée** : consolider ces huit fichiers dans `supabase/seed.sql`
 (ou un script `supabase/seed_all.sql` avec `\i`) pour un reset en une commande.
 
-## 5. Tests pgTAP (01 → 24)
+## 5. Tests pgTAP (01 → 27)
 
 ```bash
 pg_prove -d "$DB" tests/rls/*.sql
 ```
 
-Attendu : 24 fichiers, ~110 assertions, **zéro échec**. Couverture :
+Attendu : 27 fichiers, ~125 assertions, **zéro échec**. Couverture :
 
 - 01-03 : anti-élévation, récursion RLS, hook JWT
 - 04-06 : anti-brute-force, isolation multi-tenant, invitations
@@ -88,6 +90,7 @@ Attendu : 24 fichiers, ~110 assertions, **zéro échec**. Couverture :
 - 16-18 : M8 (visibilité RH, congés & validation humaine, fonctions IA RH)
 - 19-21 : M9 (visibilité notifications, lecture/écriture, fonctions IA comm)
 - 22-24 : M10 (visibilité rapports, fonctions IA, validation anomalies/recommandations)
+- 25-27 : M11 (visibilité agenda, fonctions IA planification, permissions d'écriture)
 
 ## 6. Vérification ciblée (helpers, fonctions, permissions)
 
@@ -139,6 +142,16 @@ select public.generer_resume_executif('<etab_lycee>', '<annee_2026-2027>');     
 
 -- Permissions M10
 select code from public.permissions where code like 'rapports.%';
+
+-- Fonctions IA M11 (planification & agenda) — substituer les UUID du seed
+select public.suggerer_placement_seance('<etab_lycee>', '<annee_2026-2027>', '<enseignant1>', '<classe_7a>', '<salle_a>');  -- créneau libre
+select public.detecter_conflits_emploi('<etab_lycee>', '<annee_2026-2027>');                                                -- conflits
+select public.charger_travail_enseignant('<etab_lycee>', '<annee_2026-2027>', '<enseignant1>');                            -- charge
+select public.charger_travail_eleve('<classe_7a>');                                                                         -- charge élève
+select public.recommander_seances('<etab_lycee>', '<annee_2026-2027>');                                                     -- rattrapages
+
+-- Permissions M11
+select code from public.permissions where code like 'planification.%';
 ```
 
 ## 7. Correctifs rapides (procédure)
@@ -160,9 +173,9 @@ select code from public.permissions where code like 'rapports.%';
 ## Migrations
 - [liste] appliquées : OK / KO
 ## Seeds
-- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 : OK / KO
+- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 / M11 : OK / KO
 ## Tests pgTAP
-- 01→24 : [X]/110 assertions, [n] échecs
+- 01→27 : [X]/125 assertions, [n] échecs
 - Échecs : [liste fichier → assertion → cause]
 ## Vérifications ciblées
 - Fonctions IA M7 : OK / KO
@@ -170,6 +183,7 @@ select code from public.permissions where code like 'rapports.%';
 - Fonctions IA RH M8 (turnover, formation, remplacements) : OK / KO
 - Fonctions IA comm M9 (canal, timing, A/B, sentiment) : OK / KO
 - Fonctions IA M10 (KPI, anomalies, risque, recommandations, NLG) : OK / KO
+- Fonctions IA M11 (placement, conflits, charge, rattrapage) : OK / KO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -188,7 +202,7 @@ flutter test
 ## 10. Critères de sortie
 
 - [ ] `supabase db reset` sans erreur
-- [ ] 7 seeds M4→M10 appliqués sans erreur
-- [ ] `pg_prove` 24/24 fichiers verts, 0 échec
+- [ ] 8 seeds M4→M11 appliqués sans erreur
+- [ ] `pg_prove` 27/27 fichiers verts, 0 échec
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé

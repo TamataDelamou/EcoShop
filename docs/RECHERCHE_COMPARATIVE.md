@@ -340,3 +340,59 @@ effectifs), l'A/B reste un **outil interne d'amélioration**, discret et limité
 **Règle éthique maintenue** : notifications non bloquantes, **opt-out par canal**,
 pas d'envoi automatique aux heures inopportunes, minimisation des données de
 lecture (on sait « lu/non lu », pas le contenu des réponses hors consentement).
+
+## 13. M11 — Planification & Agenda (recherche complémentaire)
+
+### 13.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M11 |
+|---|---|---|---|
+| S20 | https://en.wikipedia.org/wiki/School_timetable | Encyclopédique | Structure et finalité des emplois du temps ; contraintes classiques (enseignants, salles, matières, classes) |
+| S21 | https://en.wikipedia.org/wiki/Constraint_programming | Encyclopédique | Problème de satisfaction de contraintes (variables, domaines, contraintes) → base de l'optimisation IA des plannings |
+| S22 | https://en.wikipedia.org/wiki/Moodle | Encyclopédique | LMS de référence : module calendrier/agenda, normes e-learning (LTI, SCORM), limites hors-ligne |
+
+### 13.2 Benchmark — agenda/planification dans les LMS/SIS
+
+| Solution | Emploi du temps | Événements/agenda | Planification pédagogique | IA de planification | Hors-ligne |
+|---|---|---|---|---|---|
+| **Moodle** (S22) | Calendrier de cours | Calendrier global + événements | Oui (activités, séquences) | Non | Faible |
+| **Google Classroom** | Non (flux de devoirs) | Agenda Google lié | Devoirs/annonces | Non | Partiel (app mobile) |
+| **Schoology** | Non | Agenda intégré | Oui (cours, matériaux) | Non | Partiel |
+| **PowerSchool** | Add-on scheduler | Calendrier | Oui (gradebook lié) | Non | Non |
+| **EcoShop (cible M11)** | **Emploi du temps + contraintes** | **Événements + rappels M9** | **Progression M4 + séances** | **Optimisation CSP + conflits + charge** | **Fort (cache + LWW)** |
+
+**Lecture** : les LMS couvrent le calendrier pédagogique mais pas l'emploi du temps
+physique multi-contraintes (salles/enseignants) ; aucun ne combine optimisation IA
+et hors-ligne. Le créneau d'EcoShop est la **planification scolaire complète** :
+emploi du temps → séances → progression → événements, synchronisable hors-ligne.
+
+### 13.3 Emplois du temps en Afrique de l'Ouest — contraintes terrain
+
+- **Contraintes climatiques** : chaleur extrême → éviter les créneaux de mi-journée ;
+  saison des pluies → marges sur les déplacements et sorties.
+- **Calendrier officiel** : vacances, fêtes religieuses/nationales et **périodes
+  d'examens** (BEPC/BAC) doivent être des événements bloquants dans le planning.
+- **Ressources limitées** : nombre de salles et d'enseignants contraint → la
+  détection de conflits (salle/enseignant/classe) est prioritaire.
+
+### 13.4 IA planification — quatre cas (S21)
+
+| Cas | Application M11 | Données croisées |
+|---|---|---|
+| Optimisation des emplois du temps | Résolution CSP (salles, enseignants, classes, préférences) | `contraintes_emploi`, `emplois_du_temps` |
+| Détection de conflits | Signalement des chevauchements (horaire/salle/enseignant) + suggestion de résolution | `emplois_du_temps`, `affectations_enseignants` (M5) |
+| Recommandation de séances | Séances ciblées sur les difficultés détectées | M6 (lacunes), M7 (assiduité), M4 (progression) |
+| Prédiction de charge | Charge de travail enseignant/élève (anti-épuisement) | `emplois_du_temps`, M7 (absences), M8 (RH) |
+
+**Approche** : heuristique gloutonne + propagation de contraintes (pas de solveur
+externe) ; toute proposition reste **soumise à validation humaine** — l'IA suggère,
+le personnel valide.
+
+### 13.5 Hors-ligne agendas
+
+- **Cache** : l'agenda (emploi du temps + événements) est consultable hors connexion
+  (snapshot synchronisé).
+- **Synchronisation LWW (last-write-wins)** : pour les modifications d'agenda et de
+  progression, l'écriture la plus récente gagne (`horodatage + device_id`), cohérent
+  avec la file Drift/`sync_queue` de M0 ; les conflits de **suppression** sont
+  tranchés par `deleted_at` + version.
