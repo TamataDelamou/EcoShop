@@ -27,6 +27,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `16_m8_rh_visibilite.sql` | Visibilité RH (direction voit tout, employé son dossier, isolation multi-tenant) | M8 |
 | `17_m8_conges_validation.sql` | Congés : dépôt, interdiction d'auto-validation, validation humaine, retrait | M8 |
 | `18_m8_ia_rh.sql` | Fonctions IA RH : score de turn-over, effectifs, formation, remplacements | M8 |
+| `19_m9_notifications_visibilite.sql` | Visibilité des notifications (destinataire, direction, isolation multi-tenant) | M9 |
+| `20_m9_notifications_lecture.sql` | Lecture/écriture : marquage « lue », intégrité du contenu, envoi direction | M9 |
+| `21_m9_ia_comm.sql` | Fonctions IA communication : canal, timing, sentiment, A/B, taux de lecture | M9 |
 
 ## Prérequis
 
@@ -34,7 +37,8 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906000100_fix_core_security.sql`, `20260906000200_m1_schema_avance.sql`,
    `20260906000300_m2_auth_federation.sql`, `20260906000400_m4_referentiel_pedagogique.sql`,
    `20260906000500_m5_administration_scolarite.sql`, `20260906000600_m6_notes_evaluations.sql`,
-   `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`
+   `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`,
+   `20260906000900_m9_communication_notifications.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).

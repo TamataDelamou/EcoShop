@@ -233,3 +233,56 @@ affectation → absences → paie, dans un même tenant.
 
 **Règle éthique maintenue** : le score de turn-over et les recommandations sont des **signaux
 d'aide à la décision** pour la direction ; aucune action RH n'est automatisée.
+
+## 11. M9 — Communication & Notifications (recherche complémentaire)
+
+### 11.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M9 |
+|---|---|---|---|
+| S14 | https://en.wikipedia.org/wiki/Parental_involvement (→ consentement parental) | Encyclopédique | Droit/demande d'information du parent sur le parcours de l'enfant → les notifications d'absences/notes sont une obligation d'information, pas une option |
+| S15 | https://en.wikipedia.org/wiki/WhatsApp | Encyclopédique | 3 Md d'utilisateurs mensuels (2025), moyen de communication principal dans une grande partie de l'Afrique (2016+) ; WhatsApp Business ; exige un numéro de téléphone |
+| S16 | https://en.wikipedia.org/wiki/A/B_testing | Encyclopédique | Expérimentation randomisée à deux variantes, mesure d'un objectif défini, segmentation ciblée, sensibilité à la taille d'échantillon |
+
+### 11.2 Benchmark — modules de communication des LMS/SIS
+
+| Solution | Canaux | Préférences/horaires | IA de timing/personnalisation | Hors-ligne |
+|---|---|---|---|---|
+| **Canvas** | Email, push, in-app | Par cours/canal | Non (règles statiques) | Non |
+| **Moodle** | In-app, email, SMS (plugins) | Riches (par événement) | Non (plugins tiers) | Faible |
+| **Schoology** | Email, push | Basiques | Non | Non |
+| **PowerSchool** | Email, SMS (alertes présence) | Partielles | Non | Non |
+| **EcoShop (cible M9)** | **SMS + WhatsApp + Email + Push** | **Par utilisateur + horaires + fréquence** | **Timing IA + personnalisation + A/B** | **Fort (file locale)** |
+
+**Lecture** : aucun LMS/SIS ne combine multicanal faible connectivité + préférences
+horaires + IA de timing. Le créneau d'EcoShop est la **communication parentale
+terrain** (SMS/WhatsApp d'abord) pilotée par des règles éthiques et du hors-ligne.
+
+### 11.3 Engagement parent & canaux (contexte Afrique de l'Ouest)
+
+- **WhatsApp (S15)** : premier canal de messagerie en Afrique ; WhatsApp Business
+  permet les envois structurés. Canal prioritaire quand le parent est connecté.
+- **SMS** : fonctionne sur tout téléphone GSM sans internet — **fallback
+  obligatoire** en faible connectivité ; coût par message à provisionner.
+- **Push/Email** : dépendants de l'installation de l'app et du réseau — canaux
+  secondaires, privilégiés pour les utilisateurs équipés (enseignants, direction).
+- **Obligation d'information (S14)** : informer le parent (absences, notes,
+  sanctions, événements) est un attendu parental et réglementaire ; le module
+  doit donc garantir la traçabilité (journal d'envois + accusé de lecture).
+
+### 11.4 IA communication — trois niveaux (cohérent M6/M7/M8)
+
+| Niveau | Application M9 | Données croisées |
+|---|---|---|
+| Descriptive | Journal des envois, taux de lecture par canal/type/heure | `notifications`, `logs_envois` |
+| Prédictive | **Moment opportun** : éviter les heures tardives, préférer les créneaux de réception (préférences + historique) | `preferences_canaux`, `logs_envois` |
+| Prescriptive | Personnalisation contenu/fréquence/canal par profil ; **A/B testing** des variantes ; **analyse sémantique** des retours | `templates_notifications`, feedbacks |
+
+**A/B testing (S16)** : variantes randomisées mesurées sur un objectif défini
+(taux de lecture), avec segmentation (la variante gagnante peut différer par
+segment) et contrainte de taille d'échantillon — dans un établissement (petits
+effectifs), l'A/B reste un **outil interne d'amélioration**, discret et limité.
+
+**Règle éthique maintenue** : notifications non bloquantes, **opt-out par canal**,
+pas d'envoi automatique aux heures inopportunes, minimisation des données de
+lecture (on sait « lu/non lu », pas le contenu des réponses hors consentement).
