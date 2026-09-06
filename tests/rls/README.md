@@ -24,12 +24,18 @@ l'outillage Postgres/Supabase sera disponible.
 | `13_m7_presences_visibilite.sql` | Visibilité présences/retards/sanctions (élève, parent, personnel, étranger) | M7 |
 | `14_m7_pointage_droits.sql` | Droits de pointage (affecté/scolarité) + visibilité des alertes | M7 |
 | `15_m7_ia_fonctions.sql` | Fonctions IA : score décrochage, recommandation, prédiction de présence | M7 |
+| `16_m8_rh_visibilite.sql` | Visibilité RH (direction voit tout, employé son dossier, isolation multi-tenant) | M8 |
+| `17_m8_conges_validation.sql` | Congés : dépôt, interdiction d'auto-validation, validation humaine, retrait | M8 |
+| `18_m8_ia_rh.sql` | Fonctions IA RH : score de turn-over, effectifs, formation, remplacements | M8 |
 
 ## Prérequis
 
 1. **Migrations appliquées** : `20260904000000_core_schema.sql`,
    `20260906000100_fix_core_security.sql`, `20260906000200_m1_schema_avance.sql`,
-   `20260906000300_m2_auth_federation.sql` (dans cet ordre).
+   `20260906000300_m2_auth_federation.sql`, `20260906000400_m4_referentiel_pedagogique.sql`,
+   `20260906000500_m5_administration_scolarite.sql`, `20260906000600_m6_notes_evaluations.sql`,
+   `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`
+   (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).
 3. **Rôle d'exécution superutilisateur** (`postgres`) : les tests simulent les
