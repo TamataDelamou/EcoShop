@@ -1,0 +1,82 @@
+name: CI — Socle EcoShop (M0→M12)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    name: Base (migrations, seeds, pgTAP, audit)
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer la CLI Supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Installer pg_prove (pgTAP)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cpanminus postgresql-client libdbd-pg-perl
+          sudo cpanm --quiet --notest TAP::Parser::SourceHandler::pgTAP
+
+      - name: Démarrer la stack locale
+        run: supabase start
+
+      - name: Réinitialiser la base (migrations M0→M12 + seed M0)
+        run: supabase db reset
+
+      - name: Appliquer les seeds complémentaires (M4→M11)
+        run: |
+          for f in supabase/seed_referentiel_pedagogique.sql \
+                   supabase/seed_administration_scolarite.sql \
+                   supabase/seed_notes_evaluations.sql \
+                   supabase/seed_vie_scolaire.sql \
+                   supabase/seed_rh_personnel.sql \
+                   supabase/seed_communication_notifications.sql \
+                   supabase/seed_rapports_statistiques.sql \
+                   supabase/seed_planification_agenda.sql; do
+            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Tests pgTAP (RLS 01→27)
+        run: pg_prove -d "$SUPABASE_DB_URL" tests/rls/*.sql
+
+      - name: Audit de cohérence inter-modules
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f tests/integration/audit_coherence.sql
+
+  flutter:
+    name: Client Flutter (analyse + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/client_flutter
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Résoudre les dépendances
+        run: flutter pub get
+
+      - name: Analyse statique
+        run: flutter analyze
+
+      - name: Tests unitaires
+        run: flutter test
