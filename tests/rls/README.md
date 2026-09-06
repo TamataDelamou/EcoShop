@@ -30,6 +30,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `19_m9_notifications_visibilite.sql` | Visibilité des notifications (destinataire, direction, isolation multi-tenant) | M9 |
 | `20_m9_notifications_lecture.sql` | Lecture/écriture : marquage « lue », intégrité du contenu, envoi direction | M9 |
 | `21_m9_ia_comm.sql` | Fonctions IA communication : canal, timing, sentiment, A/B, taux de lecture | M9 |
+| `22_m10_rapports_visibilite.sql` | Visibilité des rapports (personnel, parent, élève, étranger) + KPI réservés personnel | M10 |
+| `23_m10_ia_fonctions.sql` | Fonctions IA M10 : consolidation, anomalies, risque classe, recommandation, résumé NLG | M10 |
+| `24_m10_anomalies_validation.sql` | Validation humaine des anomalies et recommandations (permission administration) | M10 |
 
 ## Prérequis
 
@@ -38,7 +41,8 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906000300_m2_auth_federation.sql`, `20260906000400_m4_referentiel_pedagogique.sql`,
    `20260906000500_m5_administration_scolarite.sql`, `20260906000600_m6_notes_evaluations.sql`,
    `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`,
-   `20260906000900_m9_communication_notifications.sql`
+   `20260906000900_m9_communication_notifications.sql`,
+   `20260906001000_m10_rapports_statistiques.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).
