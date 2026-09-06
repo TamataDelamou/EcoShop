@@ -1,9 +1,8 @@
-# Session de validation technique — Socle M0 → M7
+# Session de validation technique — Socle M0 → M8
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **avant la clôture du sprint M7** (ou à l'ouverture de
-> M8 si Docker arrive plus tôt).
+> disponible. À exécuter **à l'issue de M8** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -46,6 +45,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 6. `20260906000500_m5_administration_scolarite.sql` — M5 (structures, inscriptions, sélecteur d'enfant)
 7. `20260906000600_m6_notes_evaluations.sql` — M6 (évaluations, notes, bulletins)
 8. `20260906000700_m7_absences_vie_scolaire.sql` — M7 (présences, sanctions, alertes, IA)
+9. `20260906000800_m8_rh_personnel.sql` — M8 (employés, contrats, congés, paie légère, IA RH)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -53,7 +53,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 
 ## 4. Seeds complémentaires (ordre exact)
 
-Les seeds M4→M7 sont des fichiers séparés **non exécutés automatiquement**.
+Les seeds M4→M8 sont des fichiers séparés **non exécutés automatiquement**.
 Les appliquer dans l'ordre via psql :
 
 ```bash
@@ -62,24 +62,26 @@ psql "$DB" -f supabase/seed_referentiel_pedagogique.sql      # M4
 psql "$DB" -f supabase/seed_administration_scolarite.sql    # M5
 psql "$DB" -f supabase/seed_notes_evaluations.sql           # M6
 psql "$DB" -f supabase/seed_vie_scolaire.sql                # M7
+psql "$DB" -f supabase/seed_rh_personnel.sql                # M8
 ```
 
-**Action recommandée** : consolider ces quatre fichiers dans `supabase/seed.sql`
+**Action recommandée** : consolider ces cinq fichiers dans `supabase/seed.sql`
 (ou un script `supabase/seed_all.sql` avec `\i`) pour un reset en une commande.
 
-## 5. Tests pgTAP (01 → 15)
+## 5. Tests pgTAP (01 → 18)
 
 ```bash
 pg_prove -d "$DB" tests/rls/*.sql
 ```
 
-Attendu : 15 fichiers, ~68 assertions, **zéro échec**. Couverture :
+Attendu : 18 fichiers, ~80 assertions, **zéro échec**. Couverture :
 
 - 01-03 : anti-élévation, récursion RLS, hook JWT
 - 04-06 : anti-brute-force, isolation multi-tenant, invitations
 - 07-09 : M5 (isolation structures, lien parent, affectations)
 - 10-12 : M6 (visibilité notes, saisie, évaluations + moyenne)
 - 13-15 : M7 (visibilité vie scolaire, pointage, fonctions IA)
+- 16-18 : M8 (visibilité RH, congés & validation humaine, fonctions IA RH)
 
 ## 6. Vérification ciblée (helpers, fonctions, permissions)
 
@@ -105,6 +107,15 @@ select count(*) from public.presences;  -- 0 pour un compte sans fiche
 reset role;
 ```
 
+```sql
+-- Fonctions IA RH (M8) — substituer les UUID du seed
+select public.analyser_effectifs('<etab_lycee>');
+select public.calculer_score_turnover('<employe_ens2>');      -- attendu ~0.88 (risque élevé)
+select public.calculer_score_turnover('<employe_direction>'); -- attendu ~0.12 (risque faible)
+select public.recommander_formation('<employe_ens1>', '<annee_2026-2027>');
+select public.optimiser_remplacements('<etab_lycee>', current_date);
+```
+
 ## 7. Correctifs rapides (procédure)
 
 | Situation | Action |
@@ -124,13 +135,14 @@ reset role;
 ## Migrations
 - [liste] appliquées : OK / KO
 ## Seeds
-- M0 (auto) / M4 / M5 / M6 / M7 : OK / KO
+- M0 (auto) / M4 / M5 / M6 / M7 / M8 : OK / KO
 ## Tests pgTAP
-- 01→15 : [X]/68 assertions, [n] échecs
+- 01→18 : [X]/80 assertions, [n] échecs
 - Échecs : [liste fichier → assertion → cause]
 ## Vérifications ciblées
 - Fonctions IA M7 : OK / KO
 - Moyennes M6 : OK / KO
+- Fonctions IA RH M8 (turnover, formation, remplacements) : OK / KO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -149,7 +161,7 @@ flutter test
 ## 10. Critères de sortie
 
 - [ ] `supabase db reset` sans erreur
-- [ ] 4 seeds M4→M7 appliqués sans erreur
-- [ ] `pg_prove` 15/15 fichiers verts, 0 échec
+- [ ] 5 seeds M4→M8 appliqués sans erreur
+- [ ] `pg_prove` 18/18 fichiers verts, 0 échec
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé
