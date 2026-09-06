@@ -8,15 +8,15 @@
 
 ## 1. Sources documentées
 
-| # | Source (URL) | Type | Apport pour le projet |
-|---|---|---|---|
-| S1 | https://en.wikipedia.org/wiki/Learning_analytics | Académique | Définition, modèles prédictifs, bénéfices par acteur, éthique/confidentialité (InBloom, checklist DELICATE) |
-| S2 | https://en.wikipedia.org/wiki/Educational_data_mining | Académique | 4 objectifs EDM, phases, applications (prédiction de performance, détection de comportements, recommandation, regroupement) |
-| S3 | https://en.wikipedia.org/wiki/Learning_management_system | Encyclopédique | Fonctions LMS, parts de marché US 2023 (Canvas 41 %, Blackboard 17 %, Moodle 16 %, Brightspace 16 %), standards SCORM/xAPI/LTI, marché 24,05 Md$ (2024), CAGR 19,9 % |
-| S4 | https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type | Technique | CRDT état/opération, LWW-Register, OR-Set, usages industriels (Apple Notes hors-ligne, Figma, Redis, Riak) |
-| S5 | https://en.wikipedia.org/wiki/Student_information_system | Encyclopédique | Modules SIS : notes, emploi du temps, assiduité, relevés ; risque de sécurité des données élèves |
-| S6 | https://en.wikipedia.org/wiki/Artificial_intelligence_in_education | Académique | Historique (PLATO, ITS), 3 paradigmes (Ouyang & Jiao 2021), applications (feedback, prédiction, tutorat), risques (biais, sur-dépendance, vie privée), guidance UNESCO 2024 |
-| S7 | https://en.wikipedia.org/wiki/International_Standard_Classification_of_Education | Institutionnel (UNESCO) | ISCED 2011 niveaux 0-8 — base du référentiel M4 (déjà exploitée) |
+| #   | Source (URL)                                                                     | Type                    | Apport pour le projet                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1  | https://en.wikipedia.org/wiki/Learning_analytics                                 | Académique              | Définition, modèles prédictifs, bénéfices par acteur, éthique/confidentialité (InBloom, checklist DELICATE)                                                                 |
+| S2  | https://en.wikipedia.org/wiki/Educational_data_mining                            | Académique              | 4 objectifs EDM, phases, applications (prédiction de performance, détection de comportements, recommandation, regroupement)                                                 |
+| S3  | https://en.wikipedia.org/wiki/Learning_management_system                         | Encyclopédique          | Fonctions LMS, parts de marché US 2023 (Canvas 41 %, Blackboard 17 %, Moodle 16 %, Brightspace 16 %), standards SCORM/xAPI/LTI, marché 24,05 Md$ (2024), CAGR 19,9 %        |
+| S4  | https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type                 | Technique               | CRDT état/opération, LWW-Register, OR-Set, usages industriels (Apple Notes hors-ligne, Figma, Redis, Riak)                                                                  |
+| S5  | https://en.wikipedia.org/wiki/Student_information_system                         | Encyclopédique          | Modules SIS : notes, emploi du temps, assiduité, relevés ; risque de sécurité des données élèves                                                                            |
+| S6  | https://en.wikipedia.org/wiki/Artificial_intelligence_in_education               | Académique              | Historique (PLATO, ITS), 3 paradigmes (Ouyang & Jiao 2021), applications (feedback, prédiction, tutorat), risques (biais, sur-dépendance, vie privée), guidance UNESCO 2024 |
+| S7  | https://en.wikipedia.org/wiki/International_Standard_Classification_of_Education | Institutionnel (UNESCO) | ISCED 2011 niveaux 0-8 — base du référentiel M4 (déjà exploitée)                                                                                                            |
 
 ## 2. Benchmark concurrentiel
 
@@ -24,14 +24,14 @@ Comparaison des solutions comparables sur les axes qui différencient EcoShop :
 **couverture multi-tenant (établissements CEDEAO), hors-ligne réel, IA
 pédagogique locale, prix abordable en contexte africain.**
 
-| Solution | Type | Notes/évaluations | Hors-ligne | Analytique/IA | Cible |
-|---|---|---|---|---|---|
-| **Moodle** (open source) | LMS | Très complet (activités, quiz, notes) | Faible (app mobile limitée, essentiellement consultation) | Analytique de base, plugins | Établissements sup. surtout ; anglophone dominant |
-| **Canvas** (Instructure) | LMS | Leader US (≈41 %), rubric/notes/analytique | Quasi nul | Analytique solide, IA émergente | HE/K-12 US, coûteux |
-| **Pronote** (Index Éducation) | Cahier de notes FR | Référence francophone notes/bulletins/appréciations | Aucun | Statistiques simples | France/DOM, non multi-pays CEDEAO |
-| **PowerSchool** | SIS | Référentiel K-12 (inscriptions, notes, assiduité, relevés) | Faible | Analytique/IA add-on payant | US/K-12 |
-| **Eneza Education** | EdTech mobile Afrique | Contenu par SMS/USSD, faible bande passante | Fort (SMS) | Quiz adaptatifs légers | Kenya/RDC ; périmètre pédagogie, pas SIS |
-| **uLesson** | EdTech Afrique de l'Ouest | Cours vidéo + quiz, packs SD préchargés | Fort (téléchargement) | Recommandation simple | Nigeria/Ghana ; pas de gestion d'établissement |
+| Solution                      | Type                      | Notes/évaluations                                          | Hors-ligne                                                | Analytique/IA                   | Cible                                             |
+| ----------------------------- | ------------------------- | ---------------------------------------------------------- | --------------------------------------------------------- | ------------------------------- | ------------------------------------------------- |
+| **Moodle** (open source)      | LMS                       | Très complet (activités, quiz, notes)                      | Faible (app mobile limitée, essentiellement consultation) | Analytique de base, plugins     | Établissements sup. surtout ; anglophone dominant |
+| **Canvas** (Instructure)      | LMS                       | Leader US (≈41 %), rubric/notes/analytique                 | Quasi nul                                                 | Analytique solide, IA émergente | HE/K-12 US, coûteux                               |
+| **Pronote** (Index Éducation) | Cahier de notes FR        | Référence francophone notes/bulletins/appréciations        | Aucun                                                     | Statistiques simples            | France/DOM, non multi-pays CEDEAO                 |
+| **PowerSchool**               | SIS                       | Référentiel K-12 (inscriptions, notes, assiduité, relevés) | Faible                                                    | Analytique/IA add-on payant     | US/K-12                                           |
+| **Eneza Education**           | EdTech mobile Afrique     | Contenu par SMS/USSD, faible bande passante                | Fort (SMS)                                                | Quiz adaptatifs légers          | Kenya/RDC ; périmètre pédagogie, pas SIS          |
+| **uLesson**                   | EdTech Afrique de l'Ouest | Cours vidéo + quiz, packs SD préchargés                    | Fort (téléchargement)                                     | Recommandation simple           | Nigeria/Ghana ; pas de gestion d'établissement    |
 
 **Lecture du benchmark.** Les leaders mondiaux (Canvas, PowerSchool) couvrent
 bien les notes et l'analytique mais supposent une connectivité permanente, un
@@ -44,13 +44,13 @@ légère, multi-tenant CEDEAO.**
 
 ## 3. Analyse des besoins par acteur (M6)
 
-| Acteur | Besoins prioritaires | Traduction produit |
-|---|---|---|
-| Enseignant | Saisir vite des notes (même sans réseau), gérer devoirs/contrôles/compositions, appréciations | Saisie hors-ligne par lot, types d'évaluation, appréciations structurées |
-| Élève | Consulter ses notes, moyennes, rang, progression | Bulletins temps réel, dashboard de progression |
-| Parent | Suivre l'enfant, être alerté des décrochages | Vue enfant lié (M5), alertes d'écart |
-| Direction | Comparer classes/matières, piloter la réussite, rapports officiels | Statistiques agrégées, exports bulletins |
-| Administrateur GSG | Référentiel, conformité CEDEAO, supervision multi-tenant | Rôles `admin_gsg`, agrégats anonymisés |
+| Acteur             | Besoins prioritaires                                                                          | Traduction produit                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Enseignant         | Saisir vite des notes (même sans réseau), gérer devoirs/contrôles/compositions, appréciations | Saisie hors-ligne par lot, types d'évaluation, appréciations structurées |
+| Élève              | Consulter ses notes, moyennes, rang, progression                                              | Bulletins temps réel, dashboard de progression                           |
+| Parent             | Suivre l'enfant, être alerté des décrochages                                                  | Vue enfant lié (M5), alertes d'écart                                     |
+| Direction          | Comparer classes/matières, piloter la réussite, rapports officiels                            | Statistiques agrégées, exports bulletins                                 |
+| Administrateur GSG | Référentiel, conformité CEDEAO, supervision multi-tenant                                      | Rôles `admin_gsg`, agrégats anonymisés                                   |
 
 ## 4. Fonctionnalités différenciantes retenues
 
@@ -67,12 +67,12 @@ légère, multi-tenant CEDEAO.**
 
 ## 5. Pistes IA pour M6 (cas d'usage, données, contraintes)
 
-| Cas d'usage | Données nécessaires | Contrainte technique | Cible d'implémentation |
-|---|---|---|---|
-| Prédiction de réussite (risque par matière/période) | Historique `notes`, `evaluations`, `inscriptions`, `periodes_scolaires` | Modèle léger (régression logistique / forêt aléatoire), inférence batch | Edge Function (Supabase) + cache d'agrégats |
-| Détection d'anomalies (écarts de note, ruptures de tendance) | Séries de notes par élève/matière | Règles statistiques (z-score, IQR) d'abord, ML ensuite | Postgres (fonctions SQL) → zéro latence réseau |
-| Recommandation de contenus | Notes ↔ `programmes_matieres`/compétences (M4), historique | Jointure référentiel, scoring de lacunes | Edge Function, résultat pré-calculé dans `statistiques_agregats` |
-| NLP des appréciations | `appreciations` texte | Français + langues locales, coût/confidentialité | Hors-ligne : lexique local + TF-IDF léger (ML Kit) ; en ligne : Edge Function appelant un modèle hébergé |
+| Cas d'usage                                                  | Données nécessaires                                                     | Contrainte technique                                                    | Cible d'implémentation                                                                                   |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Prédiction de réussite (risque par matière/période)          | Historique `notes`, `evaluations`, `inscriptions`, `periodes_scolaires` | Modèle léger (régression logistique / forêt aléatoire), inférence batch | Edge Function (Supabase) + cache d'agrégats                                                              |
+| Détection d'anomalies (écarts de note, ruptures de tendance) | Séries de notes par élève/matière                                       | Règles statistiques (z-score, IQR) d'abord, ML ensuite                  | Postgres (fonctions SQL) → zéro latence réseau                                                           |
+| Recommandation de contenus                                   | Notes ↔ `programmes_matieres`/compétences (M4), historique              | Jointure référentiel, scoring de lacunes                                | Edge Function, résultat pré-calculé dans `statistiques_agregats`                                         |
+| NLP des appréciations                                        | `appreciations` texte                                                   | Français + langues locales, coût/confidentialité                        | Hors-ligne : lexique local + TF-IDF léger (ML Kit) ; en ligne : Edge Function appelant un modèle hébergé |
 
 **Principe de sobriété IA** (source S6, guidance UNESCO 2024) : commencer par
 des **règles statistiques transparentes et auditées** (explicables, sans biais
@@ -81,6 +81,7 @@ Aucune décision automatique bloquante (redoublement, exclusion) : l'IA produit
 des **signaux d'aide à la décision** pour l'enseignant et la direction.
 
 **Architecture légère proposée :**
+
 - **Tier 1 — SQL/Postgres** : moyennes, écarts-types, z-scores, classements —
   calculés par fonctions SQL sur agrégats (`statistiques_agregats`), disponibles
   hors-ligne une fois synchronisés.
@@ -115,14 +116,14 @@ Ce modèle est le même que celui documenté pour Figma (LWW par propriété).
 
 ## 7. Synthèse comparative (tableau de décision)
 
-| Critère | Moodle | Canvas | Pronote | PowerSchool | Eneza/uLesson | **EcoShop (cible)** |
-|---|---|---|---|---|---|---|
-| Multi-tenant CEDEAO | Non | Non | Non | Non | Partiel | **Oui (M1)** |
-| Notes/évaluations | Oui | Oui | **Excellent** | Oui | Non | **Oui (M6)** |
-| Hors-ligne saisie | Faible | Non | Non | Faible | Fort | **Fort (M6)** |
-| IA pédagogique | Faible | Moyenne | Non | Moyenne (payant) | Légère | **Légère, sobre, off-line** |
-| Référentiel CEDEAO/ISCED | Non | Non | Non | Non | Partiel | **Oui (M4)** |
-| Coût/licence | Libre (infra) | Élevé | Moyen | Élevé | Freemium | **Optimisé** |
+| Critère                  | Moodle        | Canvas  | Pronote       | PowerSchool      | Eneza/uLesson | **EcoShop (cible)**         |
+| ------------------------ | ------------- | ------- | ------------- | ---------------- | ------------- | --------------------------- |
+| Multi-tenant CEDEAO      | Non           | Non     | Non           | Non              | Partiel       | **Oui (M1)**                |
+| Notes/évaluations        | Oui           | Oui     | **Excellent** | Oui              | Non           | **Oui (M6)**                |
+| Hors-ligne saisie        | Faible        | Non     | Non           | Faible           | Fort          | **Fort (M6)**               |
+| IA pédagogique           | Faible        | Moyenne | Non           | Moyenne (payant) | Légère        | **Légère, sobre, off-line** |
+| Référentiel CEDEAO/ISCED | Non           | Non     | Non           | Non              | Partiel       | **Oui (M4)**                |
+| Coût/licence             | Libre (infra) | Élevé   | Moyen         | Élevé            | Freemium      | **Optimisé**                |
 
 ## 8. Références académiques clés (reprises de S1/S2/S6)
 
@@ -137,22 +138,22 @@ Ce modèle est le même que celui documenté pour Figma (LWW par propriété).
 
 ### 9.1 Sources ajoutées (accès 2026-09-06)
 
-| # | Source (URL) | Type | Apport pour M7 |
-|---|---|---|---|
-| S8 | https://en.wikipedia.org/wiki/Dropping_out | Encyclopédique | Facteurs de risque prédictifs (Rumberger : absentéisme, problèmes de comportement, désengagement) ; antécédents d'absentéisme/redoublement ; prévention par la dynamique familiale ; données UNESCO Amérique latine (finances, désintérêt) |
-| S9 | https://en.wikipedia.org/wiki/School_discipline | Encyclopédique | Formes non corporelles (retenue, conseil, suspension), discipline **restaurative** et responsabilisante, dérive des sanctions disproportionnées → virage non punitif |
-| S10 | https://en.wikipedia.org/wiki/Education_in_Guinea | Encyclopédique | Contexte : primaire obligatoire 6 ans ; HRMI : 60,7 % du droit à l'éducation satisfait, secondaire à 46,6 % → enjeu de rétention |
+| #   | Source (URL)                                      | Type           | Apport pour M7                                                                                                                                                                                                                             |
+| --- | ------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S8  | https://en.wikipedia.org/wiki/Dropping_out        | Encyclopédique | Facteurs de risque prédictifs (Rumberger : absentéisme, problèmes de comportement, désengagement) ; antécédents d'absentéisme/redoublement ; prévention par la dynamique familiale ; données UNESCO Amérique latine (finances, désintérêt) |
+| S9  | https://en.wikipedia.org/wiki/School_discipline   | Encyclopédique | Formes non corporelles (retenue, conseil, suspension), discipline **restaurative** et responsabilisante, dérive des sanctions disproportionnées → virage non punitif                                                                       |
+| S10 | https://en.wikipedia.org/wiki/Education_in_Guinea | Encyclopédique | Contexte : primaire obligatoire 6 ans ; HRMI : 60,7 % du droit à l'éducation satisfait, secondaire à 46,6 % → enjeu de rétention                                                                                                           |
 
 ### 9.2 Benchmark — modules de vie scolaire des LMS/SIS
 
-| Solution | Présences/retards | Sanctions/comportement | Alerte décrochage | Hors-ligne | IA |
-|---|---|---|---|---|---|
-| **Schoology** (PowerSchool) | Pointage par période | Non | Non (add-on) | Non | Faible |
-| **PowerSchool** | Pointage + justifications | Comportement + incidents | Early Warning System natif | Faible | Analytique |
-| **InfoSIS** (SIS générique) | Pointage par cours | Disciplinaire de base | Non | Non | Non |
-| **Pronote** | Absences/retards, motifs | Sanctions + commission éducative | Non | Non | Statistiques |
-| **Moodle** (plugin) | Pointage simple | Non | Non | Faible | Non |
-| **EcoShop (cible M7)** | Pointage demi-journée/cours + retards + justifications | Sanctions éducatives **validées humainement** | Alerte décrochage multi-facteurs (M6+M7) | **Fort** | **3 tiers, human-in-the-loop** |
+| Solution                    | Présences/retards                                      | Sanctions/comportement                        | Alerte décrochage                        | Hors-ligne | IA                             |
+| --------------------------- | ------------------------------------------------------ | --------------------------------------------- | ---------------------------------------- | ---------- | ------------------------------ |
+| **Schoology** (PowerSchool) | Pointage par période                                   | Non                                           | Non (add-on)                             | Non        | Faible                         |
+| **PowerSchool**             | Pointage + justifications                              | Comportement + incidents                      | Early Warning System natif               | Faible     | Analytique                     |
+| **InfoSIS** (SIS générique) | Pointage par cours                                     | Disciplinaire de base                         | Non                                      | Non        | Non                            |
+| **Pronote**                 | Absences/retards, motifs                               | Sanctions + commission éducative              | Non                                      | Non        | Statistiques                   |
+| **Moodle** (plugin)         | Pointage simple                                        | Non                                           | Non                                      | Faible     | Non                            |
+| **EcoShop (cible M7)**      | Pointage demi-journée/cours + retards + justifications | Sanctions éducatives **validées humainement** | Alerte décrochage multi-facteurs (M6+M7) | **Fort**   | **3 tiers, human-in-the-loop** |
 
 **Lecture** : seuls les SIS lourds (PowerSchool) proposent un Early Warning System, mais sans
 hors-ligne ni ancrage CEDEAO. Les solutions francophones (Pronote) couvrent les absences/retards
@@ -176,11 +177,11 @@ ouest-africain (S10).
 
 ### 9.4 IA prédictive vs descriptive vs prescriptive (positionnement M7)
 
-| Approche | Définition | Application M7 |
-|---|---|---|
-| **Descriptive** | Ce qui s'est passé (tableaux de bord) | `analyse_comportement` : fréquences, motifs de retard, absences injustifiées |
-| **Prédictive** | Ce qui va arriver (probabilité) | `calculer_score_decrochage` (croisement absences/retards/moyennes) ; `predire_presence` (calendrier + événements) |
-| **Prescriptive** | Que faire (recommandation) | `recommander_sanction_educative` (non punitive, fondée sur l'historique et les règles) |
+| Approche         | Définition                            | Application M7                                                                                                    |
+| ---------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Descriptive**  | Ce qui s'est passé (tableaux de bord) | `analyse_comportement` : fréquences, motifs de retard, absences injustifiées                                      |
+| **Prédictive**   | Ce qui va arriver (probabilité)       | `calculer_score_decrochage` (croisement absences/retards/moyennes) ; `predire_presence` (calendrier + événements) |
+| **Prescriptive** | Que faire (recommandation)            | `recommander_sanction_educative` (non punitive, fondée sur l'historique et les règles)                            |
 
 **Règle éthique (S9, UNESCO 2024)** : les trois niveaux produisent des **signaux soumis à
 validation humaine** (direction, conseil de classe, parent). Aucune sanction ni alerte n'est
@@ -190,21 +191,21 @@ appliquée automatiquement ; l'IA prescriptive propose, l'humain décide.
 
 ### 10.1 Sources ajoutées (accès 2026-09-06)
 
-| # | Source (URL) | Type | Apport pour M8 |
-|---|---|---|---|
-| S11 | https://en.wikipedia.org/wiki/Teacher_attrition | Encyclopédique | Facteurs de rétention/départ des enseignants : conditions de travail, charge, rémunération, soutien administratif, épuisement ; « movers vs leavers » |
-| S12 | https://en.wikipedia.org/wiki/Payroll | Encyclopédique | Composantes de la paie : brut, primes, retenues, net ; fréquences — socle de la « paie légère » |
-| S13 | https://en.wikipedia.org/wiki/Education_in_Africa | Encyclopédique | Contexte : pénurie d'enseignants qualifiés, disparités — enjeu de gestion des personnels éducatifs |
+| #   | Source (URL)                                      | Type           | Apport pour M8                                                                                                                                        |
+| --- | ------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S11 | https://en.wikipedia.org/wiki/Teacher_attrition   | Encyclopédique | Facteurs de rétention/départ des enseignants : conditions de travail, charge, rémunération, soutien administratif, épuisement ; « movers vs leavers » |
+| S12 | https://en.wikipedia.org/wiki/Payroll             | Encyclopédique | Composantes de la paie : brut, primes, retenues, net ; fréquences — socle de la « paie légère »                                                       |
+| S13 | https://en.wikipedia.org/wiki/Education_in_Africa | Encyclopédique | Contexte : pénurie d'enseignants qualifiés, disparités — enjeu de gestion des personnels éducatifs                                                    |
 
 ### 10.2 Benchmark — modules RH des SIS
 
-| Solution | Employés/contrats | Congés | Paie | Analytique RH | Hors-ligne |
-|---|---|---|---|---|---|
-| **PowerSchool** (ERP/SIS) | Fiches + contrats | Oui | Add-on | Oui | Non |
-| **InfoSIS** (SIS générique) | Basique | Partiel | Non | Non | Non |
-| **Odoo HR / OrangeHRM** (ERP générique) | **Complet** | Oui | Oui (paie) | Oui | Faible |
-| **Skolera** | Basique | Non | Non | Non | Non |
-| **EcoShop (cible M8)** | Employés + contrats + congés | Oui | Paie légère (brut/primes/retenues/net) | IA turn-over/formation/plannings | **Fort** |
+| Solution                                | Employés/contrats            | Congés  | Paie                                   | Analytique RH                    | Hors-ligne |
+| --------------------------------------- | ---------------------------- | ------- | -------------------------------------- | -------------------------------- | ---------- |
+| **PowerSchool** (ERP/SIS)               | Fiches + contrats            | Oui     | Add-on                                 | Oui                              | Non        |
+| **InfoSIS** (SIS générique)             | Basique                      | Partiel | Non                                    | Non                              | Non        |
+| **Odoo HR / OrangeHRM** (ERP générique) | **Complet**                  | Oui     | Oui (paie)                             | Oui                              | Faible     |
+| **Skolera**                             | Basique                      | Non     | Non                                    | Non                              | Non        |
+| **EcoShop (cible M8)**                  | Employés + contrats + congés | Oui     | Paie légère (brut/primes/retenues/net) | IA turn-over/formation/plannings | **Fort**   |
 
 **Lecture** : les ERP génériques (Odoo/OrangeHRM) couvrent bien le RH mais sont déconnectés
 du pédagogique (affectations M5, absences M7, compétences M4) et ne ciblent pas l'établissement
@@ -225,10 +226,10 @@ affectation → absences → paie, dans un même tenant.
 
 ### 10.4 IA RH — trois niveaux (cohérent M6/M7)
 
-| Niveau | Application M8 | Données croisées |
-|---|---|---|
-| Descriptive | Tableau de bord effectifs, ancienneté, soldes de congés | `employes`, `contrats`, `conges` |
-| Prédictive | **Risque de turn-over** (score 0-1) | absences M7 + ancienneté + charge M5/M6 |
+| Niveau       | Application M8                                                                                        | Données croisées                            |
+| ------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Descriptive  | Tableau de bord effectifs, ancienneté, soldes de congés                                               | `employes`, `contrats`, `conges`            |
+| Prédictive   | **Risque de turn-over** (score 0-1)                                                                   | absences M7 + ancienneté + charge M5/M6     |
 | Prescriptive | Recommandation de formation (M4) ; optimisation des plannings (répartition des congés, remplacements) | compétences M4, affectations M5, historique |
 
 **Règle éthique maintenue** : le score de turn-over et les recommandations sont des **signaux
@@ -238,20 +239,20 @@ d'aide à la décision** pour la direction ; aucune action RH n'est automatisée
 
 ### 11.1 Sources ajoutées (accès 2026-09-06)
 
-| # | Source (URL) | Type | Apport pour M9 |
-|---|---|---|---|
-| S14 | https://en.wikipedia.org/wiki/Parental_involvement (→ consentement parental) | Encyclopédique | Droit/demande d'information du parent sur le parcours de l'enfant → les notifications d'absences/notes sont une obligation d'information, pas une option |
-| S15 | https://en.wikipedia.org/wiki/WhatsApp | Encyclopédique | 3 Md d'utilisateurs mensuels (2025), moyen de communication principal dans une grande partie de l'Afrique (2016+) ; WhatsApp Business ; exige un numéro de téléphone |
-| S16 | https://en.wikipedia.org/wiki/A/B_testing | Encyclopédique | Expérimentation randomisée à deux variantes, mesure d'un objectif défini, segmentation ciblée, sensibilité à la taille d'échantillon |
+| #   | Source (URL)                                                                 | Type           | Apport pour M9                                                                                                                                                       |
+| --- | ---------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S14 | https://en.wikipedia.org/wiki/Parental_involvement (→ consentement parental) | Encyclopédique | Droit/demande d'information du parent sur le parcours de l'enfant → les notifications d'absences/notes sont une obligation d'information, pas une option             |
+| S15 | https://en.wikipedia.org/wiki/WhatsApp                                       | Encyclopédique | 3 Md d'utilisateurs mensuels (2025), moyen de communication principal dans une grande partie de l'Afrique (2016+) ; WhatsApp Business ; exige un numéro de téléphone |
+| S16 | https://en.wikipedia.org/wiki/A/B_testing                                    | Encyclopédique | Expérimentation randomisée à deux variantes, mesure d'un objectif défini, segmentation ciblée, sensibilité à la taille d'échantillon                                 |
 
 ### 11.2 Benchmark — modules de communication des LMS/SIS
 
-| Solution | Canaux | Préférences/horaires | IA de timing/personnalisation | Hors-ligne |
-|---|---|---|---|---|
-| **Canvas** | Email, push, in-app | Par cours/canal | Non (règles statiques) | Non |
-| **Moodle** | In-app, email, SMS (plugins) | Riches (par événement) | Non (plugins tiers) | Faible |
-| **Schoology** | Email, push | Basiques | Non | Non |
-| **PowerSchool** | Email, SMS (alertes présence) | Partielles | Non | Non |
+| Solution               | Canaux                            | Préférences/horaires                       | IA de timing/personnalisation          | Hors-ligne             |
+| ---------------------- | --------------------------------- | ------------------------------------------ | -------------------------------------- | ---------------------- |
+| **Canvas**             | Email, push, in-app               | Par cours/canal                            | Non (règles statiques)                 | Non                    |
+| **Moodle**             | In-app, email, SMS (plugins)      | Riches (par événement)                     | Non (plugins tiers)                    | Faible                 |
+| **Schoology**          | Email, push                       | Basiques                                   | Non                                    | Non                    |
+| **PowerSchool**        | Email, SMS (alertes présence)     | Partielles                                 | Non                                    | Non                    |
 | **EcoShop (cible M9)** | **SMS + WhatsApp + Email + Push** | **Par utilisateur + horaires + fréquence** | **Timing IA + personnalisation + A/B** | **Fort (file locale)** |
 
 **Lecture** : aucun LMS/SIS ne combine multicanal faible connectivité + préférences
@@ -272,11 +273,64 @@ terrain** (SMS/WhatsApp d'abord) pilotée par des règles éthiques et du hors-l
 
 ### 11.4 IA communication — trois niveaux (cohérent M6/M7/M8)
 
-| Niveau | Application M9 | Données croisées |
-|---|---|---|
-| Descriptive | Journal des envois, taux de lecture par canal/type/heure | `notifications`, `logs_envois` |
-| Prédictive | **Moment opportun** : éviter les heures tardives, préférer les créneaux de réception (préférences + historique) | `preferences_canaux`, `logs_envois` |
+| Niveau       | Application M9                                                                                                           | Données croisées                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Descriptive  | Journal des envois, taux de lecture par canal/type/heure                                                                 | `notifications`, `logs_envois`       |
+| Prédictive   | **Moment opportun** : éviter les heures tardives, préférer les créneaux de réception (préférences + historique)          | `preferences_canaux`, `logs_envois`  |
 | Prescriptive | Personnalisation contenu/fréquence/canal par profil ; **A/B testing** des variantes ; **analyse sémantique** des retours | `templates_notifications`, feedbacks |
+
+## 12. M10 — Rapports & Statistiques académiques (recherche complémentaire)
+
+### 12.1 Sources ajoutées (accès 2026-09-06)
+
+| #   | Source (URL)                                              | Type           | Apport pour M10                                                                                            |
+| --- | --------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| S17 | https://en.wikipedia.org/wiki/Business_intelligence       | Encyclopédique | Définition BI (analyse des données → aide à la décision), indicateurs clés, tableaux de bord, reporting    |
+| S18 | https://en.wikipedia.org/wiki/Anomaly_detection           | Encyclopédique | Anomalies ponctuelles/contextuelles/collectives ; détection d'écarts statistiques et de données aberrantes |
+| S19 | https://en.wikipedia.org/wiki/Natural-language_generation | Encyclopédique | Étapes de génération (contenu → agrégation → choix lexical → réalisation) → résumés exécutifs automatisés  |
+
+### 12.2 Benchmark — modules reporting/BI des SIS
+
+| Solution                           | Tableaux de bord                            | Exports                | BI/analytique           | IA                               |
+| ---------------------------------- | ------------------------------------------- | ---------------------- | ----------------------- | -------------------------------- |
+| **PowerSchool**                    | Intégrés (élève, établissement)             | PDF/Excel              | Analytics add-on        | Limitée                          |
+| **Skyward**                        | Financier + élève                           | Excel/CSV              | Reporting riche         | Non                              |
+| **Infinite Campus**                | Complet (data warehouse)                    | Multiple               | Fort                    | Non                              |
+| **Edmodo** (fermé 2022)            | Engagement basique                          | Limité                 | Faible                  | Non                              |
+| **Tableau / Power BI** (générique) | **Très complet**                            | Tous                   | BI complète             | Add-ons                          |
+| **EcoShop (cible M10)**            | **Direction / enseignant / parent / élève** | **PDF/Excel/CSV/JSON** | **Consolidation M6→M9** | **Prédictive + anomalies + NLP** |
+
+**Lecture** : les BI génériques (Tableau/Power BI) sont puissantes mais déconnectées du
+modèle scolaire multi-tenant ; les SIS couvrent le reporting mais sans IA prédictive
+ni NLP. Le créneau d'EcoShop est le **reporting pédagogique intégré** (notes × absences
+× RH × communication) avec des signaux IA soumis à validation humaine.
+
+### 12.3 Tableaux de bord éducatifs — besoins terrain (Afrique de l'Ouest)
+
+- **Indicateurs clés pour la direction (S17)** : effectifs, taux de réussite,
+  absentéisme, turn-over (M8), masse salariale (M8), engagement parents (M9) —
+  tous dérivables des modules M6→M9 déjà en place.
+- **Contrainte faible connectivité** : rapports consultables en cache, génération
+  différée (bulletin PDF produit côté serveur, téléchargé ensuite) plutôt que
+  calcul interactif en ligne.
+
+### 12.4 IA académique — trois niveaux (cohérent M6/M7/M8/M9)
+
+| Niveau       | Application M10                                                                                                                   | Données croisées                             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Descriptive  | Tableaux de bord consolidés (direction/enseignant/parent/élève)                                                                   | M6 notes, M7 assiduité, M8 RH, M9 engagement |
+| Prédictive   | **Classes à risque** (baisse de notes + absentéisme) ; **détection d'anomalies** (écarts statistiques, données aberrantes)        | M6, M7 ; statistiques de distribution        |
+| Prescriptive | **Recommandations stratégiques** (renforcement, tutorat, ajustement des effectifs) ; **résumé exécutif en langage naturel** (NLG) | agrégats M6→M9                               |
+
+**Anomalies (S18)** : signaler les notes/absences aberrantes (écart > seuil à la
+moyenne de la classe, séries incohérentes) sans correction automatique — l'anomalie
+est remontée à validation humaine.
+**Résumé exécutif (S19)** : génération structurée (contenu → agrégation → réalisation)
+à partir des agrégats, jamais d'assertion non traçable aux données.
+
+**Règle éthique maintenue** : indicateurs et résumés sont des **aides à la décision** ;
+aucune décision pédagogique ou RH n'est automatisée, les anomalies sont soumises à
+validation humaine.
 
 **A/B testing (S16)** : variantes randomisées mesurées sur un objectif défini
 (taux de lecture), avec segmentation (la variante gagnante peut différer par
