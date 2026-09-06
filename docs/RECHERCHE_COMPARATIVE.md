@@ -396,3 +396,64 @@ le personnel valide.
   progression, l'écriture la plus récente gagne (`horodatage + device_id`), cohérent
   avec la file Drift/`sync_queue` de M0 ; les conflits de **suppression** sont
   tranchés par `deleted_at` + version.
+
+## 14. M12 — Intégration & Déploiement continu (recherche complémentaire)
+
+### 14.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M12 |
+|---|---|---|---|
+| S23 | https://en.wikipedia.org/wiki/CI/CD | Encyclopédique | Pipeline CI/CD : build → test → déploiement ; CI vs *delivery* vs *deployment* ; retours rapides, petits changements |
+| S24 | https://en.wikipedia.org/wiki/GitHub_Actions | Encyclopédique | Workflows YAML déclenchés par événements, runners hébergés, secrets, marketplace, matrice de jobs, cache |
+| S25 | https://en.wikipedia.org/wiki/Application_performance_management | Encyclopédique | APM : métriques de performance (latence, débit, taux d'erreur, saturation), détection d'anomalies |
+
+### 14.2 Benchmark — pipelines CI/CD pour les solutions éducatives
+
+| Plateforme | Pipelines / intégration | Hébergement | Monitoring natif | Adéquation Afrique de l'Ouest |
+|---|---|---|---|---|
+| **Supabase** | GitHub Actions + Supabase CLI (`db reset`, migrations, Edge Functions) | Cloud géré ou self-hosted | Logs + observabilité (Postgres) | **Forte** : Postgres + RLS natifs, CLI légère |
+| **Firebase** | Cloud Build / GitHub Actions | Cloud géré (Google) | Crashlytics + Performance Monitoring | Moyenne : coût, dépendance réseau |
+| **AWS Amplify** | Amplify Hosting + CodePipeline | Cloud géré (AWS) | CloudWatch | Moyenne : courbe d'apprentissage |
+| **GitLab CI** | Pipelines `.gitlab-ci.yml` natifs | Cloud ou self-hosted | GitLab Observability | **Forte en self-hosted** (alternative si réseau contraint) |
+| **EcoShop (cible M12)** | **GitHub Actions + Supabase CLI** | **Supabase (cloud ou on-premise)** | **APM + observabilité M12** | **Pipeline à double cible : cloud + dégradé hors-ligne** |
+
+**Lecture** : pour un socle Supabase/Flutter, GitHub Actions + Supabase CLI est le
+chemin le plus court (migrations versionnées, `db reset`, `pg_prove`). Le
+self-hosted (Supabase/Docker ou GitLab) reste la variable de secours pour les
+contextes à faible connectivité.
+
+### 14.3 Déploiement continu en Afrique de l'Ouest — contraintes terrain
+
+- **Connectivité intermittente** : le déploiement doit être incrémental et
+  idempotent (reprise possible après coupure) ; éviter les étapes longues
+  ininterruptibles.
+- **Hébergement** : cloud régional (ou self-hosted) pour réduire la latence et
+  respecter la souveraineté des données éducatives.
+- **Bande passante** : images/artefacts lourds à limiter ; privilégier des
+  migrations SQL légères et des builds Flutter incrémentaux (cache).
+- **Maintenance sans DevOps dédié** : scripts simples (`deploy.sh`,
+  `backup_restore.sh`) plutôt qu'une plateforme d'orchestration complexe.
+
+### 14.4 Monitoring adapté aux contextes à faible connectivité
+
+- **Métriques APM minimales (S25)** : latence, débit, taux d'erreur, saturation
+  — quatre signaux suffisants pour détecter une dégradation.
+- **Collecte en local + envoi différé** : les métriques sont accumulées et
+  expédiées par lots quand le réseau revient (cohérent avec la file de synchro M0).
+- **Alertes hiérarchisées** : critique (panne d'authentification, échec de
+  migration), avertissement (latence), information (pics saisonniers).
+- **Seuils adaptés** : ne pas déclencher d'alerte sur une simple coupure réseau
+  (faux positif) — distinguer « indisponibilité » de « erreur applicative ».
+
+### 14.5 IA dans le DevOps éducatif — quatre cas (S23/S25)
+
+| Cas | Application M12 | Données croisées |
+|---|---|---|
+| Monitoring intelligent | Détection automatique d'anomalies de performance (latence, erreurs, saturation) | Logs Supabase, métriques APM |
+| Prédiction des pics de charge | Anticipation rentrée/examens/bulletins → recommandation de scaling | M7 (absences), M6 (évaluations), M10 (KPI), agenda M11 |
+| Optimisation des migrations | Analyse des dépendances inter-modules et ordonnancement | Migrations M0→M11, graphe de dépendances |
+| Rétroaction de pipeline | Apprentissage des échecs de CI pour proposer des correctifs ciblés | Historique GitHub Actions |
+
+**Approche** : l'IA opère en **supervision** (détection, prédiction, suggestion) ;
+aucun scaling ou déploiement n'est déclenché automatiquement sans validation
+humaine — cohérent avec la règle éthique des modules M6→M11.
