@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
+import '../../vie_scolaire/presentation/ecran_appel_classe.dart';
 import '../application/scolarite_providers.dart';
 import '../domain/affectation_enseignant.dart';
 import '../domain/classe.dart';
@@ -27,6 +28,13 @@ class EcranDetailClasse extends StatelessWidget {
         appBar: AppBar(
           title: Text(classe.nom),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.fact_check_outlined),
+              tooltip: 'Appel',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => EcranAppelClasse(classe: classe)),
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.assignment_outlined),
               tooltip: 'Évaluations',

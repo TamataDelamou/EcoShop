@@ -10,6 +10,7 @@ import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
+import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
 import '../application/sync_composition.dart';
 
 /// Onglet de la coquille applicative.
@@ -293,6 +294,24 @@ class _VueProfil extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranStructureEtablissement()),
             ),
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.warning_amber_outlined),
+                title: const Text('Alertes de décrochage'),
+                subtitle: const Text('Signal IA — validation humaine'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranAlertesDecrochage(etablissementId: etablissement.id),
+                  ),
+                ),
+              );
+            },
           ),
         const Divider(),
         ListTile(

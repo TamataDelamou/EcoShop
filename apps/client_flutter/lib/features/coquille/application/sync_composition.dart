@@ -4,6 +4,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../notes/application/notes_providers.dart';
+import '../../vie_scolaire/application/vie_scolaire_providers.dart';
 
 /// Assemble le [SyncEngine] applicatif avec la fonction de rejeu de chaque
 /// module d'écriture hors-ligne.
@@ -16,6 +17,8 @@ import '../../notes/application/notes_providers.dart';
 final syncEngineProvider = Provider<SyncEngine>((ref) {
   final gestionnaires = <String, Future<void> Function(SyncEntree)>{
     'notes': ref.watch(notesRejeuProvider),
+    'presences': ref.watch(presencesRejeuProvider),
+    'retards': ref.watch(retardsRejeuProvider),
   };
 
   return SyncEngine(

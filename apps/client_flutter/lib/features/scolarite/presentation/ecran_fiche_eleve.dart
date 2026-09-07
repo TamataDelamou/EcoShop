@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/scolarite_providers.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
+import '../../vie_scolaire/presentation/ecran_suivi_vie_scolaire.dart';
 import '../domain/fiche_eleve.dart';
 import '../domain/inscription.dart';
 import 'ecran_detail_classe.dart';
@@ -78,12 +79,28 @@ class EcranFicheEleve extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          FilledButton.tonalIcon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => EcranCarnetNotes(fiche: fiche)),
-            ),
-            icon: const Icon(Icons.grade_outlined),
-            label: const Text('Notes & bulletins'),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EcranCarnetNotes(fiche: fiche)),
+                  ),
+                  icon: const Icon(Icons.grade_outlined),
+                  label: const Text('Notes & bulletins'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EcranSuiviVieScolaire(fiche: fiche)),
+                  ),
+                  icon: const Icon(Icons.event_available_outlined),
+                  label: const Text('Vie scolaire'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Text('Historique de classes', style: Theme.of(context).textTheme.titleMedium),
