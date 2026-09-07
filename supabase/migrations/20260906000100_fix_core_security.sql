@@ -247,8 +247,9 @@ security definer
 set search_path = public
 as $$
 declare
-  claims jsonb;
-  prof   record;
+  claims        jsonb;
+  app_metadata  jsonb;
+  prof          record;
 begin
   claims := coalesce(event->'claims', '{}'::jsonb);
 
@@ -258,16 +259,23 @@ begin
     and deleted_at is null;
 
   if found then
+    -- jsonb_set ne crée pas les segments intermédiaires manquants du chemin :
+    -- on construit app_metadata à part (set à un seul niveau, toujours sûr),
+    -- puis on la fusionne dans claims en une fois.
+    app_metadata := coalesce(claims->'app_metadata', '{}'::jsonb);
+
     if prof.role_racine is not null then
-      claims := jsonb_set(claims, '{app_metadata,role_racine}',
-                          to_jsonb(prof.role_racine::text), true);
+      app_metadata := jsonb_set(app_metadata, '{role_racine}',
+                                to_jsonb(prof.role_racine::text), true);
     end if;
     if prof.gsg_id is not null then
-      claims := jsonb_set(claims, '{app_metadata,gsg_id}',
-                          to_jsonb(prof.gsg_id::text), true);
+      app_metadata := jsonb_set(app_metadata, '{gsg_id}',
+                                to_jsonb(prof.gsg_id::text), true);
     end if;
-    claims := jsonb_set(claims, '{app_metadata,statut_compte}',
-                        to_jsonb(prof.statut_compte::text), true);
+    app_metadata := jsonb_set(app_metadata, '{statut_compte}',
+                              to_jsonb(prof.statut_compte::text), true);
+
+    claims := jsonb_set(claims, '{app_metadata}', app_metadata, true);
   end if;
 
   -- Rappel : ces claims sont un cache de confort côté client. Toute décision
