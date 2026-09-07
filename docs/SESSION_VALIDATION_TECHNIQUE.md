@@ -1,8 +1,8 @@
-# Session de validation technique — Socle M0 → M14
+# Session de validation technique — Socle M0 → M15
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **à l'issue de M14** (ou dès que Docker est disponible).
+> disponible. À exécuter **à l'issue de M15** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -51,6 +51,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 12. `20260906001100_m11_planification_agenda.sql` — M11 (emplois du temps, agenda, progression, contraintes, IA planification)
 13. `20260906001200_m12_observabilite.sql` — M12 (observabilité, monitoring, prédiction de charge, permissions)
 14. `20260906001400_m14_comptabilite_sans_ohada.sql` — M14 (plans comptables, journaux, écritures, balances, IA comptable)
+15. `20260906001500_m15_marketplace_sans_auth.sql` — M15 (profils publics invités, panier/commande invité, RLS)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -78,13 +79,13 @@ psql "$DB" -f supabase/seed_comptabilite.sql           # M14
 **Action recommandée** : consolider ces dix fichiers dans `supabase/seed.sql`
 (ou un script `supabase/seed_all.sql` avec `\i`) pour un reset en une commande.
 
-## 5. Tests pgTAP (01 → 33)
+## 5. Tests pgTAP (01 → 36)
 
 ```bash
 pg_prove -d "$DB" tests/rls/*.sql
 ```
 
-Attendu : 33 fichiers, ~141 assertions, **zéro échec**. Couverture :
+Attendu : 36 fichiers, ~151 assertions, **zéro échec**. Couverture :
 
 - 01-03 : anti-élévation, récursion RLS, hook JWT
 - 04-06 : anti-brute-force, isolation multi-tenant, invitations
@@ -97,6 +98,7 @@ Attendu : 33 fichiers, ~141 assertions, **zéro échec**. Couverture :
 - 25-27 : M11 (visibilité agenda, fonctions IA planification, permissions d'écriture)
 - 28-30 : M13 (visibilité catalogue/sous-comptes, panier mono-vendeur, commandes/paiement)
 - 31-33 : M14 (plans/journaux, écritures + garde-fous, fonctions comptables + IA)
+- 34-36 : M15 (profils publics, catalogue public, panier/commande invité)
 
 ## 5.1 Audit de cohérence inter-modules (M12)
 
@@ -184,6 +186,13 @@ select public.predire_tresorerie('<etab_lycee>', 30);                           
 
 -- Permissions M14
 select code from public.permissions where code like 'comptabilite.%';
+
+-- Profils publics M15 (parcours invité)
+select id, token_acces, complet from public.profils_publics limit 5;   -- profils invités
+select count(*) from public.paniers where visiteur_id is not null;      -- paniers invités
+
+-- Permissions M15
+select code from public.permissions where code like 'marketplace.profil_public.%';
 ```
 
 ## 7. Correctifs rapides (procédure)
@@ -205,9 +214,9 @@ select code from public.permissions where code like 'comptabilite.%';
 ## Migrations
 - [liste] appliquées : OK / KO
 ## Seeds
-- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 / M11 / M13 / M14 : OK / KO
+- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 / M11 / M13 / M14 : OK / KO (M12 et M15 sans seed)
 ## Tests pgTAP
-- 01→33 : [X]/141 assertions, [n] échecs
+- 01→36 : [X]/151 assertions, [n] échecs
 - Échecs : [liste fichier → assertion → cause]
 ## Vérifications ciblées
 - Fonctions IA M7 : OK / KO
@@ -220,6 +229,7 @@ select code from public.permissions where code like 'comptabilite.%';
 - Audit de cohérence inter-modules : GO / NO-GO
 - Fonctions IA M13 (détection anomalies commandes) : OK / KO
 - Fonctions M14 (journal, grand livre, balance, IA comptable) : OK / KO
+- Edge Function creer_profil_marketplace (déploiement + appel 200) : OK / KO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -238,8 +248,9 @@ flutter test
 ## 10. Critères de sortie
 
 - [ ] `supabase db reset` sans erreur
-- [ ] 10 seeds M4→M14 appliqués sans erreur
-- [ ] `pg_prove` 33/33 fichiers verts, 0 échec
+- [ ] 10 seeds appliqués sans erreur (M4-M11, M13, M14 ; M12 et M15 sans seed)
+- [ ] `pg_prove` 36/36 fichiers verts, 0 échec
 - [ ] Audit de cohérence inter-modules → GO (0 KO)
+- [ ] Edge Function `creer_profil_marketplace` déployée et répondante
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé

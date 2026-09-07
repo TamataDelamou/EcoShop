@@ -67,6 +67,7 @@ supabase login
 supabase link --project-ref <ref>
 supabase db push                    # applique supabase/migrations dans l'ordre
 supabase functions deploy gsg-id-federate
+supabase functions deploy creer_profil_marketplace
 ```
 
 Après le premier `db push`, activer le **Custom Access Token Hook** :
@@ -101,11 +102,21 @@ flutter test
 | M1 | Schéma Supabase avancé | ✅ livré |
 | M2 | Auth & fédération GSG ID | ✅ livré |
 | M3 | Socle applicatif Flutter | ✅ livré |
-| M4 | Référentiel pédagogique CEDEAO | ⏳ à venir |
-| M5-M12 | Verticaux pédagogiques & scolaires | ⏳ à venir |
-| M13-M20 | Marketplace AssoShop, services & monétisation | ⏳ à venir |
+| M4 | Référentiel pédagogique CEDEAO | ✅ livré |
+| M5 | Administration & Scolarité | ✅ livré |
+| M6 | Notes & Évaluations | ✅ livré |
+| M7 | Absences & Vie scolaire | ✅ livré |
+| M8 | RH (personnel, contrats, paie) | ✅ livré |
+| M9 | Communication & Notifications | ✅ livré |
+| M10 | Rapports & Statistiques | ✅ livré |
+| M11 | Planification & Agenda | ✅ livré |
+| M12 | Intégration & Déploiement continu | ✅ livré |
+| M13 | Marketplace AssoShop mono-vendeur | ✅ livré |
+| M14 | Comptabilité sans OHADA | ✅ livré |
+| M15 | Marketplace sans authentification | ✅ livré |
+| M16-M20 | IA à rôles, bibliothèque, transport, réseau, reporting | ⏳ à venir |
 
-**Phase A (M0-M3) close.** Le détail du périmètre de chaque module figure dans
+**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15 livrés).** Le détail du périmètre de chaque module figure dans
 [`ANALYSE_GLOBALE.md`](./ANALYSE_GLOBALE.md) §4.3, et l'état de vérification de
 la Phase A dans [`docs/ETAT_PHASE_A.md`](./docs/ETAT_PHASE_A.md).
 
