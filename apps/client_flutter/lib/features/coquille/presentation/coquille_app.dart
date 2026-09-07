@@ -7,6 +7,10 @@ import '../../../core/providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
+import '../../rh_personnel/application/rh_providers.dart';
+import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
+import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
+import '../../rh_personnel/presentation/ecran_tableau_bord_rh.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
@@ -310,6 +314,63 @@ class _VueProfil extends ConsumerWidget {
                     builder: (_) => EcranAlertesDecrochage(etablissementId: etablissement.id),
                   ),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.badge_outlined),
+                    title: const Text('Personnel & RH'),
+                    subtitle: const Text('Annuaire, contrats, congés, absences'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranAnnuairePersonnel(etablissementId: etablissement.id),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.insights_outlined),
+                    title: const Text('Tableau de bord RH'),
+                    subtitle: const Text('Effectifs et remplacements — signal IA'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranTableauBordRh(etablissementId: etablissement.id),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              return ListTile(
+                leading: const Icon(Icons.folder_shared_outlined),
+                title: const Text('Mon dossier RH'),
+                subtitle: const Text('Contrat, congés, absences, paie'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final employe = await ref.read(monEmployeProvider(p.id).future);
+                  if (!context.mounted) return;
+                  if (employe == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Aucun dossier RH associé à ce compte.')),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EcranFicheEmploye(employe: employe)),
+                  );
+                },
               );
             },
           ),

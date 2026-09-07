@@ -4,6 +4,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../notes/application/notes_providers.dart';
+import '../../rh_personnel/application/rh_providers.dart';
 import '../../vie_scolaire/application/vie_scolaire_providers.dart';
 
 /// Assemble le [SyncEngine] applicatif avec la fonction de rejeu de chaque
@@ -19,6 +20,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'notes': ref.watch(notesRejeuProvider),
     'presences': ref.watch(presencesRejeuProvider),
     'retards': ref.watch(retardsRejeuProvider),
+    'conges': ref.watch(congesRejeuProvider),
+    'absences_personnel': ref.watch(absencesPersonnelRejeuProvider),
   };
 
   return SyncEngine(
