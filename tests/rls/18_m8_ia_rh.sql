@@ -86,7 +86,7 @@ VALUES
   (:'etab_id'::uuid, :'ens2_id'::uuid, 'IA-ENS2', 'enseignant', current_date);
 
 INSERT INTO public.contrats (etablissement_id, employe_id, type, date_debut, date_fin, salaire_base)
-SELECT :'etab_id'::uuid, e.id, v.type, current_date - 30, v.fin, v.salaire
+SELECT :'etab_id'::uuid, e.id, v.type::public.type_contrat, current_date - 30, v.fin, v.salaire
 FROM public.employes e
 JOIN (VALUES
   ('IA-DIR',  'cdi', NULL,                 6000000),

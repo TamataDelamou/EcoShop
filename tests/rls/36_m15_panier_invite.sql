@@ -31,7 +31,7 @@ SELECT is((SELECT count(*) FROM public.paniers WHERE visiteur_id = :'visiteur_id
 SELECT throws_ok(
   $sql$
     INSERT INTO public.paniers (etablissement_id, commercant_id, statut)
-    SELECT id, c.id, 'actif'
+    SELECT e.id, c.id, 'actif'
     FROM public.etablissements e, public.commercants c
     WHERE e.slug = 'ecole-invite-m15' AND c.nom = 'Commerçant Invité M15'
   $sql$,

@@ -87,7 +87,7 @@ SELECT is(
 SELECT is(
   (SELECT solde_debit FROM public.balance_comptable(:'etab_id'::uuid, '2026-12-31')
     WHERE code = '520')::numeric,
-  330000, 'balance banque : solde débiteur = 500000 - 2×85000'
+  330000::numeric, 'balance banque : solde débiteur = 500000 - 2×85000'
 );
 
 SELECT is(
