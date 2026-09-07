@@ -51,7 +51,7 @@ create table if not exists public.systemes_educatifs (
 create table if not exists public.pays_pedagogiques (
   code_iso text primary key,                       -- ISO 3166-1 alpha-2
   nom text not null,
-  type_systeme public.type_systeme_educatif not null
+  type_systeme text not null
     references public.systemes_educatifs (code),
   langue_enseignement_principale text not null,
   organisme_examinateur text,                      -- ex. WAEC, ministère national
