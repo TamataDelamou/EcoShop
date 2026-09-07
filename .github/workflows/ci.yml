@@ -58,7 +58,7 @@ jobs:
           if [ "$FAILED" = "1" ]; then exit 1; fi
 
       - name: Tests pgTAP (RLS 01→36)
-        run: pg_prove -d "$SUPABASE_DB_URL" tests/rls/*.sql
+        run: supabase test db --local tests/rls
 
       - name: Audit de cohérence inter-modules
         run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f tests/integration/audit_coherence.sql
