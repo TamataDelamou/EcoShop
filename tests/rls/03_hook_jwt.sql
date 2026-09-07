@@ -40,25 +40,20 @@ UPDATE public.profiles
 RETURNING gsg_id::text AS gsg_id \gset
 DO $$
 DECLARE
-  r record;
-BEGIN
-  SELECT role_racine, gsg_id, statut_compte, deleted_at INTO r
-  FROM public.profiles WHERE identifiant_canonique = '+224600000021';
-  IF FOUND THEN
-    RAISE NOTICE 'DIAG profil: role=% gsg=% statut=% deleted=%', r.role_racine, r.gsg_id, r.statut_compte, r.deleted_at;
-  ELSE
-    RAISE NOTICE 'DIAG profil: INTROUVABLE';
-  END IF;
-  RAISE NOTICE 'DIAG deleted_at IS NULL => %', EXISTS(SELECT 1 FROM public.profiles WHERE identifiant_canonique = '+224600000021' AND deleted_at IS NULL);
-END $$;
-DO $$
-DECLARE
   v_id uuid;
-  v_hook jsonb;
+  v_uid uuid;
+  v_c1 int;
+  v_c2 int;
+  v_c3 int;
+  v_owner text;
 BEGIN
   SELECT id INTO v_id FROM public.profiles WHERE identifiant_canonique = '+224600000021';
-  v_hook := public.custom_access_token_hook(jsonb_build_object('user_id', v_id, 'claims', '{}'::jsonb));
-  RAISE NOTICE 'DIAG hook: %', v_hook::text;
+  SELECT count(*) INTO v_c1 FROM public.profiles WHERE id = v_id;
+  SELECT count(*) INTO v_c2 FROM public.profiles WHERE id = v_id AND deleted_at IS NULL;
+  v_uid := (jsonb_build_object('user_id', v_id, 'claims', '{}'::jsonb) ->> 'user_id')::uuid;
+  SELECT count(*) INTO v_c3 FROM public.profiles WHERE id = v_uid AND deleted_at IS NULL;
+  SELECT pg_get_userbyid(proowner) INTO v_owner FROM pg_proc WHERE oid = 'public.custom_access_token_hook(jsonb)'::regprocedure;
+  RAISE NOTICE 'DIAG id=% uid=% c1=% c2=% c3=% owner=% user=%', v_id, v_uid, v_c1, v_c2, v_c3, v_owner, current_user;
 END $$;
 
 -- ---------------------------------------------------------------------------
