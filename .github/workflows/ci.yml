@@ -25,17 +25,19 @@ jobs:
         with:
           version: latest
 
-      - name: Installer pg_prove (pgTAP)
+      - name: Installer psql (client PostgreSQL)
         run: |
           sudo apt-get update
-          sudo apt-get install -y cpanminus postgresql-client libdbd-pg-perl
-          sudo cpanm --quiet --notest TAP::Parser::SourceHandler::pgTAP
+          sudo apt-get install -y postgresql-client
 
       - name: Démarrer la stack locale
         run: supabase start
 
       - name: Réinitialiser la base (migrations M0→M15 + seed M0)
         run: supabase db reset
+
+      - name: Tests pgTAP (RLS 01→36)
+        run: supabase test db --local tests/rls
 
       - name: Appliquer les seeds complémentaires (M4→M14)
         run: |
@@ -56,9 +58,6 @@ jobs:
             fi
           done
           if [ "$FAILED" = "1" ]; then exit 1; fi
-
-      - name: Tests pgTAP (RLS 01→36)
-        run: supabase test db --local tests/rls
 
       - name: Audit de cohérence inter-modules
         run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f tests/integration/audit_coherence.sql

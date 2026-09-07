@@ -58,7 +58,7 @@ VALUES (:'etab_id'::uuid, :'fiche_id'::uuid, :'classe_id'::uuid, :'annee_id'::uu
 INSERT INTO public.presences (etablissement_id, annee_scolaire_id, classe_id, fiche_eleve_id, date_presence, type_seance, statut, justifie, saisi_par)
 SELECT :'etab_id'::uuid, :'annee_id'::uuid, :'classe_id'::uuid, :'fiche_id'::uuid,
        (date '2026-10-05' + n::int), 'demi_journee',
-       case when n < 5 then 'absent' else 'present' end,
+       (case when n < 5 then 'absent' else 'present' end)::public.statut_presence,
        false, :'prof_id'::uuid
 FROM generate_series(0, 7) AS n;
 

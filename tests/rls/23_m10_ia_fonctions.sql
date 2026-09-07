@@ -88,7 +88,7 @@ INSERT INTO public.presences
    type_seance, statut, justifie, saisi_par)
 SELECT :'etab_id'::uuid, :'annee_id'::uuid, :'classe_id'::uuid, :'fiche1_id'::uuid,
        (date '2026-10-05' + n::int), 'demi_journee',
-       case when n < 2 then 'absent' else 'present' end,
+       (case when n < 2 then 'absent' else 'present' end)::public.statut_presence,
        false, :'prof_id'::uuid
 FROM generate_series(0, 5) AS n;
 

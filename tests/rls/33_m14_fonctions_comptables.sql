@@ -50,7 +50,7 @@ VALUES (:'direction'::uuid, :'etab_id'::uuid, 'direction');
 -- Écritures : scolarité 500000, fournitures 85000 (une fois), + une double saisie.
 INSERT INTO public.ecritures_comptables
   (etablissement_id, date_ecriture, libelle, compte_debit_id, compte_credit_id, montant, journal_id)
-SELECT :'etab_id'::uuid, v.date_ecriture, v.libelle, d.id, c.id, v.montant, j.id
+SELECT :'etab_id'::uuid, v.date_ecriture::date, v.libelle, d.id, c.id, v.montant, j.id
 FROM (values
   ('2026-09-15', 'Scolarité',    '520', '701', 500000),
   ('2026-09-25', 'Fournitures',  '600', '520',  85000),
