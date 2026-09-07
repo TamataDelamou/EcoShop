@@ -5,6 +5,7 @@ import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
 import '../../notes/application/notes_providers.dart';
+import '../../planification/application/planification_providers.dart';
 import '../../rapports/application/rapports_providers.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../vie_scolaire/application/vie_scolaire_providers.dart';
@@ -27,6 +28,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'notifications_lecture': ref.watch(notificationsLectureRejeuProvider),
     'preferences_canaux': ref.watch(preferencesCanauxRejeuProvider),
     'rapports': ref.watch(rapportsRejeuProvider),
+    'emplois_du_temps': ref.watch(emploisRejeuProvider),
+    'evenements_agenda': ref.watch(evenementsAgendaRejeuProvider),
+    'progression_pedagogique': ref.watch(progressionPedagogiqueRejeuProvider),
   };
 
   return SyncEngine(

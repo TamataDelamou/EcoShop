@@ -12,6 +12,12 @@ import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
+import '../../planification/presentation/ecran_agenda_evenements.dart';
+import '../../planification/presentation/ecran_choix_classe.dart';
+import '../../planification/presentation/ecran_conflits_emploi.dart';
+import '../../planification/presentation/ecran_emploi_du_temps.dart';
+import '../../planification/presentation/ecran_planification_classe.dart';
+import '../../planification/presentation/ecran_salles.dart';
 import '../../rapports/presentation/ecran_rapports.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
@@ -383,6 +389,172 @@ class _VueProfil extends ConsumerWidget {
                     builder: (_) => EcranTableauBordRapports(etablissementId: etablissement.id),
                   ),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.enseignant)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final anneeId = structure?.anneeCourante?.id;
+              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.calendar_view_week_outlined),
+                title: const Text('Mon emploi du temps'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranEmploiEnseignant(
+                      enseignantProfileId: p.id,
+                      etablissementId: etablissement.id,
+                      anneeId: anneeId,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final anneeId = structure?.anneeCourante?.id;
+              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.class_outlined),
+                title: const Text('Classes — emploi du temps & progression'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranChoixClasse(
+                      titre: 'Choisir une classe',
+                      onSelectionner: (context, classe) => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EcranPlanificationClasse(
+                            classeId: classe.id,
+                            anneeId: anneeId,
+                            titre: classe.nom,
+                            etablissementId: etablissement.id,
+                            peutVoirProgression: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final anneeId = structure?.anneeCourante?.id;
+              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.meeting_room_outlined),
+                    title: const Text('Salles'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranSalles(etablissementId: etablissement.id, anneeId: anneeId),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.event_outlined),
+                    title: const Text('Agenda de l\'établissement'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranAgendaEvenements(
+                          etablissementId: etablissement.id,
+                          anneeId: anneeId,
+                          peutCreer: p.roleRacine == RoleRacine.direction,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final anneeId = structure?.anneeCourante?.id;
+              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.rule_outlined),
+                title: const Text('Conflits d\'occupation'),
+                subtitle: const Text('Signal IA — à arbitrer'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranConflitsEmploi(etablissementId: etablissement.id, anneeId: anneeId),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.parent)
+          Consumer(
+            builder: (context, ref, _) {
+              final enfant = ref.watch(enfantActifProvider);
+              return ListTile(
+                leading: const Icon(Icons.calendar_view_week_outlined),
+                title: const Text('Emploi du temps de mon enfant'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: enfant == null
+                    ? null
+                    : () async {
+                        final inscriptions = await ref.read(inscriptionsDeFicheProvider(enfant.id).future);
+                        if (inscriptions.isEmpty || !context.mounted) return;
+                        final inscription = inscriptions.first;
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => EcranPlanificationClasse(
+                              classeId: inscription.classeId,
+                              anneeId: inscription.anneeScolaireId,
+                              titre: enfant.nomComplet,
+                            ),
+                          ),
+                        );
+                      },
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.eleve)
+          Consumer(
+            builder: (context, ref, _) {
+              final fiche = ref.watch(maFicheProvider).value;
+              return ListTile(
+                leading: const Icon(Icons.calendar_view_week_outlined),
+                title: const Text('Mon emploi du temps'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: fiche == null
+                    ? null
+                    : () async {
+                        final inscriptions = await ref.read(inscriptionsDeFicheProvider(fiche.id).future);
+                        if (inscriptions.isEmpty || !context.mounted) return;
+                        final inscription = inscriptions.first;
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => EcranPlanificationClasse(
+                              classeId: inscription.classeId,
+                              anneeId: inscription.anneeScolaireId,
+                              titre: fiche.nomComplet,
+                            ),
+                          ),
+                        );
+                      },
               );
             },
           ),
