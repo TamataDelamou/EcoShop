@@ -1,8 +1,8 @@
-# Session de validation technique — Socle M0 → M11
+# Session de validation technique — Socle M0 → M12
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **à l'issue de M11** (ou dès que Docker est disponible).
+> disponible. À exécuter **à l'issue de M12** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -49,6 +49,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 10. `20260906000900_m9_communication_notifications.sql` — M9 (notifications, préférences canaux, logs, IA comm)
 11. `20260906001000_m10_rapports_statistiques.sql` — M10 (rapports, KPI, anomalies, recommandations, NLG)
 12. `20260906001100_m11_planification_agenda.sql` — M11 (emplois du temps, agenda, progression, contraintes, IA planification)
+13. `20260906001200_m12_observabilite.sql` — M12 (observabilité, monitoring, prédiction de charge, permissions)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -91,6 +92,15 @@ Attendu : 27 fichiers, ~125 assertions, **zéro échec**. Couverture :
 - 19-21 : M9 (visibilité notifications, lecture/écriture, fonctions IA comm)
 - 22-24 : M10 (visibilité rapports, fonctions IA, validation anomalies/recommandations)
 - 25-27 : M11 (visibilité agenda, fonctions IA planification, permissions d'écriture)
+
+## 5.1 Audit de cohérence inter-modules (M12)
+
+```bash
+psql "$DB" -v ON_ERROR_STOP=1 -f tests/integration/audit_coherence.sql
+```
+
+Attendu : **`0 KO → GO`**. Contrôle 18 tables, 8 intégrités référentielles,
+9 activations RLS, 8 fonctions transverses/IA, 3 permissions M12.
 
 ## 6. Vérification ciblée (helpers, fonctions, permissions)
 
@@ -152,6 +162,13 @@ select public.recommander_seances('<etab_lycee>', '<annee_2026-2027>');         
 
 -- Permissions M11
 select code from public.permissions where code like 'planification.%';
+
+-- Observabilité M12
+select public.indicateurs_sante_base();                                      -- santé base (jsonb)
+select public.predire_pics_charge('<etab_lycee>', '<annee_2026-2027>');      -- pics de charge hebdo
+
+-- Permissions M12
+select code from public.permissions where code like 'observabilite.%';
 ```
 
 ## 7. Correctifs rapides (procédure)
@@ -184,6 +201,8 @@ select code from public.permissions where code like 'planification.%';
 - Fonctions IA comm M9 (canal, timing, A/B, sentiment) : OK / KO
 - Fonctions IA M10 (KPI, anomalies, risque, recommandations, NLG) : OK / KO
 - Fonctions IA M11 (placement, conflits, charge, rattrapage) : OK / KO
+- Fonctions IA M12 (santé base, pics de charge) : OK / KO
+- Audit de cohérence inter-modules : GO / NO-GO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -204,5 +223,6 @@ flutter test
 - [ ] `supabase db reset` sans erreur
 - [ ] 8 seeds M4→M11 appliqués sans erreur
 - [ ] `pg_prove` 27/27 fichiers verts, 0 échec
+- [ ] Audit de cohérence inter-modules → GO (0 KO)
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé
