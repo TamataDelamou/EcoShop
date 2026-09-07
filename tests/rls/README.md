@@ -42,6 +42,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `31_m14_plans_journaux.sql` | Visibilité/isolation du plan comptable et des journaux | M14 |
 | `32_m14_ecritures.sql` | Saisie d'écritures + garde-fous (tenant, débit ≠ crédit) | M14 |
 | `33_m14_fonctions_comptables.sql` | Journal, Grand Livre, Balance + détection d'anomalies | M14 |
+| `34_m15_profils_publics.sql` | Profils publics invités (jeton, complétion, RLS fermée) | M15 |
+| `35_m15_catalogue_public.sql` | Catalogue marketplace public (parcours invité sans auth) | M15 |
+| `36_m15_panier_invite.sql` | Panier/commande invités (propriétaire = profil public) | M15 |
 
 ## Prérequis
 
@@ -55,7 +58,8 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906001100_m11_planification_agenda.sql`,
    `20260906001200_m12_observabilite.sql`,
    `20260906001300_m13_marketplace_assoshop.sql`,
-   `20260906001400_m14_comptabilite_sans_ohada.sql`
+   `20260906001400_m14_comptabilite_sans_ohada.sql`,
+   `20260906001500_m15_marketplace_sans_auth.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).
