@@ -23,7 +23,7 @@ jobs:
       - name: Installer la CLI Supabase
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.116.0
 
       - name: Installer psql (client PostgreSQL)
         run: |
