@@ -457,3 +457,58 @@ contextes à faible connectivité.
 **Approche** : l'IA opère en **supervision** (détection, prédiction, suggestion) ;
 aucun scaling ou déploiement n'est déclenché automatiquement sans validation
 humaine — cohérent avec la règle éthique des modules M6→M11.
+
+## 15. M13 — Marketplace AssoShop mono-vendeur (recherche complémentaire)
+
+### 15.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M13 |
+|---|---|---|---|
+| S26 | https://en.wikipedia.org/wiki/Online_marketplace | Encyclopédique | Marketplace multi-tiers : l'opérateur traite la transaction, les tiers livrent ; complexité de la ventilation multi-vendeurs |
+| S27 | https://en.wikipedia.org/wiki/Mobile_payment | Encyclopédique | Mobile money : 4 modèles (banque/opérateur/collaboratif/ISP), inclusion financière (~50 % non bancarisés), tokenisation |
+| S28 | https://en.wikipedia.org/wiki/Shopping_cart_software | Encyclopédique | Cycle panier → commande (total, transport, taxes), paniers abandonnés, conformité PCI DSS |
+
+### 15.2 Benchmark — marketplace mono-vendeur vs multi-vendeur
+
+| Critère | Multi-vendeurs (S26) | **Mono-vendeur AssoShop (cible)** |
+|---|---|---|
+| Ventilation des paiements | Complexe (split par commerçant) | **Un seul commerçant par commande** → ventilation triviale |
+| Logistique | Multi-expéditions par panier | Une seule expédition par commande |
+| Règlement | Sous-comptes multiples simultanés | Règlement différé hors plateforme, convention vendeur-établissement |
+| Risque de litige | Élevé (multi-responsabilités) | Faible (un seul vendeur responsable) |
+| Adéquation terrain | Moyenne | **Forte** (établissements à effectifs réduits, réseau intermittent) |
+
+### 15.3 Paiement — port agnostique et mobile money (S27)
+
+- **Inclusion financière** : ~50 % des adultes mondiaux non bancarisés ; le mobile
+  money (Orange Money, MTN MoMo, Wave) est le canal dominant en Afrique de
+  l'Ouest → l'adaptateur Mobile Money est aussi important que CinetPay.
+- **Quatre modèles** (banque-centré, opérateur-centré, collaboratif, ISP) : le
+  port de paiement EcoShop est **agnostique**, chaque adaptateur masque son modèle.
+- **Sécurité** : tokenisation + « target removal » — aucun numéro de carte/PIN
+  stocké côté EcoShop ; seules des références de transaction transitent.
+- **Sous-comptes marchands** : un établissement configure ses **propres
+  identifiants CinetPay/Mobile Money** → les encaissements (scolarité, cantine)
+  arrivent **directement sur le compte de l'établissement**, sans transit GSG.
+
+### 15.4 Cycle panier → commande (S28)
+
+1. Panier (mono-vendeur) accumule les articles d'**un seul commerçant**.
+2. Total = articles + transport + frais éventuels (les taxes sont hors périmètre
+   v1).
+3. Commande validée → paiement via le sous-compte marchand de l'établissement
+   (CinetPay ou Mobile Money selon préférence).
+4. Panier abandonné : suivi pour relance (hors-ligne : le panier est conservé
+   en local jusqu'à synchronisation).
+
+### 15.5 Règles métier arbitrées (à intégrer strictement)
+
+1. **Panier mono-vendeur** : une commande est restreinte à un seul commerçant
+   externe ; ajouter un article d'un autre commerçant vide/recrée le panier.
+2. **Comptes CinetPay dédiés** : isolation stricte des encaissements par
+   établissement via `sous_comptes_marchands` (identifiants propres, jamais
+   partagés, secrets non stockés en clair).
+3. **Port de paiement agnostique** : `paiements.fournisseur` ∈
+   {cinetpay, mobile_money} + colonnes génériques (`reference_fournisseur`,
+   `statut`) — aucun schéma spécifique fournisseur ; les adaptateurs sont des
+   Edge Functions.
