@@ -36,6 +36,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `25_m11_emplois_visibilite.sql` | Visibilité des emplois du temps et de l'agenda (personnel, élève, parent, étranger) | M11 |
 | `26_m11_ia_planification.sql` | Fonctions IA M11 : placement, conflits, charge, recommandation de séances | M11 |
 | `27_m11_contraintes_ecriture.sql` | Permissions d'écriture de la planification (generer/administrer) | M11 |
+| `28_m13_visibilite_catalogue.sql` | Visibilité catalogue (public) + isolation des sous-comptes marchands | M13 |
+| `29_m13_panier_mono_vendeur.sql` | Garde-fou panier mono-vendeur (rejet d'un produit d'un autre commerçant) | M13 |
+| `30_m13_commandes_paiement.sql` | Visibilité des commandes + cohérence fournisseur/sous-compte de paiement | M13 |
 
 ## Prérequis
 
@@ -46,7 +49,9 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`,
    `20260906000900_m9_communication_notifications.sql`,
    `20260906001000_m10_rapports_statistiques.sql`,
-   `20260906001100_m11_planification_agenda.sql`
+   `20260906001100_m11_planification_agenda.sql`,
+   `20260906001200_m12_observabilite.sql`,
+   `20260906001300_m13_marketplace_assoshop.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).
