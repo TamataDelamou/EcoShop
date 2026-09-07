@@ -115,14 +115,14 @@ insert into _audit_m12 values
 -- 4. Fonctions transverses et IA présentes (nom uniquement, via catalogues)
 -- ---------------------------------------------------------------------------
 insert into _audit_m12 values
-  ('fonctions', 'set_updated_at',        fn_ok('set_updated_at'),        'helper audit'),
-  ('fonctions', 'est_admin_gsg',         fn_ok('est_admin_gsg'),         'rôle global'),
-  ('fonctions', 'est_appel_service',     fn_ok('est_appel_service'),     'rôle service'),
-  ('fonctions', 'est_membre_actif',      fn_ok('est_membre_actif'),      'membre actif'),
-  ('fonctions', 'a_permission',          fn_ok('a_permission'),          'contrôle fin de permission'),
-  ('fonctions', 'membres_verifie_tenant', fn_ok('membres_verifie_tenant'), 'garde-fou multi-tenant'),
-  ('fonctions', 'indicateurs_sante_base', fn_ok('indicateurs_sante_base'), 'monitoring M12'),
-  ('fonctions', 'predire_pics_charge',   fn_ok('predire_pics_charge'),   'prédiction charge M12');
+  ('fonctions', 'set_updated_at',        pg_temp.fn_ok('set_updated_at'),        'helper audit'),
+  ('fonctions', 'est_admin_gsg',         pg_temp.fn_ok('est_admin_gsg'),         'rôle global'),
+  ('fonctions', 'est_appel_service',     pg_temp.fn_ok('est_appel_service'),     'rôle service'),
+  ('fonctions', 'est_membre_actif',      pg_temp.fn_ok('est_membre_actif'),      'membre actif'),
+  ('fonctions', 'a_permission',          pg_temp.fn_ok('a_permission'),          'contrôle fin de permission'),
+  ('fonctions', 'membres_verifie_tenant', pg_temp.fn_ok('membres_verifie_tenant'), 'garde-fou multi-tenant'),
+  ('fonctions', 'indicateurs_sante_base', pg_temp.fn_ok('indicateurs_sante_base'), 'monitoring M12'),
+  ('fonctions', 'predire_pics_charge',   pg_temp.fn_ok('predire_pics_charge'),   'prédiction charge M12');
 
 -- ---------------------------------------------------------------------------
 -- 5. Permissions d'observabilité M12 dans le catalogue
