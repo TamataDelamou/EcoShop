@@ -84,7 +84,7 @@ SELECT throws_ok(
   $$ INSERT INTO public.notifications (etablissement_id, destinataire, type, canal, contenu)
      VALUES ('30000000-0000-0000-0000-000000000001', auth.uid(), 'absence', 'sms', 'test') $$,
   '42501',
-  'notification : envoi réservé à la direction'
+  NULL
 );
 
 -- 5. Isolation multi-tenant : la direction ne voit pas un autre établissement.

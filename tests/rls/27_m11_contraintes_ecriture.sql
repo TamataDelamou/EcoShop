@@ -93,7 +93,7 @@ SELECT throws_ok(
      WHERE e.slug = 'ecole-ecrit-m11'
      LIMIT 1 $$,
   '42501',
-  'enseignant : création de créneau interdite sans permission'
+  NULL
 );
 
 -- 3. La direction (administrer) crée une contrainte.
@@ -115,7 +115,7 @@ SELECT throws_ok(
      WHERE e.slug = 'ecole-ecrit-m11'
      LIMIT 1 $$,
   '42501',
-  'enseignant : création de contrainte interdite sans permission'
+  NULL
 );
 
 -- 5. La direction modifie une contrainte existante.

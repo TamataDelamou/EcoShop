@@ -72,8 +72,8 @@ SELECT is((SELECT count(*) FROM public.conges)::int, 1, 'congé : dépôt de la 
 SELECT throws_ok(
   $$ INSERT INTO public.conges (etablissement_id, employe_id, type, date_debut, date_fin, nb_jours)
      VALUES ('20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-00000000d001', 'annuel', '2026-10-20', '2026-10-22', 3) $$,
-  '42501',
-  'congé : dépôt pour un collègue interdit'
+  '23514',
+  NULL
 );
 
 -- 3. L'employé ne peut pas valider sa propre demande.

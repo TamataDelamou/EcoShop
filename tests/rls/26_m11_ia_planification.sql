@@ -94,9 +94,11 @@ SELECT is(
 
 -- 4. Ajout d'un chevauchement de salle (classe B, prof2, même salle, 08:30-09:30)
 --    puis détection d'un conflit.
+RESET ROLE;
 INSERT INTO public.emplois_du_temps
   (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, salle_id, jour_semaine, heure_debut, heure_fin, type)
 VALUES (:'etab_id'::uuid, :'annee_id'::uuid, :'classe_b_id'::uuid, :'prof2_id'::uuid, :'salle_id'::uuid, 1, '08:30', '09:30', 'cours');
+SET LOCAL ROLE authenticated;
 
 SELECT is(
   (SELECT count(*) FROM public.detecter_conflits_emploi(:'etab_id'::uuid, :'annee_id'::uuid))::int,

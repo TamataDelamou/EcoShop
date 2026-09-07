@@ -27,7 +27,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(5);
+SELECT plan(6);
 
 -- ---------------------------------------------------------------------------
 -- Tenant A + comptes
@@ -105,7 +105,7 @@ SELECT throws_ok(
      WHERE e.slug = 'ecole-rh-m8' AND m.role_dans_etablissement = 'enseignant'
      LIMIT 1 $$,
   '42501',
-  'employé : création de dossier interdite'
+  NULL
 );
 
 -- 5. Un membre d'un autre établissement ne voit aucun dossier du tenant A.

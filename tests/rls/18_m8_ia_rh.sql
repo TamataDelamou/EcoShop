@@ -50,7 +50,7 @@ INSERT INTO public.programmes_matieres (programme_id, code, nom, statut)
 VALUES (:'prog_id'::uuid, 'MATH', 'Mathématiques', 'publie') RETURNING id AS matiere_math \gset
 
 INSERT INTO public.programmes_matieres (programme_id, code, nom, statut)
-VALUES (:'prog_id'::uuid, 'PC', 'Physique-Chimie', 'publie') RETURNING id AS matiere_pc \gset
+VALUES (:'prog_id'::uuid, 'PC-M8', 'Physique-Chimie', 'publie') RETURNING id AS matiere_pc \gset
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classes

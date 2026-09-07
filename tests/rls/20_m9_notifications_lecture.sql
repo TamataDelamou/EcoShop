@@ -69,7 +69,7 @@ SELECT throws_ok(
   $$ UPDATE public.notifications SET contenu = 'contenu modifié'
      WHERE id = '40000000-0000-0000-0000-00000000a001' $$,
   '42501',
-  'notification : altération du contenu par le destinataire interdite'
+  NULL
 );
 
 -- 3. La direction ne peut pas marquer « lue » à la place du destinataire.

@@ -134,7 +134,7 @@ SELECT set_config('request.jwt.claims',
 SELECT throws_ok(
   $$ SELECT public.risque_classe((SELECT id FROM public.classes WHERE code = '6A')) $$,
   '42501',
-  'contrôle d''accès : risque_classe refusé à un élève'
+  NULL
 );
 
 RESET ROLE;

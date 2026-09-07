@@ -86,10 +86,16 @@ SELECT is((SELECT count(*) FROM public.evaluations)::int, 1, 'évaluation : cré
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'ens2_id', 'role', 'authenticated')::text, true);
 SELECT is(public.est_enseignant_affecte(:'classe_id'), false, 'évaluation : non affecté détecté');
-INSERT INTO public.evaluations
-  (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, type, libelle, coefficient, bareme, statut)
-VALUES (:'etab_id'::uuid, :'annee_id'::uuid, :'classe_id'::uuid, :'ens2_id'::uuid,
-        'devoir', 'Devoir pirate', 1, 20, 'brouillon');
+SELECT throws_ok(
+  $$ INSERT INTO public.evaluations
+       (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, type, libelle, coefficient, bareme, statut)
+     SELECT e.id, a.id, c.id, auth.uid(), 'devoir', 'Devoir pirate', 1, 20, 'brouillon'
+     FROM public.etablissements e
+     JOIN public.annees_scolaires a ON a.etablissement_id = e.id
+     JOIN public.classes c ON c.etablissement_id = e.id
+     WHERE e.slug = 'ecole-eval-m6' AND c.code = '4A' $$,
+  '42501', NULL, 'evaluation : creation bloquee pour non affecte'
+);
 SELECT is((SELECT count(*) FROM public.evaluations)::int, 1, 'évaluation : création bloquée pour non affecté');
 
 -- 4. Moyenne pondérée exacte : (16/20*2 + 12/20*1)/3 * 20 = 14.67.
