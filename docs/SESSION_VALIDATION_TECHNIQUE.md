@@ -1,8 +1,8 @@
-# Session de validation technique — Socle M0 → M12
+# Session de validation technique — Socle M0 → M14
 
 > Check-list opérationnelle, étape par étape, pour valider l'ensemble du socle
 > backend (migrations, RLS, seeds, helpers, fonctions IA) dès que Docker est
-> disponible. À exécuter **à l'issue de M12** (ou dès que Docker est disponible).
+> disponible. À exécuter **à l'issue de M14** (ou dès que Docker est disponible).
 
 ## 1. Prérequis
 
@@ -50,6 +50,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 11. `20260906001000_m10_rapports_statistiques.sql` — M10 (rapports, KPI, anomalies, recommandations, NLG)
 12. `20260906001100_m11_planification_agenda.sql` — M11 (emplois du temps, agenda, progression, contraintes, IA planification)
 13. `20260906001200_m12_observabilite.sql` — M12 (observabilité, monitoring, prédiction de charge, permissions)
+14. `20260906001400_m14_comptabilite_sans_ohada.sql` — M14 (plans comptables, journaux, écritures, balances, IA comptable)
 
 > M3 (OTP/coquille) est côté client Flutter — aucune migration.
 
@@ -57,7 +58,7 @@ Applique dans l'ordre lexicographique du dossier `supabase/migrations/` :
 
 ## 4. Seeds complémentaires (ordre exact)
 
-Les seeds M4→M11 sont des fichiers séparés **non exécutés automatiquement**.
+Les seeds M4→M14 sont des fichiers séparés **non exécutés automatiquement**.
 Les appliquer dans l'ordre via psql :
 
 ```bash
@@ -70,18 +71,20 @@ psql "$DB" -f supabase/seed_rh_personnel.sql                # M8
 psql "$DB" -f supabase/seed_communication_notifications.sql # M9
 psql "$DB" -f supabase/seed_rapports_statistiques.sql      # M10
 psql "$DB" -f supabase/seed_planification_agenda.sql     # M11
+psql "$DB" -f supabase/seed_marketplace_assoshop.sql   # M13
+psql "$DB" -f supabase/seed_comptabilite.sql           # M14
 ```
 
-**Action recommandée** : consolider ces huit fichiers dans `supabase/seed.sql`
+**Action recommandée** : consolider ces dix fichiers dans `supabase/seed.sql`
 (ou un script `supabase/seed_all.sql` avec `\i`) pour un reset en une commande.
 
-## 5. Tests pgTAP (01 → 27)
+## 5. Tests pgTAP (01 → 33)
 
 ```bash
 pg_prove -d "$DB" tests/rls/*.sql
 ```
 
-Attendu : 27 fichiers, ~125 assertions, **zéro échec**. Couverture :
+Attendu : 33 fichiers, ~141 assertions, **zéro échec**. Couverture :
 
 - 01-03 : anti-élévation, récursion RLS, hook JWT
 - 04-06 : anti-brute-force, isolation multi-tenant, invitations
@@ -92,6 +95,8 @@ Attendu : 27 fichiers, ~125 assertions, **zéro échec**. Couverture :
 - 19-21 : M9 (visibilité notifications, lecture/écriture, fonctions IA comm)
 - 22-24 : M10 (visibilité rapports, fonctions IA, validation anomalies/recommandations)
 - 25-27 : M11 (visibilité agenda, fonctions IA planification, permissions d'écriture)
+- 28-30 : M13 (visibilité catalogue/sous-comptes, panier mono-vendeur, commandes/paiement)
+- 31-33 : M14 (plans/journaux, écritures + garde-fous, fonctions comptables + IA)
 
 ## 5.1 Audit de cohérence inter-modules (M12)
 
@@ -169,6 +174,16 @@ select public.predire_pics_charge('<etab_lycee>', '<annee_2026-2027>');      -- 
 
 -- Permissions M12
 select code from public.permissions where code like 'observabilite.%';
+
+-- Fonctions comptables M14 (substituer les UUID du seed)
+select public.journal_comptable('<etab_lycee>', '<journal_bq>', '2026-01-01', '2026-12-31');  -- journal
+select public.grand_livre('<etab_lycee>', '<compte_520>', '2026-01-01', '2026-12-31');      -- grand livre
+select public.balance_comptable('<etab_lycee>', '2026-12-31');                                -- balance
+select public.detecter_anomalies_comptables('<etab_lycee>');                                  -- IA anomalies
+select public.predire_tresorerie('<etab_lycee>', 30);                                          -- IA trésorerie
+
+-- Permissions M14
+select code from public.permissions where code like 'comptabilite.%';
 ```
 
 ## 7. Correctifs rapides (procédure)
@@ -190,9 +205,9 @@ select code from public.permissions where code like 'observabilite.%';
 ## Migrations
 - [liste] appliquées : OK / KO
 ## Seeds
-- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 / M11 : OK / KO
+- M0 (auto) / M4 / M5 / M6 / M7 / M8 / M9 / M10 / M11 / M13 / M14 : OK / KO
 ## Tests pgTAP
-- 01→27 : [X]/125 assertions, [n] échecs
+- 01→33 : [X]/141 assertions, [n] échecs
 - Échecs : [liste fichier → assertion → cause]
 ## Vérifications ciblées
 - Fonctions IA M7 : OK / KO
@@ -203,6 +218,8 @@ select code from public.permissions where code like 'observabilite.%';
 - Fonctions IA M11 (placement, conflits, charge, rattrapage) : OK / KO
 - Fonctions IA M12 (santé base, pics de charge) : OK / KO
 - Audit de cohérence inter-modules : GO / NO-GO
+- Fonctions IA M13 (détection anomalies commandes) : OK / KO
+- Fonctions M14 (journal, grand livre, balance, IA comptable) : OK / KO
 - Isolation multi-tenant : OK / KO
 ## Anomalies & actions correctives
 - [anomalie] → [correctif appliqué]
@@ -221,8 +238,8 @@ flutter test
 ## 10. Critères de sortie
 
 - [ ] `supabase db reset` sans erreur
-- [ ] 8 seeds M4→M11 appliqués sans erreur
-- [ ] `pg_prove` 27/27 fichiers verts, 0 échec
+- [ ] 10 seeds M4→M14 appliqués sans erreur
+- [ ] `pg_prove` 33/33 fichiers verts, 0 échec
 - [ ] Audit de cohérence inter-modules → GO (0 KO)
 - [ ] Vérifications ciblées §6 toutes conformes
 - [ ] Rapport de validation renseigné et archivé

@@ -39,6 +39,9 @@ l'outillage Postgres/Supabase sera disponible.
 | `28_m13_visibilite_catalogue.sql` | Visibilité catalogue (public) + isolation des sous-comptes marchands | M13 |
 | `29_m13_panier_mono_vendeur.sql` | Garde-fou panier mono-vendeur (rejet d'un produit d'un autre commerçant) | M13 |
 | `30_m13_commandes_paiement.sql` | Visibilité des commandes + cohérence fournisseur/sous-compte de paiement | M13 |
+| `31_m14_plans_journaux.sql` | Visibilité/isolation du plan comptable et des journaux | M14 |
+| `32_m14_ecritures.sql` | Saisie d'écritures + garde-fous (tenant, débit ≠ crédit) | M14 |
+| `33_m14_fonctions_comptables.sql` | Journal, Grand Livre, Balance + détection d'anomalies | M14 |
 
 ## Prérequis
 
@@ -51,7 +54,8 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906001000_m10_rapports_statistiques.sql`,
    `20260906001100_m11_planification_agenda.sql`,
    `20260906001200_m12_observabilite.sql`,
-   `20260906001300_m13_marketplace_assoshop.sql`
+   `20260906001300_m13_marketplace_assoshop.sql`,
+   `20260906001400_m14_comptabilite_sans_ohada.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).
