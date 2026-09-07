@@ -512,3 +512,43 @@ humaine — cohérent avec la règle éthique des modules M6→M11.
    {cinetpay, mobile_money} + colonnes génériques (`reference_fournisseur`,
    `statut`) — aucun schéma spécifique fournisseur ; les adaptateurs sont des
    Edge Functions.
+
+## 16. M14 — Comptabilité sans OHADA (recherche complémentaire)
+
+### 16.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M14 |
+|---|---|---|---|
+| S29 | https://en.wikipedia.org/wiki/Double-entry_bookkeeping | Encyclopédique | Partie double : débit = crédit ; équation comptable ; soldes normaux par nature de compte ; balance de vérification |
+| S30 | https://en.wikipedia.org/wiki/General_ledger | Encyclopédique | Grand livre = agrégat des journaux ; balance extraite du grand livre ; 7 catégories de comptes |
+| S31 | https://en.wikipedia.org/wiki/Cash_flow_forecasting | Encyclopédique | Prévision de trésorerie (méthode directe 30 j = encaissements/décaissements) ; limites des prédictions |
+
+### 16.2 Fondamentaux retenus (structure ouverte, sans OHADA)
+
+- **Partie double** : chaque écriture a un débit et un crédit de montants égaux ;
+  l'équation `Actif = Passif + Capitaux` doit rester équilibrée.
+- **Soldes normaux** (S29) : débit augmente actifs/charges ; crédit augmente
+  passifs/produits/capitaux — utilisés pour calculer les soldes de la balance.
+- **7 catégories** (S30) : actifs, passifs, capitaux, produits, charges, gains,
+  pertes — servent de `type` dans `plans_comptables`, sans imposer de plan
+  OHADA : l'utilisateur crée ses propres comptes.
+- **Balance de vérification** : total débit = total crédit (contrôle d'intégrité).
+
+### 16.3 IA comptable (S31)
+
+| Cas | Implémentation | Limite (S31) |
+|---|---|---|
+| Détection d'anomalies | Doubles saisies (mêmes comptes/montant/date), montants aberrants, déséquilibres | Règles déterministes robustes |
+| Prédiction de trésorerie | Flux net journalier historique projeté sur N jours (méthode directe 30 j) | Comportement humain imprévisible → prédiction indicative |
+| Recommandation d'écritures | Détection de libellés récurrents mensuels (abonnements, salaires) | Proposition soumise à validation |
+| Analyse de tendances | Évolution dépenses/revenus par mois | Lecture descriptive |
+
+**Règle éthique maintenue** : l'IA suggère, l'humain valide — aucune écriture
+n'est générée ou clôturée automatiquement.
+
+### 16.4 Hors-ligne (cohérent M0/M6)
+
+- Saisie d'écritures en cache (Drift/`sync_queue`), résolution **Last-Write-Wins**
+  (`client_ts` + `device_id`) ; les totaux (balance, grand livre) ne sont jamais
+  synchronisés, toujours **recalculés côté serveur**.
+- Consultation des balances/grands livres en cache (snapshot synchronisé).
