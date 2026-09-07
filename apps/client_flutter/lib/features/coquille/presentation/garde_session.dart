@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/destination_session.dart';
+import '../../auth/presentation/ecran_choix_espace.dart';
 import '../../auth/presentation/ecran_choix_role.dart';
-import '../../auth/presentation/ecran_connexion.dart';
 import '../../auth/presentation/ecran_liaison_fiche.dart';
 import '../../etablissement/presentation/ecran_selection_etablissement.dart';
 import 'coquille_app.dart';
@@ -24,7 +24,7 @@ class RacineApp extends ConsumerWidget {
 
     return switch (destination) {
       DestinationSession.chargement => const _EcranChargement(),
-      DestinationSession.connexion => const EcranConnexion(),
+      DestinationSession.connexion => const EcranChoixEspace(),
       DestinationSession.compteBloque => const _EcranCompteBloque(),
       DestinationSession.choixRole => const EcranChoixRole(),
       DestinationSession.liaisonFiche => const EcranLiaisonFiche(),

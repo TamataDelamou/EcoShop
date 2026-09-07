@@ -12,6 +12,7 @@ import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
+import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
 import '../../planification/presentation/ecran_choix_classe.dart';
 import '../../planification/presentation/ecran_conflits_emploi.dart';
@@ -230,6 +231,9 @@ class _CorpsOnglet extends ConsumerWidget {
     }
     if (onglet == OngletCoquille.scolarite) {
       return EcranScolarite(profil: profil);
+    }
+    if (onglet == OngletCoquille.boutique) {
+      return EcranMarketplace(profil: profil);
     }
 
     return Center(

@@ -3,6 +3,7 @@ import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/auth/domain/profil.dart';
 import 'package:ecoshop_client/features/coquille/presentation/coquille_app.dart';
 import 'package:ecoshop_client/features/coquille/presentation/garde_session.dart';
+import 'package:ecoshop_client/features/auth/presentation/ecran_choix_espace.dart';
 import 'package:ecoshop_client/features/auth/presentation/ecran_choix_role.dart';
 import 'package:ecoshop_client/features/auth/presentation/ecran_connexion.dart';
 import 'package:ecoshop_client/features/auth/presentation/ecran_liaison_fiche.dart';
@@ -32,8 +33,16 @@ Future<void> monter(
 }
 
 void main() {
-  testWidgets('sans session, affiche l’écran de connexion', (tester) async {
+  testWidgets('sans session, affiche le choix d’espace', (tester) async {
     await monter(tester, session: false, faux: FauxAuthRepository());
+    expect(find.byType(EcranChoixEspace), findsOneWidget);
+    expect(find.byType(EcranConnexion), findsNothing);
+  });
+
+  testWidgets('choisir un espace mène à la connexion OTP (un seul mécanisme d’auth)', (tester) async {
+    await monter(tester, session: false, faux: FauxAuthRepository());
+    await tester.tap(find.text('Marketplace'));
+    await tester.pumpAndSettle();
     expect(find.byType(EcranConnexion), findsOneWidget);
   });
 
