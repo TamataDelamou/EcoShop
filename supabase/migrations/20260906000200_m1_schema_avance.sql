@@ -104,7 +104,7 @@ create trigger annees_set_updated_at
 
 -- ---------------------------------------------------------------------------
 -- 3. Référentiel de permissions — jamais de liste codée en dur dans le client.
---    Le code suit la forme « domaine.objet.action ».
+--    Le code suit la forme « domaine.action » ou « domaine.objet.action ».
 -- ---------------------------------------------------------------------------
 create table if not exists public.permissions (
   code text primary key,
@@ -112,7 +112,7 @@ create table if not exists public.permissions (
   libelle text not null,
   description text,
   created_at timestamptz not null default now(),
-  constraint permissions_code_forme check (code ~ '^[a-z_]+\.[a-z_]+\.[a-z_]+$')
+  constraint permissions_code_forme check (code ~ '^[a-z_]+(\.[a-z_]+){1,2}$')
 );
 
 comment on table public.permissions is
