@@ -40,20 +40,10 @@ UPDATE public.profiles
 RETURNING gsg_id::text AS gsg_id \gset
 DO $$
 DECLARE
-  v_id uuid;
-  v_uid uuid;
-  v_c1 int;
-  v_c2 int;
-  v_c3 int;
-  v_owner text;
+  v_def text;
 BEGIN
-  SELECT id INTO v_id FROM public.profiles WHERE identifiant_canonique = '+224600000021';
-  SELECT count(*) INTO v_c1 FROM public.profiles WHERE id = v_id;
-  SELECT count(*) INTO v_c2 FROM public.profiles WHERE id = v_id AND deleted_at IS NULL;
-  v_uid := (jsonb_build_object('user_id', v_id, 'claims', '{}'::jsonb) ->> 'user_id')::uuid;
-  SELECT count(*) INTO v_c3 FROM public.profiles WHERE id = v_uid AND deleted_at IS NULL;
-  SELECT pg_get_userbyid(proowner) INTO v_owner FROM pg_proc WHERE oid = 'public.custom_access_token_hook(jsonb)'::regprocedure;
-  RAISE NOTICE 'DIAG id=% uid=% c1=% c2=% c3=% owner=% user=%', v_id, v_uid, v_c1, v_c2, v_c3, v_owner, current_user;
+  SELECT pg_get_functiondef(oid) INTO v_def FROM pg_proc WHERE oid = 'public.custom_access_token_hook(jsonb)'::regprocedure;
+  RAISE NOTICE 'DIAG def: %', v_def;
 END $$;
 
 -- ---------------------------------------------------------------------------
