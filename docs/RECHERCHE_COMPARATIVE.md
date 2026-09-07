@@ -552,3 +552,43 @@ n'est générée ou clôturée automatiquement.
   (`client_ts` + `device_id`) ; les totaux (balance, grand livre) ne sont jamais
   synchronisés, toujours **recalculés côté serveur**.
 - Consultation des balances/grands livres en cache (snapshot synchronisé).
+
+## 17. M15 — Marketplace sans authentification (recherche complémentaire)
+
+### 17.1 Sources ajoutées (accès 2026-09-06)
+
+| # | Source (URL) | Type | Apport pour M15 |
+|---|---|---|---|
+| S32 | https://en.wikipedia.org/wiki/Online_shopping | Encyclopédique | Checkout invité vs enregistré : l'inscription forcée fait abandonner le panier → parcours invité prioritaire |
+| S33 | https://en.wikipedia.org/wiki/Progressive_disclosure | Encyclopédique | Divulgation progressive : ne demander que l'essentiel, révéler le reste à la demande → formulaire de complétion uniquement si incomplet |
+| S34 | https://en.wikipedia.org/wiki/Access_token | Encyclopédique | Jeton opaque, révocable, à durée limitée → `token_acces` du profil invité |
+
+### 17.2 Checkout invité vs enregistré (S32)
+
+| Critère | Enregistré (mot de passe) | **Invité (M15)** |
+|---|---|---|
+| Friction | Forte (compte + mot de passe) | **Minimale** (aucun mot de passe) |
+| Abandon de panier | Élevé si inscription forcée | Réduit |
+| Conversion en compte | Immédiate | **Différée** (le profil public peut être lié à un compte plus tard) |
+| Suivi de commande | Par compte | Par `token_acces` (jeton opaque) |
+
+**Règle métier** : l'inscription n'est jamais un préalable à la consultation ni
+à l'achat ; elle n'intervient que pour les espaces protégés (Établissement,
+Enseignant, Parent/Élève, Administration).
+
+### 17.3 Divulgation progressive (S33)
+
+Le formulaire de complétion (nom, email, téléphone, rôle, établissement) ne
+s'affiche que si le profil invité est **incomplet** ; sinon l'utilisateur
+navigue librement. Aucune donnée n'est demandée inutilement en amont.
+
+### 17.4 Jeton d'accès invité (S34)
+
+- `profils_publics.token_acces` = UUID **opaque** (jamais un secret) qui
+  corrèle le panier/commande au profil invité.
+- Révocable (suppression du profil public) et **non élévateur de privilège** :
+  il ne donne jamais accès aux espaces protégés — seuls la lecture publique du
+  catalogue et le parcours invité sont concernés.
+- Le rôle logique `visiteur_marketplace` est **lecture seule** sur les
+  ressources publiques ; toute écriture passe par l'Edge Function
+  `creer_profil_marketplace` (service role), jamais par RLS directe anon.
