@@ -115,5 +115,12 @@ table de rattachement familial hors du module qui la définit.
 
 ## 5. Reste à faire
 
-M4 à M20 sont entiers. Séquence inchangée : Phase B (M4-M12), puis Phase C
-(M13-M20), un module à la fois, chacun clos et validé avant le suivant.
+M4 à M15 sont **livrés par migrations SQL** (cf. `ANALYSE_GLOBALE.md` §4.4) et
+leurs contrats d'interface sont spécifiés dans [`docs/contrats/`](./contrats/README.md).
+Le socle M0 → M15 est validé en CI : migrations + seeds + 36 tests RLS passent
+sur `main` (hook JWT, modèle de rôles, multi-tenant, audit des RPC).
+
+Reste à replanifier puis livrer (M16 → M20) : Port Paiement hexagonal, moteur de
+questions & quiz, profil de maîtrise & gamification, préparation aux examens,
+IA à rôles, bibliothèque, transport scolaire, réseau & backoffice GSG,
+reporting/Premium. Un module à la fois, chacun clos et validé avant le suivant.

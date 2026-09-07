@@ -244,6 +244,37 @@ Supabase : Auth (OTP E.164) · Postgres + RLS · Storage · Realtime · Edge Fun
 | M19 | **Réseau d'établissements & Backoffice GSG** | Réseaux, validation, paramètres globaux, CMS |
 | M20 | **Reporting, Tableaux de bord & Premium** | Tableau de bord directeur, alertes, monétisation Premium élève |
 
+### 4.4 État réel du découpage — réconciliation (livré M4 → M15)
+
+Le plan §4.3 (retenu pour traçabilité) a été **réordonné à la construction** :
+les verticaux pédagogiques les plus structurants ont été livrés en priorité, et
+la vie scolaire / communication ont été avancées. Le périmètre **réellement
+délivré** par migrations SQL est le suivant.
+
+| # | Module réellement livré | Migration | Contrat d'interface | Écart vs plan §4.3 |
+|---|---|---|---|---|
+| M4 | Référentiel pédagogique CEDEAO | `20260906000400_m4_referentiel_pedagogique.sql` | [M04](./docs/contrats/M04_referentiel_pedagogique.md) | conforme |
+| M5 | Administration & Scolarité | `20260906000500_m5_administration_scolarite.sql` | [M05](./docs/contrats/M05_administration_scolarite.md) | conforme |
+| M6 | Notes & Évaluations | `20260906000600_m6_notes_evaluations.sql` | [M06](./docs/contrats/M06_notes_evaluations.md) | conforme (« Bulletins » inclus) |
+| M7 | Absences & Vie scolaire | `20260906000700_m7_absences_vie_scolaire.sql` | [M07](./docs/contrats/M07_absences_vie_scolaire.md) | vie scolaire avancée (ex-M9) |
+| M8 | RH & Personnel | `20260906000800_m8_rh_personnel.sql` | [M08](./docs/contrats/M08_rh_personnel.md) | conforme |
+| M9 | Communication & Notifications | `20260906000900_m9_communication_notifications.sql` | [M09](./docs/contrats/M09_communication_notifications.md) | communication avancée (ex-M15) |
+| M10 | Rapports & Statistiques | `20260906001000_m10_rapports_statistiques.sql` | [M10](./docs/contrats/M10_rapports_statistiques.md) | nouveau (ex-Reporting M20, avancé) |
+| M11 | Planification & Agenda | `20260906001100_m11_planification_agenda.sql` | [M11](./docs/contrats/M11_planification_agenda.md) | emploi du temps (ex-M7) |
+| M12 | Intégration & Déploiement (observabilité) | `20260906001200_m12_observabilite.sql` | [M12](./docs/contrats/M12_observabilite.md) | nouveau |
+| M13 | Marketplace AssoShop (mono-vendeur) | `20260906001300_m13_marketplace_assoshop.sql` | [M13](./docs/contrats/M13_marketplace_assoshop.md) | conforme |
+| M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | nouveau (le Port Paiement ex-M14 reste à livrer) |
+| M15 | Marketplace sans authentification | `20260906001500_m15_marketplace_sans_auth.sql` | [M15](./docs/contrats/M15_marketplace_public.md) | nouveau |
+
+**Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
+(CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
+de questions & quiz (ex-M10), profil de maîtrise & gamification (ex-M11),
+préparation aux examens (ex-M12) — ainsi que M16 IA à rôles, M17 Bibliothèque,
+M18 Transport, M19 Réseau & Backoffice GSG, M20 Reporting/Premium.
+
+La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
+[`docs/contrats/`](./docs/contrats/README.md).
+
 ---
 
 ## 5. Cadrage officiel acté (réponses définitives)
@@ -277,9 +308,19 @@ sur `role_racine`, récursion RLS, hook JWT inopérant) ont été corrigés par 
 migration `20260906000100_fix_core_security.sql`.
 
 Le détail des livrables, l'état de vérification et les réserves ouvertes
-figurent dans [`docs/ETAT_PHASE_A.md`](./docs/ETAT_PHASE_A.md). **Réserve
-principale** : aucune migration SQL ni Edge Function n'a pu être exécutée
-(outils backend absents du poste) ; la clôture formelle de M1 et M2 suppose un
-`supabase db reset` et les tests d'intégration RLS (pgTAP).
+figurent dans [`docs/ETAT_PHASE_A.md`](./docs/ETAT_PHASE_A.md).
 
-Le module suivant est **M4 — Référentiel pédagogique CEDEAO**.
+**État de livraison au-delà de la Phase A** : les modules M4 → M15 sont
+également livrés par migrations SQL (cf. §4.4), leurs contrats d'interface
+(DTOs & RPCs) sont spécifiés dans [`docs/contrats/`](./docs/contrats/README.md),
+et le socle M0 → M15 est validé de bout en bout en CI : migrations + seeds +
+36 tests RLS passent sur la branche `main` (hook JWT, modèle de rôles,
+multi-tenant, audit des RPC).
+
+**Réserve** : les migrations n'ont pas été exécutées sur une instance Supabase
+locale (outils backend absents du poste) ; la validation repose sur le
+rejeu `supabase db reset` + tests pgTAP du workflow CI GitHub Actions.
+
+Le module suivant à ouvrir est **M16 — IA à rôles**, après replanification des
+verticaux décalés (§4.4) : Port Paiement, moteur de questions/quiz, profil de
+maîtrise, préparation aux examens.
