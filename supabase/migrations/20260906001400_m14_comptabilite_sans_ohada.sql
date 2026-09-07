@@ -167,7 +167,7 @@ security definer
 set search_path = public
 as $$
   select public.est_admin_gsg()
-      or public.est_appel_service()
+
       or public.est_direction(p_etablissement)
       or public.a_permission(p_etablissement, 'comptabilite.lire');
 $$;
@@ -180,7 +180,7 @@ security definer
 set search_path = public
 as $$
   select public.est_admin_gsg()
-      or public.est_appel_service()
+
       or public.est_direction(p_etablissement)
       or public.a_permission(p_etablissement, 'comptabilite.ecrire');
 $$;

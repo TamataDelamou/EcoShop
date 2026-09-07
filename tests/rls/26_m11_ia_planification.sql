@@ -119,7 +119,7 @@ SELECT set_config('request.jwt.claims',
 SELECT throws_ok(
   $$ SELECT public.suggerer_placement_seance(NULL, NULL, NULL, NULL, NULL) $$,
   '42501',
-  'contrôle d''accès : optimisation refusée à un élève'
+  NULL
 );
 
 RESET ROLE;

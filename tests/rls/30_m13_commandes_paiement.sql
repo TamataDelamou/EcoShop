@@ -76,6 +76,8 @@ SELECT set_config('request.jwt.claims',
 SELECT is((SELECT count(*) FROM public.commandes)::int, 0, 'direction autre établissement : ne voit rien');
 
 -- Paiement incohérent : sous-compte cinetpay + fournisseur mobile_money → 23514.
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'direction_a', 'role', 'authenticated')::text, true);
 SELECT throws_ok(
   $sql$
     INSERT INTO public.paiements

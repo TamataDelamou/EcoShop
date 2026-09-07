@@ -101,16 +101,18 @@ SELECT is((SELECT statut FROM public.recommandations_strategiques WHERE id = :'r
 -- 4. L'enseignant (personnel sans permission) ne peut pas valider une anomalie.
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'ens_id', 'role', 'authenticated')::text, true);
-SELECT throws_ok(
-  $$ UPDATE public.anomalies_statistiques SET statut = 'traitee' WHERE signature = 'sig-anomalie-test' $$,
-  '42501',
+UPDATE public.anomalies_statistiques SET statut = 'traitee' WHERE signature = 'sig-anomalie-test';
+SELECT is(
+  (SELECT statut::text FROM public.anomalies_statistiques WHERE signature = 'sig-anomalie-test'),
+  'confirmee',
   'enseignant : validation d''anomalie interdite sans permission'
 );
 
 -- 5. L'enseignant ne peut pas valider une recommandation.
-SELECT throws_ok(
-  $$ UPDATE public.recommandations_strategiques SET statut = 'mise_en_oeuvre' WHERE type = 'tutorat' $$,
-  '42501',
+UPDATE public.recommandations_strategiques SET statut = 'mise_en_oeuvre' WHERE type = 'tutorat';
+SELECT is(
+  (SELECT statut::text FROM public.recommandations_strategiques WHERE type = 'tutorat'),
+  'validee',
   'enseignant : validation de recommandation interdite sans permission'
 );
 

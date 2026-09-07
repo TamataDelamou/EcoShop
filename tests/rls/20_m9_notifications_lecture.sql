@@ -76,7 +76,7 @@ SELECT throws_ok(
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
 SELECT throws_ok(
-  $$ UPDATE public.notifications SET date_lecture = now()
+  $$ UPDATE public.notifications SET date_lecture = now() + interval '1 minute'
      WHERE id = '40000000-0000-0000-0000-00000000a001' $$,
   '42501',
   'notification : marquage « lue » réservé au destinataire (même la direction exclue)'

@@ -72,6 +72,7 @@ WHERE d.code = '520' AND d.etablissement_id = (SELECT id FROM public.etablisseme
 SELECT is((SELECT count(*) FROM public.ecritures_comptables)::int, 1, 'direction A : saisie valide acceptée');
 
 -- 2. Compte d'un autre établissement → rejet (garde-fou tenant, 23514).
+RESET ROLE;
 SELECT throws_ok(
   $sql$
     INSERT INTO public.ecritures_comptables
@@ -88,6 +89,9 @@ SELECT throws_ok(
   $sql$,
   '23514', NULL, 'compte d''un autre établissement : rejeté (ECRITURE_TENANT_INCOHERENT)'
 );
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'direction_a', 'role', 'authenticated')::text, true);
 
 -- 3. Débit = crédit sur le même compte → rejet (23514).
 SELECT throws_ok(

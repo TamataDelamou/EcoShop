@@ -38,6 +38,24 @@ UPDATE public.profiles
    SET gsg_id = gen_random_uuid()
  WHERE id = :'prof_id'::uuid
 RETURNING gsg_id::text AS gsg_id \gset
+DO $$
+DECLARE
+  r record;
+  v_found boolean;
+BEGIN
+  SELECT role_racine, gsg_id, statut_compte, deleted_at INTO r FROM public.profiles WHERE id = :'prof_id'::uuid;
+  IF FOUND THEN
+    RAISE NOTICE 'DIAG profil: role=% gsg=% statut=% deleted=%', r.role_racine, r.gsg_id, r.statut_compte, r.deleted_at;
+  ELSE
+    RAISE NOTICE 'DIAG profil: INTROUVABLE';
+  END IF;
+  SELECT EXISTS(SELECT 1 FROM public.profiles WHERE id = :'prof_id'::uuid AND deleted_at IS NULL) INTO v_found;
+  RAISE NOTICE 'DIAG deleted_at IS NULL => %', v_found;
+END $$;
+DO $$
+BEGIN
+  RAISE NOTICE 'DIAG hook: %', public.custom_access_token_hook(jsonb_build_object('user_id', :'prof_id', 'claims', '{}'::jsonb))::text;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- Le hook renvoie {"claims": {"app_metadata": {...}}}.

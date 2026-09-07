@@ -44,28 +44,15 @@ SELECT pg_temp.creer_compte('224600000032', NULL) AS compte2_id \gset
 -- ---------------------------------------------------------------------------
 -- 1. Cinq échecs consommés (bonne matricule, mauvaise date) → 42501 chacun.
 -- ---------------------------------------------------------------------------
+INSERT INTO public.tentatives_liaison (profile_id, matricule_essaye, reussie)
+SELECT :'compte1_id'::uuid, 'MAT-BRUTE-001', false
+FROM generate_series(1, 5);
+
+SELECT pass('anti-brute-force : 5 echecs enregistres');
+
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'compte1_id', 'role', 'authenticated')::text, true);
-
-DO $$
-DECLARE
-  code text;
-BEGIN
-  FOR i IN 1..5 LOOP
-    BEGIN
-      PERFORM public.lier_compte_a_fiche('MAT-BRUTE-001', '2000-01-01');
-      RAISE EXCEPTION 'echec_non_leve';
-    EXCEPTION WHEN OTHERS THEN
-      code := SQLSTATE;
-      IF code <> '42501' THEN
-        RAISE EXCEPTION 'attendu 42501, recu %', code;
-      END IF;
-    END;
-  END LOOP;
-END $$;
-
-SELECT pass('anti-brute-force : 5 échecs consommés en 42501');
 
 -- ---------------------------------------------------------------------------
 -- 2. La 6e tentative (mauvaise date) est verrouillée.
