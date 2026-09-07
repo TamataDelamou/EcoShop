@@ -91,7 +91,7 @@ insert into public.ecritures_comptables
   (etablissement_id, date_ecriture, libelle, compte_debit_id, compte_credit_id,
    montant, piece_justificative, journal_id, user_id)
 select (select val from seed_m14 where cle = 'etab'),
-       v.date_ecriture, v.libelle,
+       v.date_ecriture::date, v.libelle,
        d.id, c.id, v.montant, v.piece,
        j.id, (select val from seed_m14 where cle = 'saisisseur')
 from (values
@@ -111,7 +111,7 @@ join public.journaux j on j.code = v.jcode
 where not exists (
   select 1 from public.ecritures_comptables e
   where e.etablissement_id = (select val from seed_m14 where cle = 'etab')
-    and e.date_ecriture = v.date_ecriture
+    and e.date_ecriture = v.date_ecriture::date
     and e.libelle = v.libelle
     and e.montant = v.montant
 );
