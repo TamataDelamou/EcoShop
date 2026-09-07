@@ -1,4 +1,4 @@
-name: CI — Socle EcoShop (M0→M12)
+name: CI — Socle EcoShop (M0→M15)
 
 on:
   push:
@@ -34,10 +34,10 @@ jobs:
       - name: Démarrer la stack locale
         run: supabase start
 
-      - name: Réinitialiser la base (migrations M0→M12 + seed M0)
+      - name: Réinitialiser la base (migrations M0→M15 + seed M0)
         run: supabase db reset
 
-      - name: Appliquer les seeds complémentaires (M4→M11)
+      - name: Appliquer les seeds complémentaires (M4→M14)
         run: |
           for f in supabase/seed_referentiel_pedagogique.sql \
                    supabase/seed_administration_scolarite.sql \
@@ -46,11 +46,13 @@ jobs:
                    supabase/seed_rh_personnel.sql \
                    supabase/seed_communication_notifications.sql \
                    supabase/seed_rapports_statistiques.sql \
-                   supabase/seed_planification_agenda.sql; do
+                   supabase/seed_planification_agenda.sql \
+                   supabase/seed_marketplace_assoshop.sql \
+                   supabase/seed_comptabilite.sql; do
             psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
 
-      - name: Tests pgTAP (RLS 01→27)
+      - name: Tests pgTAP (RLS 01→36)
         run: pg_prove -d "$SUPABASE_DB_URL" tests/rls/*.sql
 
       - name: Audit de cohérence inter-modules
