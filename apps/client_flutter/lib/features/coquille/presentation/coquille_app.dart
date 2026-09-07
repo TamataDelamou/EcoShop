@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
+import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
+import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
+import '../../scolarite/presentation/ecran_scolarite.dart';
+import '../../scolarite/presentation/ecran_structure_etablissement.dart';
+import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
+import '../application/sync_composition.dart';
 
 /// Onglet de la coquille applicative.
 ///
@@ -48,7 +54,29 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
   int _index = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Amorce une resynchronisation dès l'entrée dans l'application — les
+    // écritures hors-ligne d'une session précédente ne doivent pas attendre
+    // un futur changement de connectivité si le réseau est déjà disponible.
+    // Gardé derrière `Env.estConfigure` : construire le moteur de sync exige
+    // un client Supabase initialisé (jamais le cas en test ni en mode
+    // diagnostic sans --dart-define).
+    if (Env.estConfigure) {
+      Future.microtask(() => ref.read(syncEngineProvider).synchroniser());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (Env.estConfigure) {
+      ref.listen<bool>(estEnLigneProvider, (etaitEnLigne, estEnLigne) {
+        if (estEnLigne && etaitEnLigne == false) {
+          ref.read(syncEngineProvider).synchroniser();
+        }
+      });
+    }
+
     final profil = ref.watch(profilProvider).value;
     final onglets = OngletCoquille.pourRole(profil?.roleRacine);
     // Un changement de rôle ou de rattachement peut raccourcir la liste :
@@ -66,6 +94,7 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       body: Column(
         children: [
           const _BandeauHorsLigne(),
+          const SelecteurEnfant(),
           Expanded(
             child: large
                 ? Row(
@@ -179,6 +208,9 @@ class _CorpsOnglet extends ConsumerWidget {
     if (onglet == OngletCoquille.profil) {
       return _VueProfil(profil: profil);
     }
+    if (onglet == OngletCoquille.scolarite) {
+      return EcranScolarite(profil: profil);
+    }
 
     return Center(
       child: Padding(
@@ -243,6 +275,25 @@ class _VueProfil extends ConsumerWidget {
           title: const Text('Identité GSG ID'),
           subtitle: Text(p.gsgId ?? 'non fédérée'),
         ),
+        ListTile(
+          leading: const Icon(Icons.public_outlined),
+          title: const Text('Référentiel pédagogique CEDEAO'),
+          subtitle: const Text('Consultable hors connexion'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const EcranPaysPedagogiques()),
+          ),
+        ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          ListTile(
+            leading: const Icon(Icons.apartment_outlined),
+            title: const Text('Structures & annuaire'),
+            subtitle: const Text('Campus, années, périodes, classes'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranStructureEtablissement()),
+            ),
+          ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.logout),
