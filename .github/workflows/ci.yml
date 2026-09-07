@@ -39,6 +39,7 @@ jobs:
 
       - name: Appliquer les seeds complémentaires (M4→M14)
         run: |
+          FAILED=0
           for f in supabase/seed_referentiel_pedagogique.sql \
                    supabase/seed_administration_scolarite.sql \
                    supabase/seed_notes_evaluations.sql \
@@ -49,8 +50,12 @@ jobs:
                    supabase/seed_planification_agenda.sql \
                    supabase/seed_marketplace_assoshop.sql \
                    supabase/seed_comptabilite.sql; do
-            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+            if ! psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"; then
+              echo "SEED_ECHEC: $f"
+              FAILED=1
+            fi
           done
+          if [ "$FAILED" = "1" ]; then exit 1; fi
 
       - name: Tests pgTAP (RLS 01→36)
         run: pg_prove -d "$SUPABASE_DB_URL" tests/rls/*.sql

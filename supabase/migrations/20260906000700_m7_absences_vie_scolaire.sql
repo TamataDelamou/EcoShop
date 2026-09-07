@@ -35,7 +35,7 @@ exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type public.type_sanction as enum
-    ('avertissement', 'blame', 'retenue', 'travail_interet', 'exclusion_temporaire', 'conseil_discipline');
+    ('avertissement', 'blame', 'retenue', 'travail_interet', 'exclusion_temporaire', 'conseil_discipline', 'entretien_famille_et_tutorat');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
