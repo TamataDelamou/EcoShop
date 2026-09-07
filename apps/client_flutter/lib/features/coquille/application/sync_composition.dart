@@ -5,6 +5,7 @@ import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
 import '../../notes/application/notes_providers.dart';
+import '../../rapports/application/rapports_providers.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../vie_scolaire/application/vie_scolaire_providers.dart';
 
@@ -25,6 +26,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'absences_personnel': ref.watch(absencesPersonnelRejeuProvider),
     'notifications_lecture': ref.watch(notificationsLectureRejeuProvider),
     'preferences_canaux': ref.watch(preferencesCanauxRejeuProvider),
+    'rapports': ref.watch(rapportsRejeuProvider),
   };
 
   return SyncEngine(

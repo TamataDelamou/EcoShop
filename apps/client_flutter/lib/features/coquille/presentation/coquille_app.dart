@@ -12,11 +12,14 @@ import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
+import '../../rapports/presentation/ecran_rapports.dart';
+import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
 import '../../rh_personnel/presentation/ecran_tableau_bord_rh.dart';
+import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
@@ -362,6 +365,58 @@ class _VueProfil extends ConsumerWidget {
                     builder: (_) => EcranTableauBordCommunication(etablissementId: etablissement.id),
                   ),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.query_stats_outlined),
+                title: const Text('Rapports & statistiques'),
+                subtitle: const Text('Indicateurs, anomalies, recommandations'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranTableauBordRapports(etablissementId: etablissement.id),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.parent)
+          Consumer(
+            builder: (context, ref, _) {
+              final enfant = ref.watch(enfantActifProvider);
+              return ListTile(
+                leading: const Icon(Icons.summarize_outlined),
+                title: const Text('Rapports de mon enfant'),
+                subtitle: const Text('Bulletins, relevés de notes'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: enfant == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => EcranMesRapports(ficheEleveId: enfant.id)),
+                        ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.eleve)
+          Consumer(
+            builder: (context, ref, _) {
+              final fiche = ref.watch(maFicheProvider).value;
+              return ListTile(
+                leading: const Icon(Icons.summarize_outlined),
+                title: const Text('Mes rapports'),
+                subtitle: const Text('Bulletins, relevés de notes'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: fiche == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => EcranMesRapports(ficheEleveId: fiche.id)),
+                        ),
               );
             },
           ),
