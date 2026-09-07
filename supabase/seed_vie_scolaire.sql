@@ -71,7 +71,7 @@ select (select val from seed_m7 where cle = 'etab'),
        (select val from seed_m7 where cle = 'fiche_aicha'),
        (date '2026-10-05' + n::int),
        'demi_journee',
-       case when (n % 2) = 0 then 'absent' else 'present' end,
+       (case when (n % 2) = 0 then 'absent' else 'present' end)::public.statut_presence,
        false,
        (select val from seed_m7 where cle = 'enseignant1')
 from generate_series(0, 7) as n
