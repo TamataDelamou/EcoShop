@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
+import '../../communication/application/comm_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../vie_scolaire/application/vie_scolaire_providers.dart';
@@ -22,6 +23,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'retards': ref.watch(retardsRejeuProvider),
     'conges': ref.watch(congesRejeuProvider),
     'absences_personnel': ref.watch(absencesPersonnelRejeuProvider),
+    'notifications_lecture': ref.watch(notificationsLectureRejeuProvider),
+    'preferences_canaux': ref.watch(preferencesCanauxRejeuProvider),
   };
 
   return SyncEngine(

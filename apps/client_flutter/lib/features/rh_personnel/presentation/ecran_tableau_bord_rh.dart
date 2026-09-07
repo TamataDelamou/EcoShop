@@ -23,9 +23,11 @@ class EcranTableauBordRh extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final aujourdHui = DateTime.now();
+    final date = DateTime(aujourdHui.year, aujourdHui.month, aujourdHui.day);
     final effectifs = ref.watch(analyserEffectifsProvider(etablissementId));
     final remplacements = ref.watch(
-      optimiserRemplacementsProvider((etablissementId: etablissementId, date: DateTime.now())),
+      optimiserRemplacementsProvider((etablissementId: etablissementId, date: date)),
     );
 
     return Scaffold(
@@ -33,7 +35,7 @@ class EcranTableauBordRh extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(analyserEffectifsProvider(etablissementId));
-          ref.invalidate(optimiserRemplacementsProvider((etablissementId: etablissementId, date: DateTime.now())));
+          ref.invalidate(optimiserRemplacementsProvider((etablissementId: etablissementId, date: date)));
         },
         child: ListView(
           padding: const EdgeInsets.all(16),

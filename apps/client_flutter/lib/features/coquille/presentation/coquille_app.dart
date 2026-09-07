@@ -6,6 +6,12 @@ import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
+import '../../communication/presentation/ecran_notifications.dart';
+import '../../communication/presentation/ecran_preferences_canaux.dart';
+import '../../communication/presentation/ecran_tableau_bord_communication.dart';
+import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
+import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
+import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
@@ -289,6 +295,76 @@ class _VueProfil extends ConsumerWidget {
             MaterialPageRoute(builder: (_) => const EcranPaysPedagogiques()),
           ),
         ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.notifications_outlined),
+          title: const Text('Notifications'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => EcranNotifications(profileId: p.id)),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.tune_outlined),
+          title: const Text('Préférences de notification'),
+          subtitle: const Text('Canaux, horaires, fréquence'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => EcranPreferencesCanaux(profileId: p.id)),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.forum_outlined),
+          title: const Text('Messagerie'),
+          subtitle: const Text('Prototype local — non synchronisé'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => EcranMessagerie(profileId: p.id, profileNom: p.nomAffiche)),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.campaign_outlined),
+          title: const Text('Annonces'),
+          subtitle: const Text('Prototype local — non synchronisé'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => EcranAnnonces(
+                profileId: p.id,
+                profileNom: p.nomAffiche,
+                peutPublier: p.roleRacine == RoleRacine.direction,
+              ),
+            ),
+          ),
+        ),
+        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.enseignant)
+          ListTile(
+            leading: const Icon(Icons.menu_book_outlined),
+            title: const Text('Cahier de liaison'),
+            subtitle: const Text('Prototype local — non synchronisé'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => EcranCahierLiaison(profileId: p.id, profileNom: p.nomAffiche)),
+            ),
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.insights_outlined),
+                title: const Text('Tableau de bord communication'),
+                subtitle: const Text('Taux de lecture, modèles de messages'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranTableauBordCommunication(etablissementId: etablissement.id),
+                  ),
+                ),
+              );
+            },
+          ),
         if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
           ListTile(
             leading: const Icon(Icons.apartment_outlined),
