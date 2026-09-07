@@ -38,12 +38,45 @@ UPDATE public.profiles
    SET gsg_id = gen_random_uuid()
  WHERE id = :'prof_id'::uuid
 RETURNING gsg_id::text AS gsg_id \gset
+CREATE OR REPLACE FUNCTION pg_temp.debug_hook(event jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  claims jsonb;
+  prof record;
+BEGIN
+  claims := coalesce(event->'claims', '{}'::jsonb);
+  RAISE NOTICE 'DIAG ctx: user=% session=% rls=%', current_user, session_user, current_setting('row_security', true);
+  select role_racine, gsg_id, statut_compte into prof
+  from public.profiles
+  where id = (event->>'user_id')::uuid
+    and deleted_at is null;
+  RAISE NOTICE 'DIAG found=%', FOUND;
+  if found then
+    RAISE NOTICE 'DIAG prof: role=% gsg=% stat=%', prof.role_racine, prof.gsg_id, prof.statut_compte;
+    if prof.role_racine is not null then
+      claims := jsonb_set(claims, '{app_metadata,role_racine}', to_jsonb(prof.role_racine::text), true);
+    end if;
+    if prof.gsg_id is not null then
+      claims := jsonb_set(claims, '{app_metadata,gsg_id}', to_jsonb(prof.gsg_id::text), true);
+    end if;
+    claims := jsonb_set(claims, '{app_metadata,statut_compte}', to_jsonb(prof.statut_compte::text), true);
+  end if;
+  return jsonb_build_object('claims', claims);
+END;
+$$;
+
 DO $$
 DECLARE
-  v_def text;
+  v_id uuid;
+  v_out jsonb;
 BEGIN
-  SELECT pg_get_functiondef(oid) INTO v_def FROM pg_proc WHERE oid = 'public.custom_access_token_hook(jsonb)'::regprocedure;
-  RAISE NOTICE 'DIAG def: %', v_def;
+  SELECT id INTO v_id FROM public.profiles WHERE identifiant_canonique = '+224600000021';
+  v_out := pg_temp.debug_hook(jsonb_build_object('user_id', v_id, 'claims', '{}'::jsonb));
+  RAISE NOTICE 'DIAG debug_hook out: %', v_out::text;
 END $$;
 
 -- ---------------------------------------------------------------------------
