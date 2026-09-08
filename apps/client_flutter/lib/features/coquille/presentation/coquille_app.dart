@@ -12,6 +12,7 @@ import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
+import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
 import '../../planification/presentation/ecran_choix_classe.dart';
@@ -678,6 +679,22 @@ class _VueProfil extends ConsumerWidget {
                     MaterialPageRoute(builder: (_) => EcranFicheEmploye(employe: employe)),
                   );
                 },
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.calculate_outlined),
+                title: const Text('Comptabilité'),
+                subtitle: const Text('Journal, grand livre, balance — supervision IA'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranComptabilite(etablissementId: etablissement.id)),
+                ),
               );
             },
           ),

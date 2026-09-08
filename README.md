@@ -120,5 +120,18 @@ flutter test
 [`ANALYSE_GLOBALE.md`](./ANALYSE_GLOBALE.md) §4.3, et l'état de vérification de
 la Phase A dans [`docs/ETAT_PHASE_A.md`](./docs/ETAT_PHASE_A.md).
 
+Le tableau ci-dessus trace la livraison **SQL** (migrations + RLS). Le
+**client Flutter** (`apps/client_flutter`) est un chantier distinct, construit
+module par module sur ce socle déjà livré :
+
+| Module | Client Flutter | Tests (`flutter test`) |
+|---|---|---|
+| M13 | Marketplace AssoShop mono-vendeur | ✅ livré et vérifié |
+| M14 | Comptabilité sans OHADA | ✅ livré et vérifié |
+| M15 | Marketplace sans authentification | ✅ livré et vérifié (périmètre reconsidéré, cf. `docs/ETAT_PHASE_C.md` §2) |
+
+État détaillé, écarts doc/DDL corrigés et réserve technique (exécution
+locale des migrations) dans [`docs/ETAT_PHASE_C.md`](./docs/ETAT_PHASE_C.md).
+
 *Chaque module est clos, testé et validé avant le passage au suivant
 (règle d'or du séquençage strict).*

@@ -4,6 +4,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
+import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../planification/application/planification_providers.dart';
@@ -34,6 +35,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'progression_pedagogique': ref.watch(progressionPedagogiqueRejeuProvider),
     'paniers': ref.watch(paniersRejeuProvider),
     'lignes_paniers': ref.watch(lignesPaniersRejeuProvider),
+    'ecritures_comptables': ref.watch(ecrituresRejeuProvider),
   };
 
   return SyncEngine(

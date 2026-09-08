@@ -263,7 +263,7 @@ délivré** par migrations SQL est le suivant.
 | M11 | Planification & Agenda | `20260906001100_m11_planification_agenda.sql` | [M11](./docs/contrats/M11_planification_agenda.md) | emploi du temps (ex-M7) |
 | M12 | Intégration & Déploiement (observabilité) | `20260906001200_m12_observabilite.sql` | [M12](./docs/contrats/M12_observabilite.md) | nouveau |
 | M13 | Marketplace AssoShop (mono-vendeur) | `20260906001300_m13_marketplace_assoshop.sql` | [M13](./docs/contrats/M13_marketplace_assoshop.md) | conforme |
-| M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | nouveau (le Port Paiement ex-M14 reste à livrer) |
+| M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | livré et vérifié (client Flutter + RLS 31-33 ; le Port Paiement, ex-M14 dans le plan §4.3, reste un chantier distinct à replanifier M16-M20 — non couplé à ce module) |
 | M15 | Marketplace sans authentification | `20260906001500_m15_marketplace_sans_auth.sql` | [M15](./docs/contrats/M15_marketplace_public.md) | nouveau |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
