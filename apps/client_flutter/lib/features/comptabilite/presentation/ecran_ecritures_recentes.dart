@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/shimmer.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../export_pdf/data/recu_pdf_builder.dart';
+import '../../export_pdf/presentation/ecran_apercu_pdf.dart';
+import '../../themes/application/theme_providers.dart';
 import '../application/comptabilite_providers.dart';
 import '../domain/ecriture_comptable.dart';
 import 'ecran_saisie_ecriture.dart';
@@ -67,7 +71,7 @@ class EcranEcrituresRecentes extends ConsumerWidget {
   }
 }
 
-class _CarteEcriture extends StatelessWidget {
+class _CarteEcriture extends ConsumerStatefulWidget {
   const _CarteEcriture({
     required this.ecriture,
     required this.compteDebit,
@@ -81,25 +85,75 @@ class _CarteEcriture extends StatelessWidget {
   final String journal;
 
   @override
+  ConsumerState<_CarteEcriture> createState() => _CarteEcritureState();
+}
+
+class _CarteEcritureState extends ConsumerState<_CarteEcriture> {
+  bool _exportEnCours = false;
+
+  Future<void> _exporterRecu() async {
+    final etablissement = ref.read(etablissementActifProvider);
+    if (etablissement == null) return;
+    final variante = ref.read(themeVariantProvider);
+
+    setState(() => _exportEnCours = true);
+    try {
+      final octets = await construireRecuPdf(
+        ecriture: widget.ecriture,
+        libelleCompteDebit: widget.compteDebit,
+        libelleCompteCredit: widget.compteCredit,
+        libelleJournal: widget.journal,
+        etablissement: etablissement,
+        variante: variante,
+      );
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EcranApercuPdf(
+            titre: 'Reçu',
+            octets: octets,
+            nomFichier: 'recu_${widget.ecriture.id}.pdf',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exportEnCours = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final ecriture = widget.ecriture;
     final date = ecriture.dateEcriture;
     final dateAffichee = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         title: Text(ecriture.libelle),
-        subtitle: Text('$dateAffichee — $journal\n$compteDebit → $compteCredit'),
+        subtitle: Text('$dateAffichee — ${widget.journal}\n${widget.compteDebit} → ${widget.compteCredit}'),
         isThreeLine: true,
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(formaterMontant(ecriture.montant), style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (ecriture.saisiHorsLigne)
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Icon(Icons.cloud_off_outlined, size: 14),
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(formaterMontant(ecriture.montant), style: const TextStyle(fontWeight: FontWeight.w700)),
+                if (ecriture.saisiHorsLigne)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Icon(Icons.cloud_off_outlined, size: 14),
+                  ),
+              ],
+            ),
+            IconButton(
+              tooltip: 'Exporter le reçu (PDF)',
+              onPressed: _exportEnCours ? null : _exporterRecu,
+              icon: _exportEnCours
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.picture_as_pdf_outlined),
+            ),
           ],
         ),
       ),

@@ -74,26 +74,39 @@ sécurité active**, décrite ci-dessous telle que constatée avant correction.
 qu'aucune des 7 règles absolues n'a de contrepartie serveur (table + RLS +
 trigger) équivalente à la source. Détail complet en [§9 — M9](#9-m9--communication--notifications).
 
-### 0.2 Génération de documents depuis des modèles (bulletins, reçus, attestations)
+### 0.2 Génération de documents depuis des modèles (bulletins, reçus, attestations) — **RÉSOLU pour bulletins et reçus**
+
+> **Statut : corrigé** par le module **M15ter — Export PDF**
+> ([`docs/contrats/M15ter_export_pdf.md`](./contrats/M15ter_export_pdf.md)),
+> inséré juste après M15bis. Le bulletin (M6) et le reçu (dérivé d'une
+> écriture comptable M14) sont désormais exportables/imprimables/partageables
+> en PDF, alignés sur les 3 chartes graphiques de M15bis. 246 tests passent,
+> `flutter analyze` propre. **Attestations toujours hors périmètre** (voir
+> ci-dessous — pas une régression, confirmé absent des deux côtés).
 
 - **Bulletins** (M6) : absents des deux côtés en tant que « système de modèles »
   paramétrable — mais la source avait au moins un **export PDF codé en dur**
-  (mise en page A4, impression). La cible n'a **aucune capacité d'export** : le
-  bulletin est un simple affichage écran d'un champ JSON.
+  (mise en page A4, impression). La cible n'avait **aucune capacité d'export**
+  avant M15ter (le bulletin était un simple affichage écran d'un champ JSON) —
+  **corrigé**, voir `apps/client_flutter/lib/features/export_pdf/data/bulletin_pdf_builder.dart`.
+  Réserve assumée : un bulletin s'exporte à la fois, pas de génération groupée
+  pour toute une classe (dépend d'un autre écart déjà signalé, non résolu —
+  §6 point 8).
 - **Reçus de paiement** (M13/M14) : la source génère un reçu thermique 58 mm à
-  chaque encaissement et un reçu A4 annuel ; la cible n'a **aucune dépendance
-  PDF/impression** et aucun écran de reçu. Le propre document cible
-  (`docs/COMPTABILITE.md` §9) reconnaît ce trou et le renvoie à un « M14
-  complément ou M20 ».
+  chaque encaissement et un reçu A4 annuel ; la cible n'avait **aucune
+  dépendance PDF/impression** avant M15ter — **corrigé** pour le format A4
+  (`apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart`),
+  un reçu par écriture comptable déjà saisie. Réserve assumée : pas de format
+  thermique 58 mm ni de récapitulatif annuel (dépendent d'écarts déjà signalés
+  et non résolus — absence d'écran de caisse dédié et de solde élève par
+  année, §10 points 1/3).
 - **Attestations** (scolarité/inscription/paiement) : recherche exhaustive côté
   source — **cette fonctionnalité n'existe pas dans ecoshop_flutter non plus**.
   Ce n'est donc pas une régression, mais une fonctionnalité à instruire comme
-  nouvelle si le besoin est confirmé.
+  nouvelle si le besoin est confirmé. **Non traitée par M15ter**, comme
+  explicitement cadré.
 
-**Recommandation** : traiter l'export PDF des bulletins et des reçus comme un
-chantier prioritaire avant mise en production réelle en établissement — ce sont
-des usages quotidiens (remise au parent, archivage, impression) dans le contexte
-visé. Détail complet en [§6](#6-m6--notes--évaluations) et [§13-15](#13-15-m13-marketplace-assoshop--m14-comptabilité--m15-marketplace-public).
+Détail complet en [§6](#6-m6--notes--évaluations) et [§13-15](#13-15-m13-marketplace-assoshop--m14-comptabilité--m15-marketplace-public).
 
 ### 0.3 Autres écarts à impact élevé relevés par l'audit (hors les deux points ci-dessus)
 
@@ -191,7 +204,7 @@ pour le point prioritaire bulletins PDF.
 
 | Écart | Source | État cible | Impact | Recommandation proposée |
 |---|---|---|---|---|
-| **Génération de bulletins PDF** | `pdf_service.dart` (mise en page A4 codée en dur, pas un système de gabarits paramétrable ; export individuel et par classe, impression) | **Absent** — aucune dépendance `pdf`/`printing`, aucun bouton d'export ; le bulletin cible n'est qu'un affichage écran du JSON | **Élevé** | **Implémenter en priorité** si un document imprimable est requis en usage réel |
+| **Génération de bulletins PDF** | `pdf_service.dart` (mise en page A4 codée en dur, pas un système de gabarits paramétrable ; export individuel et par classe, impression) | **Résolu (individuel)** par M15ter — export/impression/partage PDF fonctionnel (`bulletin_pdf_builder.dart`). Reste absent : export groupé pour une classe entière (dépend du point 8 ci-dessous, non résolu) | Élevé | **Corrigé** pour l'export individuel — voir `docs/contrats/M15ter_export_pdf.md` |
 | Génération administrative de bulletins pour toute une classe | `generation_bulletins_screen.dart`, `NotesService.genererBulletin()` | Absent côté UI — aucune RPC de calcul/composition automatique, aucun écran | Élevé | Implémenter maintenant — prérequis pour que l'export PDF ait un contenu |
 | Rédaction d'appréciations (bulletin/matière) | Champ libre `appreciationGenerale` | Dégradé — modèle cible plus riche (table `appreciations` typée) mais **aucun écran ne l'utilise**, ni saisie ni affichage | Moyen | Implémenter un écran de saisie — la donnée existe déjà |
 | Score de risque d'échec continu par élève (0-100, alimente un chatbot IA direction) | `NotesService.recalculerRisqueEchec()` | Dégradé/différent — la table `statistiques_agregats.risque_reussite` existe côté serveur mais n'est référencée nulle part côté client ; remplacé en pratique par les alertes de décrochage (M7), plus actionnables mais différentes | Moyen | Différer une décision de convergence — clarifier si les alertes M7 remplacent intégralement l'ancien score |
@@ -284,7 +297,7 @@ pour le point prioritaire reçus PDF.
 
 | Écart | Source | État cible | Impact | Recommandation proposée |
 |---|---|---|---|---|
-| **Génération de reçus PDF** (thermique 58mm + A4 annuel) | `pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`) | **Absent** — aucune dépendance `pdf`/`printing`, aucun écran de reçu ; gap reconnu par `docs/COMPTABILITE.md` §9 lui-même | **Élevé** | **Implémenter** — besoin quotidien de caisse, indépendant de l'intégration CinetPay complète |
+| **Génération de reçus PDF** (thermique 58mm + A4 annuel) | `pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`) | **Résolu (format A4, par écriture)** par M15ter (`recu_pdf_builder.dart`). Reste absent : format thermique 58mm et récapitulatif annuel (dépendent des points 1/3 ci-dessous, non résolus) | Élevé | **Corrigé** pour le format A4 — voir `docs/contrats/M15ter_export_pdf.md` |
 | Attestations (scolarité/inscription/paiement) | **Absent aussi côté source** (recherche exhaustive négative) | Absent | Nul pour cet audit | Différer — hors périmètre des deux bases, à instruire comme nouveauté si besoin confirmé |
 | **Encaissement de frais de scolarité** (écran dédié, solde élève, reçu automatique) | `paiement_screen.dart`, `cahier_journal_screen.dart` | **Absent** — M14 livré est une comptabilité générale en partie double pure, sans solde élève ni lien automatique paiement→écriture ; le périmètre annoncé (« M14 — Paiement, reçus, encaissements scolarité ») n'a pas été livré tel quel | **Élevé** | **Implémenter** — fonctionnalité cœur de métier ; à cadrer (nouveau module vs extension M14) |
 | Achat sans authentification (parcours invité) | Sans équivalent source (l'original exige toujours l'auth) | Absent côté client bien que le schéma SQL existe (`profils_publics`, `visiteur_id`) ; le code cible reconnaît lui-même que tout achat passe par l'OTP | Moyen à élevé | Différer/abandonner selon arbitrage produit — documenter le choix si l'OTP systématique est assumé |
@@ -313,13 +326,13 @@ prête) — **à confirmer un par un avec le porteur de projet** :
 1. Parcours d'entrée Enseignant/Direction/Vendeur/Fondateur réseau (M0-M3)
 2. Plafond de comptes parents liés à une fiche élève (M0-M3)
 3. Création d'inscription + détection de double inscription (M5)
-4. Export PDF des bulletins + génération de bulletins pour une classe entière (M6)
+4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6, non résolu).
 5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7)
 6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8)
 7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend.
 8. Tableau de bord directeur consolidé Finances+Scolarité (M10)
 9. Séances ponctuelles / annulation d'un cours (M11)
-10. Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14)
+10. Écran d'encaissement de frais de scolarité (M13/M14) — ~~reçu PDF~~ **corrigé** (M15ter, un reçu par écriture déjà saisie) ; l'écran d'encaissement dédié reste absent.
 11. Gestion des stocks et anti-survente (M13)
 
 ---
@@ -368,7 +381,7 @@ Racine cible : `C:\Users\delam\PlatformGSG\EcoShop`.
 
 | Écart | Fichiers source | Fichiers/éléments cible |
 |---|---|---|
-| **Bulletins PDF** | `lib/services/pdf_service.dart` (`genererBulletinA4`, `genererBulletinsClasseA4`, `_contenuBulletin`, `imprimer`), `lib/features/notes/screens/bulletin_screen.dart`, `generation_bulletins_screen.dart` | `apps/client_flutter/lib/features/notes/presentation/ecran_bulletins.dart` (affichage seul) ; aucune dépendance `pdf`/`printing` dans `apps/client_flutter/pubspec.yaml` ; `docs/contrats/M06_notes_evaluations.md` |
+| **Bulletins PDF** | `lib/services/pdf_service.dart` (`genererBulletinA4`, `genererBulletinsClasseA4`, `_contenuBulletin`, `imprimer`), `lib/features/notes/screens/bulletin_screen.dart`, `generation_bulletins_screen.dart` | **Résolu (export individuel)** : `apps/client_flutter/lib/features/export_pdf/data/bulletin_pdf_builder.dart`, bouton d'export dans `ecran_bulletins.dart`. Génération groupée par classe toujours absente |
 | Déclaration manuelle de sanction | `lib/features/vie_scolaire/screens/sanction_declaration_screen.dart`, `VieScolaireService.declarerSanction()` | `apps/client_flutter/lib/features/vie_scolaire/domain/vie_scolaire_repository.dart` (`proposerSanction` inutilisé), `.../presentation/ecran_sanctions.dart` |
 | Changement de statut de sanction | `VieScolaireService.leverSanction()`, `sanction_declaration_screen.dart` (`_SanctionTile`) | `vie_scolaire_repository.dart`/`data/supabase_vie_scolaire_repository.dart` (`changerStatutSanction` inutilisé) |
 | Exclusion définitive | `lib/models/vie_scolaire_model.dart` (`enum SanctionType`) | `type_sanction` (enum), `supabase/migrations/20260906000700_m7_absences_vie_scolaire.sql`, `docs/contrats/M07_absences_vie_scolaire.md` |
@@ -407,7 +420,7 @@ Racine cible : `C:\Users\delam\PlatformGSG\EcoShop`.
 
 | Écart | Fichiers source | Fichiers/éléments cible |
 |---|---|---|
-| **Reçus PDF** | `lib/services/pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`, `imprimer`), `lib/features/financier/screens/recu_screen.dart` | aucune dépendance `pdf`/`printing` dans `apps/client_flutter/pubspec.yaml` ; `docs/COMPTABILITE.md` §9 (gap reconnu) |
+| **Reçus PDF** | `lib/services/pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`, `imprimer`), `lib/features/financier/screens/recu_screen.dart` | **Résolu (format A4, par écriture)** : `apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart`, action d'export dans `ecran_ecritures_recentes.dart`. Format thermique 58mm et récapitulatif annuel toujours absents |
 | Attestations | absent côté source (recherche négative) | absent (pas une régression) |
 | **Encaissement de scolarité** | `lib/features/financier/screens/paiement_screen.dart`, `recu_screen.dart`, `cahier_journal_screen.dart`, `lib/services/financier_service.dart` | `apps/client_flutter/lib/features/comptabilite/` (comptabilité générale seulement), `docs/M13_ASSOSHOP_MARKETPLACE.md` §7 (promis, non livré), `supabase/migrations/20260906001400_m14_comptabilite_sans_ohada.sql` |
 | Achat sans authentification | sans équivalent source | schéma présent (`supabase/migrations/20260906001500_m15_marketplace_sans_auth.sql` : `profils_publics`, `paniers.visiteur_id`) mais `apps/client_flutter/lib/features/marketplace/domain/panier.dart` (commentaire : parcours anonyme non couvert) |

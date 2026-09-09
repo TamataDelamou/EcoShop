@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../export_pdf/data/bulletin_pdf_builder.dart';
+import '../../export_pdf/presentation/ecran_apercu_pdf.dart';
 import '../../scolarite/domain/fiche_eleve.dart';
+import '../../themes/application/theme_providers.dart';
 import '../application/notes_providers.dart';
 import '../domain/bulletin.dart';
-import '../domain/enums_notes.dart';
 
 /// Liste des bulletins publiés d'un élève (M6) — snapshots signés, intégrité
 /// vérifiable côté back-office (contrat M06 §2).
@@ -39,25 +42,58 @@ class EcranBulletins extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 itemCount: liste.length,
                 itemBuilder: (context, i) =>
-                    EntreeAnimee(index: i, enfant: _CarteBulletin(bulletin: liste[i])),
+                    EntreeAnimee(index: i, enfant: _CarteBulletin(bulletin: liste[i], fiche: fiche)),
               ),
       ),
     );
   }
 }
 
-class _CarteBulletin extends StatelessWidget {
-  const _CarteBulletin({required this.bulletin});
+class _CarteBulletin extends ConsumerStatefulWidget {
+  const _CarteBulletin({required this.bulletin, required this.fiche});
 
   final Bulletin bulletin;
+  final FicheEleve fiche;
+
+  @override
+  ConsumerState<_CarteBulletin> createState() => _CarteBulletinState();
+}
+
+class _CarteBulletinState extends ConsumerState<_CarteBulletin> {
+  bool _exportEnCours = false;
+
+  Future<void> _exporterPdf() async {
+    final etablissement = ref.read(etablissementActifProvider);
+    if (etablissement == null) return;
+    final variante = ref.read(themeVariantProvider);
+
+    setState(() => _exportEnCours = true);
+    try {
+      final octets = await construireBulletinPdf(
+        bulletin: widget.bulletin,
+        fiche: widget.fiche,
+        etablissement: etablissement,
+        variante: variante,
+      );
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EcranApercuPdf(
+            titre: widget.bulletin.type.libelle,
+            octets: octets,
+            nomFichier: 'bulletin_${widget.fiche.matricule}.pdf',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exportEnCours = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final libelleType = switch (bulletin.type) {
-      TypeBulletin.trimestriel => 'Trimestre',
-      TypeBulletin.semestriel => 'Semestre',
-      TypeBulletin.annuel => 'Bulletin annuel',
-    };
+    final bulletin = widget.bulletin;
+    final libelleType = bulletin.type.libelle;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -94,6 +130,17 @@ class _CarteBulletin extends StatelessWidget {
                     ],
                   ),
                 ],
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _exportEnCours ? null : _exporterPdf,
+                    icon: _exportEnCours
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                    label: const Text('Exporter en PDF'),
+                  ),
+                ),
               ],
             ),
           ),

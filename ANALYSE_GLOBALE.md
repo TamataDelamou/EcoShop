@@ -279,6 +279,7 @@ délivré** par migrations SQL est le suivant.
 | M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | livré et vérifié (client Flutter + RLS 31-33 ; le Port Paiement, ex-M14 dans le plan §4.3, reste un chantier distinct à replanifier M16-M20 — non couplé à ce module) |
 | M15 | Marketplace sans authentification | `20260906001500_m15_marketplace_sans_auth.sql` | [M15](./docs/contrats/M15_marketplace_public.md) | nouveau |
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
+| M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -300,6 +301,27 @@ d'écart du module). A entraîné, en problème hérité résolu au passage, la
 migration des ~76 fichiers d'écrans qui lisaient des couleurs figées à la
 compilation (`AppColors.xxx`) vers un système de palette réactif au thème
 (`AppPalette`, `ThemeExtension`).
+
+**M15ter — Export PDF (bulletins & reçus)** (livré, cf.
+[`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md)) :
+inséré juste après M15bis, avant M16. Réponse au point d'écart §0.2 de
+`docs/AUDIT_ECOSHOP_FLUTTER.md` : `ecoshop_flutter` générait un bulletin et
+un reçu PDF (mise en page codée en dur) que la cible ne savait pas du tout
+produire. Le bulletin (M6) et le reçu (dérivé d'une écriture comptable M14)
+sont désormais exportables, prévisualisables, imprimables et partageables,
+alignés sur les 3 chartes graphiques de M15bis (toujours en variante claire
+pour le document imprimé). Les attestations restent hors périmètre
+(confirmées absentes des deux côtés par l'audit, pas une régression).
+
+**Patch de sécurité M9 — messagerie de groupe scolaire** (résolu, cf.
+`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1 et
+`docs/contrats/M09_communication_notifications.md` §6) : traité en urgence,
+hors séquencement normal. Schéma RLS complet créé pour les groupes de classe
+supervisés (7 règles absolues de protection des mineurs reprises
+d'`ecoshop_flutter`, absentes côté serveur cible) ; fuite de données locales
+entre comptes successifs sur un même appareil corrigée côté client
+(purge à la déconnexion). Réserve assumée : les écrans du prototype local ne
+sont pas encore raccordés à ce nouveau backend.
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
@@ -354,13 +376,23 @@ rejeu `supabase db reset` + tests pgTAP du workflow CI GitHub Actions.
 [`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md)) :
 233 tests passent, `flutter analyze` ne remonte aucun problème.
 
+**M15ter — Export PDF (bulletins & reçus)** est livré (cf. §4.4 ci-dessus et
+[`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md)) :
+246 tests passent, `flutter analyze` ne remonte aucun problème.
+
+**Patch de sécurité M9 — messagerie de groupe scolaire** est résolu (cf.
+`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1) : schéma RLS complet + purge de la
+fuite locale entre comptes à la déconnexion, 15 assertions pgTAP dédiées.
+
 Le module suivant dans la séquence est **M16 — IA à rôles**, mais son
-ouverture est **bloquée** tant que le rapport d'écart rétroactif
+ouverture reste **bloquée** tant que le reste du rapport d'écart rétroactif
 [`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md) (M0 → M15,
 règle transversale §4.2.5) n'a pas été examiné et arbitré module par module
-par le porteur de projet — en particulier le point de sécurité sur la
-protection des mineurs dans les conversations de classe (M9, absente côté
-serveur) et l'absence de génération PDF des bulletins/reçus (M6/M13/M14).
+par le porteur de projet — les deux points les plus sensibles (protection des
+mineurs en M9, génération PDF des bulletins/reçus) sont désormais traités
+(voir ci-dessus), mais ~10 autres écarts restent à arbitrer un par un
+(parcours d'inscription, onboarding enseignant/direction, paie RH dégradée,
+exceptions d'emploi du temps, etc. — liste complète §11 de l'audit).
 L'ouverture de M16 devra aussi intégrer les conclusions de cet audit
 concernant Parent IA (vérifier que l'implémentation `ecoshop_flutter`
 existante, cf. `PARENT_IA.md`, n'est pas une base à ignorer), ainsi que la

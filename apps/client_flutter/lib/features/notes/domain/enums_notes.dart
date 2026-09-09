@@ -62,6 +62,12 @@ enum TypeBulletin {
     }
     return TypeBulletin.trimestriel;
   }
+
+  String get libelle => switch (this) {
+        trimestriel => 'Trimestre',
+        semestriel => 'Semestre',
+        annuel => 'Bulletin annuel',
+      };
 }
 
 enum StatutBulletin {
