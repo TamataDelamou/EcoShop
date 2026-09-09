@@ -115,12 +115,19 @@ flutter test
 | M14 | Comptabilité sans OHADA | ✅ livré |
 | M15 | Marketplace sans authentification | ✅ livré |
 | M15bis | Thèmes internationaux & Dark Mode | ✅ livré |
-| M15ter | Export PDF (bulletins & reçus) | ✅ livré |
+| M15ter | Export PDF (bulletins) | ✅ livré (volet reçus retiré, voir ci-dessous) |
+| M15quater | Inscription, réinscription & encaissement de scolarité | ⏳ à venir — prochain module |
 | M16-M20 | IA à rôles, bibliothèque, transport, réseau, reporting | ⏳ à venir |
 
-**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15ter livrés).**
+**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15ter livrés,
+M15quater en cours de cadrage).**
 M15bis et M15ter n'ont pas de migration SQL propre (modules purement
 client) — insérés entre M15 et M16 conformément à `ANALYSE_GLOBALE.md` §4.4.
+M15ter livrait initialement un export PDF de reçu adossé aux écritures
+comptables générales de M14 ; ce sous-périmètre a été **retiré** avant tout
+push (aucun lien structurel avec un élève/une inscription/un solde dû — voir
+`docs/contrats/M15ter_export_pdf.md` §7) et sera reconstruit après
+**M15quater**, sur une entité d'encaissement dédiée.
 Un patch de sécurité d'urgence a également été appliqué à M9 (messagerie de
 groupe scolaire — protection des mineurs, voir
 `docs/contrats/M09_communication_notifications.md` §6 et
@@ -141,7 +148,7 @@ module par module sur ce socle déjà livré :
 | M14 | Comptabilité sans OHADA | ✅ livré et vérifié |
 | M15 | Marketplace sans authentification | ✅ livré et vérifié (périmètre reconsidéré, cf. `docs/ETAT_PHASE_C.md` §2) |
 | M15bis | Thèmes internationaux & Dark Mode | ✅ livré et vérifié (233 tests, `flutter analyze` propre) |
-| M15ter | Export PDF (bulletins & reçus) | ✅ livré et vérifié (246 tests, `flutter analyze` propre) |
+| M15ter | Export PDF (bulletins) | ✅ livré et vérifié (242 tests, `flutter analyze` propre) — volet reçus retiré |
 
 État détaillé, écarts doc/DDL corrigés et réserve technique (exécution
 locale des migrations) dans [`docs/ETAT_PHASE_C.md`](./docs/ETAT_PHASE_C.md).

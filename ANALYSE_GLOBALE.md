@@ -279,7 +279,8 @@ délivré** par migrations SQL est le suivant.
 | M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | livré et vérifié (client Flutter + RLS 31-33 ; le Port Paiement, ex-M14 dans le plan §4.3, reste un chantier distinct à replanifier M16-M20 — non couplé à ce module) |
 | M15 | Marketplace sans authentification | `20260906001500_m15_marketplace_sans_auth.sql` | [M15](./docs/contrats/M15_marketplace_public.md) | nouveau |
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
-| M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit |
+| M15ter | Export PDF (bulletins) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré puis retiré, voir M15ter §7 |
+| M15quater | Inscription, réinscription & encaissement de scolarité | *(à définir — nouvelles tables + RPC)* | *(à venir)* | inséré hors plan §4.3, entre M15ter et M16 — prochain module à ouvrir |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -302,16 +303,34 @@ migration des ~76 fichiers d'écrans qui lisaient des couleurs figées à la
 compilation (`AppColors.xxx`) vers un système de palette réactif au thème
 (`AppPalette`, `ThemeExtension`).
 
-**M15ter — Export PDF (bulletins & reçus)** (livré, cf.
+**M15ter — Export PDF (bulletins)** (livré, cf.
 [`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md)) :
 inséré juste après M15bis, avant M16. Réponse au point d'écart §0.2 de
 `docs/AUDIT_ECOSHOP_FLUTTER.md` : `ecoshop_flutter` générait un bulletin et
 un reçu PDF (mise en page codée en dur) que la cible ne savait pas du tout
-produire. Le bulletin (M6) et le reçu (dérivé d'une écriture comptable M14)
-sont désormais exportables, prévisualisables, imprimables et partageables,
-alignés sur les 3 chartes graphiques de M15bis (toujours en variante claire
-pour le document imprimé). Les attestations restent hors périmètre
-(confirmées absentes des deux côtés par l'audit, pas une régression).
+produire. Le bulletin (M6) est désormais exportable, prévisualisable,
+imprimable et partageable, aligné sur les 3 chartes graphiques de M15bis
+(toujours en variante claire pour le document imprimé). Les attestations
+restent hors périmètre (confirmées absentes des deux côtés par l'audit, pas
+une régression). **Le volet « reçu » a été retiré** avant tout push : la
+première version s'appuyait sur `EcritureComptable` (écriture comptable
+générale M14), sans aucun lien structurel avec un élève, une inscription ou
+un solde dû — un document ayant l'apparence d'un reçu de scolarité sans
+garantie qu'il en soit un. Voir `docs/contrats/M15ter_export_pdf.md` §7. Le
+reçu PDF sera reconstruit après **M15quater** (ci-dessous), sur l'entité
+d'encaissement dédiée que ce module livrera.
+
+**M15quater — Inscription, réinscription & encaissement de scolarité**
+(prochain module à ouvrir, périmètre acté avec le porteur de projet, pas
+encore construit) : regroupe les écarts liés à l'administration scolaire et
+aux finances élève déjà signalés par l'audit (§4-5 ci-dessus et
+`docs/AUDIT_ECOSHOP_FLUTTER.md` §3-4) — création d'inscription, réinscription
+annuelle, statut boursier, champs administratifs de la fiche élève,
+paramètres établissement (tarifs/paliers), détection de double inscription,
+et surtout une **entité d'encaissement de scolarité dédiée** (liant
+explicitement `fiche_eleve_id`/`inscription_id`, montant dû, montant payé,
+solde) — préalable nécessaire à la reconstruction du reçu PDF retiré de
+M15ter. Passe devant les ~8 autres écarts de l'audit restant à arbitrer.
 
 **Patch de sécurité M9 — messagerie de groupe scolaire** (résolu, cf.
 `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1 et
@@ -376,25 +395,31 @@ rejeu `supabase db reset` + tests pgTAP du workflow CI GitHub Actions.
 [`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md)) :
 233 tests passent, `flutter analyze` ne remonte aucun problème.
 
-**M15ter — Export PDF (bulletins & reçus)** est livré (cf. §4.4 ci-dessus et
+**M15ter — Export PDF (bulletins)** est livré (cf. §4.4 ci-dessus et
 [`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md)) :
-246 tests passent, `flutter analyze` ne remonte aucun problème.
+242 tests passent, `flutter analyze` ne remonte aucun problème. **Le volet
+« reçu » a été retiré** avant tout push vers `origin/main` (aucune garantie
+de lien avec un vrai encaissement de scolarité, voir M15ter §7) — à
+reconstruire après M15quater.
 
 **Patch de sécurité M9 — messagerie de groupe scolaire** est résolu (cf.
 `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1) : schéma RLS complet + purge de la
 fuite locale entre comptes à la déconnexion, 15 assertions pgTAP dédiées.
 
-Le module suivant dans la séquence est **M16 — IA à rôles**, mais son
-ouverture reste **bloquée** tant que le reste du rapport d'écart rétroactif
+Le prochain module à ouvrir est **M15quater — Inscription, réinscription &
+encaissement de scolarité** (voir §4.4 ci-dessus) — il passe devant les ~8
+autres écarts de l'audit restant à arbitrer. **M16 — IA à rôles** reste
+**bloqué** tant que le reste du rapport d'écart rétroactif
 [`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md) (M0 → M15,
 règle transversale §4.2.5) n'a pas été examiné et arbitré module par module
-par le porteur de projet — les deux points les plus sensibles (protection des
-mineurs en M9, génération PDF des bulletins/reçus) sont désormais traités
-(voir ci-dessus), mais ~10 autres écarts restent à arbitrer un par un
-(parcours d'inscription, onboarding enseignant/direction, paie RH dégradée,
-exceptions d'emploi du temps, etc. — liste complète §11 de l'audit).
-L'ouverture de M16 devra aussi intégrer les conclusions de cet audit
-concernant Parent IA (vérifier que l'implémentation `ecoshop_flutter`
-existante, cf. `PARENT_IA.md`, n'est pas une base à ignorer), ainsi que la
-replanification des verticaux décalés déjà identifiée (§4.4) : Port Paiement,
-moteur de questions/quiz, profil de maîtrise, préparation aux examens.
+par le porteur de projet — le point le plus sensible (protection des
+mineurs en M9) est désormais traité (voir ci-dessus), la génération PDF des
+bulletins l'est également, mais le reçu de scolarité dépend de M15quater et
+~8 autres écarts restent à arbitrer un par un (parcours d'entrée rôles à
+privilège, onboarding enseignant/direction, paie RH dégradée, exceptions
+d'emploi du temps, etc. — liste complète §11 de l'audit). L'ouverture de M16
+devra aussi intégrer les conclusions de cet audit concernant Parent IA
+(vérifier que l'implémentation `ecoshop_flutter` existante, cf.
+`PARENT_IA.md`, n'est pas une base à ignorer), ainsi que la replanification
+des verticaux décalés déjà identifiée (§4.4) : Port Paiement, moteur de
+questions/quiz, profil de maîtrise, préparation aux examens.

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/shimmer.dart';
-import '../../auth/application/auth_providers.dart';
-import '../../export_pdf/data/recu_pdf_builder.dart';
-import '../../export_pdf/presentation/ecran_apercu_pdf.dart';
-import '../../themes/application/theme_providers.dart';
 import '../application/comptabilite_providers.dart';
 import '../domain/ecriture_comptable.dart';
 import 'ecran_saisie_ecriture.dart';
@@ -15,6 +11,13 @@ import 'widgets/montant.dart';
 /// Les codes de comptes sont résolus depuis le plan comptable déjà chargé
 /// (pas d'embed PostgREST : deux FK vers `plans_comptables` sur la même
 /// ligne rendraient la relation ambiguë, cf. `ecriture_comptable.dart`).
+///
+/// Pas d'export « reçu » ici : une écriture comptable générale n'a aucun
+/// lien structurel avec un élève, une inscription ou un solde dû (voir
+/// `docs/contrats/M15ter_export_pdf.md`) — un export PDF depuis cet écran
+/// aurait l'apparence d'un reçu de scolarité sans qu'aucune donnée ne le
+/// garantisse. Le PDF reçu sera rebranché ici une fois l'entité dédiée
+/// livrée par M15quater (encaissement de scolarité).
 class EcranEcrituresRecentes extends ConsumerWidget {
   const EcranEcrituresRecentes({super.key, required this.etablissementId});
 
@@ -71,7 +74,7 @@ class EcranEcrituresRecentes extends ConsumerWidget {
   }
 }
 
-class _CarteEcriture extends ConsumerStatefulWidget {
+class _CarteEcriture extends StatelessWidget {
   const _CarteEcriture({
     required this.ecriture,
     required this.compteDebit,
@@ -85,75 +88,25 @@ class _CarteEcriture extends ConsumerStatefulWidget {
   final String journal;
 
   @override
-  ConsumerState<_CarteEcriture> createState() => _CarteEcritureState();
-}
-
-class _CarteEcritureState extends ConsumerState<_CarteEcriture> {
-  bool _exportEnCours = false;
-
-  Future<void> _exporterRecu() async {
-    final etablissement = ref.read(etablissementActifProvider);
-    if (etablissement == null) return;
-    final variante = ref.read(themeVariantProvider);
-
-    setState(() => _exportEnCours = true);
-    try {
-      final octets = await construireRecuPdf(
-        ecriture: widget.ecriture,
-        libelleCompteDebit: widget.compteDebit,
-        libelleCompteCredit: widget.compteCredit,
-        libelleJournal: widget.journal,
-        etablissement: etablissement,
-        variante: variante,
-      );
-      if (!mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => EcranApercuPdf(
-            titre: 'Reçu',
-            octets: octets,
-            nomFichier: 'recu_${widget.ecriture.id}.pdf',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _exportEnCours = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final ecriture = widget.ecriture;
     final date = ecriture.dateEcriture;
     final dateAffichee = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         title: Text(ecriture.libelle),
-        subtitle: Text('$dateAffichee — ${widget.journal}\n${widget.compteDebit} → ${widget.compteCredit}'),
+        subtitle: Text('$dateAffichee — $journal\n$compteDebit → $compteCredit'),
         isThreeLine: true,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(formaterMontant(ecriture.montant), style: const TextStyle(fontWeight: FontWeight.w700)),
-                if (ecriture.saisiHorsLigne)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Icon(Icons.cloud_off_outlined, size: 14),
-                  ),
-              ],
-            ),
-            IconButton(
-              tooltip: 'Exporter le reçu (PDF)',
-              onPressed: _exportEnCours ? null : _exporterRecu,
-              icon: _exportEnCours
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.picture_as_pdf_outlined),
-            ),
+            Text(formaterMontant(ecriture.montant), style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (ecriture.saisiHorsLigne)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Icon(Icons.cloud_off_outlined, size: 14),
+              ),
           ],
         ),
       ),
