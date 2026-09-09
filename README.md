@@ -149,8 +149,8 @@ module par module sur ce socle déjà livré :
 | M14 | Comptabilité sans OHADA | ✅ livré et vérifié |
 | M15 | Marketplace sans authentification | ✅ livré et vérifié (périmètre reconsidéré, cf. `docs/ETAT_PHASE_C.md` §2) |
 | M15bis | Thèmes internationaux & Dark Mode | ✅ livré et vérifié (233 tests, `flutter analyze` propre) |
-| M15ter | Export PDF (bulletins & reçus) | ✅ livré et vérifié (260 tests, `flutter analyze` propre) |
-| M15quater | Inscription, réinscription & encaissement de scolarité | ✅ livré et vérifié (260 tests, `flutter analyze` propre ; 18 assertions pgTAP non exécutées localement) |
+| M15ter | Export PDF (bulletins & reçus) | ✅ livré et vérifié (261 tests, `flutter analyze` propre) |
+| M15quater | Inscription, réinscription & encaissement de scolarité | ✅ livré et vérifié (261 tests, `flutter analyze` propre ; 25 assertions pgTAP — statut d'exécution locale : voir `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.4) |
 
 État détaillé, écarts doc/DDL corrigés et réserve technique (exécution
 locale des migrations) dans [`docs/ETAT_PHASE_C.md`](./docs/ETAT_PHASE_C.md).

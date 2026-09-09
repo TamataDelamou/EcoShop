@@ -59,6 +59,60 @@ void main() {
     });
   }
 
+  test(
+      'chaîne complète : ligne "serveur" (JSON snake_case identique à une '
+      'réponse Postgres réelle) -> depuisJson -> construireRecuPdf, sans '
+      'objet Dart construit à la main dans le chemin testé', () async {
+    // Simule exactement ce que renverrait `encaissements_scolarite` (colonnes
+    // de la migration 20260906001501) et `fiches_eleves` après un INSERT
+    // réel côté serveur — reproduit la forme des données, pas un objet Dart
+    // pré-fabriqué, pour vérifier le chemin réellement emprunté par
+    // `_exporterRecu()` (dépendance : depuisJson, pas un constructeur direct).
+    final ligneServeurEncaissement = <String, dynamic>{
+      'id': 'enc-server-1',
+      'etablissement_id': 'e1',
+      'fiche_eleve_id': 'f1',
+      'inscription_id': 'i1',
+      'type_frais': 'scolarite',
+      'montant': 400000,
+      'moyen_paiement': 'mobile_money',
+      'reference_paiement': 'TXN-SERVEUR-77',
+      'date_paiement': '2026-10-06',
+      'saisi_par': 'p-direction-server',
+      'statut': 'valide',
+      'motif_annulation': null,
+      'annule_par': null,
+      'annule_le': null,
+      'created_at': '2026-10-06T09:00:00.000Z',
+    };
+    final ligneServeurFiche = <String, dynamic>{
+      'id': 'f1',
+      'etablissement_id': 'e1',
+      'matricule': 'GS-00099',
+      'nom': 'DIALLO',
+      'prenom': 'Fatoumata',
+      'date_naissance': '2012-06-01',
+    };
+
+    final encaissement = EncaissementScolarite.depuisJson(ligneServeurEncaissement);
+    final ficheServeur = FicheEleve.depuisJson(ligneServeurFiche);
+
+    // La donnée qui a traversé le JSON n'a pas été altérée en chemin.
+    expect(encaissement.referencePaiement, 'TXN-SERVEUR-77');
+    expect(encaissement.saisiPar, 'p-direction-server');
+    expect(ficheServeur.matricule, 'GS-00099');
+
+    final octets = await construireRecuPdf(
+      encaissement: encaissement,
+      fiche: ficheServeur,
+      etablissement: etablissement,
+      variante: AppThemeVariant.francophoneCfa,
+    );
+
+    expect(String.fromCharCodes(octets.take(5)), '%PDF-');
+    expect(octets.length, greaterThan(500));
+  });
+
   test('fonctionne aussi pour un encaissement sans référence de paiement', () async {
     final encaissement = EncaissementScolarite(
       id: 'enc2',

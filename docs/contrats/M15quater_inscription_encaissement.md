@@ -156,22 +156,28 @@ Conformément à la règle transversale ANALYSE_GLOBALE.md §4.2.5.
 
 ## 7. Tests
 
-- pgTAP (`tests/rls/38_m15quater_inscription_encaissement.sql`, 18
+- pgTAP (`tests/rls/38_m15quater_inscription_encaissement.sql`, 25
   assertions) : création d'inscription (permission, matricule généré),
   doublon, réinscription (contrainte unique sur la même année), statut
   boursier tracé, paliers ≤ 100 %, solde calculé serveur, encaissement
   (auteur forcé, visibilité personnel/parent/tiers, immutabilité,
-  annulation motivée).
+  annulation motivée). Renforcé après relecture : isolation inter-
+  établissement prouvée avec un **second établissement réel** doté de sa
+  propre direction (pas seulement un tiers non affilié — §8, section 9) ;
+  annulation **valide** (motif fourni) — succès, `annule_par`/`annule_le`
+  tracés automatiquement, `solde_scolarite` recalculé (section 10).
 - Flutter : round-trip JSON pour tous les nouveaux domaines
   (`test/features/scolarite/domain_json_test.dart`), repli cache hors ligne
   pour les nouvelles lectures et absence de repli pour les écritures
   (`test/features/scolarite/cached_scolarite_repository_test.dart`), reçu
-  PDF reconstruit (`test/features/export_pdf/recu_pdf_builder_test.dart`).
+  PDF reconstruit (`test/features/export_pdf/recu_pdf_builder_test.dart`,
+  y compris un test de chaîne complète JSON-serveur → `depuisJson` →
+  `construireRecuPdf`, sans objet Dart construit à la main dans le chemin
+  testé).
 
-260 tests Flutter passent au total, `flutter analyze` propre. Les tests
-pgTAP n'ont pas pu être exécutés localement (outils Postgres/Supabase
-absents du poste — même réserve que le reste du projet, cf.
-`docs/ETAT_PHASE_A.md`).
+261 tests Flutter passent au total, `flutter analyze` propre. Statut
+d'exécution des 25 assertions pgTAP : voir `docs/AUDIT_ECOSHOP_FLUTTER.md`
+§0.4 (tentative d'installation Docker/Podman documentée).
 
 ---
 

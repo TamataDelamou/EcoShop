@@ -46,7 +46,7 @@ l'outillage Postgres/Supabase sera disponible.
 | `35_m15_catalogue_public.sql` | Catalogue marketplace public (parcours invité sans auth) | M15 |
 | `36_m15_panier_invite.sql` | Panier/commande invités (propriétaire = profil public) | M15 |
 | `37_m9_patch_messagerie_groupe.sql` | Patch de sécurité — 7 règles absolues de protection des mineurs sur la messagerie de groupe (membre/parent/non-membre, création réservée adulte, modération, signalements) | M9 (patch) |
-| `38_m15quater_inscription_encaissement.sql` | Création d'inscription (matricule serveur, permission), doublon, réinscription (contrainte unique), statut boursier tracé, paliers ≤ 100 %, solde scolaire serveur, encaissement (auteur forcé, visibilité, immutabilité, annulation motivée) | M15quater |
+| `38_m15quater_inscription_encaissement.sql` | Création d'inscription (matricule serveur, permission), doublon, réinscription (contrainte unique), statut boursier tracé, paliers ≤ 100 %, solde scolaire serveur, encaissement (auteur forcé, visibilité, immutabilité, annulation motivée), isolation inter-établissement réelle (2 établissements distincts), annulation valide (succès + traçabilité + recalcul de solde) | M15quater |
 
 ## Prérequis
 

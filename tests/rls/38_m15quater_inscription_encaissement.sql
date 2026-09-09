@@ -13,7 +13,13 @@
 --   • un encaissement force `saisi_par = auth.uid()`, est visible à
 --     l'élève/au parent, invisible à un tiers, immuable une fois créé
 --     (sauf annulation tracée avec motif obligatoire) ; un élève ne peut pas
---     en créer.
+--     en créer ;
+--   • isolation inter-établissement RÉELLE (deux établissements distincts,
+--     chacun avec sa propre direction) : la direction d'un établissement B
+--     ne peut ni lire ni écrire un encaissement de l'établissement A ;
+--   • une annulation valide (motif fourni) réussit, trace automatiquement
+--     `annule_par`/`annule_le`, et `solde_scolarite` se recalcule aussitôt
+--     (l'encaissement annulé sort de la somme des montants payés).
 --
 -- Note technique : l'interpolation de variable psql (:'var') ne doit jamais
 -- apparaître à l'intérieur d'un bloc dollar-quoté ($$...$$) — on passe les
@@ -40,7 +46,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(18);
+SELECT plan(25);
 
 -- ---------------------------------------------------------------------------
 -- Établissement (id fixe), 2 années scolaires, 2 classes, comptes.
@@ -64,9 +70,19 @@ SELECT pg_temp.creer_compte('224600003001', 'direction') AS dir_id      \gset
 SELECT pg_temp.creer_compte('224600003002', 'eleve')     AS eleve_id    \gset
 SELECT pg_temp.creer_compte('224600003003', 'parent')    AS parent_id   \gset
 SELECT pg_temp.creer_compte('224600003004', 'eleve')     AS etranger_id \gset
+SELECT pg_temp.creer_compte('224600003005', 'direction') AS dir_b_id    \gset
 
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
 VALUES (:'dir_id'::uuid, '42000000-0000-0000-0000-000000000001', 'direction');
+
+-- Un second établissement RÉEL, distinct, avec sa propre direction — pour
+-- prouver l'isolation inter-établissement (et pas seulement l'exclusion
+-- d'un tiers non affilié, cf. 8c).
+INSERT INTO public.etablissements (id, nom, slug)
+VALUES ('42000000-0000-0000-0000-000000000099', 'École B (isolation)', 'ecole-b-isolation-m15q');
+
+INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
+VALUES (:'dir_b_id'::uuid, '42000000-0000-0000-0000-000000000099', 'direction');
 
 -- ---------------------------------------------------------------------------
 -- Assertions
@@ -248,6 +264,69 @@ SELECT throws_ok(
   format($$ UPDATE public.encaissements_scolarite SET statut = 'annule' WHERE id = %L $$, :'encaissement_id'),
   '23514',
   NULL
+);
+
+-- ---------------------------------------------------------------------------
+-- 9. Isolation RÉELLE inter-établissement — deux établissements distincts,
+-- chacun avec sa propre direction (pas seulement un tiers non affilié).
+-- ---------------------------------------------------------------------------
+
+-- 9a. La direction de l'établissement B ne voit pas l'encaissement de A.
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'dir_b_id', 'role', 'authenticated')::text, true);
+SELECT is(
+  (SELECT count(*) FROM public.encaissements_scolarite WHERE id = :'encaissement_id'::uuid)::int, 0,
+  'encaissement : invisible à la direction d''un autre établissement (isolation réelle, pas juste un tiers non affilié)'
+);
+
+-- 9b. La direction de l'établissement B ne peut pas insérer un encaissement
+-- rattaché à l'établissement A (elle n'est direction que de B).
+SELECT throws_ok(
+  format(
+    $$ INSERT INTO public.encaissements_scolarite
+       (etablissement_id, fiche_eleve_id, inscription_id, type_frais, montant, saisi_par)
+       VALUES ('42000000-0000-0000-0000-000000000001', %L, %L, 'scolarite', 1000, auth.uid()) $$,
+    :'fiche_id', :'inscription1_id'
+  ),
+  '42501',
+  NULL
+);
+
+-- ---------------------------------------------------------------------------
+-- 10. Annulation valide (motif fourni) : succès, traçabilité auto, solde
+-- recalculé côté serveur (jamais stocké).
+-- ---------------------------------------------------------------------------
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
+
+UPDATE public.encaissements_scolarite
+SET statut = 'annule', motif_annulation = 'Erreur de saisie - double encaissement'
+WHERE id = :'encaissement_id'::uuid;
+
+SELECT is(
+  (SELECT statut::text FROM public.encaissements_scolarite WHERE id = :'encaissement_id'::uuid),
+  'annule',
+  'annulation motivée : acceptée, statut passé à annule'
+);
+SELECT is(
+  (SELECT annule_par FROM public.encaissements_scolarite WHERE id = :'encaissement_id'::uuid)::text,
+  :'dir_id',
+  'annulation : annule_par enregistré automatiquement (auth.uid()), jamais transmis par le client'
+);
+SELECT ok(
+  (SELECT annule_le FROM public.encaissements_scolarite WHERE id = :'encaissement_id'::uuid) IS NOT NULL,
+  'annulation : annule_le horodaté automatiquement'
+);
+
+SELECT is(
+  (SELECT montant_paye FROM public.solde_scolarite(:'inscription1_id'::uuid))::numeric,
+  0::numeric,
+  'solde scolaire : recalculé automatiquement, l''encaissement annulé sort de la somme payée'
+);
+SELECT is(
+  (SELECT solde FROM public.solde_scolarite(:'inscription1_id'::uuid))::numeric,
+  1000000::numeric,
+  'solde scolaire : redevient égal au tarif complet après annulation du seul encaissement'
 );
 
 RESET ROLE;

@@ -122,9 +122,13 @@ Conformément à la règle transversale ANALYSE_GLOBALE.md §4.2.5.
 - `test/features/export_pdf/recu_pdf_builder_test.dart` (reconstruit, voir
   §7) — génère un PDF structurellement valide pour les 3 variantes à partir
   d'un `EncaissementScolarite` (M15quater), avec et sans référence de
-  paiement.
+  paiement ; inclut un test de chaîne complète (ligne « serveur » JSON
+  snake_case → `EncaissementScolarite.depuisJson`/`FicheEleve.depuisJson` →
+  `construireRecuPdf`) pour vérifier que le chemin réellement emprunté par
+  `_exporterRecu()` — pas un objet Dart pré-fabriqué à la main — produit
+  bien un PDF valide.
 
-260 tests passent au total (module entier, y compris M15quater),
+261 tests passent au total (module entier, y compris M15quater),
 `flutter analyze` propre.
 
 ## 6. Limites connues et éléments différés
@@ -178,6 +182,6 @@ chaque ligne de l'historique). Format A4 unique (pas de variante thermique
 **Point de contrôle** : le module M15ter (Export PDF) est-il totalement clos
 et validé ? — Bulletins livrés et conservés ; reçu livré, retiré pour raison
 de sécurité des données, puis reconstruit sur la bonne entité après
-M15quater. 260 tests passent, `flutter analyze` propre. **M16** reste
+M15quater. 261 tests passent, `flutter analyze` propre. **M16** reste
 bloqué indépendamment de M15ter, par l'arbitrage en attente du reste du
 rapport d'audit rétroactif (`docs/AUDIT_ECOSHOP_FLUTTER.md`).

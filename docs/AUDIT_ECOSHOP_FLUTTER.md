@@ -127,6 +127,128 @@ Détail complet en [§6](#6-m6--notes--évaluations) et [§13-15](#13-15-m13-mar
 | 9 | Aucun écran d'encaissement de frais de scolarité (solde élève, reçu) — le périmètre annoncé pour M14 n'a pas été livré tel quel | M14 | Élevé |
 | 10 | Gestion des stocks absente y compris en base — survente non prévenue par construction | M13 | Élevé |
 
+### 0.4 Vérifications post-M15quater — preuves RLS/annulation et tentative d'exécution locale des tests pgTAP
+
+Trois points de vérification exigés avant tout push, avec preuve.
+
+**a) Isolation par établissement sur `encaissements_scolarite` — pas seulement par élève.**
+Confirmé par lecture directe du code, pas par supposition :
+- `encaissements_insert_gestion`/`encaissements_update_annulation`
+  (migration `20260906001501...sql`, lignes 474-483) exigent
+  `a_permission(etablissement_id, 'scolarite.encaissement.gerer')` ou
+  `est_direction(etablissement_id)` — évalués sur la colonne
+  `etablissement_id` de la ligne, jamais sur l'élève.
+- `est_direction(p_etablissement)` (migration M1, ligne 298) et
+  `a_permission` filtrent `etablissements_membres` sur
+  `m.etablissement_id = p_etablissement` **exact** — un compte direction de
+  l'établissement B n'a simplement aucune ligne d'appartenance pour
+  l'établissement A, donc `est_direction(A)` est faux pour lui.
+- `encaissements_select_visible` appelle `encaissement_visible(id)` (lignes
+  250-259), qui teste `est_personnel(e.etablissement_id)` (même logique de
+  filtre exact) **ou** `fiche_visible(e.fiche_eleve_id)` — cette dernière
+  (migration M5, ligne 328) exige elle-même
+  `est_personnel(f.etablissement_id)` (établissement du fiche, pas
+  générique) **ou** être l'élève lui-même **ou** son parent confirmé.
+- **Preuve par test, renforcée à cette occasion** : le test 38 ne couvrait
+  jusqu'ici qu'un tiers non affilié à aucun établissement (§8c) — insuffisant
+  pour prouver une isolation *inter-établissement* au sens strict.
+  `tests/rls/38_m15quater_inscription_encaissement.sql` a été complété
+  (section 9) avec un **second établissement réel**, doté de sa propre
+  direction (`dir_b_id`) : la direction B ne voit pas l'encaissement de
+  l'établissement A (assertion 9a) et ne peut pas y insérer un encaissement
+  (42501, assertion 9b). 25 assertions au total désormais (était 18).
+
+**b) Recalcul du solde à l'annulation + traçabilité qui/quand.**
+- `solde_scolarite` (lignes 264-292) est une fonction **calculée à chaque
+  appel** (CTE sur `sum(montant) where statut = 'valide'`) — jamais une
+  colonne stockée. Un encaissement annulé (`statut = 'annule'`) sort
+  mécaniquement de cette somme dès l'appel suivant : la « mise à jour » est
+  automatique par construction, il n'y a pas de recalcul explicite à
+  déclencher ni à oublier.
+- `encaissements_verifie_immuable` (lignes 216-239) impose
+  `new.annule_par := auth.uid()` et `new.annule_le := now()` **côté
+  serveur**, uniquement à la transition `valide → annule`, en plus du motif
+  saisi par le client (`motif_annulation`, obligatoire, sinon 23514).
+- **Le test 38 ne couvrait jusqu'ici que le rejet d'une annulation sans
+  motif (§8d)**, jamais le succès d'une annulation valide — c'est un vrai
+  trou comblé à cette occasion : section 10 du test insère une annulation
+  motivée, puis vérifie `statut = 'annule'`, `annule_par = dir_id`,
+  `annule_le` non nul, et surtout que `solde_scolarite` redevient égal au
+  tarif plein (`montant_paye = 0`, `solde = 1000000`) une fois le seul
+  encaissement annulé.
+
+**c) Test de bout en bout encaissement → PDF reçu, sur la même donnée.**
+Le test existant (`test/features/export_pdf/recu_pdf_builder_test.dart`)
+construisait un objet `EncaissementScolarite` **à la main** en Dart, puis le
+passait au générateur de PDF — un test unitaire du rendu, pas une preuve que
+la donnée *telle qu'elle reviendrait du serveur* survit intacte jusqu'au PDF.
+Un test d'intégration au sens strict (insertion réelle en base, export
+depuis cette même ligne) n'est pas réalisable sans instance Postgres
+disponible (voir ci-dessous). En attendant, un test de chaîne a été ajouté
+au même fichier : une ligne JSON snake_case **identique à ce que renverrait
+Postgres** (colonnes de la migration `encaissements_scolarite`/
+`fiches_eleves`) est désérialisée via `EncaissementScolarite.depuisJson`/
+`FicheEleve.depuisJson` — le même chemin que `_exporterRecu()` dans
+`ecran_encaissement_scolarite.dart` — puis passée telle quelle à
+`construireRecuPdf`. Limite assumée : le test vérifie que la donnée
+traverse la désérialisation sans altération et produit un PDF structurel
+valide ; il ne relit pas le texte à l'intérieur du PDF généré (aucune
+dépendance d'extraction de texte PDF n'est présente dans le projet —
+ajouter une telle dépendance pour ce seul test a été jugé disproportionné,
+à confirmer avec le porteur de projet si une preuve plus forte est exigée).
+
+**Tentative d'installation Docker/Podman en local, avec preuve.**
+Constat avant toute tentative : `docker`/`podman` absents du PATH ; le CLI
+Supabase, lui, est déjà installé (`supabase 2.116.0`).
+
+1. `winget --version` → `v1.29.280` (disponible).
+2. `wsl --status` → *« Le Sous-système Windows pour Linux n'est pas
+   installé. Vous pouvez effectuer l'installation en exécutant
+   "wsl.exe --install". »* — **WSL2 absent**, prérequis du backend par
+   défaut de Docker Desktop sur Windows.
+3. Vérification des droits : la session d'exécution n'est **pas**
+   administrateur (`IsInRole(Administrator)` → `False`).
+4. Tentative réelle : `winget install --id Docker.DockerDesktop -e
+   --accept-source-agreements --accept-package-agreements`. Sortie
+   obtenue avant blocage :
+   ```
+   Trouvé Docker Desktop [Docker.DockerDesktop] Version 4.90.0
+   Téléchargement en cours https://desktop.docker.com/win/main/amd64/238679/Docker%20Desktop%20Installer.exe
+   ```
+   Après 25 minutes d'exécution, le processus `winget.exe` n'affichait
+   qu'un temps CPU cumulé de 3,7 s (quasi inactif) et aucun fichier
+   partiel n'était visible sur le disque — un blocage silencieux, sans
+   message d'erreur.
+5. Diagnostic du blocage — mesure directe de la bande passante disponible
+   vers l'hôte de téléchargement :
+   `curl` vers cette même URL a reçu **212 992 octets sur 604 875 184**
+   (la taille totale de l'installeur, ~577 Mo) en 15 secondes, soit
+   environ **14 Ko/s**. À ce débit, le seul téléchargement prendrait de
+   l'ordre de **12 heures**. Le réseau de ce poste (sandbox d'exécution)
+   n'est donc pas coupé vers ce domaine, mais sévèrement bridé — un blocage
+   de fait, pas un simple manque de tentative. Le processus a été arrêté
+   (`Stop-Process`) plutôt que laissé tourner indéfiniment.
+6. Podman a été écarté sans nouvelle tentative séparée : Podman Desktop sur
+   Windows exige la même machine de virtualisation (WSL2 ou Hyper-V,
+   ci-dessus absente) et la même élévation administrateur (ci-dessus
+   indisponible dans cette session) — les deux blocages constatés aux
+   points 2 et 3 s'appliquent identiquement, indépendamment du débit
+   réseau.
+
+**Conclusion honnête** : l'installation de Docker/Podman sur ce poste, dans
+cette session, est **bloquée par trois facteurs indépendants et vérifiés**
+(pas de droits administrateur, WSL2 non installé, débit réseau prohibitif
+vers le CDN de Docker) — pas par un manque de tentative. Les 25 assertions
+pgTAP des tests 38 (M15quater) et 31-33 (M14) restent donc **écrites mais
+non exécutées localement**. Elles n'ont pas non plus pu être vérifiées via
+la CI dans le cadre de cette demande (portée : exécution *locale*,
+explicitement hors CI). Lever ce blocage demanderait soit des droits
+administrateur + WSL2 pré-installé sur ce poste, soit un environnement
+d'exécution avec accès réseau non bridé vers `desktop.docker.com`, soit une
+alternative sans Docker (ex. Postgres natif Windows + extension pgTAP
+installée manuellement) — à arbitrer avec le porteur de projet si la preuve
+d'exécution locale reste requise avant le prochain push.
+
 ---
 
 ## 1. Méthode et limites
@@ -354,10 +476,12 @@ livré (cf. `docs/contrats/M15quater_inscription_encaissement.md`) : création
 d'inscription, réinscription, statut boursier, champs administratifs de la
 fiche élève, paramètres établissement (tarifs/paliers), détection de double
 inscription, et l'entité d'encaissement de scolarité dédiée qui a permis de
-reconstruire le reçu PDF retiré de M15ter (§0.2). 260 tests Flutter passent,
-`flutter analyze` propre ; 18 assertions pgTAP écrites (non exécutées
-localement, outils Postgres absents du poste — même réserve que le reste du
-projet).
+reconstruire le reçu PDF retiré de M15ter (§0.2). 261 tests Flutter passent,
+`flutter analyze` propre ; 25 assertions pgTAP écrites, isolation
+inter-établissement et annulation tracée vérifiées par preuve de code et
+tests renforcés (§0.4) ; installation locale de Docker/Podman tentée et
+bloquée par trois facteurs vérifiés (§0.4) — non exécutées localement, non
+plus par manque de tentative.
 
 **~8 écarts restants** (parcours d'entrée rôles à privilège, paie RH, tableau
 de bord directeur, séances ponctuelles, gestion des stocks, etc. — liste

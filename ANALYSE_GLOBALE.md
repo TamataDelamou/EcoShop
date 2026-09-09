@@ -399,7 +399,7 @@ rejeu `supabase db reset` + tests pgTAP du workflow CI GitHub Actions.
 
 **M15ter — Export PDF (bulletins & reçus)** est livré (cf. §4.4 ci-dessus et
 [`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md)) :
-260 tests passent, `flutter analyze` ne remonte aucun problème. Le volet
+261 tests passent, `flutter analyze` ne remonte aucun problème. Le volet
 « reçu », retiré avant tout push (aucune garantie de lien avec un vrai
 encaissement de scolarité, voir M15ter §7), a été **reconstruit** après
 M15quater sur l'entité d'encaissement dédiée.
@@ -407,8 +407,10 @@ M15quater sur l'entité d'encaissement dédiée.
 **M15quater — Inscription, réinscription & encaissement de scolarité** est
 livré (cf. §4.4 ci-dessus et
 [`docs/contrats/M15quater_inscription_encaissement.md`](./docs/contrats/M15quater_inscription_encaissement.md)) :
-260 tests Flutter passent, `flutter analyze` propre ; 18 assertions pgTAP
-écrites (non exécutées localement, outils Postgres absents du poste).
+261 tests Flutter passent, `flutter analyze` propre ; 25 assertions pgTAP
+écrites — voir `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.4 pour la vérification
+détaillée de l'isolation RLS, de l'annulation tracée, et le statut réel de
+la tentative d'exécution locale (Docker/Podman).
 
 **Patch de sécurité M9 — messagerie de groupe scolaire** est résolu (cf.
 `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1) : schéma RLS complet + purge de la
