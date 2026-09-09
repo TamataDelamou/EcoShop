@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/rh_providers.dart';
@@ -28,17 +28,17 @@ class EcranPaie extends ConsumerWidget {
         children: [
           Container(
             width: double.infinity,
-            color: AppColors.bleuElectrique.withValues(alpha: 0.06),
+            color: context.palette.primaire.withValues(alpha: 0.06),
             padding: const EdgeInsets.all(16),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.bleuElectrique, size: 18),
-                SizedBox(width: 8),
+                Icon(Icons.info_outline, color: context.palette.primaire, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     "Consultation seule — l'établissement des bulletins de paie "
                     'sera géré par le module Comptabilité.',
-                    style: TextStyle(fontSize: 12, color: AppColors.bleuElectrique),
+                    style: TextStyle(fontSize: 12, color: context.palette.primaire),
                   ),
                 ),
               ],
@@ -99,8 +99,8 @@ class _CarteBulletin extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _LigneMontant(libelle: 'Base', montant: bulletin.salaireBase),
-            _LigneMontant(libelle: 'Primes', montant: bulletin.primes, couleur: AppColors.vertMenthe),
-            _LigneMontant(libelle: 'Retenues', montant: -bulletin.retenues, couleur: AppColors.erreur),
+            _LigneMontant(libelle: 'Primes', montant: bulletin.primes, couleur: context.palette.succes),
+            _LigneMontant(libelle: 'Retenues', montant: -bulletin.retenues, couleur: context.palette.erreur),
             const Divider(),
             _LigneMontant(libelle: 'Net', montant: bulletin.net, accent: true),
           ],
@@ -157,10 +157,11 @@ class _PastilleStatutPaie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final couleur = switch (statut) {
-      StatutPaie.brouillon => AppColors.encreSecondaire,
-      StatutPaie.valide => AppColors.bleuElectrique,
-      StatutPaie.paye => AppColors.vertMenthe,
+      StatutPaie.brouillon => palette.encreSecondaire,
+      StatutPaie.valide => palette.primaire,
+      StatutPaie.paye => palette.succes,
     };
 
     return Container(

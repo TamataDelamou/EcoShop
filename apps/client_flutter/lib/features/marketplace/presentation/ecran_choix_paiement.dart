@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../application/marketplace_providers.dart';
 import '../domain/enums_marketplace.dart';
 import '../domain/ligne_commande.dart';
@@ -119,7 +120,7 @@ class _EcranChoixPaiementState extends ConsumerState<EcranChoixPaiement> {
                     Text('Total à régler', style: Theme.of(context).textTheme.bodyMedium),
                     Text(
                       formaterMontant(_total, 'XOF'),
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.bleuElectrique),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: context.palette.primaire),
                     ),
                     const SizedBox(height: 20),
                     Text('Mode de paiement', style: Theme.of(context).textTheme.titleSmall),

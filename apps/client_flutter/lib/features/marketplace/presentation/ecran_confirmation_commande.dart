@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../domain/commande.dart';
 import 'ecran_mes_commandes.dart';
 import 'widgets/montant.dart';
@@ -21,7 +22,7 @@ class EcranConfirmationCommande extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle_outline, size: 72, color: AppColors.vertMenthe),
+                Icon(Icons.check_circle_outline, size: 72, color: context.palette.succes),
                 const SizedBox(height: 20),
                 Text('Commande envoyée', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
@@ -29,7 +30,7 @@ class EcranConfirmationCommande extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   formaterMontant(commande.montantTotal, commande.devise),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: AppColors.bleuElectrique),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: context.palette.primaire),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(

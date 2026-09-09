@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../scolarite/domain/fiche_eleve.dart';
@@ -194,7 +194,7 @@ class _LigneNote extends StatelessWidget {
             note.absent ? 'Absent·e' : '${note.valeur?.toStringAsFixed(1) ?? '—'}/${evaluation?.bareme.toStringAsFixed(0) ?? '20'}',
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: note.absent ? AppColors.encreSecondaire : AppColors.encre,
+              color: note.absent ? context.palette.encreSecondaire : context.palette.encre,
             ),
           ),
         ],

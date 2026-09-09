@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../domain/enums_planification.dart';
 
 /// Pastille de statut d'une séance de progression pédagogique.
@@ -12,11 +13,11 @@ class PastilleStatutProgression extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutProgression.planifiee => AppColors.bleuElectrique,
-      StatutProgression.realisee => AppColors.vertMenthe,
-      StatutProgression.reportee => AppColors.orangePop,
-      StatutProgression.annulee => AppColors.encreSecondaire,
-      StatutProgression.proposee => AppColors.dore,
+      StatutProgression.planifiee => context.palette.primaire,
+      StatutProgression.realisee => context.palette.succes,
+      StatutProgression.reportee => context.palette.accent,
+      StatutProgression.annulee => context.palette.encreSecondaire,
+      StatutProgression.proposee => context.palette.premium,
     };
 
     return Container(

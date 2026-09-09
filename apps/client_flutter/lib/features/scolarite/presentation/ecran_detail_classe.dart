@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
@@ -104,25 +104,25 @@ class _CarteEleve extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.bleuElectrique.withValues(alpha: 0.12),
+          backgroundColor: context.palette.primaire.withValues(alpha: 0.12),
           child: Text(
             (fiche?.prenom.isNotEmpty ?? false) ? fiche!.prenom[0].toUpperCase() : '?',
-            style: const TextStyle(color: AppColors.bleuElectrique, fontWeight: FontWeight.w700),
+            style: TextStyle(color: context.palette.primaire, fontWeight: FontWeight.w700),
           ),
         ),
         title: Text(fiche?.nomComplet ?? 'Élève'),
         subtitle: Text('Matricule ${fiche?.matricule ?? '—'}'),
-        trailing: _pastilleStatut(inscription.statut.code),
+        trailing: _pastilleStatut(context, inscription.statut.code),
       ),
     );
   }
 
-  Widget _pastilleStatut(String code) {
+  Widget _pastilleStatut(BuildContext context, String code) {
     final (couleur, libelle) = switch (code) {
-      'active' => (AppColors.vertMenthe, 'Active'),
-      'redoublante' => (AppColors.orangePop, 'Redouble'),
-      'en_attente' => (AppColors.dore, 'En attente'),
-      _ => (AppColors.encreSecondaire, 'Retirée'),
+      'active' => (context.palette.succes, 'Active'),
+      'redoublante' => (context.palette.accent, 'Redouble'),
+      'en_attente' => (context.palette.premium, 'En attente'),
+      _ => (context.palette.encreSecondaire, 'Retirée'),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -176,15 +176,15 @@ class _CarteAffectation extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AppColors.bordure,
-          child: Icon(Icons.person, color: AppColors.encreSecondaire),
+        leading: CircleAvatar(
+          backgroundColor: context.palette.bordure,
+          child: Icon(Icons.person, color: context.palette.encreSecondaire),
         ),
         title: Text(affectation.nomEnseignant ?? 'Enseignant'),
         subtitle: Text(affectation.nomMatiere ?? 'Matière non précisée'),
         trailing: affectation.volumeHoraireHebdo != null
             ? Text('${affectation.volumeHoraireHebdo} h/sem.',
-                style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12))
+                style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12))
             : null,
       ),
     );
@@ -220,7 +220,7 @@ class _EtatErreur extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.encreSecondaire),
+            Icon(Icons.cloud_off, size: 40, color: context.palette.encreSecondaire),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
           ],

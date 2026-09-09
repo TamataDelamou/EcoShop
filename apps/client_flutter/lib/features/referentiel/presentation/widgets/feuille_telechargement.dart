@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../application/referentiel_providers.dart';
 import '../../domain/paquet_referentiel.dart';
 import '../../domain/pays_pedagogique.dart';
@@ -42,8 +42,8 @@ class _FeuilleTelechargement extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.download_for_offline_outlined,
-                    color: AppColors.bleuElectrique),
+                Icon(Icons.download_for_offline_outlined,
+                    color: context.palette.primaire),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -54,10 +54,10 @@ class _FeuilleTelechargement extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               "L'empreinte SHA-256 de chaque paquet est vérifiée avant toute "
               'mise en cache locale.',
-              style: TextStyle(color: AppColors.encreSecondaire, fontSize: 13),
+              style: TextStyle(color: context.palette.encreSecondaire, fontSize: 13),
             ),
             const SizedBox(height: 16),
             paquets.when(
@@ -139,7 +139,7 @@ class _LignePaquetState extends ConsumerState<_LignePaquet> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            const Icon(Icons.inventory_2_outlined, color: AppColors.bleuElectrique),
+            Icon(Icons.inventory_2_outlined, color: context.palette.primaire),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -147,8 +147,8 @@ class _LignePaquetState extends ConsumerState<_LignePaquet> {
                 children: [
                   Text('Version ${widget.paquet.version}',
                       style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text('$taille Mo', style: const TextStyle(
-                        color: AppColors.encreSecondaire,
+                  Text('$taille Mo', style: TextStyle(
+                        color: context.palette.encreSecondaire,
                         fontSize: 12,
                       )),
                   if (_messageErreur != null)
@@ -156,7 +156,7 @@ class _LignePaquetState extends ConsumerState<_LignePaquet> {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         _messageErreur!,
-                        style: const TextStyle(color: AppColors.erreur, fontSize: 12),
+                        style: TextStyle(color: context.palette.erreur, fontSize: 12),
                       ),
                     ),
                 ],
@@ -185,9 +185,9 @@ class _BoutonEtat extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       _EtatTelechargement.reussi =>
-        const Icon(Icons.check_circle, color: AppColors.vertMenthe),
+        Icon(Icons.check_circle, color: context.palette.succes),
       _EtatTelechargement.echec => IconButton(
-          icon: const Icon(Icons.refresh, color: AppColors.erreur),
+          icon: Icon(Icons.refresh, color: context.palette.erreur),
           onPressed: onAppui,
         ),
       _EtatTelechargement.repos => FilledButton(

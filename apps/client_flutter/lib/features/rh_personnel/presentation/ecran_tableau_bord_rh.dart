@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/shimmer.dart';
@@ -107,7 +107,7 @@ class _CarteEffectif extends StatelessWidget {
                 ),
                 Text(
                   'Ancienneté moyenne : ${effectif.ancienneteMoyenneJours.toStringAsFixed(0)} j',
-                  style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12),
+                  style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12),
                 ),
               ],
             ),
@@ -116,10 +116,10 @@ class _CarteEffectif extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('${effectif.effectif}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.bleuElectrique)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.palette.primaire)),
               Text(
                 'Masse : ${effectif.masseSalarialeBase.toStringAsFixed(0)}',
-                style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 11),
+                style: TextStyle(color: context.palette.encreSecondaire, fontSize: 11),
               ),
             ],
           ),
@@ -139,7 +139,7 @@ class _CarteRemplacement extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.swap_horiz, color: AppColors.orangePop),
+        leading: Icon(Icons.swap_horiz, color: context.palette.accent),
         title: Text('${remplacement.absentMatricule} → ${remplacement.remplacantMatricule}'),
         subtitle: const Text('Enseignant absent → remplaçant le moins chargé'),
       ),

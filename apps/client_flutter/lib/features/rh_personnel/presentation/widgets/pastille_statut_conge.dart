@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_rh.dart';
 
 /// Pastille de statut d'une demande de congé (demandé / validé / refusé).
@@ -11,10 +11,11 @@ class PastilleStatutConge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final couleur = switch (statut) {
-      StatutConge.demande => AppColors.dore,
-      StatutConge.valide => AppColors.vertMenthe,
-      StatutConge.refuse => AppColors.erreur,
+      StatutConge.demande => palette.premium,
+      StatutConge.valide => palette.succes,
+      StatutConge.refuse => palette.erreur,
     };
 
     return Container(

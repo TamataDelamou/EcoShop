@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import 'ecran_connexion.dart';
 
 /// Accueil pré-authentification — orientation vers l'un des espaces de
@@ -46,35 +47,35 @@ class _EcranChoixEspaceState extends State<EcranChoixEspace> {
                   const SizedBox(height: 28),
                   _CarteEspace(
                     icone: Icons.storefront_outlined,
-                    couleur: AppColors.orangePop,
+                    couleur: context.palette.accent,
                     titre: 'Marketplace',
                     description: 'Parcourir le catalogue et commander — un compte suffit, sans établissement requis.',
                     onTap: () => setState(() => _espaceChoisi = true),
                   ),
                   _CarteEspace(
                     icone: Icons.apartment_outlined,
-                    couleur: AppColors.bleuElectrique,
+                    couleur: context.palette.primaire,
                     titre: 'Espace Établissement',
                     description: 'Direction et personnel administratif.',
                     onTap: () => setState(() => _espaceChoisi = true),
                   ),
                   _CarteEspace(
                     icone: Icons.groups_outlined,
-                    couleur: AppColors.bleuElectrique,
+                    couleur: context.palette.primaire,
                     titre: 'Espace Enseignant',
                     description: 'Notes, présences et progression pédagogique.',
                     onTap: () => setState(() => _espaceChoisi = true),
                   ),
                   _CarteEspace(
                     icone: Icons.family_restroom_outlined,
-                    couleur: AppColors.vertMenthe,
+                    couleur: context.palette.succes,
                     titre: 'Espace Parent / Élève',
                     description: 'Suivi de la scolarité et révision.',
                     onTap: () => setState(() => _espaceChoisi = true),
                   ),
                   _CarteEspace(
                     icone: Icons.admin_panel_settings_outlined,
-                    couleur: AppColors.dore,
+                    couleur: context.palette.premium,
                     titre: 'Administration',
                     description: 'Réseau GSG et contenu pédagogique.',
                     onTap: () => setState(() => _espaceChoisi = true),

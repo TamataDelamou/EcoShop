@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/scolarite_providers.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
@@ -35,11 +35,11 @@ class EcranFicheEleve extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 26,
-                        backgroundColor: AppColors.bleuElectrique.withValues(alpha: 0.12),
+                        backgroundColor: context.palette.primaire.withValues(alpha: 0.12),
                         child: Text(
                           fiche.prenom.isNotEmpty ? fiche.prenom[0].toUpperCase() : '?',
-                          style: const TextStyle(
-                            color: AppColors.bleuElectrique,
+                          style: TextStyle(
+                            color: context.palette.primaire,
                             fontWeight: FontWeight.w700,
                             fontSize: 18,
                           ),
@@ -53,12 +53,12 @@ class EcranFicheEleve extends ConsumerWidget {
                             Text(fiche.nomComplet,
                                 style: Theme.of(context).textTheme.titleMedium),
                             Text('Matricule ${fiche.matricule}',
-                                style: const TextStyle(color: AppColors.encreSecondaire)),
+                                style: TextStyle(color: context.palette.encreSecondaire)),
                           ],
                         ),
                       ),
                       if (!fiche.estActive)
-                        const Icon(Icons.pause_circle_outline, color: AppColors.encreSecondaire),
+                        Icon(Icons.pause_circle_outline, color: context.palette.encreSecondaire),
                     ],
                   ),
                   const Divider(height: 28),
@@ -142,7 +142,7 @@ class _LigneInfo extends StatelessWidget {
         children: [
           SizedBox(
             width: 150,
-            child: Text(libelle, style: const TextStyle(color: AppColors.encreSecondaire)),
+            child: Text(libelle, style: TextStyle(color: context.palette.encreSecondaire)),
           ),
           Expanded(child: Text(valeur, style: const TextStyle(fontWeight: FontWeight.w500))),
         ],
@@ -159,15 +159,16 @@ class _BadgeSupervision extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.dore.withValues(alpha: 0.12),
+        color: context.palette.premium.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.shield_outlined, size: 14, color: AppColors.dore),
-          SizedBox(width: 4),
-          Text('Compte supervisé', style: TextStyle(color: AppColors.dore, fontSize: 12, fontWeight: FontWeight.w600)),
+          Icon(Icons.shield_outlined, size: 14, color: context.palette.premium),
+          const SizedBox(width: 4),
+          Text('Compte supervisé',
+              style: TextStyle(color: context.palette.premium, fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -185,7 +186,7 @@ class _CarteInscription extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.class_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.class_outlined, color: context.palette.primaire),
         title: Text(classe?.nom ?? 'Classe inconnue'),
         subtitle: Text('Inscrit le ${EcranFicheEleve._formatDate(inscription.dateInscription)}'),
         trailing: classe == null

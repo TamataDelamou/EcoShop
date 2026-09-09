@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/comm_providers.dart';
 import '../domain/enums_comm.dart';
@@ -40,7 +40,7 @@ class EcranPreferencesCanaux extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: AppColors.dore.withValues(alpha: 0.06),
+                color: context.palette.premium.withValues(alpha: 0.06),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(

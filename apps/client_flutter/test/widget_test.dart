@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecoshop_client/core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palettes.dart';
 import 'package:ecoshop_client/main.dart';
 
 void main() {
-  group('Charte graphique (AppColors)', () {
-    test('couleurs conformes à la charte Innovation & Énergie', () {
-      expect(AppColors.fond, const Color(0xFFF8FAFC));
-      expect(AppColors.bleuElectrique, const Color(0xFF2563EB));
-      expect(AppColors.orangePop, const Color(0xFFFF6B00));
-      expect(AppColors.vertMenthe, const Color(0xFF10B981));
-      expect(AppColors.dore, const Color(0xFFE1A100));
+  group('Charte graphique (AppPalettes)', () {
+    test('francophone_cfa clair conforme à la charte Innovation & Énergie', () {
+      final palette = AppPalettes.francophoneCfaLight;
+      expect(palette.fond, const Color(0xFFF8FAFC));
+      expect(palette.primaire, const Color(0xFF2563EB));
+      expect(palette.accent, const Color(0xFFFF6B00));
+      expect(palette.succes, const Color(0xFF10B981));
+      expect(palette.premium, const Color(0xFFE1A100));
     });
   });
 

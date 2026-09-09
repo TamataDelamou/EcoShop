@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/shimmer.dart';
@@ -77,8 +77,8 @@ class _CarteTauxLecture extends StatelessWidget {
   Widget build(BuildContext context) {
     final pourcentage = (taux.tauxLecture * 100).toStringAsFixed(0);
     final couleur = taux.tauxLecture >= 0.7
-        ? AppColors.vertMenthe
-        : (taux.tauxLecture >= 0.4 ? AppColors.orangePop : AppColors.erreur);
+        ? context.palette.succes
+        : (taux.tauxLecture >= 0.4 ? context.palette.accent : context.palette.erreur);
 
     return GlassCard(
       padding: const EdgeInsets.all(12),
@@ -94,7 +94,7 @@ class _CarteTauxLecture extends StatelessWidget {
                 ),
                 Text(
                   '${taux.nbLus} lues / ${taux.nbEnvoyes} envoyées',
-                  style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12),
+                  style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12),
                 ),
               ],
             ),
@@ -189,9 +189,9 @@ class _PastilleSentiment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (sentiment) {
-      'positif' => AppColors.vertMenthe,
-      'negatif' => AppColors.erreur,
-      _ => AppColors.encreSecondaire,
+      'positif' => context.palette.succes,
+      'negatif' => context.palette.erreur,
+      _ => context.palette.encreSecondaire,
     };
 
     return Container(

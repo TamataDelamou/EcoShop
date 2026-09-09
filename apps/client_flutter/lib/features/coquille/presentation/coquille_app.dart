@@ -31,6 +31,7 @@ import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
+import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
 import '../application/sync_composition.dart';
 
@@ -307,6 +308,15 @@ class _VueProfil extends ConsumerWidget {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const EcranPaysPedagogiques()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.dark_mode_outlined),
+          title: const Text('Apparence'),
+          subtitle: const Text('Clair, sombre, système'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const EcranPreferencesApparence()),
           ),
         ),
         const Divider(),

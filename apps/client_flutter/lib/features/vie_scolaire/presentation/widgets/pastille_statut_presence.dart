@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_vie_scolaire.dart';
 
 /// Pastille de statut de présence (présent / absent / retard / exclu / dispensé).
@@ -12,11 +12,11 @@ class PastilleStatutPresence extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (couleur, icone) = switch (statut) {
-      StatutPresence.present => (AppColors.vertMenthe, Icons.check_circle_outline),
-      StatutPresence.absent => (AppColors.erreur, Icons.cancel_outlined),
-      StatutPresence.retard => (AppColors.orangePop, Icons.schedule_outlined),
-      StatutPresence.exclu => (AppColors.encreSecondaire, Icons.block_outlined),
-      StatutPresence.dispense => (AppColors.bleuElectrique, Icons.event_busy_outlined),
+      StatutPresence.present => (context.palette.succes, Icons.check_circle_outline),
+      StatutPresence.absent => (context.palette.erreur, Icons.cancel_outlined),
+      StatutPresence.retard => (context.palette.accent, Icons.schedule_outlined),
+      StatutPresence.exclu => (context.palette.encreSecondaire, Icons.block_outlined),
+      StatutPresence.dispense => (context.palette.primaire, Icons.event_busy_outlined),
     };
 
     return Container(

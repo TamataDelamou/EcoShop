@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/comm_providers.dart';
@@ -63,9 +63,9 @@ class _CarteNotification extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      color: lue ? null : AppColors.bleuElectrique.withValues(alpha: 0.05),
+      color: lue ? null : context.palette.primaire.withValues(alpha: 0.05),
       child: ListTile(
-        leading: Icon(_icone(notification.canal), color: lue ? AppColors.encreSecondaire : AppColors.bleuElectrique),
+        leading: Icon(_icone(notification.canal), color: lue ? context.palette.encreSecondaire : context.palette.primaire),
         title: Text(
           notification.type,
           style: TextStyle(fontWeight: lue ? FontWeight.w400 : FontWeight.w700),
@@ -76,9 +76,9 @@ class _CarteNotification extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
         trailing: lue
-            ? const Icon(Icons.mark_email_read_outlined, color: AppColors.vertMenthe)
+            ? Icon(Icons.mark_email_read_outlined, color: context.palette.succes)
             : IconButton(
-                icon: const Icon(Icons.mark_email_unread_outlined, color: AppColors.bleuElectrique),
+                icon: Icon(Icons.mark_email_unread_outlined, color: context.palette.primaire),
                 tooltip: 'Marquer comme lue',
                 onPressed: () async {
                   await ref.read(commRepositoryProvider).marquerLue(notification.id, destinataire: profileId);

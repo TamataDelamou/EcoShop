@@ -205,6 +205,19 @@ Supabase : Auth (OTP E.164) · Postgres + RLS · Storage · Realtime · Edge Fun
 2. Code source complet, propre, optimisé et commenté.
 3. Documentation d'API et mise en conformité aux règles métiers (v4.1).
 4. Scénarios de tests unitaires et d'intégration couvrant le module.
+5. **Rapport d'écart fonctionnel vs `ecoshop_flutter`** — avant de déclarer un
+   module clos, comparer le périmètre réellement couvert avec le code source
+   original (`C:\Users\delam\ProjetsFlutter\ecoshop_flutter`, dossier
+   `lib/features/` correspondant). Toute fonctionnalité présente dans
+   `ecoshop_flutter` mais absente ou dégradée ici est **listée et posée en
+   question — jamais implémentée ni écartée silencieusement**. La décision
+   (implémenter maintenant / différer / abandonner explicitement et pourquoi)
+   se prend en conversation avec le porteur de projet, module par module.
+   Rappel de cadrage : ce projet est un environnement d'**amélioration** de
+   `ecoshop_flutter`, pas une réécriture qui peut perdre des fonctionnalités
+   en route. Règle transversale permanente, applicable à tous les modules,
+   passés et à venir (cf. audit rétroactif M0→M15 dans
+   [`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md)).
 
 ### 4.3 Séquence (Phase A / B / C)
 
@@ -265,12 +278,28 @@ délivré** par migrations SQL est le suivant.
 | M13 | Marketplace AssoShop (mono-vendeur) | `20260906001300_m13_marketplace_assoshop.sql` | [M13](./docs/contrats/M13_marketplace_assoshop.md) | conforme |
 | M14 | Comptabilité sans OHADA | `20260906001400_m14_comptabilite_sans_ohada.sql` | [M14](./docs/contrats/M14_comptabilite.md) | livré et vérifié (client Flutter + RLS 31-33 ; le Port Paiement, ex-M14 dans le plan §4.3, reste un chantier distinct à replanifier M16-M20 — non couplé à ce module) |
 | M15 | Marketplace sans authentification | `20260906001500_m15_marketplace_sans_auth.sql` | [M15](./docs/contrats/M15_marketplace_public.md) | nouveau |
+| M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
 de questions & quiz (ex-M10), profil de maîtrise & gamification (ex-M11),
 préparation aux examens (ex-M12) — ainsi que M16 IA à rôles, M17 Bibliothèque,
 M18 Transport, M19 Réseau & Backoffice GSG, M20 Reporting/Premium.
+
+**M15bis — Thèmes internationaux & Dark Mode** (livré, cf.
+[`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md)) :
+inséré dans la séquence de construction entre M15 (livré) et M16 (IA à rôles,
+qui conserve son numéro et son contenu inchangés). Périmètre : deux nouvelles
+chartes graphiques d'établissement alignées sur le référentiel CEDEAO de M4
+(`anglophone_waec`, `lusophone` — `arabophone_mixte` différé, pas encore de
+charte dédiée ; `francophone_cfa` reste la charte « Innovation & Énergie »
+existante) et un mode sombre réellement fonctionnel sur l'ensemble de
+l'application (contrairement à `ecoshop_flutter`, qui définissait un thème
+sombre jamais branché — `themeMode: ThemeMode.light` figé en dur, cf. rapport
+d'écart du module). A entraîné, en problème hérité résolu au passage, la
+migration des ~76 fichiers d'écrans qui lisaient des couleurs figées à la
+compilation (`AppColors.xxx`) vers un système de palette réactif au thème
+(`AppPalette`, `ThemeExtension`).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
@@ -321,6 +350,19 @@ multi-tenant, audit des RPC).
 locale (outils backend absents du poste) ; la validation repose sur le
 rejeu `supabase db reset` + tests pgTAP du workflow CI GitHub Actions.
 
-Le module suivant à ouvrir est **M16 — IA à rôles**, après replanification des
-verticaux décalés (§4.4) : Port Paiement, moteur de questions/quiz, profil de
-maîtrise, préparation aux examens.
+**M15bis — Thèmes internationaux & Dark Mode** est livré (cf. §4.4 ci-dessus et
+[`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md)) :
+233 tests passent, `flutter analyze` ne remonte aucun problème.
+
+Le module suivant dans la séquence est **M16 — IA à rôles**, mais son
+ouverture est **bloquée** tant que le rapport d'écart rétroactif
+[`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md) (M0 → M15,
+règle transversale §4.2.5) n'a pas été examiné et arbitré module par module
+par le porteur de projet — en particulier le point de sécurité sur la
+protection des mineurs dans les conversations de classe (M9, absente côté
+serveur) et l'absence de génération PDF des bulletins/reçus (M6/M13/M14).
+L'ouverture de M16 devra aussi intégrer les conclusions de cet audit
+concernant Parent IA (vérifier que l'implémentation `ecoshop_flutter`
+existante, cf. `PARENT_IA.md`, n'est pas une base à ignorer), ainsi que la
+replanification des verticaux décalés déjà identifiée (§4.4) : Port Paiement,
+moteur de questions/quiz, profil de maîtrise, préparation aux examens.

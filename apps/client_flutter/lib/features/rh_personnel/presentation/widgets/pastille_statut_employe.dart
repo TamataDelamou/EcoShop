@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_rh.dart';
 
 /// Pastille de statut employé (actif / en congé / suspendu / démissionnaire
@@ -12,12 +12,13 @@ class PastilleStatutEmploye extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final (couleur, icone) = switch (statut) {
-      StatutEmploye.actif => (AppColors.vertMenthe, Icons.check_circle_outline),
-      StatutEmploye.enConge => (AppColors.bleuElectrique, Icons.beach_access_outlined),
-      StatutEmploye.suspendu => (AppColors.orangePop, Icons.pause_circle_outline),
-      StatutEmploye.demissionnaire => (AppColors.encreSecondaire, Icons.logout),
-      StatutEmploye.retraite => (AppColors.encreSecondaire, Icons.elderly_outlined),
+      StatutEmploye.actif => (palette.succes, Icons.check_circle_outline),
+      StatutEmploye.enConge => (palette.primaire, Icons.beach_access_outlined),
+      StatutEmploye.suspendu => (palette.accent, Icons.pause_circle_outline),
+      StatutEmploye.demissionnaire => (palette.encreSecondaire, Icons.logout),
+      StatutEmploye.retraite => (palette.encreSecondaire, Icons.elderly_outlined),
     };
 
     return Container(

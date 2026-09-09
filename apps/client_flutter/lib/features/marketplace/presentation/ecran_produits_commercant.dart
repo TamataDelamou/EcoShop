@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/widgets/shimmer.dart';
 import '../application/marketplace_providers.dart';
 import '../domain/catalogue_produit.dart';
@@ -103,10 +104,10 @@ class _CarteProduit extends ConsumerWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.orangePop.withValues(alpha: 0.12),
+                color: context.palette.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.inventory_2_outlined, color: AppColors.orangePop),
+              child: Icon(Icons.inventory_2_outlined, color: context.palette.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -126,7 +127,7 @@ class _CarteProduit extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     formaterMontant(produit.prix, produit.devise),
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.bleuElectrique),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: context.palette.primaire),
                   ),
                 ],
               ),

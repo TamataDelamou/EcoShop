@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../application/comptabilite_providers.dart';
 import '../domain/plan_comptable.dart';
 import 'widgets/montant.dart';
@@ -93,7 +93,7 @@ class _EcranGrandLivreState extends ConsumerState<EcranGrandLivre> {
                               return ListTile(
                                 leading: Icon(
                                   m.estDebit ? Icons.arrow_downward : Icons.arrow_upward,
-                                  color: m.estDebit ? AppColors.bleuElectrique : AppColors.orangePop,
+                                  color: m.estDebit ? context.palette.primaire : context.palette.accent,
                                 ),
                                 title: Text(m.libelle),
                                 subtitle: Text(date),
@@ -101,7 +101,7 @@ class _EcranGrandLivreState extends ConsumerState<EcranGrandLivre> {
                                   formaterMontant(m.montant),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    color: m.estDebit ? AppColors.bleuElectrique : AppColors.orangePop,
+                                    color: m.estDebit ? context.palette.primaire : context.palette.accent,
                                   ),
                                 ),
                               );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../../core/widgets/entree_animee.dart';
 import '../../../../core/widgets/shimmer.dart';
 import '../application/communication_locale_providers.dart';
@@ -133,24 +133,24 @@ class _CarteAnnonce extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(annonce.destinataireLabel, style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12)),
+                  child: Text(annonce.destinataireLabel, style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12)),
                 ),
                 if (annonce.important)
-                  const Icon(Icons.priority_high, size: 16, color: AppColors.erreur),
+                  Icon(Icons.priority_high, size: 16, color: context.palette.erreur),
               ],
             ),
             const SizedBox(height: 4),
             Text(annonce.contenu),
             const SizedBox(height: 6),
-            Text('Par ${annonce.auteurNom}', style: const TextStyle(fontSize: 11, color: AppColors.encreSecondaire)),
+            Text('Par ${annonce.auteurNom}', style: TextStyle(fontSize: 11, color: context.palette.encreSecondaire)),
             if (annonce.important) ...[
               const SizedBox(height: 8),
               annonce.accuseReception
-                  ? const Row(
+                  ? Row(
                       children: [
-                        Icon(Icons.check_circle_outline, size: 16, color: AppColors.vertMenthe),
-                        SizedBox(width: 4),
-                        Text('Lecture confirmée', style: TextStyle(color: AppColors.vertMenthe, fontSize: 12)),
+                        Icon(Icons.check_circle_outline, size: 16, color: context.palette.succes),
+                        const SizedBox(width: 4),
+                        Text('Lecture confirmée', style: TextStyle(color: context.palette.succes, fontSize: 12)),
                       ],
                     )
                   : OutlinedButton.icon(

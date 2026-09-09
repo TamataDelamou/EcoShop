@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/moderation_locale.dart';
 
 /// Zone de composition du prototype local (M9) — détecte les termes
@@ -47,19 +47,19 @@ class _ComposeurLocalState extends State<ComposeurLocal> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.bordure)),
+        color: context.palette.surface,
+        border: Border(top: BorderSide(color: context.palette.bordure)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...widget.champsSupplementaires,
           if (_signalee)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
               child: Text(
                 'Terme potentiellement inapproprié détecté — signalé pour modération humaine, envoi non bloqué.',
-                style: TextStyle(color: AppColors.orangePop, fontSize: 11, fontWeight: FontWeight.w600),
+                style: TextStyle(color: context.palette.accent, fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ),
           Row(

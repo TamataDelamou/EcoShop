@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/planification_providers.dart';
@@ -58,7 +59,7 @@ class _CarteSalle extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           salle.actif ? Icons.meeting_room_outlined : Icons.block_outlined,
-          color: salle.actif ? AppColors.bleuElectrique : AppColors.encreSecondaire,
+          color: salle.actif ? context.palette.primaire : context.palette.encreSecondaire,
         ),
         title: Text(salle.libelle),
         subtitle: salle.capacite != null ? Text('${salle.capacite} places') : null,

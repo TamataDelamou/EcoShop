@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
@@ -64,7 +64,7 @@ class EcranFicheEmploye extends ConsumerWidget {
                     error: (erreur, _) => const SizedBox.shrink(),
                     data: (heures) => Text(
                       'Charge horaire hebdomadaire : $heures h',
-                      style: const TextStyle(color: AppColors.encreSecondaire),
+                      style: TextStyle(color: context.palette.encreSecondaire),
                     ),
                   ),
                 ],
@@ -81,7 +81,7 @@ class EcranFicheEmploye extends ConsumerWidget {
               final contrat = actuel.first;
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.description_outlined, color: AppColors.bleuElectrique),
+                  leading: Icon(Icons.description_outlined, color: context.palette.primaire),
                   title: Text('Contrat en cours — ${contrat.type.libelle}'),
                   subtitle: Text(
                     contrat.dateFin == null
@@ -163,7 +163,7 @@ class _LienDossier extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icone, color: AppColors.bleuElectrique),
+        leading: Icon(icone, color: context.palette.primaire),
         title: Text(libelle),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
@@ -185,9 +185,10 @@ class _CarteScoreTurnover extends ConsumerWidget {
       loading: () => const ShimmerCarteListe(),
       error: (erreur, _) => const SizedBox.shrink(),
       data: (valeur) {
+        final palette = context.palette;
         final couleur = valeur >= 0.7
-            ? AppColors.erreur
-            : (valeur >= 0.4 ? AppColors.orangePop : AppColors.vertMenthe);
+            ? palette.erreur
+            : (valeur >= 0.4 ? palette.accent : palette.succes);
         return GlassCard(
           couleurBordure: couleur.withValues(alpha: 0.3),
           enfant: Column(

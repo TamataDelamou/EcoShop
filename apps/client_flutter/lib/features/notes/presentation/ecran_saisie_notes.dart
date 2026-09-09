@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/sync/device_id_provider.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../scolarite/application/scolarite_providers.dart';
@@ -89,18 +89,19 @@ class _BandeauHorsLigneSaisie extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(estEnLigneProvider)) return const SizedBox.shrink();
+    final couleur = context.palette.accent;
     return Container(
       width: double.infinity,
-      color: AppColors.orangePop.withValues(alpha: 0.12),
+      color: couleur.withValues(alpha: 0.12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.cloud_off, size: 16, color: AppColors.orangePop),
-          SizedBox(width: 8),
+          Icon(Icons.cloud_off, size: 16, color: couleur),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Hors ligne — les notes saisies seront envoyées au retour du réseau.',
-              style: TextStyle(color: AppColors.orangePop, fontSize: 12),
+              style: TextStyle(color: couleur, fontSize: 12),
             ),
           ),
         ],
@@ -264,13 +265,13 @@ class _BoutonEtat extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       _EtatLigne.synchronise =>
-        IconButton(icon: const Icon(Icons.check_circle, color: AppColors.vertMenthe), onPressed: onAppui),
+        IconButton(icon: Icon(Icons.check_circle, color: context.palette.succes), onPressed: onAppui),
       _EtatLigne.enAttente =>
-        IconButton(icon: const Icon(Icons.cloud_off, color: AppColors.orangePop), onPressed: onAppui),
+        IconButton(icon: Icon(Icons.cloud_off, color: context.palette.accent), onPressed: onAppui),
       _EtatLigne.erreur =>
-        IconButton(icon: const Icon(Icons.error_outline, color: AppColors.erreur), onPressed: onAppui),
+        IconButton(icon: Icon(Icons.error_outline, color: context.palette.erreur), onPressed: onAppui),
       _EtatLigne.repos =>
-        IconButton(icon: const Icon(Icons.save_outlined, color: AppColors.bleuElectrique), onPressed: onAppui),
+        IconButton(icon: Icon(Icons.save_outlined, color: context.palette.primaire), onPressed: onAppui),
     };
   }
 }

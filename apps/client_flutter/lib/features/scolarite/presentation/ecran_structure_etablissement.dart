@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/scolarite_providers.dart';
@@ -41,7 +41,7 @@ class _EcranStructureEtablissementState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off, size: 48, color: AppColors.encreSecondaire),
+                Icon(Icons.cloud_off, size: 48, color: context.palette.encreSecondaire),
                 const SizedBox(height: 16),
                 const Text(
                   "L'annuaire n'a pas encore été consulté : une connexion "
@@ -150,9 +150,9 @@ class _PuceUnite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      avatar: const Icon(Icons.apartment_outlined, size: 16, color: AppColors.bleuElectrique),
+      avatar: Icon(Icons.apartment_outlined, size: 16, color: context.palette.primaire),
       label: Text(unite.nom),
-      backgroundColor: AppColors.bleuElectrique.withValues(alpha: 0.08),
+      backgroundColor: context.palette.primaire.withValues(alpha: 0.08),
     );
   }
 }
@@ -167,7 +167,7 @@ class _CarteClasse extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.meeting_room_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.meeting_room_outlined, color: context.palette.primaire),
         title: Text(classe.nom),
         subtitle: classe.capacite != null ? Text('Capacité : ${classe.capacite}') : null,
         trailing: const Icon(Icons.chevron_right),

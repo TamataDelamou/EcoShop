@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import 'ecran_anomalies_comptables.dart';
 import 'ecran_balance.dart';
 import 'ecran_ecritures_recentes.dart';
@@ -28,28 +28,28 @@ class EcranComptabilite extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _section(context, 'Saisie'),
-          _tuile(context, Icons.receipt_long_outlined, AppColors.bleuElectrique, 'Écritures récentes',
+          _tuile(context, Icons.receipt_long_outlined, context.palette.primaire, 'Écritures récentes',
               'Saisie et consultation', () => EcranEcrituresRecentes(etablissementId: etablissementId)),
           _section(context, 'Configuration'),
-          _tuile(context, Icons.account_tree_outlined, AppColors.bleuElectrique, 'Plan comptable',
+          _tuile(context, Icons.account_tree_outlined, context.palette.primaire, 'Plan comptable',
               'Structure ouverte, arborescente', () => EcranPlanComptable(etablissementId: etablissementId)),
-          _tuile(context, Icons.menu_book_outlined, AppColors.bleuElectrique, 'Journaux',
+          _tuile(context, Icons.menu_book_outlined, context.palette.primaire, 'Journaux',
               'Opérations, banque, caisse, achats, ventes', () => EcranJournaux(etablissementId: etablissementId)),
           _section(context, 'Documents'),
-          _tuile(context, Icons.article_outlined, AppColors.orangePop, 'Journal comptable',
+          _tuile(context, Icons.article_outlined, context.palette.accent, 'Journal comptable',
               'Chronologie d\'un journal', () => EcranJournalComptable(etablissementId: etablissementId)),
-          _tuile(context, Icons.book_outlined, AppColors.orangePop, 'Grand livre',
+          _tuile(context, Icons.book_outlined, context.palette.accent, 'Grand livre',
               'Mouvements d\'un compte', () => EcranGrandLivre(etablissementId: etablissementId)),
-          _tuile(context, Icons.balance_outlined, AppColors.orangePop, 'Balance',
+          _tuile(context, Icons.balance_outlined, context.palette.accent, 'Balance',
               'Soldes débit/crédit à une date', () => EcranBalance(etablissementId: etablissementId)),
           _section(context, 'Supervision IA'),
-          _tuile(context, Icons.report_gmailerrorred_outlined, AppColors.dore, 'Anomalies',
+          _tuile(context, Icons.report_gmailerrorred_outlined, context.palette.premium, 'Anomalies',
               'Montants élevés, doubles saisies', () => EcranAnomaliesComptables(etablissementId: etablissementId)),
-          _tuile(context, Icons.trending_up_outlined, AppColors.dore, 'Prévision de trésorerie',
+          _tuile(context, Icons.trending_up_outlined, context.palette.premium, 'Prévision de trésorerie',
               'Projection à 30 jours', () => EcranPrevisionTresorerie(etablissementId: etablissementId)),
-          _tuile(context, Icons.repeat_outlined, AppColors.dore, 'Écritures récurrentes',
+          _tuile(context, Icons.repeat_outlined, context.palette.premium, 'Écritures récurrentes',
               'Suggestions de ressaisie', () => EcranEcrituresRecommandees(etablissementId: etablissementId)),
-          _tuile(context, Icons.insights_outlined, AppColors.dore, 'Tendances',
+          _tuile(context, Icons.insights_outlined, context.palette.premium, 'Tendances',
               'Charges/produits sur 12 mois', () => EcranTendances(etablissementId: etablissementId)),
         ],
       ),
@@ -58,7 +58,7 @@ class EcranComptabilite extends StatelessWidget {
 
   Widget _section(BuildContext context, String titre) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
-        child: Text(titre, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.encreSecondaire)),
+        child: Text(titre, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: context.palette.encreSecondaire)),
       );
 
   Widget _tuile(

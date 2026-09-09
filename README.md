@@ -114,9 +114,15 @@ flutter test
 | M13 | Marketplace AssoShop mono-vendeur | ✅ livré |
 | M14 | Comptabilité sans OHADA | ✅ livré |
 | M15 | Marketplace sans authentification | ✅ livré |
+| M15bis | Thèmes internationaux & Dark Mode | ✅ livré |
 | M16-M20 | IA à rôles, bibliothèque, transport, réseau, reporting | ⏳ à venir |
 
-**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15 livrés).** Le détail du périmètre de chaque module figure dans
+**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15bis livrés).**
+M15bis n'a pas de migration SQL propre (module purement client) — inséré
+entre M15 et M16 conformément à `ANALYSE_GLOBALE.md` §4.4. **M16 reste
+bloqué** tant que l'audit d'écart rétroactif M0→M15
+([`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md)) n'a pas
+été arbitré par le porteur de projet. Le détail du périmètre de chaque module figure dans
 [`ANALYSE_GLOBALE.md`](./ANALYSE_GLOBALE.md) §4.3, et l'état de vérification de
 la Phase A dans [`docs/ETAT_PHASE_A.md`](./docs/ETAT_PHASE_A.md).
 
@@ -129,9 +135,12 @@ module par module sur ce socle déjà livré :
 | M13 | Marketplace AssoShop mono-vendeur | ✅ livré et vérifié |
 | M14 | Comptabilité sans OHADA | ✅ livré et vérifié |
 | M15 | Marketplace sans authentification | ✅ livré et vérifié (périmètre reconsidéré, cf. `docs/ETAT_PHASE_C.md` §2) |
+| M15bis | Thèmes internationaux & Dark Mode | ✅ livré et vérifié (233 tests, `flutter analyze` propre) |
 
 État détaillé, écarts doc/DDL corrigés et réserve technique (exécution
 locale des migrations) dans [`docs/ETAT_PHASE_C.md`](./docs/ETAT_PHASE_C.md).
+M15bis est documenté dans
+[`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md).
 
 *Chaque module est clos, testé et validé avant le passage au suivant
 (règle d'or du séquençage strict).*

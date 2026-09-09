@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
@@ -85,7 +85,7 @@ class _CarteSanction extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 sanction.contexteEducatif!,
-                style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 13),
+                style: TextStyle(color: context.palette.encreSecondaire, fontSize: 13),
               ),
             ],
             const SizedBox(height: 8),
@@ -125,10 +125,10 @@ class _PastilleStatutSanction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (couleur, libelle) = switch (statut) {
-      StatutSanction.proposee => (AppColors.dore, 'Proposée'),
-      StatutSanction.notifiee => (AppColors.orangePop, 'Notifiée'),
-      StatutSanction.executee => (AppColors.bleuElectrique, 'Exécutée'),
-      StatutSanction.annulee => (AppColors.encreSecondaire, 'Annulée'),
+      StatutSanction.proposee => (context.palette.premium, 'Proposée'),
+      StatutSanction.notifiee => (context.palette.accent, 'Notifiée'),
+      StatutSanction.executee => (context.palette.primaire, 'Exécutée'),
+      StatutSanction.annulee => (context.palette.encreSecondaire, 'Annulée'),
     };
 
     return Container(

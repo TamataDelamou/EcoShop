@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_palette.dart';
 
 /// Loader squelette « Shimmer » — balayage lumineux en boucle sur une forme
 /// neutre, le temps qu'une lecture réseau ou cache se résolve (charte ch. 2 —
@@ -74,7 +74,7 @@ class ShimmerBloc extends StatelessWidget {
       height: hauteur,
       width: largeur,
       decoration: BoxDecoration(
-        color: AppColors.bordure,
+        color: context.palette.bordure,
         borderRadius: BorderRadius.circular(rayon),
       ),
     );
@@ -88,18 +88,19 @@ class ShimmerCarteListe extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return Shimmer(
       enfant: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: palette.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.bordure),
+          border: Border.all(color: palette.bordure),
         ),
         child: Row(
           children: [
-            const CircleAvatar(radius: 20, backgroundColor: AppColors.bordure),
+            CircleAvatar(radius: 20, backgroundColor: palette.bordure),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

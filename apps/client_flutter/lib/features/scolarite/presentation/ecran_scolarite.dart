@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../auth/domain/profil.dart';
 import '../application/scolarite_providers.dart';
 import '../domain/affectation_enseignant.dart';
@@ -119,7 +119,7 @@ class _CarteMaClasse extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.class_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.class_outlined, color: context.palette.primaire),
         title: Text(affectation.nomMatiere ?? 'Matière non précisée'),
         subtitle: Text(affectation.roleAffectation.code),
         trailing: const Icon(Icons.chevron_right),

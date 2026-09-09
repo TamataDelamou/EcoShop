@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
@@ -121,7 +121,7 @@ class _CarteRecommandation extends ConsumerWidget {
               const SizedBox(height: 10),
               FilledButton.icon(
                 onPressed: () => _statuer(ref, 'mise_en_oeuvre'),
-                icon: const Icon(Icons.check_circle_outline, color: AppColors.vertMenthe),
+                icon: Icon(Icons.check_circle_outline, color: context.palette.succes),
                 label: const Text('Marquer mise en œuvre'),
               ),
             ],

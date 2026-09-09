@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/comm_providers.dart';
@@ -77,7 +77,7 @@ class _CarteTemplate extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           template.actif ? Icons.check_circle_outline : Icons.pause_circle_outline,
-          color: template.actif ? AppColors.vertMenthe : AppColors.encreSecondaire,
+          color: template.actif ? context.palette.succes : context.palette.encreSecondaire,
         ),
         title: Text('${template.type} — ${template.canal.libelle}'),
         subtitle: Text(template.contenu, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -185,7 +185,7 @@ class _FormulaireTemplateState extends ConsumerState<_FormulaireTemplate> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 8),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
           ],
         ),

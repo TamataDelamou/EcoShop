@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/referentiel_providers.dart';
@@ -82,11 +82,11 @@ class _CartePays extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: AppColors.bleuElectrique.withValues(alpha: 0.1),
+                backgroundColor: context.palette.primaire.withValues(alpha: 0.1),
                 child: Text(
                   pays.codeIso,
-                  style: const TextStyle(
-                    color: AppColors.bleuElectrique,
+                  style: TextStyle(
+                    color: context.palette.primaire,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -105,12 +105,12 @@ class _CartePays extends StatelessWidget {
                       children: [
                         Pastille(
                           texte: libelleSysteme,
-                          couleur: AppColors.bleuElectrique,
+                          couleur: context.palette.primaire,
                           icone: Icons.public,
                         ),
                         Pastille(
                           texte: pays.langueEnseignementPrincipale,
-                          couleur: AppColors.encreSecondaire,
+                          couleur: context.palette.encreSecondaire,
                           icone: Icons.translate,
                         ),
                       ],
@@ -118,7 +118,7 @@ class _CartePays extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.encreSecondaire),
+              Icon(Icons.chevron_right, color: context.palette.encreSecondaire),
             ],
           ),
         ),
@@ -138,7 +138,7 @@ class _EtatVide extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.public_off, size: 48, color: AppColors.encreSecondaire),
+            Icon(Icons.public_off, size: 48, color: context.palette.encreSecondaire),
             const SizedBox(height: 16),
             Text('Aucun pays publié pour le moment.',
                 style: Theme.of(context).textTheme.bodyMedium),
@@ -162,7 +162,7 @@ class _EtatErreur extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, size: 48, color: AppColors.encreSecondaire),
+            Icon(Icons.cloud_off, size: 48, color: context.palette.encreSecondaire),
             const SizedBox(height: 16),
             const Text(
               'Impossible de charger le référentiel et aucune copie hors-ligne '

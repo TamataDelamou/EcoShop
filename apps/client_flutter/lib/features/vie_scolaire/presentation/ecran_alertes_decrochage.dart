@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/vie_scolaire_providers.dart';
@@ -30,17 +30,17 @@ class EcranAlertesDecrochage extends ConsumerWidget {
         children: [
           Container(
             width: double.infinity,
-            color: AppColors.dore.withValues(alpha: 0.08),
+            color: context.palette.premium.withValues(alpha: 0.08),
             padding: const EdgeInsets.all(16),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.dore, size: 18),
-                SizedBox(width: 8),
+                Icon(Icons.info_outline, color: context.palette.premium, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Ces scores sont un signal, jamais un verdict — le traitement '
                     "(entretien, soutien, transmission) reste une décision humaine.",
-                    style: TextStyle(fontSize: 12, color: AppColors.dore),
+                    style: TextStyle(fontSize: 12, color: context.palette.premium),
                   ),
                 ),
               ],
@@ -78,7 +78,7 @@ class _CarteAlerte extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final couleur = alerte.score >= 0.8 ? AppColors.erreur : AppColors.orangePop;
+    final couleur = alerte.score >= 0.8 ? context.palette.erreur : context.palette.accent;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 
 /// Bandeau permanent rappelant qu'un écran appartient au **prototype local**
 /// de M9 : aucune donnée n'est envoyée au serveur, rien n'est partagé entre
@@ -14,16 +14,16 @@ class BanniereProtoype extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.orangePop.withValues(alpha: 0.12),
+      color: context.palette.accent.withValues(alpha: 0.12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.science_outlined, size: 16, color: AppColors.orangePop),
-          SizedBox(width: 8),
+          Icon(Icons.science_outlined, size: 16, color: context.palette.accent),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Prototype local — non synchronisé, visible sur cet appareil uniquement.',
-              style: TextStyle(color: AppColors.orangePop, fontSize: 12, fontWeight: FontWeight.w600),
+              style: TextStyle(color: context.palette.accent, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ],

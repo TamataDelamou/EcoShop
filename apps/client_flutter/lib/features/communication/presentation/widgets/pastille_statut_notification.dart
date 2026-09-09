@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_comm.dart';
 
 /// Pastille de statut de notification (en attente / envoyée / lue / échouée
@@ -13,11 +13,11 @@ class PastilleStatutNotification extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutNotification.enAttente => AppColors.dore,
-      StatutNotification.envoyee => AppColors.bleuElectrique,
-      StatutNotification.lue => AppColors.vertMenthe,
-      StatutNotification.echouee => AppColors.erreur,
-      StatutNotification.annulee => AppColors.encreSecondaire,
+      StatutNotification.enAttente => context.palette.premium,
+      StatutNotification.envoyee => context.palette.primaire,
+      StatutNotification.lue => context.palette.succes,
+      StatutNotification.echouee => context.palette.erreur,
+      StatutNotification.annulee => context.palette.encreSecondaire,
     };
 
     return Container(

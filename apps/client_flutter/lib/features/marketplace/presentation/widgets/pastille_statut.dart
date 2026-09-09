@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../domain/enums_marketplace.dart';
 
 /// Pastille de statut de commande — code couleur cohérent avec les autres
@@ -13,12 +14,12 @@ class PastilleStatutCommande extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutCommande.brouillon => AppColors.encreSecondaire,
-      StatutCommande.confirmee => AppColors.bleuElectrique,
-      StatutCommande.payee => AppColors.vertMenthe,
-      StatutCommande.expediee => AppColors.orangePop,
-      StatutCommande.livree => AppColors.vertMenthe,
-      StatutCommande.annulee => AppColors.erreur,
+      StatutCommande.brouillon => context.palette.encreSecondaire,
+      StatutCommande.confirmee => context.palette.primaire,
+      StatutCommande.payee => context.palette.succes,
+      StatutCommande.expediee => context.palette.accent,
+      StatutCommande.livree => context.palette.succes,
+      StatutCommande.annulee => context.palette.erreur,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -37,11 +38,11 @@ class PastilleStatutPaiement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutPaiement.initie => AppColors.encreSecondaire,
-      StatutPaiement.enAttente => AppColors.orangePop,
-      StatutPaiement.reussi => AppColors.vertMenthe,
-      StatutPaiement.echoue => AppColors.erreur,
-      StatutPaiement.rembourse => AppColors.dore,
+      StatutPaiement.initie => context.palette.encreSecondaire,
+      StatutPaiement.enAttente => context.palette.accent,
+      StatutPaiement.reussi => context.palette.succes,
+      StatutPaiement.echoue => context.palette.erreur,
+      StatutPaiement.rembourse => context.palette.premium,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

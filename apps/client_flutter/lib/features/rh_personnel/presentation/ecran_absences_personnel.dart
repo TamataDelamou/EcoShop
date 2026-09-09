@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/rh_providers.dart';
@@ -71,7 +71,7 @@ class _CarteAbsence extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           absence.justifie ? Icons.check_circle_outline : Icons.warning_amber_outlined,
-          color: absence.justifie ? AppColors.vertMenthe : AppColors.orangePop,
+          color: absence.justifie ? context.palette.succes : context.palette.accent,
         ),
         title: Text('${absence.type.libelle} — ${_formatDate(absence.dateAbsence)}'),
         subtitle: absence.motif != null ? Text(absence.motif!) : null,
@@ -179,7 +179,7 @@ class _FormulaireAbsenceState extends ConsumerState<_FormulaireAbsence> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 8),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
           ],
         ),

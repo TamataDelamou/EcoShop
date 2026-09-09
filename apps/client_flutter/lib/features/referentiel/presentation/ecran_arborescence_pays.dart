@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/referentiel_providers.dart';
@@ -48,7 +48,7 @@ class EcranArborescencePays extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off, size: 48, color: AppColors.encreSecondaire),
+                Icon(Icons.cloud_off, size: 48, color: context.palette.encreSecondaire),
                 const SizedBox(height: 16),
                 const Text(
                   'Ce pays n\'a pas encore été consulté : une connexion est '
@@ -113,7 +113,7 @@ class _Contenu extends StatelessWidget {
               for (final examen in arborescence.examens)
                 Pastille(
                   texte: examen.nom,
-                  couleur: AppColors.orangePop,
+                  couleur: context.palette.accent,
                   icone: Icons.workspace_premium_outlined,
                 ),
             ],
@@ -142,7 +142,7 @@ class _CarteCycle extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: cycle.ordre == 1,
-        leading: const Icon(Icons.account_tree_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.account_tree_outlined, color: context.palette.primaire),
         title: Text(cycle.nom, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           [

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/sync/device_id_provider.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../auth/application/auth_providers.dart';
 import '../application/marketplace_providers.dart';
 import 'ecran_choix_paiement.dart';
@@ -290,7 +291,7 @@ class _CorpsPanier extends StatelessWidget {
                     const Text('Total'),
                     Text(
                       formaterMontant(total, 'XOF'),
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.bleuElectrique),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: context.palette.primaire),
                     ),
                   ],
                 ),
@@ -309,15 +310,15 @@ class _PanierVide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 56, color: AppColors.encreSecondaire),
-            SizedBox(height: 12),
-            Text('Votre panier est vide.'),
+            Icon(Icons.shopping_cart_outlined, size: 56, color: context.palette.encreSecondaire),
+            const SizedBox(height: 12),
+            const Text('Votre panier est vide.'),
           ],
         ),
       ),

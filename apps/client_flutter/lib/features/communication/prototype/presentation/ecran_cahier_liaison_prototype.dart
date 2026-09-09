@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../../core/widgets/shimmer.dart';
 import '../../../scolarite/application/scolarite_providers.dart';
 import '../../../scolarite/domain/fiche_eleve.dart';
@@ -123,7 +123,7 @@ class _CarteMot extends StatelessWidget {
                 Expanded(
                   child: Text(mot.auteurNom, style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
-                Text(_formatDate(mot.dateCreation), style: const TextStyle(fontSize: 11, color: AppColors.encreSecondaire)),
+                Text(_formatDate(mot.dateCreation), style: TextStyle(fontSize: 11, color: context.palette.encreSecondaire)),
               ],
             ),
             const SizedBox(height: 6),

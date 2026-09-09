@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/rh_providers.dart';
@@ -71,7 +71,7 @@ class _CarteContrat extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           contrat.estEnCours ? Icons.check_circle_outline : Icons.history,
-          color: contrat.estEnCours ? AppColors.vertMenthe : AppColors.encreSecondaire,
+          color: contrat.estEnCours ? context.palette.succes : context.palette.encreSecondaire,
         ),
         title: Text(contrat.type.libelle),
         subtitle: Text(
@@ -215,7 +215,7 @@ class _FormulaireContratState extends ConsumerState<_FormulaireContrat> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 8),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
           ],
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
@@ -93,7 +93,7 @@ class _CarteConge extends ConsumerWidget {
             Text('Du ${_formatDate(conge.dateDebut)} au ${_formatDate(conge.dateFin)} · ${conge.nbJours} j'),
             if (conge.motif != null && conge.motif!.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(conge.motif!, style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 13)),
+              Text(conge.motif!, style: TextStyle(color: context.palette.encreSecondaire, fontSize: 13)),
             ],
             if (peutValider && conge.statut == StatutConge.demande) ...[
               const SizedBox(height: 10),
@@ -101,8 +101,8 @@ class _CarteConge extends ConsumerWidget {
                 children: [
                   OutlinedButton.icon(
                     onPressed: () => _valider(ref, 'refuse'),
-                    icon: const Icon(Icons.close, color: AppColors.erreur),
-                    label: const Text('Refuser', style: TextStyle(color: AppColors.erreur)),
+                    icon: Icon(Icons.close, color: context.palette.erreur),
+                    label: Text('Refuser', style: TextStyle(color: context.palette.erreur)),
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
@@ -238,7 +238,7 @@ class _FormulaireCongeState extends ConsumerState<_FormulaireConge> {
               trailing: const Icon(Icons.calendar_today_outlined),
               onTap: () => _choisirDate(debut: false),
             ),
-            Text('$_nbJours jour(s)', style: const TextStyle(color: AppColors.encreSecondaire)),
+            Text('$_nbJours jour(s)', style: TextStyle(color: context.palette.encreSecondaire)),
             const SizedBox(height: 12),
             TextField(
               controller: _motifCtrl,
@@ -246,7 +246,7 @@ class _FormulaireCongeState extends ConsumerState<_FormulaireConge> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 8),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
           ],
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/rh_providers.dart';
@@ -150,10 +150,10 @@ class _CarteEmploye extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.bleuElectrique.withValues(alpha: 0.12),
+          backgroundColor: context.palette.primaire.withValues(alpha: 0.12),
           child: Text(
             employe.matricule.isEmpty ? '?' : employe.matricule.substring(0, 1).toUpperCase(),
-            style: const TextStyle(color: AppColors.bleuElectrique, fontWeight: FontWeight.w700),
+            style: TextStyle(color: context.palette.primaire, fontWeight: FontWeight.w700),
           ),
         ),
         title: Text(employe.nomAffiche ?? employe.matricule),

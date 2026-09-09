@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/shimmer.dart';
@@ -98,7 +98,7 @@ class _Contenu extends ConsumerWidget {
           const SizedBox(height: 24),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.warning_amber_outlined, color: AppColors.orangePop),
+              leading: Icon(Icons.warning_amber_outlined, color: context.palette.accent),
               title: const Text('Anomalies statistiques'),
               subtitle: const Text('Notes aberrantes, absentéisme excessif'),
               trailing: const Icon(Icons.chevron_right),
@@ -111,7 +111,7 @@ class _Contenu extends ConsumerWidget {
           ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.lightbulb_outline, color: AppColors.bleuElectrique),
+              leading: Icon(Icons.lightbulb_outline, color: context.palette.primaire),
               title: const Text('Recommandations stratégiques'),
               subtitle: const Text('Tutorat, renforcement — classes à risque'),
               trailing: const Icon(Icons.chevron_right),
@@ -124,7 +124,7 @@ class _Contenu extends ConsumerWidget {
           ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.description_outlined, color: AppColors.vertMenthe),
+              leading: Icon(Icons.description_outlined, color: context.palette.succes),
               title: const Text('Rapports générés'),
               subtitle: const Text('Bulletins, relevés, statistiques, exports'),
               trailing: const Icon(Icons.chevron_right),
@@ -199,9 +199,9 @@ class _CarteIndicateur extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(indicateur.libelle, style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12)),
+          Text(indicateur.libelle, style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12)),
           const SizedBox(height: 6),
-          Text(texte, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.bleuElectrique)),
+          Text(texte, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.palette.primaire)),
         ],
       ),
     );

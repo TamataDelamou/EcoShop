@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 
 /// Badge de moyenne — vert menthe si réussite (≥ 10/20), orange pop sinon.
 ///
@@ -17,8 +17,8 @@ class MoyenneBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final valeur = moyenne;
     final couleur = valeur == null
-        ? AppColors.encreSecondaire
-        : (valeur >= 10 ? AppColors.vertMenthe : AppColors.orangePop);
+        ? context.palette.encreSecondaire
+        : (valeur >= 10 ? context.palette.succes : context.palette.accent);
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: grande ? 16 : 10, vertical: grande ? 8 : 5),

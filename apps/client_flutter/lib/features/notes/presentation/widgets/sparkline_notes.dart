@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 
 /// Mini-graphique d'évolution des notes d'une matière (charte ch. 2 —
 /// indicateurs visuels de performance). Pas de dépendance graphique tierce :
@@ -19,7 +19,7 @@ class SparklineNotes extends StatelessWidget {
         child: Center(
           child: Text(
             valeursSur20.isEmpty ? 'Pas encore de note' : '${valeursSur20.single.toStringAsFixed(1)}/20',
-            style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12),
+            style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12),
           ),
         ),
       );
@@ -29,26 +29,32 @@ class SparklineNotes extends StatelessWidget {
       height: hauteur,
       width: double.infinity,
       child: CustomPaint(
-        painter: _SparklinePainter(valeursSur20),
+        painter: _SparklinePainter(
+          valeursSur20,
+          couleurTrait: context.palette.primaire,
+          couleurReussite: context.palette.succes,
+        ),
       ),
     );
   }
 }
 
 class _SparklinePainter extends CustomPainter {
-  _SparklinePainter(this.valeurs);
+  _SparklinePainter(this.valeurs, {required this.couleurTrait, required this.couleurReussite});
 
   final List<double> valeurs;
+  final Color couleurTrait;
+  final Color couleurReussite;
 
   @override
   void paint(Canvas canvas, Size size) {
     final trait = Paint()
-      ..color = AppColors.bleuElectrique
+      ..color = couleurTrait
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    final point = Paint()..color = AppColors.bleuElectrique;
-    final pointReussite = Paint()..color = AppColors.vertMenthe;
+    final point = Paint()..color = couleurTrait;
+    final pointReussite = Paint()..color = couleurReussite;
 
     final dx = size.width / (valeurs.length - 1);
     final chemin = Path();
@@ -72,5 +78,8 @@ class _SparklinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SparklinePainter oldDelegate) => oldDelegate.valeurs != valeurs;
+  bool shouldRepaint(covariant _SparklinePainter oldDelegate) =>
+      oldDelegate.valeurs != valeurs ||
+      oldDelegate.couleurTrait != couleurTrait ||
+      oldDelegate.couleurReussite != couleurReussite;
 }

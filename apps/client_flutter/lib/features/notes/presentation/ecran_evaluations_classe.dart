@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
@@ -89,7 +89,7 @@ class _CarteEvaluation extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: const Icon(Icons.assignment_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.assignment_outlined, color: context.palette.primaire),
         title: Text(evaluation.libelle),
         subtitle: Text(
           '${evaluation.type.libelle} · ${evaluation.nomMatiere ?? 'Matière non précisée'} '
@@ -240,7 +240,7 @@ class _FeuilleNouvelleEvaluationState extends ConsumerState<_FeuilleNouvelleEval
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 12),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
             const SizedBox(height: 20),
             FilledButton(

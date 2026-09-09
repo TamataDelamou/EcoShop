@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../../core/widgets/glass_card.dart';
 import '../../domain/emploi_du_temps.dart';
 import '../../domain/enums_planification.dart';
@@ -16,7 +17,7 @@ class CarteSeance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final couleur = _couleurType(emploi.type);
+    final couleur = _couleurType(context, emploi.type);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -37,7 +38,7 @@ class CarteSeance extends StatelessWidget {
                   if (libelleSecondaire != null)
                     Text(
                       libelleSecondaire!,
-                      style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12),
+                      style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12),
                     ),
                 ],
               ),
@@ -52,12 +53,12 @@ class CarteSeance extends StatelessWidget {
     );
   }
 
-  static Color _couleurType(TypeSeance type) => switch (type) {
-        TypeSeance.cours => AppColors.bleuElectrique,
-        TypeSeance.examen => AppColors.erreur,
-        TypeSeance.activite => AppColors.vertMenthe,
-        TypeSeance.etude => AppColors.dore,
-        TypeSeance.pause => AppColors.encreSecondaire,
+  static Color _couleurType(BuildContext context, TypeSeance type) => switch (type) {
+        TypeSeance.cours => context.palette.primaire,
+        TypeSeance.examen => context.palette.erreur,
+        TypeSeance.activite => context.palette.succes,
+        TypeSeance.etude => context.palette.premium,
+        TypeSeance.pause => context.palette.encreSecondaire,
       };
 }
 

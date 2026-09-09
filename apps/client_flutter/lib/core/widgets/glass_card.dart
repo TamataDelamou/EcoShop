@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_palette.dart';
 
 /// Carte « glassmorphism » — flou d'arrière-plan léger, bordure fine
 /// lumineuse et ombre douce (charte ch. 2). Réservée aux surfaces posées sur
@@ -24,6 +24,7 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return ClipRRect(
       borderRadius: BorderRadius.circular(rayon),
       child: BackdropFilter(
@@ -34,11 +35,11 @@ class GlassCard extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.72),
             borderRadius: BorderRadius.circular(rayon),
             border: Border.all(
-              color: couleurBordure ?? AppColors.bleuElectrique.withValues(alpha: 0.18),
+              color: couleurBordure ?? palette.primaire.withValues(alpha: 0.18),
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.encre.withValues(alpha: 0.06),
+                color: palette.encre.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../scolarite/domain/fiche_eleve.dart';
@@ -62,7 +62,7 @@ class _CarteBulletin extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ExpansionTile(
-        leading: const Icon(Icons.receipt_long_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.receipt_long_outlined, color: context.palette.primaire),
         title: Text(libelleType),
         subtitle: bulletin.publieLe != null ? Text('Publié le ${_formatDate(bulletin.publieLe!)}') : null,
         children: [
@@ -83,12 +83,12 @@ class _CarteBulletin extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.verified_outlined, size: 16, color: AppColors.vertMenthe),
+                      Icon(Icons.verified_outlined, size: 16, color: context.palette.succes),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           'Intégrité vérifiable — empreinte ${bulletin.signatureSha256!.substring(0, 12)}…',
-                          style: const TextStyle(fontSize: 12, color: AppColors.encreSecondaire),
+                          style: TextStyle(fontSize: 12, color: context.palette.encreSecondaire),
                         ),
                       ),
                     ],

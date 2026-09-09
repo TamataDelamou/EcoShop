@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_rapports.dart';
 
 /// Pastille générique — factorise l'apparence commune à toutes les pastilles
@@ -32,11 +32,11 @@ class PastilleStatutRapport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutRapport.demande => AppColors.dore,
-      StatutRapport.enAttente => AppColors.orangePop,
-      StatutRapport.genere => AppColors.vertMenthe,
-      StatutRapport.echec => AppColors.erreur,
-      StatutRapport.expire => AppColors.encreSecondaire,
+      StatutRapport.demande => context.palette.premium,
+      StatutRapport.enAttente => context.palette.accent,
+      StatutRapport.genere => context.palette.succes,
+      StatutRapport.echec => context.palette.erreur,
+      StatutRapport.expire => context.palette.encreSecondaire,
     };
     return _Pastille(libelle: statut.libelle, couleur: couleur);
   }
@@ -50,9 +50,9 @@ class PastilleSeverite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (severite) {
-      'elevee' => AppColors.erreur,
-      'moyenne' => AppColors.orangePop,
-      _ => AppColors.encreSecondaire,
+      'elevee' => context.palette.erreur,
+      'moyenne' => context.palette.accent,
+      _ => context.palette.encreSecondaire,
     };
     return _Pastille(libelle: severite, couleur: couleur);
   }
@@ -66,10 +66,10 @@ class PastilleStatutAnomalie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutAnomalie.ouverte => AppColors.dore,
-      StatutAnomalie.confirmee => AppColors.orangePop,
-      StatutAnomalie.rejetee => AppColors.encreSecondaire,
-      StatutAnomalie.traitee => AppColors.vertMenthe,
+      StatutAnomalie.ouverte => context.palette.premium,
+      StatutAnomalie.confirmee => context.palette.accent,
+      StatutAnomalie.rejetee => context.palette.encreSecondaire,
+      StatutAnomalie.traitee => context.palette.succes,
     };
     return _Pastille(libelle: statut.libelle, couleur: couleur);
   }
@@ -83,9 +83,9 @@ class PastillePriorite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (priorite) {
-      'haute' => AppColors.erreur,
-      'moyenne' => AppColors.orangePop,
-      _ => AppColors.encreSecondaire,
+      'haute' => context.palette.erreur,
+      'moyenne' => context.palette.accent,
+      _ => context.palette.encreSecondaire,
     };
     return _Pastille(libelle: priorite, couleur: couleur);
   }
@@ -99,10 +99,10 @@ class PastilleStatutRecommandation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final couleur = switch (statut) {
-      StatutRecommandation.proposee => AppColors.dore,
-      StatutRecommandation.validee => AppColors.bleuElectrique,
-      StatutRecommandation.miseEnOeuvre => AppColors.vertMenthe,
-      StatutRecommandation.rejetee => AppColors.encreSecondaire,
+      StatutRecommandation.proposee => context.palette.premium,
+      StatutRecommandation.validee => context.palette.primaire,
+      StatutRecommandation.miseEnOeuvre => context.palette.succes,
+      StatutRecommandation.rejetee => context.palette.encreSecondaire,
     };
     return _Pastille(libelle: statut.libelle, couleur: couleur);
   }

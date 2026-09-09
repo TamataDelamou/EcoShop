@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import 'ecran_agenda_evenements.dart';
 import 'ecran_emploi_du_temps.dart';
 import 'ecran_progression_pedagogique.dart';
@@ -32,7 +33,7 @@ class EcranPlanificationClasse extends StatelessWidget {
         children: [
           Card(
             child: ListTile(
-              leading: const Icon(Icons.calendar_view_week_outlined, color: AppColors.bleuElectrique),
+              leading: Icon(Icons.calendar_view_week_outlined, color: context.palette.primaire),
               title: const Text('Emploi du temps'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
@@ -42,7 +43,7 @@ class EcranPlanificationClasse extends StatelessWidget {
           ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.event_outlined, color: AppColors.orangePop),
+              leading: Icon(Icons.event_outlined, color: context.palette.accent),
               title: const Text('Agenda'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
@@ -55,7 +56,7 @@ class EcranPlanificationClasse extends StatelessWidget {
           if (peutVoirProgression && etablissementId != null)
             Card(
               child: ListTile(
-                leading: const Icon(Icons.trending_up_outlined, color: AppColors.vertMenthe),
+                leading: Icon(Icons.trending_up_outlined, color: context.palette.succes),
                 title: const Text('Progression pédagogique'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/widgets/shimmer.dart';
 import '../application/marketplace_providers.dart';
 import '../domain/commercant.dart';
@@ -58,9 +59,9 @@ class _CarteCommercant extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AppColors.bleuElectrique,
-          child: Icon(Icons.storefront_outlined, color: Colors.white),
+        leading: CircleAvatar(
+          backgroundColor: context.palette.primaire,
+          child: const Icon(Icons.storefront_outlined, color: Colors.white),
         ),
         title: Text(commercant.nom),
         subtitle: commercant.raisonSociale != null ? Text(commercant.raisonSociale!) : null,

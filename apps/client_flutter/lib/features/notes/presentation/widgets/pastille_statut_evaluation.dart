@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../domain/enums_notes.dart';
 
 /// Pastille de statut d'une évaluation (brouillon / publiée / clôturée).
@@ -12,9 +12,9 @@ class PastilleStatutEvaluation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (couleur, libelle) = switch (statut) {
-      StatutEvaluation.brouillon => (AppColors.encreSecondaire, 'Brouillon'),
-      StatutEvaluation.publiee => (AppColors.vertMenthe, 'Publiée'),
-      StatutEvaluation.cloturee => (AppColors.bleuElectrique, 'Clôturée'),
+      StatutEvaluation.brouillon => (context.palette.encreSecondaire, 'Brouillon'),
+      StatutEvaluation.publiee => (context.palette.succes, 'Publiée'),
+      StatutEvaluation.cloturee => (context.palette.primaire, 'Clôturée'),
     };
 
     return Container(

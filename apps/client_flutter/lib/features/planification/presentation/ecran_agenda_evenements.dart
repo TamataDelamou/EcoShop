@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/sync/device_id_provider.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/planification_providers.dart';
@@ -85,7 +86,7 @@ class _CarteEvenement extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Icon(_icone(evenement.type), color: _couleur(evenement.type)),
+        leading: Icon(_icone(evenement.type), color: _couleur(context, evenement.type)),
         title: Text(evenement.titre),
         subtitle: Text(
           [
@@ -118,11 +119,11 @@ class _CarteEvenement extends StatelessWidget {
         TypeEvenementAgenda.autre => Icons.event_outlined,
       };
 
-  static Color _couleur(TypeEvenementAgenda type) => switch (type) {
-        TypeEvenementAgenda.examen => AppColors.erreur,
-        TypeEvenementAgenda.conseilClasse => AppColors.orangePop,
-        TypeEvenementAgenda.fete => AppColors.vertMenthe,
-        _ => AppColors.bleuElectrique,
+  static Color _couleur(BuildContext context, TypeEvenementAgenda type) => switch (type) {
+        TypeEvenementAgenda.examen => context.palette.erreur,
+        TypeEvenementAgenda.conseilClasse => context.palette.accent,
+        TypeEvenementAgenda.fete => context.palette.succes,
+        _ => context.palette.primaire,
       };
 }
 
@@ -233,7 +234,7 @@ class _FormulaireEvenementState extends ConsumerState<_FormulaireEvenement> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 8),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
           ],
         ),

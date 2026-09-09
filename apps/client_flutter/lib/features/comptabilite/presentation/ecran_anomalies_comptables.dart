@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../application/comptabilite_providers.dart';
 import 'widgets/badge_signal_ia.dart';
 import 'widgets/montant.dart';
@@ -46,7 +46,7 @@ class EcranAnomaliesComptables extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(a.libelleAnomalie, style: const TextStyle(color: AppColors.orangePop, fontWeight: FontWeight.w600)),
+                      Text(a.libelleAnomalie, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 4),
                       Text('$date — ${formaterMontant(a.montant)}'),
                     ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/rapports_providers.dart';
@@ -108,7 +108,7 @@ class _CarteRapport extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Icon(_icone(rapport.format), color: AppColors.bleuElectrique),
+        leading: Icon(_icone(rapport.format), color: context.palette.primaire),
         title: Text(rapport.type),
         subtitle: Text(rapport.format.libelle + (rapport.demandeHorsLigne ? ' · déposé hors ligne' : '')),
         trailing: PastilleStatutRapport(statut: rapport.statut),
@@ -191,7 +191,7 @@ class _FormulaireRapportState extends ConsumerState<_FormulaireRapport> {
           ),
           if (_erreur != null) ...[
             const SizedBox(height: 8),
-            Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+            Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
           ],
         ],
       ),

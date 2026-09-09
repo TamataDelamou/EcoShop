@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/role_racine.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../application/scolarite_providers.dart';
 import '../../domain/fiche_eleve.dart';
@@ -38,7 +38,7 @@ class SelecteurEnfant extends ConsumerWidget {
 
         return Container(
           height: 88,
-          color: AppColors.surface,
+          color: context.palette.surface,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -105,19 +105,19 @@ class _PuceEnfant extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: selectionne ? AppColors.bleuElectrique : Colors.transparent,
+                    color: selectionne ? context.palette.primaire : Colors.transparent,
                     width: 2,
                   ),
                 ),
                 child: CircleAvatar(
                   radius: 22,
                   backgroundColor: selectionne
-                      ? AppColors.bleuElectrique
-                      : AppColors.bleuElectrique.withValues(alpha: 0.12),
+                      ? context.palette.primaire
+                      : context.palette.primaire.withValues(alpha: 0.12),
                   child: Text(
                     _initiales(fiche.nomComplet),
                     style: TextStyle(
-                      color: selectionne ? Colors.white : AppColors.bleuElectrique,
+                      color: selectionne ? Colors.white : context.palette.primaire,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -132,7 +132,7 @@ class _PuceEnfant extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: selectionne ? FontWeight.w700 : FontWeight.w400,
-                  color: selectionne ? AppColors.bleuElectrique : AppColors.encreSecondaire,
+                  color: selectionne ? context.palette.primaire : context.palette.encreSecondaire,
                 ),
               ),
             ],
@@ -166,15 +166,15 @@ class _PuceAjouter extends StatelessWidget {
             onTap: onTap,
             child: CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.orangePop.withValues(alpha: 0.12),
-              child: const Icon(Icons.add, color: AppColors.orangePop),
+              backgroundColor: context.palette.accent.withValues(alpha: 0.12),
+              child: Icon(Icons.add, color: context.palette.accent),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Ajouter',
             maxLines: 1,
-            style: TextStyle(fontSize: 12, color: AppColors.encreSecondaire),
+            style: TextStyle(fontSize: 12, color: context.palette.encreSecondaire),
           ),
         ],
       ),

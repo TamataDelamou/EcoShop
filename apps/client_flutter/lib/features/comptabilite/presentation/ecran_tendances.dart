@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../application/comptabilite_providers.dart';
 import 'widgets/badge_signal_ia.dart';
 import 'widgets/montant.dart';
@@ -45,14 +45,14 @@ class EcranTendances extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Charges : ${formaterMontant(t.totalCharges)}', style: const TextStyle(color: AppColors.erreur)),
-                          Text('Produits : ${formaterMontant(t.totalProduits)}', style: const TextStyle(color: AppColors.vertMenthe)),
+                          Text('Charges : ${formaterMontant(t.totalCharges)}', style: TextStyle(color: context.palette.erreur)),
+                          Text('Produits : ${formaterMontant(t.totalProduits)}', style: TextStyle(color: context.palette.succes)),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Solde net : ${formaterMontant(t.soldeNet)}',
-                        style: TextStyle(fontWeight: FontWeight.w700, color: t.soldeNet >= 0 ? AppColors.vertMenthe : AppColors.erreur),
+                        style: TextStyle(fontWeight: FontWeight.w700, color: t.soldeNet >= 0 ? context.palette.succes : context.palette.erreur),
                       ),
                     ],
                   ),

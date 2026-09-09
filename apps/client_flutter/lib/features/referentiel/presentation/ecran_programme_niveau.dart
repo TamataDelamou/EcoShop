@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/referentiel_providers.dart';
@@ -44,7 +44,7 @@ class _EcranProgrammeNiveauState extends ConsumerState<EcranProgrammeNiveau> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off, size: 48, color: AppColors.encreSecondaire),
+                Icon(Icons.cloud_off, size: 48, color: context.palette.encreSecondaire),
                 const SizedBox(height: 16),
                 const Text(
                   'Ce niveau n\'a pas encore été consulté hors-ligne : une '
@@ -96,7 +96,7 @@ class _Contenu extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text(paysNom, style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.encreSecondaire,
+              color: context.palette.encreSecondaire,
             )),
         const SizedBox(height: 4),
         if (arborescence.filieres.isNotEmpty) ...[
@@ -120,7 +120,7 @@ class _Contenu extends StatelessWidget {
             if (programme?.anneeScolaire != null)
               Pastille(
                 texte: programme!.anneeScolaire!,
-                couleur: AppColors.bleuElectrique,
+                couleur: context.palette.primaire,
                 icone: Icons.event_outlined,
               ),
           ],
@@ -186,7 +186,7 @@ class _CarteMatiere extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.menu_book_outlined, color: AppColors.bleuElectrique),
+        leading: Icon(Icons.menu_book_outlined, color: context.palette.primaire),
         title: Text(matiere.nom),
         subtitle: matiere.volumeHoraireAnnuel != null
             ? Text('${matiere.volumeHoraireAnnuel} h / an')
@@ -194,7 +194,7 @@ class _CarteMatiere extends StatelessWidget {
         trailing: matiere.coefficient != null
             ? Pastille(
                 texte: 'Coef. ${matiere.coefficient}',
-                couleur: AppColors.orangePop,
+                couleur: context.palette.accent,
               )
             : null,
       ),

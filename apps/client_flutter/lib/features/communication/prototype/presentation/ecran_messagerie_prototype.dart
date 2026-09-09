@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/shimmer.dart';
 import '../application/communication_locale_providers.dart';
@@ -200,7 +200,7 @@ class _Bulle extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 280),
         child: GlassCard(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          couleurBordure: estMoi ? AppColors.bleuElectrique.withValues(alpha: 0.3) : null,
+          couleurBordure: estMoi ? context.palette.primaire.withValues(alpha: 0.3) : null,
           enfant: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -209,9 +209,9 @@ class _Bulle extends StatelessWidget {
                 Text(message.auteurNom, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               Text(message.contenu),
               if (message.signalee)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Icon(Icons.flag_outlined, size: 14, color: AppColors.orangePop),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Icon(Icons.flag_outlined, size: 14, color: context.palette.accent),
                 ),
             ],
           ),

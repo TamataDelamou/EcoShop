@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../application/scolarite_providers.dart';
 import '../../domain/enums_scolarite.dart';
 import '../../domain/scolarite_repository.dart';
@@ -83,9 +83,9 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
       ref.invalidate(mesEnfantsProvider);
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enfant lié avec succès.'),
-          backgroundColor: AppColors.vertMenthe,
+        SnackBar(
+          content: const Text('Enfant lié avec succès.'),
+          backgroundColor: context.palette.succes,
         ),
       );
     } on ErreurScolarite catch (e) {
@@ -112,16 +112,16 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
           children: [
             Row(
               children: [
-                const Icon(Icons.family_restroom, color: AppColors.bleuElectrique),
+                Icon(Icons.family_restroom, color: context.palette.primaire),
                 const SizedBox(width: 10),
                 Text('Lier un enfant', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Le matricule et la date de naissance sont fournis par '
               "l'établissement de votre enfant.",
-              style: TextStyle(color: AppColors.encreSecondaire, fontSize: 13),
+              style: TextStyle(color: context.palette.encreSecondaire, fontSize: 13),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -161,7 +161,7 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
             ),
             if (_erreur != null) ...[
               const SizedBox(height: 12),
-              Text(_erreur!, style: const TextStyle(color: AppColors.erreur)),
+              Text(_erreur!, style: TextStyle(color: context.palette.erreur)),
             ],
             const SizedBox(height: 20),
             FilledButton(

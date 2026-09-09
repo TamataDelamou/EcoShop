@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/planification_providers.dart';
@@ -78,7 +79,7 @@ class _CarteConflit extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Icon(_icone(conflit.type), color: AppColors.erreur),
+        leading: Icon(_icone(conflit.type), color: context.palette.erreur),
         title: Text('Conflit de ${_libelleType(conflit.type)}'),
         subtitle: Text(
           '${joursSemaine[conflit.jourSemaine - 1]} · ${conflit.heureDebut} – ${conflit.heureFin}',

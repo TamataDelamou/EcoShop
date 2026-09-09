@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
+
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/planification_providers.dart';
@@ -86,7 +87,7 @@ class _CarteProgression extends ConsumerWidget {
             ),
             if (progression.objectifs != null && progression.objectifs!.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(progression.objectifs!, style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 13)),
+              Text(progression.objectifs!, style: TextStyle(color: context.palette.encreSecondaire, fontSize: 13)),
             ],
             if (progression.statut == StatutProgression.proposee) ...[
               const SizedBox(height: 8),

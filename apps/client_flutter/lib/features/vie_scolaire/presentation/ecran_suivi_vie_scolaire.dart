@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../scolarite/application/scolarite_providers.dart';
@@ -97,7 +97,7 @@ class _Contenu extends ConsumerWidget {
                         const SizedBox(height: 8),
                         for (final alerte in liste)
                           Card(
-                            color: AppColors.dore.withValues(alpha: 0.06),
+                            color: context.palette.premium.withValues(alpha: 0.06),
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -171,22 +171,22 @@ class _CarteIndicateurs extends ConsumerWidget {
               _Indicateur(
                 libelle: 'Absences injustifiées',
                 valeur: '${donnees['absences_non_justifiees'] ?? 0}',
-                couleur: AppColors.erreur,
+                couleur: context.palette.erreur,
               ),
               _Indicateur(
                 libelle: 'Absences justifiées',
                 valeur: '${donnees['absences_justifiees'] ?? 0}',
-                couleur: AppColors.encreSecondaire,
+                couleur: context.palette.encreSecondaire,
               ),
               _Indicateur(
                 libelle: 'Retards injustifiés',
                 valeur: '${donnees['retards_non_justifies'] ?? 0}',
-                couleur: AppColors.orangePop,
+                couleur: context.palette.accent,
               ),
               _Indicateur(
                 libelle: 'Retard moyen',
                 valeur: '${donnees['retard_moyen_minutes'] ?? 0} min',
-                couleur: AppColors.bleuElectrique,
+                couleur: context.palette.primaire,
               ),
             ],
           ),
@@ -211,7 +211,7 @@ class _Indicateur extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(valeur, style: TextStyle(color: couleur, fontSize: 22, fontWeight: FontWeight.w700)),
-          Text(libelle, style: const TextStyle(color: AppColors.encreSecondaire, fontSize: 12)),
+          Text(libelle, style: TextStyle(color: context.palette.encreSecondaire, fontSize: 12)),
         ],
       ),
     );
@@ -233,7 +233,7 @@ class _CarteTauxPresence extends StatelessWidget {
 
     final presents = presences.where((p) => p.statut.code == 'present').length;
     final taux = presents / presences.length;
-    final couleur = taux >= 0.9 ? AppColors.vertMenthe : AppColors.orangePop;
+    final couleur = taux >= 0.9 ? context.palette.succes : context.palette.accent;
 
     return Card(
       child: Padding(
@@ -315,12 +315,12 @@ class _CarteRetard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: const Icon(Icons.schedule_outlined, color: AppColors.orangePop),
+        leading: Icon(Icons.schedule_outlined, color: context.palette.accent),
         title: Text('${retard.minutesRetard} min — ${_formatDate(retard.dateRetard)}'),
         subtitle: retard.motif != null ? Text(retard.motif!) : null,
         trailing: Icon(
           retard.justifie ? Icons.check_circle_outline : Icons.circle_outlined,
-          color: retard.justifie ? AppColors.vertMenthe : AppColors.encreSecondaire,
+          color: retard.justifie ? context.palette.succes : context.palette.encreSecondaire,
         ),
       ),
     );
