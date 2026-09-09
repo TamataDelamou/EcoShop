@@ -5,14 +5,14 @@
 > Code : `apps/client_flutter/lib/features/export_pdf/`.
 > Tests : `apps/client_flutter/test/features/export_pdf/`.
 >
-> **Retrait du sous-périmètre « reçu PDF » (voir §7)** : livré initialement
-> avec un export de reçu adossé aux écritures comptables générales de M14
-> (`EcritureComptable`), puis **retiré** avant tout push vers `origin/main` —
-> cette entité n'a aucun lien structurel avec un élève, une inscription ou
-> un solde dû, et n'aurait pas garanti qu'un document ayant l'apparence d'un
-> reçu de scolarité corresponde à un vrai encaissement. Ce sous-périmètre
-> sera rebranché sur une entité d'encaissement dédiée livrée par
-> **M15quater — Inscription, réinscription & encaissement de scolarité**.
+> **Retrait puis reconstruction du sous-périmètre « reçu PDF » (voir §7)** :
+> livré initialement avec un export de reçu adossé aux écritures comptables
+> générales de M14 (`EcritureComptable`), puis **retiré** avant tout push
+> vers `origin/main` — cette entité n'avait aucun lien structurel avec un
+> élève, une inscription ou un solde dû. **Reconstruit** après
+> **M15quater — Inscription, réinscription & encaissement de scolarité**
+> (`docs/contrats/M15quater_inscription_encaissement.md`), sur l'entité
+> `EncaissementScolarite` dédiée — voir §7 pour l'historique complet.
 
 ## 1. Périmètre (livré)
 
@@ -24,7 +24,9 @@ avant ce module.
 1. **Export PDF des bulletins** (M6) : le bulletin, jusqu'ici un simple
    affichage écran d'un jsonb (`ecran_bulletins.dart`), peut désormais être
    exporté, prévisualisé, imprimé ou partagé en PDF. **Livré et conservé.**
-2. **Export PDF des reçus** (M13/M14) : **retiré** — voir §7.
+2. **Export PDF des reçus** (M13/M14 puis M15quater) : livré, **retiré**,
+   puis **reconstruit** sur l'entité `EncaissementScolarite` de M15quater —
+   voir §7.
 3. **Attestations** (scolarité/inscription/paiement) : **hors périmètre**,
    confirmées absentes des deux côtés par l'audit (pas une régression) —
    reportées à l'arbitrage général du porteur de projet, pas traitées ici.
@@ -74,11 +76,14 @@ normalement via `Theme.of(context)`/`context.palette`. Conservé générique
 (pas spécifique au bulletin) pour être réutilisé sans modification quand le
 PDF reçu sera rebranché (M15quater).
 
-### 2.5 Point d'entrée UI
+### 2.5 Points d'entrée UI
 
-`ecran_bulletins.dart` : bouton « Exporter en PDF » sur chaque bulletin
-publié (`_CarteBulletin`, `ConsumerStatefulWidget` pour l'état de chargement
-de l'export).
+- `ecran_bulletins.dart` : bouton « Exporter en PDF » sur chaque bulletin
+  publié (`_CarteBulletin`, `ConsumerStatefulWidget` pour l'état de
+  chargement de l'export).
+- `ecran_encaissement_scolarite.dart` (M15quater) : icône « Exporter le reçu
+  (PDF) » sur chaque encaissement de l'historique — voir §7, le reçu est
+  reconstruit ici, pas dans ce module.
 
 ## 3. Résolution des problèmes hérités
 
@@ -100,8 +105,10 @@ Conformément à la règle transversale ANALYSE_GLOBALE.md §4.2.5.
 |---|---|---|---|
 | Export PDF bulletin | `pdf_service.dart` (`genererBulletinA4`) — mise en page codée en dur, **moyenne générale + rang + appréciation seulement**, pas le détail par matière (limite documentée dans le code source lui-même) | `construireBulletinPdf` — rend **tout** `bulletin.contenu` (jsonb serveur), donc le détail par matière si le serveur le fournit ; dépend de ce que M6 publie réellement dans ce champ | Dépassé en flexibilité (rend ce que le serveur envoie), mais n'a pas de mise en page dédiée « par matière » codée en dur comme la source — différence de conception, pas une perte |
 | Export PDF groupé (classe entière) | `genererBulletinsClasseA4` — génère tous les bulletins d'une classe en un geste | **Absent** — ce module exporte un bulletin à la fois | Écart assumé : dépend du point non résolu « génération de bulletins pour une classe entière » (déjà signalé, différé, audit M6 point 8) — sans écran de génération de masse, un export groupé n'a pas de source de données à consommer |
-| Reçu thermique 58 mm / reçu A4 annuel | `genererRecuThermique`/`genererRecuA4` | **Retiré** (voir §7) — sera traité après M15quater, sur l'entité d'encaissement dédiée, pas sur une écriture comptable générale | Différé — dépend de M15quater |
-| Fiche élève PDF | `genererFicheEleve` (identité + situation financière + historique) | **Absent** | Différé — dépend du suivi financier par élève (M15quater), hors périmètre de ce module |
+| Reçu A4 (par encaissement) | `genererRecuA4` | **Reconstruit** (voir §7) sur `EncaissementScolarite` (M15quater) — `apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart` | Couvert (A4 seul) |
+| Reçu thermique 58 mm | `genererRecuThermique` | **Absent** — pas d'écran de caisse dédié côté cible | Différé — à revoir si un besoin de caisse physique est confirmé |
+| Reçu A4 annuel récapitulatif | `genererRecuA4` (variante annuelle, 2 exemplaires) | **Absent** — un reçu = un encaissement, pas de récapitulatif annuel consolidé | Différé |
+| Fiche élève PDF | `genererFicheEleve` (identité + situation financière + historique, un seul document imprimable) | **Absent en PDF** — le suivi financier existe désormais à l'écran (`ecran_fiche_eleve.dart`, M15quater : solde, historique d'encaissements), mais aucun export imprimable de la fiche complète | Différé — hors périmètre de ce module |
 | Bulletin de paie PDF | `pdf_service.dart` (paie) | **Absent** | Différé — dépend du cycle de paie RH, déjà signalé fortement dégradé (audit M8/M9 point 4), hors périmètre de ce module |
 | Attestations | Absentes des deux côtés (confirmé par l'audit) | Absentes | Pas un écart — hors périmètre assumé de ce module |
 
@@ -112,8 +119,13 @@ Conformément à la règle transversale ANALYSE_GLOBALE.md §4.2.5.
 - `test/features/export_pdf/bulletin_pdf_builder_test.dart` — génère un PDF
   structurellement valide (en-tête `%PDF-`) pour les 3 variantes, avec et
   sans contenu.
+- `test/features/export_pdf/recu_pdf_builder_test.dart` (reconstruit, voir
+  §7) — génère un PDF structurellement valide pour les 3 variantes à partir
+  d'un `EncaissementScolarite` (M15quater), avec et sans référence de
+  paiement.
 
-242 tests passent au total (module entier), `flutter analyze` propre.
+260 tests passent au total (module entier, y compris M15quater),
+`flutter analyze` propre.
 
 ## 6. Limites connues et éléments différés
 
@@ -125,12 +137,12 @@ Conformément à la règle transversale ANALYSE_GLOBALE.md §4.2.5.
 - Glyphes hors police de base (ex. tiret cadratin) dans les champs libres
   utilisateur : affichage dégradé (glyphe manquant), pas d'échec — voir §2.2.
 
-## 7. Historique — retrait du sous-périmètre « reçu PDF »
+## 7. Historique — retrait puis reconstruction du sous-périmètre « reçu PDF »
 
-**Livré initialement**, puis **retiré avant tout push vers `origin/main`**,
-sur décision explicite du porteur de projet, pour la raison suivante :
-l'export s'appuyait sur `EcritureComptable` (M14, écriture comptable
-générale — débit/crédit/montant/libellé/journal), qui n'a **aucun lien
+**Étape 1 — livré, puis retiré avant tout push vers `origin/main`**, sur
+décision explicite du porteur de projet : l'export s'appuyait sur
+`EcritureComptable` (M14, écriture comptable générale —
+débit/crédit/montant/libellé/journal), qui n'avait **aucun lien
 structurel** avec un élève, une inscription ou un solde dû :
 
 - Pas de `fiche_eleve_id` sur `EcritureComptable`.
@@ -145,23 +157,27 @@ Autrement dit : le document généré avait l'apparence d'un reçu officiel de
 scolarité sans qu'aucune donnée ne garantisse qu'il corresponde à un vrai
 encaissement — un risque inacceptable pour un document remis à une famille.
 
-**Ce qui a été retiré** (commit de retrait à identifier dans l'historique
-git, postérieur au commit initial de M15ter) :
-- `apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart`
-  (supprimé).
-- `apps/client_flutter/test/features/export_pdf/recu_pdf_builder_test.dart`
-  (supprimé).
-- Le bouton « Exporter le reçu (PDF) » et l'état associé dans
-  `ecran_ecritures_recentes.dart` (`_CarteEcriture` revenu à un
-  `StatelessWidget` simple, comme avant M15ter).
+Retiré : `recu_pdf_builder.dart` et son test supprimés, bouton d'export
+retiré de `ecran_ecritures_recentes.dart` (`_CarteEcriture` revenu à un
+`StatelessWidget` simple, comme avant M15ter). `PdfPaletteX`, `entete_pdf.dart`
+et `EcranApercuPdf` sont restés génériques (jamais spécifiques au reçu) —
+aucune reprise n'a été nécessaire pour l'étape 2.
 
-**Ce qui reste** : `PdfPaletteX`, `entete_pdf.dart` et `EcranApercuPdf` sont
-restés génériques (jamais spécifiques au reçu) — aucune reprise nécessaire
-de cette infrastructure partagée quand le PDF reçu sera reconstruit.
+**Étape 2 — reconstruit après M15quater** : `EncaissementScolarite`
+(`docs/contrats/M15quater_inscription_encaissement.md`) lie explicitement
+`ficheEleveId`/`inscriptionId` — un reçu généré aujourd'hui correspond
+toujours à un encaissement réellement lié à un élève inscrit.
+`recu_pdf_builder.dart` a été réécrit contre cette entité (jamais
+`EcritureComptable`), avec un nouveau point d'entrée UI dans
+`ecran_encaissement_scolarite.dart` (icône « Exporter le reçu (PDF) » sur
+chaque ligne de l'historique). Format A4 unique (pas de variante thermique
+58 mm, pas de récapitulatif annuel — voir §4).
 
-**Prochaine étape (M15quater, puis retour ici)** : une fois l'entité
-d'encaissement de scolarité dédiée livrée (liant explicitement
-`fiche_eleve_id`/`inscription_id`, montant dû, montant payé, solde), un
-nouveau `recu_pdf_builder.dart` sera écrit contre **cette** entité — jamais
-contre `EcritureComptable` — et ce document sera remis à jour en
-conséquence.
+---
+
+**Point de contrôle** : le module M15ter (Export PDF) est-il totalement clos
+et validé ? — Bulletins livrés et conservés ; reçu livré, retiré pour raison
+de sécurité des données, puis reconstruit sur la bonne entité après
+M15quater. 260 tests passent, `flutter analyze` propre. **M16** reste
+bloqué indépendamment de M15ter, par l'arbitrage en attente du reste du
+rapport d'audit rétroactif (`docs/AUDIT_ECOSHOP_FLUTTER.md`).

@@ -8,10 +8,14 @@ import '../../auth/application/auth_providers.dart';
 import '../data/cached_scolarite_repository.dart';
 import '../data/supabase_scolarite_repository.dart';
 import '../domain/affectation_enseignant.dart';
+import '../domain/encaissement_scolarite.dart';
 import '../domain/fiche_eleve.dart';
+import '../domain/frais_scolarite_config.dart';
 import '../domain/inscription.dart';
+import '../domain/palier_paiement_config.dart';
 import '../domain/relation_parent_eleve.dart';
 import '../domain/scolarite_repository.dart';
+import '../domain/solde_scolarite.dart';
 import '../domain/structure_etablissement.dart';
 
 /// Port de la scolarité — réseau d'abord, repli cache Drift (domaine
@@ -53,6 +57,12 @@ final maFicheProvider = FutureProvider<FicheEleve?>((ref) {
   return ref.watch(scolariteRepositoryProvider).maFiche();
 });
 
+/// Fiche d'un élève donné, par id (rafraîchissement ponctuel — ex. avant un
+/// export PDF de reçu qui a besoin du nom/matricule de l'élève).
+final ficheEleveProvider = FutureProvider.family<FicheEleve?, String>((ref, ficheId) {
+  return ref.watch(scolariteRepositoryProvider).ficheEleve(ficheId);
+});
+
 /// Affectations enseignantes d'une classe.
 final affectationsDeClasseProvider =
     FutureProvider.family<List<AffectationEnseignant>, String>((ref, classeId) {
@@ -87,4 +97,46 @@ final enfantActifProvider = Provider<FicheEleve?>((ref) {
   final choisi = ref.watch(enfantSelectionneProvider);
   if (choisi != null && actifs.any((f) => f.id == choisi.id)) return choisi;
   return actifs.first;
+});
+
+// ---------------------------------------------------------------------------
+// M15quater — inscription, réinscription, encaissement de scolarité
+// ---------------------------------------------------------------------------
+
+/// Tarifs configurés pour un (établissement, année) — tarif par défaut et
+/// tarifs par niveau.
+final fraisScolariteConfigProvider = FutureProvider.family<List<FraisScolariteConfig>, ({String etablissementId, String anneeScolaireId})>(
+  (ref, params) {
+    return ref.watch(scolariteRepositoryProvider).fraisScolariteConfig(
+          etablissementId: params.etablissementId,
+          anneeScolaireId: params.anneeScolaireId,
+        );
+  },
+);
+
+/// Paliers de paiement configurés pour un (établissement, année), triés.
+final paliersPaiementConfigProvider = FutureProvider.family<List<PalierPaiementConfig>, ({String etablissementId, String anneeScolaireId})>(
+  (ref, params) {
+    return ref.watch(scolariteRepositoryProvider).paliersPaiementConfig(
+          etablissementId: params.etablissementId,
+          anneeScolaireId: params.anneeScolaireId,
+        );
+  },
+);
+
+/// Solde scolaire d'une inscription (calcul serveur — jamais recalculé ici).
+final soldeScolariteProvider = FutureProvider.family<SoldeScolarite, String>((ref, inscriptionId) {
+  return ref.watch(scolariteRepositoryProvider).soldeScolarite(inscriptionId);
+});
+
+/// Historique des encaissements d'une inscription, le plus récent d'abord.
+final encaissementsDeInscriptionProvider =
+    FutureProvider.family<List<EncaissementScolarite>, String>((ref, inscriptionId) {
+  return ref.watch(scolariteRepositoryProvider).encaissementsDeInscription(inscriptionId);
+});
+
+/// Cahier journal des encaissements d'un établissement, tous élèves confondus.
+final encaissementsRecentsProvider =
+    FutureProvider.family<List<EncaissementScolarite>, String>((ref, etablissementId) {
+  return ref.watch(scolariteRepositoryProvider).encaissementsRecents(etablissementId);
 });

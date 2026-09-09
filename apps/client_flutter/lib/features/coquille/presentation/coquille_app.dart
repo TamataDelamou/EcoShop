@@ -28,6 +28,10 @@ import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
 import '../../rh_personnel/presentation/ecran_tableau_bord_rh.dart';
 import '../../scolarite/application/scolarite_providers.dart';
+import '../../scolarite/presentation/ecran_cahier_encaissements.dart';
+import '../../scolarite/presentation/ecran_creation_inscription.dart';
+import '../../scolarite/presentation/ecran_parametres_financiers.dart';
+import '../../scolarite/presentation/ecran_reinscription.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
@@ -706,6 +710,61 @@ class _VueProfil extends ConsumerWidget {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => EcranComptabilite(etablissementId: etablissement.id)),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          ListTile(
+            leading: const Icon(Icons.person_add_alt_1_outlined),
+            title: const Text('Nouvelle inscription'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranCreationInscription()),
+            ),
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          ListTile(
+            leading: const Icon(Icons.autorenew_outlined),
+            title: const Text('Réinscription'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranReinscription()),
+            ),
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final anneeId = structure?.anneeCourante?.id;
+              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.request_quote_outlined),
+                    title: const Text('Paramètres financiers'),
+                    subtitle: const Text('Tarifs, paliers de paiement'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranParametresFinanciers(
+                          etablissementId: etablissement.id,
+                          anneeScolaireId: anneeId,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.receipt_long_outlined),
+                    title: const Text('Cahier des encaissements'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranCahierEncaissements(etablissementId: etablissement.id),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),

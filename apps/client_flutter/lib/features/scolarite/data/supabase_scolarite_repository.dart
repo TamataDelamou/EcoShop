@@ -3,14 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/affectation_enseignant.dart';
 import '../domain/annee_scolaire.dart';
 import '../domain/classe.dart';
+import '../domain/encaissement_scolarite.dart';
 import '../domain/enums_scolarite.dart';
 import '../domain/fiche_eleve.dart';
+import '../domain/frais_scolarite_config.dart';
 import '../domain/inscription.dart';
+import '../domain/palier_paiement_config.dart';
 import '../domain/periode_scolaire.dart';
 import '../domain/relation_parent_eleve.dart';
 import '../domain/scolarite_repository.dart';
+import '../domain/solde_scolarite.dart';
 import '../domain/structure_etablissement.dart';
 import '../domain/unite_operationnelle.dart';
+import '../domain/verifications_reinscription.dart';
 
 /// Implémentation Supabase du port [ScolariteRepository] (M5).
 ///
@@ -211,6 +216,241 @@ class SupabaseScolariteRepository implements ScolariteRepository {
         },
       );
       return id;
+    });
+  }
+
+  // --- M15quater : inscription, réinscription, doublon -------------------
+
+  @override
+  Future<FicheEleve?> ficheParMatricule({
+    required String etablissementId,
+    required String matricule,
+  }) {
+    return _executer(() async {
+      final ligne = await _client
+          .from('fiches_eleves')
+          .select()
+          .eq('etablissement_id', etablissementId)
+          .eq('matricule', matricule.trim())
+          .maybeSingle();
+      return ligne == null ? null : FicheEleve.depuisJson(ligne);
+    });
+  }
+
+  @override
+  Future<String> creerInscriptionNouvelEleve({
+    required String etablissementId,
+    required String nom,
+    required String prenom,
+    required DateTime dateNaissance,
+    required String classeId,
+    required String anneeScolaireId,
+    String? sexe,
+  }) {
+    return _executer(() async {
+      final id = await _client.rpc<String>(
+        'creer_inscription_nouvel_eleve',
+        params: {
+          'p_etablissement': etablissementId,
+          'p_nom': nom.trim(),
+          'p_prenom': prenom.trim(),
+          'p_date_naissance': _formatDateIso(dateNaissance),
+          'p_classe_id': classeId,
+          'p_annee_scolaire_id': anneeScolaireId,
+          'p_sexe': sexe,
+        },
+      );
+      return id;
+    });
+  }
+
+  @override
+  Future<bool> verifierDoublonEleve({
+    required String nom,
+    required String prenom,
+    required DateTime dateNaissance,
+  }) {
+    return _executer(() async {
+      final resultat = await _client.rpc<bool>(
+        'verifier_doublon_eleve',
+        params: {
+          'p_nom': nom.trim(),
+          'p_prenom': prenom.trim(),
+          'p_date_naissance': _formatDateIso(dateNaissance),
+        },
+      );
+      return resultat;
+    });
+  }
+
+  @override
+  Future<VerificationsReinscription> verificationsReinscription({
+    required String ficheEleveId,
+    required String anneePrecedenteId,
+  }) {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'verifications_reinscription',
+        params: {'p_fiche_eleve_id': ficheEleveId, 'p_annee_precedente_id': anneePrecedenteId},
+      );
+      final ligne = (lignes).cast<Map<String, dynamic>>().first;
+      return VerificationsReinscription.depuisJson(ligne);
+    });
+  }
+
+  @override
+  Future<String> creerReinscription({
+    required String ficheEleveId,
+    required String classeId,
+    required String anneeScolaireId,
+  }) {
+    return _executer(() async {
+      final id = await _client.rpc<String>(
+        'creer_reinscription',
+        params: {
+          'p_fiche_eleve_id': ficheEleveId,
+          'p_classe_id': classeId,
+          'p_annee_scolaire_id': anneeScolaireId,
+        },
+      );
+      return id;
+    });
+  }
+
+  @override
+  Future<void> definirStatutBoursier({
+    required String inscriptionId,
+    required bool boursier,
+  }) {
+    return _executer(() async {
+      await _client.from('inscriptions').update({'boursier': boursier}).eq('id', inscriptionId);
+    });
+  }
+
+  @override
+  Future<void> mettreAJourFicheAdmin(FicheEleve fiche) {
+    return _executer(() async {
+      await _client
+          .from('fiches_eleves')
+          .update(fiche.versJsonMiseAJourAdmin())
+          .eq('id', fiche.id);
+    });
+  }
+
+  // --- M15quater : paramètres financiers de l'établissement ---------------
+
+  @override
+  Future<List<FraisScolariteConfig>> fraisScolariteConfig({
+    required String etablissementId,
+    required String anneeScolaireId,
+  }) {
+    return _executer(() async {
+      final lignes = await _client
+          .from('frais_scolarite_config')
+          .select()
+          .eq('etablissement_id', etablissementId)
+          .eq('annee_scolaire_id', anneeScolaireId)
+          .isFilter('deleted_at', null);
+      return lignes.map((l) => FraisScolariteConfig.depuisJson(l)).toList(growable: false);
+    });
+  }
+
+  @override
+  Future<void> enregistrerFraisScolariteConfig(FraisScolariteConfig config) {
+    return _executer(() async {
+      await _client
+          .from('frais_scolarite_config')
+          .upsert(config.versJsonEcriture(), onConflict: 'etablissement_id,annee_scolaire_id,niveau_id');
+    });
+  }
+
+  @override
+  Future<List<PalierPaiementConfig>> paliersPaiementConfig({
+    required String etablissementId,
+    required String anneeScolaireId,
+  }) {
+    return _executer(() async {
+      final lignes = await _client
+          .from('paliers_paiement_config')
+          .select()
+          .eq('etablissement_id', etablissementId)
+          .eq('annee_scolaire_id', anneeScolaireId)
+          .isFilter('deleted_at', null)
+          .order('ordre');
+      return lignes.map((l) => PalierPaiementConfig.depuisJson(l)).toList(growable: false);
+    });
+  }
+
+  @override
+  Future<void> enregistrerPalierPaiement(PalierPaiementConfig palier) {
+    return _executer(() async {
+      await _client
+          .from('paliers_paiement_config')
+          .upsert(palier.versJsonEcriture(), onConflict: 'etablissement_id,annee_scolaire_id,ordre');
+    });
+  }
+
+  // --- M15quater : encaissement de scolarité ------------------------------
+
+  @override
+  Future<SoldeScolarite> soldeScolarite(String inscriptionId) {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'solde_scolarite',
+        params: {'p_inscription_id': inscriptionId},
+      );
+      final ligne = lignes.cast<Map<String, dynamic>>().first;
+      return SoldeScolarite.depuisJson(ligne);
+    });
+  }
+
+  @override
+  Future<List<EncaissementScolarite>> encaissementsDeInscription(String inscriptionId) {
+    return _executer(() async {
+      final lignes = await _client
+          .from('encaissements_scolarite')
+          .select()
+          .eq('inscription_id', inscriptionId)
+          .order('date_paiement', ascending: false);
+      return lignes.map((l) => EncaissementScolarite.depuisJson(l)).toList(growable: false);
+    });
+  }
+
+  @override
+  Future<List<EncaissementScolarite>> encaissementsRecents(String etablissementId, {int limite = 100}) {
+    return _executer(() async {
+      final lignes = await _client
+          .from('encaissements_scolarite')
+          .select()
+          .eq('etablissement_id', etablissementId)
+          .order('date_paiement', ascending: false)
+          .limit(limite);
+      return lignes.map((l) => EncaissementScolarite.depuisJson(l)).toList(growable: false);
+    });
+  }
+
+  @override
+  Future<EncaissementScolarite> enregistrerEncaissement(EncaissementScolarite encaissement) {
+    return _executer(() async {
+      final ligne = await _client
+          .from('encaissements_scolarite')
+          .insert(encaissement.versJsonCreation())
+          .select()
+          .single();
+      return EncaissementScolarite.depuisJson(ligne);
+    });
+  }
+
+  @override
+  Future<void> annulerEncaissement({
+    required String encaissementId,
+    required String motif,
+  }) {
+    return _executer(() async {
+      await _client.from('encaissements_scolarite').update({
+        'statut': 'annule',
+        'motif_annulation': motif,
+      }).eq('id', encaissementId);
     });
   }
 

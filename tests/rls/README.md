@@ -46,6 +46,7 @@ l'outillage Postgres/Supabase sera disponible.
 | `35_m15_catalogue_public.sql` | Catalogue marketplace public (parcours invité sans auth) | M15 |
 | `36_m15_panier_invite.sql` | Panier/commande invités (propriétaire = profil public) | M15 |
 | `37_m9_patch_messagerie_groupe.sql` | Patch de sécurité — 7 règles absolues de protection des mineurs sur la messagerie de groupe (membre/parent/non-membre, création réservée adulte, modération, signalements) | M9 (patch) |
+| `38_m15quater_inscription_encaissement.sql` | Création d'inscription (matricule serveur, permission), doublon, réinscription (contrainte unique), statut boursier tracé, paliers ≤ 100 %, solde scolaire serveur, encaissement (auteur forcé, visibilité, immutabilité, annulation motivée) | M15quater |
 
 ## Prérequis
 
@@ -61,7 +62,8 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906001200_m12_observabilite.sql`,
    `20260906001300_m13_marketplace_assoshop.sql`,
    `20260906001400_m14_comptabilite_sans_ohada.sql`,
-   `20260906001500_m15_marketplace_sans_auth.sql`
+   `20260906001500_m15_marketplace_sans_auth.sql`,
+   `20260906001501_m15quater_inscription_encaissement.sql`
    (dans cet ordre).
 2. **Extension pgTAP installée** : `create extension if not exists pgtap;`
    (`supabase test db` l'installe automatiquement).

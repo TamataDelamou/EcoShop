@@ -2,7 +2,8 @@ import 'classe.dart';
 import 'enums_scolarite.dart';
 import 'fiche_eleve.dart';
 
-/// Projection cliente de `public.inscriptions` (M5).
+/// Projection cliente de `public.inscriptions` (M5 + statut boursier annuel,
+/// M15quater).
 ///
 /// [fiche] est peuplée via l'embed PostgREST `fiches_eleves(*)` (listes de
 /// classe) ; [classe] via l'embed `classes(*)` (historique d'une fiche). Une
@@ -20,6 +21,9 @@ class Inscription {
     this.motifRetrait,
     this.fiche,
     this.classe,
+    this.boursier = false,
+    this.boursierModifiePar,
+    this.boursierModifieLe,
   });
 
   factory Inscription.depuisJson(Map<String, dynamic> json) {
@@ -38,6 +42,11 @@ class Inscription {
       motifRetrait: json['motif_retrait'] as String?,
       fiche: ficheJson == null ? null : FicheEleve.depuisJson(ficheJson),
       classe: classeJson == null ? null : Classe.depuisJson(classeJson),
+      boursier: json['boursier'] as bool? ?? false,
+      boursierModifiePar: json['boursier_modifie_par'] as String?,
+      boursierModifieLe: json['boursier_modifie_le'] == null
+          ? null
+          : DateTime.parse(json['boursier_modifie_le'] as String),
     );
   }
 
@@ -54,6 +63,9 @@ class Inscription {
         'motif_retrait': motifRetrait,
         'fiches_eleves': fiche?.versJson(),
         'classes': classe?.versJson(),
+        'boursier': boursier,
+        'boursier_modifie_par': boursierModifiePar,
+        'boursier_modifie_le': boursierModifieLe?.toIso8601String(),
       };
 
   final String id;
@@ -67,4 +79,10 @@ class Inscription {
   final String? motifRetrait;
   final FicheEleve? fiche;
   final Classe? classe;
+
+  /// Statut boursier de l'ANNÉE de cette inscription — jamais permanent sur
+  /// la fiche élève (une bourse se réévalue chaque année).
+  final bool boursier;
+  final String? boursierModifiePar;
+  final DateTime? boursierModifieLe;
 }

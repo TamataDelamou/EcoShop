@@ -1,4 +1,5 @@
-/// Projection cliente de `public.fiches_eleves` (M2 + enrichissement M5).
+/// Projection cliente de `public.fiches_eleves` (M2 + enrichissement M5,
+/// champs administratifs complémentaires M15quater).
 ///
 /// Visible via `fiche_visible()` : personnel de l'établissement, l'élève lié,
 /// ou un parent confirmé (contrat M05 §4).
@@ -17,6 +18,13 @@ class FicheEleve {
     this.nationalite,
     this.statut = 'actif',
     this.estSupervise = false,
+    this.numeroClasse,
+    this.nomPere,
+    this.nomMere,
+    this.quartier,
+    this.personneUrgenceNom,
+    this.personneUrgenceTelephone,
+    this.redoublant = false,
   });
 
   factory FicheEleve.depuisJson(Map<String, dynamic> json) {
@@ -34,6 +42,13 @@ class FicheEleve {
       nationalite: json['nationalite'] as String?,
       statut: json['statut'] as String? ?? 'actif',
       estSupervise: json['est_supervise'] as bool? ?? false,
+      numeroClasse: json['numero_classe'] as int?,
+      nomPere: json['nom_pere'] as String?,
+      nomMere: json['nom_mere'] as String?,
+      quartier: json['quartier'] as String?,
+      personneUrgenceNom: json['personne_urgence_nom'] as String?,
+      personneUrgenceTelephone: json['personne_urgence_telephone'] as String?,
+      redoublant: json['redoublant'] as bool? ?? false,
     );
   }
 
@@ -51,6 +66,25 @@ class FicheEleve {
         'nationalite': nationalite,
         'statut': statut,
         'est_supervise': estSupervise,
+        'numero_classe': numeroClasse,
+        'nom_pere': nomPere,
+        'nom_mere': nomMere,
+        'quartier': quartier,
+        'personne_urgence_nom': personneUrgenceNom,
+        'personne_urgence_telephone': personneUrgenceTelephone,
+        'redoublant': redoublant,
+      };
+
+  /// Colonnes modifiables par une mise à jour administrative du dossier
+  /// (jamais `matricule`/`profile_id`, qui suivent leurs propres règles).
+  Map<String, dynamic> versJsonMiseAJourAdmin() => {
+        'numero_classe': numeroClasse,
+        'nom_pere': nomPere,
+        'nom_mere': nomMere,
+        'quartier': quartier,
+        'personne_urgence_nom': personneUrgenceNom,
+        'personne_urgence_telephone': personneUrgenceTelephone,
+        'redoublant': redoublant,
       };
 
   final String id;
@@ -66,6 +100,15 @@ class FicheEleve {
   final String? nationalite;
   final String statut;
   final bool estSupervise;
+
+  /// Numéro de l'élève dans la liste de sa classe (usage administratif).
+  final int? numeroClasse;
+  final String? nomPere;
+  final String? nomMere;
+  final String? quartier;
+  final String? personneUrgenceNom;
+  final String? personneUrgenceTelephone;
+  final bool redoublant;
 
   String get nomComplet => '$prenom $nom';
   bool get estActive => statut == 'actif';

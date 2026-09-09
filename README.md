@@ -115,19 +115,20 @@ flutter test
 | M14 | Comptabilité sans OHADA | ✅ livré |
 | M15 | Marketplace sans authentification | ✅ livré |
 | M15bis | Thèmes internationaux & Dark Mode | ✅ livré |
-| M15ter | Export PDF (bulletins) | ✅ livré (volet reçus retiré, voir ci-dessous) |
-| M15quater | Inscription, réinscription & encaissement de scolarité | ⏳ à venir — prochain module |
+| M15ter | Export PDF (bulletins & reçus) | ✅ livré (reçu reconstruit après M15quater, voir ci-dessous) |
+| M15quater | Inscription, réinscription & encaissement de scolarité | ✅ livré |
 | M16-M20 | IA à rôles, bibliothèque, transport, réseau, reporting | ⏳ à venir |
 
-**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15ter livrés,
-M15quater en cours de cadrage).**
-M15bis et M15ter n'ont pas de migration SQL propre (modules purement
-client) — insérés entre M15 et M16 conformément à `ANALYSE_GLOBALE.md` §4.4.
+**Phases A et B (M0-M12) closes, Phase C engagée (M13-M15quater livrés).**
+M15bis, M15ter et M15quater n'ont pas de migration SQL propre pour M15bis/
+M15ter (modules purement client) — M15quater, lui, ajoute des tables et RPC
+dédiés (inscription, encaissement de scolarité). Tous trois insérés entre
+M15 et M16 conformément à `ANALYSE_GLOBALE.md` §4.4.
 M15ter livrait initialement un export PDF de reçu adossé aux écritures
 comptables générales de M14 ; ce sous-périmètre a été **retiré** avant tout
 push (aucun lien structurel avec un élève/une inscription/un solde dû — voir
-`docs/contrats/M15ter_export_pdf.md` §7) et sera reconstruit après
-**M15quater**, sur une entité d'encaissement dédiée.
+`docs/contrats/M15ter_export_pdf.md` §7), puis **reconstruit** après
+**M15quater**, sur l'entité d'encaissement dédiée (`EncaissementScolarite`).
 Un patch de sécurité d'urgence a également été appliqué à M9 (messagerie de
 groupe scolaire — protection des mineurs, voir
 `docs/contrats/M09_communication_notifications.md` §6 et
@@ -148,14 +149,17 @@ module par module sur ce socle déjà livré :
 | M14 | Comptabilité sans OHADA | ✅ livré et vérifié |
 | M15 | Marketplace sans authentification | ✅ livré et vérifié (périmètre reconsidéré, cf. `docs/ETAT_PHASE_C.md` §2) |
 | M15bis | Thèmes internationaux & Dark Mode | ✅ livré et vérifié (233 tests, `flutter analyze` propre) |
-| M15ter | Export PDF (bulletins) | ✅ livré et vérifié (242 tests, `flutter analyze` propre) — volet reçus retiré |
+| M15ter | Export PDF (bulletins & reçus) | ✅ livré et vérifié (260 tests, `flutter analyze` propre) |
+| M15quater | Inscription, réinscription & encaissement de scolarité | ✅ livré et vérifié (260 tests, `flutter analyze` propre ; 18 assertions pgTAP non exécutées localement) |
 
 État détaillé, écarts doc/DDL corrigés et réserve technique (exécution
 locale des migrations) dans [`docs/ETAT_PHASE_C.md`](./docs/ETAT_PHASE_C.md).
 M15bis est documenté dans
 [`docs/contrats/M15bis_themes_dark_mode.md`](./docs/contrats/M15bis_themes_dark_mode.md),
 M15ter dans
-[`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md).
+[`docs/contrats/M15ter_export_pdf.md`](./docs/contrats/M15ter_export_pdf.md),
+M15quater dans
+[`docs/contrats/M15quater_inscription_encaissement.md`](./docs/contrats/M15quater_inscription_encaissement.md).
 
 *Chaque module est clos, testé et validé avant le passage au suivant
 (règle d'or du séquençage strict).*

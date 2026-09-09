@@ -74,23 +74,22 @@ sécurité active**, décrite ci-dessous telle que constatée avant correction.
 qu'aucune des 7 règles absolues n'a de contrepartie serveur (table + RLS +
 trigger) équivalente à la source. Détail complet en [§9 — M9](#9-m9--communication--notifications).
 
-### 0.2 Génération de documents depuis des modèles (bulletins, reçus, attestations) — **RÉSOLU pour les bulletins ; reçus retirés dans l'attente de M15quater**
+### 0.2 Génération de documents depuis des modèles (bulletins, reçus, attestations) — **RÉSOLU**
 
-> **Statut : bulletins corrigés** par le module **M15ter — Export PDF**
-> ([`docs/contrats/M15ter_export_pdf.md`](./contrats/M15ter_export_pdf.md)),
-> inséré juste après M15bis. Le bulletin (M6) est désormais
-> exportable/imprimable/partageable en PDF, aligné sur les 3 chartes
-> graphiques de M15bis. **Le sous-périmètre « reçu PDF » a été livré puis
-> retiré** avant tout push vers `origin/main` : il s'appuyait sur une
-> écriture comptable générale (`EcritureComptable`, M14) sans aucun lien
-> structurel avec un élève, une inscription ou un solde dû — un document
-> ayant l'apparence d'un reçu de scolarité sans garantie qu'il corresponde à
-> un vrai encaissement. Voir `docs/contrats/M15ter_export_pdf.md` §7
-> (historique du retrait). Le reçu PDF sera reconstruit après
-> **M15quater — Inscription, réinscription & encaissement de scolarité**,
-> sur l'entité d'encaissement dédiée que ce module livrera. **Attestations
-> toujours hors périmètre** (voir ci-dessous — pas une régression, confirmé
-> absent des deux côtés).
+> **Statut : corrigé**, en deux temps. Le bulletin (M6) est exportable en
+> PDF depuis **M15ter — Export PDF**
+> ([`docs/contrats/M15ter_export_pdf.md`](./contrats/M15ter_export_pdf.md)).
+> Le reçu (M13/M14) a été livré une première fois avec M15ter, **retiré**
+> avant tout push (il s'appuyait sur une écriture comptable générale,
+> `EcritureComptable`, sans aucun lien structurel avec un élève, une
+> inscription ou un solde dû — un document ayant l'apparence d'un reçu sans
+> le garantir), puis **reconstruit** sur l'entité dédiée
+> `EncaissementScolarite` livrée par
+> **M15quater — Inscription, réinscription & encaissement de scolarité**
+> ([`docs/contrats/M15quater_inscription_encaissement.md`](./contrats/M15quater_inscription_encaissement.md)).
+> Voir `docs/contrats/M15ter_export_pdf.md` §7 pour l'historique complet du
+> retrait puis de la reconstruction. **Attestations toujours hors
+> périmètre** (pas une régression, confirmé absent des deux côtés).
 
 - **Bulletins** (M6) : absents des deux côtés en tant que « système de modèles »
   paramétrable — mais la source avait au moins un **export PDF codé en dur**
@@ -101,16 +100,15 @@ trigger) équivalente à la source. Détail complet en [§9 — M9](#9-m9--commu
   pour toute une classe (dépend d'un autre écart déjà signalé, non résolu —
   §6 point 8).
 - **Reçus de paiement** (M13/M14) : la source génère un reçu thermique 58 mm à
-  chaque encaissement et un reçu A4 annuel ; la cible n'a **toujours aucune**
-  capacité de reçu utilisable — une première version adossée à
-  `EcritureComptable` a été livrée puis **retirée** (raison ci-dessus). Reste
-  à construire après M15quater, sur la vraie entité d'encaissement
-  (`fiche_eleve_id`/`inscription_id`, montant dû, montant payé, solde).
+  chaque encaissement et un reçu A4 annuel ; **corrigé pour le format A4** —
+  `apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart`
+  (M15quater), adossé à `EncaissementScolarite` (`fiche_eleve_id`/
+  `inscription_id` explicites, `saisi_par` imposé serveur). Réserve assumée :
+  pas de format thermique 58 mm ni de récapitulatif annuel consolidé.
 - **Attestations** (scolarité/inscription/paiement) : recherche exhaustive côté
   source — **cette fonctionnalité n'existe pas dans ecoshop_flutter non plus**.
   Ce n'est donc pas une régression, mais une fonctionnalité à instruire comme
-  nouvelle si le besoin est confirmé. **Non traitée par M15ter**, comme
-  explicitement cadré.
+  nouvelle si le besoin est confirmé. **Non traitée**, hors périmètre assumé.
 
 Détail complet en [§6](#6-m6--notes--évaluations) et [§13-15](#13-15-m13-marketplace-assoshop--m14-comptabilité--m15-marketplace-public).
 
@@ -187,14 +185,14 @@ l'élève.
 
 | Écart | Source | État cible | Impact | Recommandation proposée |
 |---|---|---|---|---|
-| Création d'une inscription (nouvel élève) | `inscription_screen.dart`, génération serveur de matricule, détection de double inscription, frais distinct de l'annuité | Absent — `ScolariteRepository` n'a aucune méthode de création, aucune RPC dédiée | Élevé | **Planifié dans M15quater** |
-| Réinscription annuelle avec vérifications automatiques (impayés, admission, sanction, boursier) | `reinscription_screen.dart` | Absent — aucun concept de réinscription distinct | Élevé | **Planifié dans M15quater** |
-| Statut boursier annuel avec traçabilité (qui/quand) | `InscriptionModel.statutBoursier` | Absent du schéma `inscriptions` | Moyen à élevé | **Planifié dans M15quater** |
-| Champs administratifs du dossier élève (filiation, quartier, contact d'urgence, redoublant, n° classe) | `EleveModel` | Absent — M5 n'ajoute que sexe/lieu de naissance/nationalité/statut/est_supervise | Moyen | **Planifié dans M15quater** |
-| Suivi financier consolidé sur la fiche élève (solde, historique paiements, PDF) | `fiche_eleve_screen.dart`, `FinancierService`, `PdfService.genererFicheEleve` | Absent — aucun module financier/paiement élève dans le monorepo cible | Élevé | **Planifié dans M15quater** (une fois l'entité d'encaissement livrée) |
-| Historique des réinscriptions sur la fiche élève | `streamReinscriptionsEleve` | Absent — conséquence directe du point réinscription | Faible isolément | **Planifié dans M15quater** (avec la réinscription) |
-| Paramètres établissement : tarification, paliers de paiement, activation paiement en ligne | `parametres_etablissement_screen.dart` | Absent — aucun écran ni table équivalente | Élevé | **Planifié dans M15quater** |
-| Détection de double inscription inter-établissements (identifiant déterministe) | `genererIdentifiantGenere`, `verifierDoubleInscription` | Absent — conséquence de l'absence de création d'inscription | Moyen | **Planifié dans M15quater**, comme règle serveur |
+| Création d'une inscription (nouvel élève) | `inscription_screen.dart`, génération serveur de matricule, détection de double inscription, frais distinct de l'annuité | **Résolu** — RPC `creer_inscription_nouvel_eleve` (M15quater), matricule généré serveur, `ecran_creation_inscription.dart` | Élevé | **Corrigé** — voir `docs/contrats/M15quater_inscription_encaissement.md` |
+| Réinscription annuelle avec vérifications automatiques (impayés, admission, sanction, boursier) | `reinscription_screen.dart` | **Résolu (3/4 vérifications)** — RPC `creer_reinscription`/`verifications_reinscription`, `ecran_reinscription.dart`. Vérification « admission classe supérieure » non couverte (§6 du contrat M15quater) | Élevé | **Corrigé pour l'essentiel** |
+| Statut boursier annuel avec traçabilité (qui/quand) | `InscriptionModel.statutBoursier` | **Résolu** — `inscriptions.boursier` + trigger `inscriptions_verifie_boursier` (auteur/date automatiques), bascule dans `ecran_fiche_eleve.dart` | Moyen à élevé | **Corrigé** |
+| Champs administratifs du dossier élève (filiation, quartier, contact d'urgence, redoublant, n° classe) | `EleveModel` | **Résolu** — colonnes ajoutées à `fiches_eleves`, dialogue d'édition dans `ecran_fiche_eleve.dart` | Moyen | **Corrigé** |
+| Suivi financier consolidé sur la fiche élève (solde, historique paiements, PDF) | `fiche_eleve_screen.dart`, `FinancierService`, `PdfService.genererFicheEleve` | **Résolu à l'écran** — solde + historique d'encaissements dans `ecran_fiche_eleve.dart` (RPC `solde_scolarite`). **PDF de fiche complète non couvert** (seul le reçu par encaissement est exportable, voir §10) | Élevé | **Corrigé pour l'essentiel** |
+| Historique des réinscriptions sur la fiche élève | `streamReinscriptionsEleve` | **Dégradé** — les réinscriptions apparaissent dans le même historique de classes que les inscriptions initiales, sans distinction visuelle | Faible isolément | Corrigé indirectement (visible dans l'historique), distinction fine différée |
+| Paramètres établissement : tarification, paliers de paiement, activation paiement en ligne | `parametres_etablissement_screen.dart` | **Résolu (tarif par défaut + paliers)** — `ecran_parametres_financiers.dart`. Tarif **par niveau** supporté par le schéma mais pas encore par l'écran ; activation paiement en ligne différée (Port Paiement, M16-M20) | Élevé | **Corrigé pour l'essentiel** |
+| Détection de double inscription inter-établissements (identifiant déterministe) | `genererIdentifiantGenere`, `verifierDoubleInscription` | **Résolu** — RPC `verifier_doublon_eleve` (booléen seul, confidentialité inter-établissement préservée), dialogue de confirmation dans `ecran_creation_inscription.dart` | Moyen | **Corrigé** |
 
 **Couvert sans écart notable** : liaison parent↔fiche (RPC `lier_parent_a_fiche`,
 anti-brute-force au moins aussi robuste), sélecteur multi-enfants, structure
@@ -302,9 +300,9 @@ livraison, en attente de M15quater** (entité d'encaissement dédiée).
 
 | Écart | Source | État cible | Impact | Recommandation proposée |
 |---|---|---|---|---|
-| **Génération de reçus PDF** (thermique 58mm + A4 annuel) | `pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`) | **Toujours absent.** Une première version (M15ter) adossée à `EcritureComptable` a été livrée puis **retirée** avant tout push — aucun lien structurel avec un élève/une inscription/un solde dû, risque de document ayant l'apparence d'un reçu sans le garantir. Voir `docs/contrats/M15ter_export_pdf.md` §7 | Élevé | **Planifié dans M15quater** — reçu PDF à reconstruire sur l'entité d'encaissement dédiée que ce module livrera, jamais sur une écriture comptable générale |
+| **Génération de reçus PDF** (thermique 58mm + A4 annuel) | `pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`) | **Résolu (format A4, par encaissement)** — reconstruit sur `EncaissementScolarite` (M15quater) après le retrait de la version M15ter adossée à `EcritureComptable`. Format thermique 58mm et récapitulatif annuel toujours absents | Élevé | **Corrigé pour l'essentiel** — voir `docs/contrats/M15quater_inscription_encaissement.md` |
 | Attestations (scolarité/inscription/paiement) | **Absent aussi côté source** (recherche exhaustive négative) | Absent | Nul pour cet audit | Différer — hors périmètre des deux bases, à instruire comme nouveauté si besoin confirmé |
-| **Encaissement de frais de scolarité** (écran dédié, solde élève, reçu automatique) | `paiement_screen.dart`, `cahier_journal_screen.dart` | **Absent** — M14 livré est une comptabilité générale en partie double pure, sans solde élève ni lien automatique paiement→écriture ; le périmètre annoncé (« M14 — Paiement, reçus, encaissements scolarité ») n'a pas été livré tel quel | **Élevé** | **Planifié dans M15quater** — Inscription, réinscription & encaissement de scolarité (nouveau module, périmètre défini avec le porteur de projet) |
+| **Encaissement de frais de scolarité** (écran dédié, solde élève, reçu automatique) | `paiement_screen.dart`, `cahier_journal_screen.dart` | **Résolu** — entité `encaissements_scolarite` dédiée, `ecran_encaissement_scolarite.dart`, `ecran_cahier_encaissements.dart`, solde calculé serveur (M15quater) | **Élevé** | **Corrigé** |
 | Achat sans authentification (parcours invité) | Sans équivalent source (l'original exige toujours l'auth) | Absent côté client bien que le schéma SQL existe (`profils_publics`, `visiteur_id`) ; le code cible reconnaît lui-même que tout achat passe par l'OTP | Moyen à élevé | Différer/abandonner selon arbitrage produit — documenter le choix si l'OTP systématique est assumé |
 | Auto-inscription vendeur avec validation GSG | `demande_vendeur_screen.dart` | Absent — onboarding vendeur 100% back-office | Moyen | Différer — à documenter comme choix arbitré si volontaire |
 | Gestion catalogue et ventes côté vendeur (CRUD produits, onglet Ventes/portefeuille) | `mes_produits_screen.dart` | Absent | Élevé si rôle vendeur actif côté app | Différer — lié à l'arbitrage vendeur ci-dessus |
@@ -330,14 +328,14 @@ prête) — **à confirmer un par un avec le porteur de projet** :
 
 1. Parcours d'entrée Enseignant/Direction/Vendeur/Fondateur réseau (M0-M3)
 2. Plafond de comptes parents liés à une fiche élève (M0-M3)
-3. Création d'inscription + détection de double inscription (M5) — **planifié dans M15quater**
+3. ~~Création d'inscription + détection de double inscription (M5)~~ — **corrigé** (M15quater)
 4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6, non résolu).
 5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7)
 6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8)
 7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend.
 8. Tableau de bord directeur consolidé Finances+Scolarité (M10)
 9. Séances ponctuelles / annulation d'un cours (M11)
-10. Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14) — **planifiés dans M15quater** (une première version du reçu PDF, adossée à `EcritureComptable`, a été livrée par M15ter puis retirée — aucune garantie de lien avec un vrai encaissement, voir §0.2).
+10. ~~Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14)~~ — **corrigé** (M15quater : entité `encaissements_scolarite` dédiée, reçu PDF reconstruit dessus — voir §0.2).
 11. Gestion des stocks et anti-survente (M13)
 
 ---
@@ -351,17 +349,20 @@ pourquoi) seront reportées dans `ANALYSE_GLOBALE.md` §4.4 au fur et à mesure.
 M15bis (thèmes internationaux & dark mode) n'est pas concerné par ce blocage et
 a été traité en parallèle (cf. `docs/contrats/M15bis_themes_dark_mode.md`).
 
-**Ordre de traitement décidé** : **M15quater — Inscription, réinscription &
-encaissement de scolarité** passe devant les ~8 écarts restants (parcours
-d'entrée rôles à privilège, paie RH, tableau de bord directeur, séances
-ponctuelles, gestion des stocks, etc.) — ces derniers restent en attente
-d'arbitrage, non traités tant que M15quater n'est pas clos. Le module
-regroupe les points 3/4/6/7 de la liste ci-dessus, tous liés au même
-sous-système (administration scolaire + finances élève) : création
+**M15quater — Inscription, réinscription & encaissement de scolarité** est
+livré (cf. `docs/contrats/M15quater_inscription_encaissement.md`) : création
 d'inscription, réinscription, statut boursier, champs administratifs de la
 fiche élève, paramètres établissement (tarifs/paliers), détection de double
-inscription, et une entité d'encaissement de scolarité dédiée — préalable
-nécessaire à la reconstruction du reçu PDF retiré de M15ter (§0.2).
+inscription, et l'entité d'encaissement de scolarité dédiée qui a permis de
+reconstruire le reçu PDF retiré de M15ter (§0.2). 260 tests Flutter passent,
+`flutter analyze` propre ; 18 assertions pgTAP écrites (non exécutées
+localement, outils Postgres absents du poste — même réserve que le reste du
+projet).
+
+**~8 écarts restants** (parcours d'entrée rôles à privilège, paie RH, tableau
+de bord directeur, séances ponctuelles, gestion des stocks, etc. — liste
+complète §11) restent en attente d'arbitrage par le porteur de projet, non
+traités.
 
 ---
 
@@ -437,7 +438,7 @@ Racine cible : `C:\Users\delam\PlatformGSG\EcoShop`.
 
 | Écart | Fichiers source | Fichiers/éléments cible |
 |---|---|---|
-| **Reçus PDF** | `lib/services/pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`, `imprimer`), `lib/features/financier/screens/recu_screen.dart` | **Toujours absent.** Livré une première fois par M15ter (`recu_pdf_builder.dart`, adossé à `EcritureComptable`), puis **retiré** avant tout push — pas de lien structurel avec un élève/une inscription/un solde dû. Planifié dans M15quater, sur une entité d'encaissement dédiée |
+| **Reçus PDF** | `lib/services/pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`, `imprimer`), `lib/features/financier/screens/recu_screen.dart` | **Résolu.** Livré une première fois par M15ter (`recu_pdf_builder.dart`, adossé à `EcritureComptable`), puis **retiré** avant tout push, puis **reconstruit** (M15quater) sur `EncaissementScolarite` — `apps/client_flutter/lib/features/export_pdf/data/recu_pdf_builder.dart` |
 | Attestations | absent côté source (recherche négative) | absent (pas une régression) |
 | **Encaissement de scolarité** | `lib/features/financier/screens/paiement_screen.dart`, `recu_screen.dart`, `cahier_journal_screen.dart`, `lib/services/financier_service.dart` | `apps/client_flutter/lib/features/comptabilite/` (comptabilité générale seulement), `docs/M13_ASSOSHOP_MARKETPLACE.md` §7 (promis, non livré), `supabase/migrations/20260906001400_m14_comptabilite_sans_ohada.sql` |
 | Achat sans authentification | sans équivalent source | schéma présent (`supabase/migrations/20260906001500_m15_marketplace_sans_auth.sql` : `profils_publics`, `paniers.visiteur_id`) mais `apps/client_flutter/lib/features/marketplace/domain/panier.dart` (commentaire : parcours anonyme non couvert) |
