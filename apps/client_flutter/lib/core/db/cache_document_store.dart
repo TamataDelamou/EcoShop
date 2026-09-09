@@ -52,4 +52,13 @@ class CacheDocumentStore {
     if (ligne == null) return null;
     return jsonDecode(ligne.payload) as Map<String, dynamic>;
   }
+
+  /// Supprime toutes les lignes de ce domaine — patch de sécurité M9 : un
+  /// domaine dont le contenu n'est pas isolé par profil (clé unique
+  /// `'global'`, cf. `CommunicationLocaleRepository`) doit être purgé à la
+  /// déconnexion pour ne pas fuiter vers le prochain compte connecté sur le
+  /// même appareil.
+  Future<void> purgerTout() {
+    return (_db.delete(_db.cacheEntries)..where((t) => t.domaine.equals(domaine))).go();
+  }
 }

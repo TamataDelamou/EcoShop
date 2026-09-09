@@ -7,6 +7,7 @@ import '../../auth/presentation/ecran_choix_espace.dart';
 import '../../auth/presentation/ecran_choix_role.dart';
 import '../../auth/presentation/ecran_liaison_fiche.dart';
 import '../../etablissement/presentation/ecran_selection_etablissement.dart';
+import '../application/session_logout.dart';
 import 'coquille_app.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
@@ -72,10 +73,7 @@ class _EcranCompteBloque extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               OutlinedButton(
-                onPressed: () async {
-                  await ref.read(authRepositoryProvider).deconnecter();
-                  if (context.mounted) ref.rafraichirSession();
-                },
+                onPressed: () => ref.deconnecterEtPurgerDonneesLocales(),
                 child: const Text('Se déconnecter'),
               ),
             ],

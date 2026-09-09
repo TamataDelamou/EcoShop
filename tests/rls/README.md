@@ -45,6 +45,7 @@ l'outillage Postgres/Supabase sera disponible.
 | `34_m15_profils_publics.sql` | Profils publics invités (jeton, complétion, RLS fermée) | M15 |
 | `35_m15_catalogue_public.sql` | Catalogue marketplace public (parcours invité sans auth) | M15 |
 | `36_m15_panier_invite.sql` | Panier/commande invités (propriétaire = profil public) | M15 |
+| `37_m9_patch_messagerie_groupe.sql` | Patch de sécurité — 7 règles absolues de protection des mineurs sur la messagerie de groupe (membre/parent/non-membre, création réservée adulte, modération, signalements) | M9 (patch) |
 
 ## Prérequis
 
@@ -54,6 +55,7 @@ l'outillage Postgres/Supabase sera disponible.
    `20260906000500_m5_administration_scolarite.sql`, `20260906000600_m6_notes_evaluations.sql`,
    `20260906000700_m7_absences_vie_scolaire.sql`, `20260906000800_m8_rh_personnel.sql`,
    `20260906000900_m9_communication_notifications.sql`,
+   `20260906000901_m9_patch_securite_messagerie_groupe.sql`,
    `20260906001000_m10_rapports_statistiques.sql`,
    `20260906001100_m11_planification_agenda.sql`,
    `20260906001200_m12_observabilite.sql`,

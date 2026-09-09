@@ -20,11 +20,39 @@
 Sur les deux points explicitement signalés comme sensibles par le porteur de
 projet, l'audit confirme un écart réel des deux côtés :
 
-### 0.1 Protection des mineurs dans les conversations de classe — **ALERTE SÉCURITÉ**
+### 0.1 Protection des mineurs dans les conversations de classe — **RÉSOLU** (patch de sécurité d'urgence)
+
+> **Statut : corrigé.** Traité hors séquencement normal, avant tout autre
+> point de cet audit, sur décision explicite du porteur de projet.
+>
+> - **Volet serveur** — schéma RLS complet créé par
+>   `supabase/migrations/20260906000901_m9_patch_securite_messagerie_groupe.sql`
+>   (tables `groupes_discussion`/`messages_groupe`/`signalements_message`,
+>   appartenance dérivée des inscriptions/affectations réelles, jamais des
+>   relations parentales, RLS dès la création couvrant les 7 règles absolues
+>   listées ci-dessous). Vérifié par 15 assertions pgTAP dans
+>   `tests/rls/37_m9_patch_messagerie_groupe.sql` (membre/parent/non-membre,
+>   création réservée adulte, modération, signalements).
+> - **Volet client (fuite entre comptes)** — cause identifiée : le prototype
+>   local (`CommunicationLocaleRepository`) stockait ses entrées sous une clé
+>   de cache unique (`'global'`) non isolée par profil, et `rafraichirSession()`
+>   n'invalidait jamais `entreesLocalesProvider`. Corrigé par
+>   `apps/client_flutter/lib/features/coquille/application/session_logout.dart` :
+>   la déconnexion purge désormais systématiquement ce cache local et invalide
+>   le provider avant qu'un autre compte puisse se connecter sur le même
+>   appareil. Reproduit et vérifié par
+>   `apps/client_flutter/test/features/coquille/session_logout_test.dart`
+>   (scénario explicite : déconnexion A → connexion B → B ne voit rien de A).
+> - **Réserve assumée** : le schéma serveur existe et est protégé, mais les
+>   écrans du prototype local (`ecran_messagerie_prototype.dart` et consorts)
+>   ne sont **pas encore raccordés** à ce nouveau backend — voir
+>   `docs/contrats/M09_communication_notifications.md` §6. Ce patch ferme le
+>   trou de sécurité serveur ; le raccordement de l'écran reste un travail
+>   distinct, à cadrer avec les ~10 autres écarts de cet audit.
 
 Contrairement à ce que l'on pourrait supposer d'un simple report de fonctionnalité,
-ce n'est pas seulement une fonctionnalité manquante : c'est une **régression de
-sécurité active**.
+ce n'était pas seulement une fonctionnalité manquante : c'était une **régression de
+sécurité active**, décrite ci-dessous telle que constatée avant correction.
 
 - Côté source, `ecoshop_flutter` applique 7 règles absolues au niveau des règles
   Firestore elles-mêmes (pas seulement l'UI) : création de groupe réservée à une
@@ -210,13 +238,13 @@ nouvelle et plus riche que la source).
 
 ## 8. M9 — Communication & Notifications
 
-Voir [§0.1](#01-protection-des-mineurs-dans-les-conversations-de-classe--alerte-sécurité)
-pour le détail complet du point prioritaire protection des mineurs — **alerte
-de sécurité, pas un simple écart fonctionnel.**
+Voir [§0.1](#01-protection-des-mineurs-dans-les-conversations-de-classe--résolu-patch-de-sécurité-durgence)
+pour le détail complet du patch de sécurité — **résolu**, plus une alerte
+ouverte.
 
-| Écart | Source | État cible | Impact | Recommandation proposée |
+| Écart | Source | État cible | Impact | Statut |
 |---|---|---|---|---|
-| **Groupes de classe supervisés (7 règles absolues de protection des mineurs)** | Règles Firestore explicites : création serveur uniquement, adulte permanent, zéro MP élève↔élève, texte seul, modération réservée personnel, soft-delete, signalements dédiés | **Absent côté serveur** — aucune table `conversations`/`messages`/`groupes_discussion`/`signalements` ; remplacé par un prototype 100% local sans restriction de rôle, avec fuite de données entre comptes successifs sur appareil partagé (clé de cache `'global'` non isolée) | **Élevé — sécurité** | Ne pas exposer davantage à un rôle élève tant qu'aucune contrepartie serveur n'existe ; à documenter comme blocage de sécurité explicite, décision au porteur de projet |
+| **Groupes de classe supervisés (7 règles absolues de protection des mineurs)** | Règles Firestore explicites : création serveur uniquement, adulte permanent, zéro MP élève↔élève, texte seul, modération réservée personnel, soft-delete, signalements dédiés | **Résolu** — schéma RLS complet (`20260906000901_m9_patch_securite_messagerie_groupe.sql`, 15 assertions pgTAP) + purge de la fuite locale à la déconnexion (`session_logout.dart`). Réserve : les écrans du prototype local ne sont pas encore raccordés à ce backend (§0.1) | **Élevé — sécurité** | **Corrigé** (voir §0.1) |
 | Annonces d'établissement | `annonces_screen.dart`, RLS réservant la création au personnel admin | Absent en tant que fonctionnalité réelle — aucune table `annonces`, remplacé par un prototype local avec garde cosmétique non protégé par RLS | Moyen | Implémenter une vraie table + RLS (patron réutilisable de `templates_notifications`) avant de considérer M9 complet |
 | Cahier de liaison parent-enseignant | — | Prototype local, mais correctement restreint parent/enseignant côté UI (contrairement à la Messagerie) | Faible à moyen | Différer sauf priorité égale aux annonces |
 
@@ -288,7 +316,7 @@ prête) — **à confirmer un par un avec le porteur de projet** :
 4. Export PDF des bulletins + génération de bulletins pour une classe entière (M6)
 5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7)
 6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8)
-7. Protection des mineurs — table serveur + RLS pour les groupes de classe, **avant toute exposition élargie** (M9 — sécurité, pas une priorité produit ordinaire)
+7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend.
 8. Tableau de bord directeur consolidé Finances+Scolarité (M10)
 9. Séances ponctuelles / annulation d'un cours (M11)
 10. Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14)
@@ -304,3 +332,89 @@ pourquoi) seront reportées dans `ANALYSE_GLOBALE.md` §4.4 au fur et à mesure.
 **M16 (IA à rôles) reste bloqué tant que cet arbitrage n'a pas eu lieu.**
 M15bis (thèmes internationaux & dark mode) n'est pas concerné par ce blocage et
 est traité en parallèle (cf. `docs/contrats/M15bis_themes_dark_mode.md`).
+
+---
+
+## Annexe — Références de fichiers précises (source ↔ cible)
+
+Chemins exacts relevés lors de l'audit, pour vérification directe par le
+porteur de projet. Racine source : `C:\Users\delam\ProjetsFlutter\ecoshop_flutter`.
+Racine cible : `C:\Users\delam\PlatformGSG\EcoShop`.
+
+### M0 → M3 — Socle
+
+| Écart | Fichiers `ecoshop_flutter` (source) | Fichiers/éléments EcoShop (cible) |
+|---|---|---|
+| Parcours d'entrée rôles à privilège | `lib/features/auth/screens/role_selection_screen.dart`, `invitation_code_screen.dart`, `direction_choix_screen.dart`, `demande_etablissement_screen.dart`, `en_attente_validation_screen.dart` | `apps/client_flutter/lib/features/auth/presentation/ecran_choix_role.dart`, `ecran_choix_espace.dart`, `.../auth/domain/destination_session.dart` (`GardeSession.resoudre`) ; RPC serveur `accepter_invitation`/`demandes_adhesion` déjà dans `supabase/migrations/20260906000300_m2_auth_federation.sql`, jamais appelées côté client |
+| Décompte anti-brute-force imprécis | `functions/liaison_eleve_helpers.js` | `supabase/migrations/20260906000300_m2_auth_federation.sql` (`lier_compte_a_fiche`) ; `apps/client_flutter/lib/features/auth/application/connexion_controller.dart` |
+| Plafond de comptes parents liés | `functions/liaison_eleve_helpers.js` (`MAX_PARENTS_LIES = 4`) | `supabase/migrations/20260906000500_m5_administration_scolarite.sql` lignes 372-431 (`lier_parent_a_fiche`) |
+| Connexion GSG ID | `lib/features/auth/screens/gsg_id_login_screen.dart`, `lib/services/gsg_kernel_client.dart`, `GSG_KERNEL_PILOTE.md` | `apps/client_flutter/lib/features/auth/presentation/ecran_connexion.dart` (OTP seul) ; `ANALYSE_GLOBALE.md` §5.3 |
+| Auto-gestion vendeur | doc de `role_selection_screen.dart`, `DemandeVendeurScreen`, `lib/features/gsg_backoffice/screens/validation_vendeurs_screen.dart`, `CommercantModel` | `supabase/migrations/20260906001300_m13_marketplace_assoshop.sql` lignes 310-328 (RLS `commercants`/`catalogues_produits`) |
+
+### M4 → M5 — Référentiel & Administration/Scolarité
+
+| Écart | Fichiers source | Fichiers/éléments cible |
+|---|---|---|
+| Création d'inscription | `lib/features/administration/screens/inscription_screen.dart`, `lib/models/eleve_model.dart` (`genererIdentifiantGenere`), `FirestoreService.creerInscriptionServeur` | `apps/client_flutter/lib/features/scolarite/domain/scolarite_repository.dart` (aucune méthode de création) ; `supabase/migrations/20260906000500_m5_administration_scolarite.sql` |
+| Réinscription annuelle | `lib/features/administration/screens/reinscription_screen.dart`, `lib/models/inscription_model.dart` (`ReinscriptionModel`) | absent |
+| Statut boursier | `lib/features/administration/screens/fiche_eleve_screen.dart` (`_basculerStatutBoursier`), `InscriptionModel.statutBoursier` | table `inscriptions`, `docs/contrats/M05_administration_scolarite.md` §2 |
+| Champs administratifs dossier élève | `lib/models/eleve_model.dart` (`numeroClasse`, `nomPere`, `nomMere`, `quartier`, `personneUrgenceNom`, `personneUrgenceTelephone`, `redoublant`), `fiche_eleve_screen.dart` | table `fiches_eleves`, `docs/contrats/M05_administration_scolarite.md` §2 |
+| Suivi financier fiche élève | `fiche_eleve_screen.dart`, `lib/services/financier_service.dart`, `lib/services/pdf_service.dart` (`genererFicheEleve`) | `apps/client_flutter/lib/features/scolarite/presentation/ecran_fiche_eleve.dart` (pas de section financière) |
+| Historique réinscriptions | `fiche_eleve_screen.dart` (`streamReinscriptionsEleve`) | absent |
+| Paramètres établissement (tarifs, paliers) | `lib/features/administration/screens/parametres_etablissement_screen.dart` | `apps/client_flutter/lib/features/etablissement/` (aucun écran équivalent), aucune table `frais_config`/`paliers_config` |
+| Détection double inscription | `lib/models/eleve_model.dart` (`genererIdentifiantGenere`), `FirestoreService.verifierDoubleInscription`, Cloud Function `creerInscriptionInterne` | absent |
+
+### M6 → M7 — Notes/Évaluations & Vie scolaire
+
+| Écart | Fichiers source | Fichiers/éléments cible |
+|---|---|---|
+| **Bulletins PDF** | `lib/services/pdf_service.dart` (`genererBulletinA4`, `genererBulletinsClasseA4`, `_contenuBulletin`, `imprimer`), `lib/features/notes/screens/bulletin_screen.dart`, `generation_bulletins_screen.dart` | `apps/client_flutter/lib/features/notes/presentation/ecran_bulletins.dart` (affichage seul) ; aucune dépendance `pdf`/`printing` dans `apps/client_flutter/pubspec.yaml` ; `docs/contrats/M06_notes_evaluations.md` |
+| Déclaration manuelle de sanction | `lib/features/vie_scolaire/screens/sanction_declaration_screen.dart`, `VieScolaireService.declarerSanction()` | `apps/client_flutter/lib/features/vie_scolaire/domain/vie_scolaire_repository.dart` (`proposerSanction` inutilisé), `.../presentation/ecran_sanctions.dart` |
+| Changement de statut de sanction | `VieScolaireService.leverSanction()`, `sanction_declaration_screen.dart` (`_SanctionTile`) | `vie_scolaire_repository.dart`/`data/supabase_vie_scolaire_repository.dart` (`changerStatutSanction` inutilisé) |
+| Exclusion définitive | `lib/models/vie_scolaire_model.dart` (`enum SanctionType`) | `type_sanction` (enum), `supabase/migrations/20260906000700_m7_absences_vie_scolaire.sql`, `docs/contrats/M07_absences_vie_scolaire.md` |
+| Bourses | `lib/models/inscription_model.dart` (`statutBoursier`), `lib/services/firestore_service.dart` (`definirStatutBoursier`), `reinscription_screen.dart`, `fiche_eleve_screen.dart`, `pdf_service.dart` | absent, `docs/contrats/M07_absences_vie_scolaire.md` |
+| Appréciations | `generation_bulletins_screen.dart` (`BulletinModel.appreciationGenerale`), `bulletin_screen.dart` | `apps/client_flutter/lib/features/notes/domain/appreciation.dart`, `data/notes_repository.dart` (aucun écran dans `presentation/`) |
+| Score de risque continu par élève | `lib/services/notes_service.dart` (`recalculerRisqueEchec`, `_calculerRisque`) | table `statistiques_agregats` (`type_agregat='risque_reussite'`, migration M6) ; `apps/client_flutter/lib/features/vie_scolaire/presentation/ecran_suivi_vie_scolaire.dart` (alertes_decrochage à la place) |
+| Génération de bulletins pour une classe | `lib/features/notes/screens/generation_bulletins_screen.dart`, `NotesService.genererBulletin()` | absent, `supabase/migrations/20260906000600_m6_notes_evaluations.sql` |
+
+### M8 → M9 — RH & Communication
+
+| Écart | Fichiers source | Fichiers/éléments cible |
+|---|---|---|
+| **Protection des mineurs — messagerie de groupe** | `lib/features/communication/screens/groupe_chat_screen.dart` (lignes 181-192), `creer_groupe_screen.dart`, `gestion_groupe_screen.dart`, `traitement_signalements_screen.dart` ; `firestore/firestore.rules` lignes 1093-1224 (1123 `allow create: if false`, 1135-1145 update restreint, 1165-1176 messages texte seul, 1182-1189 soft-delete, 1216-1224 signalements) | **Résolu par le patch de sécurité de ce rapport** (cf. §0.1 mis à jour) : `supabase/migrations/20260906000901_m9_patch_securite_messagerie_groupe.sql`, `apps/client_flutter/lib/features/coquille/application/session_logout.dart`. Prototype local pré-patch : `apps/client_flutter/lib/features/communication/prototype/domain/entree_communication_locale.dart` (lignes 12-19), `data/communication_locale_repository.dart`, `presentation/ecran_messagerie_prototype.dart` (lignes 16-100), `presentation/ecran_annonces_prototype.dart` (lignes 22-24), `coquille_app.dart` (lignes 331-338, 354) |
+| Annonces d'établissement | `lib/features/communication/screens/annonces_screen.dart`, `creer_annonce_screen.dart`, `lib/services/annonce_service.dart` | `apps/client_flutter/lib/features/communication/prototype/presentation/ecran_annonces_prototype.dart` (local uniquement) ; aucune table `annonces` dans `supabase/migrations/20260906000900_m9_communication_notifications.sql` |
+| Cahier de liaison | (voir §8, hors focus prioritaire de cet audit) | `apps/client_flutter/lib/features/communication/prototype/presentation/ecran_cahier_liaison_prototype.dart` |
+| Paie — cycle complet | `RH_PAIE.md`, `lib/features/rh/screens/generer_bulletin_paie_screen.dart`, `bulletin_paie_detail_screen.dart`, `primes_etablissement_screen.dart`, `avances_etablissement_screen.dart`, `bulletins_paie_etablissement_screen.dart`, Cloud Functions `paie.js`/`paie_helpers.js` | table `paie_bulletins` (`supabase/migrations/20260906000800_m8_rh_personnel.sql`) ; `apps/client_flutter/lib/features/rh_personnel/data/rh_repository.dart` lignes 30-32/53 (lecture seule, report annoncé vers M14) ; `supabase/migrations/20260906001400_m14_comptabilite_sans_ohada.sql` (aucune mention paie, report non tenu) |
+| Dossier personnel — documents/qualifications/historique | `RH_PERSONNEL.md` §1-6 | table `employes` (`supabase/migrations/20260906000800_m8_rh_personnel.sql`, `categorie` figée par CHECK) |
+| Congés — états, chevauchement, admin-on-behalf | `RH_CONGES.md` | enum `statut_conge`, policy `conges_insert_demande` (migration M8, ~lignes 642-647) ; `apps/client_flutter/lib/features/rh_personnel/presentation/ecran_conges.dart` ligne 27 (`peutDemander`, filtre d'affichage seulement) |
+| Liaison compte personnel par matricule | `RH_PERSONNEL.md` §2/§6.5 | `employes.profile_id` `NOT NULL` (migration M8, ligne 69) |
+
+### M10 → M12 — Rapports, Planification, Observabilité
+
+| Écart | Fichiers source | Fichiers/éléments cible |
+|---|---|---|
+| Tableau de bord directeur consolidé | `lib/features/reporting/screens/tableau_bord_directeur_screen.dart`, Cloud Function `obtenirTableauBordDirecteur`, `TABLEAU_BORD_DIRECTEUR.md` §2-3 | `apps/client_flutter/lib/features/rapports/presentation/ecran_tableau_bord_rapports.dart`, `supabase/migrations/20260906001000_m10_rapports_statistiques.sql` (`indicateurs_cles`) |
+| Bannière IA « élèves à risque » | `lib/features/dashboard/screens/dashboard_screen.dart` (`_AiBanner`), `TABLEAU_BORD_DIRECTEUR.md` §3bis | `statistiques_agregats.risque_reussite` (migration M6), RPC `risque_classe` (migration M10/M11 §7.3) |
+| Score de risque par élève (pas classe) | `lib/services/notes_service.dart` (`recalculerRisqueEchec`) | RPC `risque_classe(p_classe)` (agrégé classe seulement) |
+| Tableau de bord réseau | `lib/features/reseau/screens/tableau_bord_reseau_screen.dart` | aucun dossier `reseau` côté cible |
+| Séances ponctuelles / annulation | doc `EMPLOI_DU_TEMPS.md` §2 (champs `type`/`statut`/`dateException`), `seance_form_screen.dart`, `FONCTIONNALITES.md` ligne 73 | table `emplois_du_temps` (`supabase/migrations/20260906001100_m11_planification_agenda.sql`), `apps/client_flutter/lib/features/planification/domain/emploi_du_temps.dart` |
+| Notification d'annulation de séance | `functions/emploi_du_temps.js` (`onSeancePonctuelleCreated`), `FONCTIONNALITES.md` lignes 76/100 | absent (conséquence du point précédent) |
+| Congé enseignant → annulation cours | `FONCTIONNALITES.md` ligne 127 | aucun lien entre `20260906000800_m8_rh_personnel.sql` et `20260906001100_m11_planification_agenda.sql` |
+| Exclusion séance de remplacement (anti-bug conflit) | doc `EMPLOI_DU_TEMPS.md` §2 | RPC `detecter_conflits_emploi` (migration M11 §8.2) |
+| M12 Observabilité | aucun équivalent (recherche négative) | `supabase/migrations/20260906001200_m12_observabilite.sql` |
+
+### M13 → M15 — Marketplace & Comptabilité
+
+| Écart | Fichiers source | Fichiers/éléments cible |
+|---|---|---|
+| **Reçus PDF** | `lib/services/pdf_service.dart` (`genererRecuThermique`, `genererRecuA4`, `imprimer`), `lib/features/financier/screens/recu_screen.dart` | aucune dépendance `pdf`/`printing` dans `apps/client_flutter/pubspec.yaml` ; `docs/COMPTABILITE.md` §9 (gap reconnu) |
+| Attestations | absent côté source (recherche négative) | absent (pas une régression) |
+| **Encaissement de scolarité** | `lib/features/financier/screens/paiement_screen.dart`, `recu_screen.dart`, `cahier_journal_screen.dart`, `lib/services/financier_service.dart` | `apps/client_flutter/lib/features/comptabilite/` (comptabilité générale seulement), `docs/M13_ASSOSHOP_MARKETPLACE.md` §7 (promis, non livré), `supabase/migrations/20260906001400_m14_comptabilite_sans_ohada.sql` |
+| Achat sans authentification | sans équivalent source | schéma présent (`supabase/migrations/20260906001500_m15_marketplace_sans_auth.sql` : `profils_publics`, `paniers.visiteur_id`) mais `apps/client_flutter/lib/features/marketplace/domain/panier.dart` (commentaire : parcours anonyme non couvert) |
+| Auto-inscription vendeur | `lib/features/marketplace/screens/demande_vendeur_screen.dart` | RLS `supabase/migrations/20260906001300_m13_marketplace_assoshop.sql` §4 (`commercants`/`catalogues_produits` réservés back-office) |
+| Gestion catalogue/ventes vendeur | `lib/features/marketplace/screens/mes_produits_screen.dart`, `produit_form_screen.dart` | `apps/client_flutter/lib/features/marketplace/presentation/ecran_produits_commercant.dart` (vue acheteur), `ecran_sous_comptes_marchands.dart` (vue établissement) |
+| Stock / anti-survente | `models/produit_model.dart` (champ `stock`), `panier_screen.dart`, `enum StatutCommande.echecStock` | table `catalogues_produits` (migration M13, aucune colonne stock) |
+| Livraison 2 étapes QR | `lib/features/marketplace/screens/suivi_commande_screen.dart`, `reception_colis_screen.dart`, `remise_colis_screen.dart` | `enum StatutCommande` cible (`expediee`/`livree` seulement), aucune dépendance QR/scanner |
+| Restriction géographique | `catalogue_screen.dart` (`_BandeauLocalisation`), `produit_detail_screen.dart` (`_CarteVendeur`) | `apps/client_flutter/lib/features/marketplace/domain/commercant.dart` (pas de ville/pays) |
+| Réputation vendeur | `produit_detail_screen.dart` (`_CarteVendeur`), `models/commercant_model.dart` | absent |
+| SLA de livraison | `demande_vendeur_screen.dart`, `enum StatutCommande.rembourseeSla` | absent |

@@ -33,6 +33,7 @@ import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
+import '../application/session_logout.dart';
 import '../application/sync_composition.dart';
 
 /// Onglet de la coquille applicative.
@@ -712,10 +713,7 @@ class _VueProfil extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.logout),
           title: const Text('Se déconnecter'),
-          onTap: () async {
-            await ref.read(authRepositoryProvider).deconnecter();
-            if (context.mounted) ref.rafraichirSession();
-          },
+          onTap: () => ref.deconnecterEtPurgerDonneesLocales(),
         ),
       ],
     );

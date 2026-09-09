@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../coquille/application/session_logout.dart';
 import '../application/auth_providers.dart';
 import '../application/connexion_controller.dart';
 import '../domain/auth_repository.dart';
@@ -78,10 +79,7 @@ class _EcranLiaisonFicheState extends ConsumerState<EcranLiaisonFiche> {
           IconButton(
             tooltip: 'Se déconnecter',
             icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await ref.read(authRepositoryProvider).deconnecter();
-              if (context.mounted) ref.rafraichirSession();
-            },
+            onPressed: () => ref.deconnecterEtPurgerDonneesLocales(),
           ),
         ],
       ),

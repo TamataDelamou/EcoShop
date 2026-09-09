@@ -108,3 +108,30 @@ Unique `(etablissement_id, type, canal)`.
 - Permissions seedées : `comm.notifier`, `comm.voir_logs`.
 - IA : jamais d'envoi automatique sans règle éthique (opt-out par canal, horaires, minimisation) ; afficher les suggestions comme non-bloquantes.
 - Soft-delete : filtrer `deleted_at is null` sur `notifications`.
+
+## 6. Patch de sécurité — messagerie de groupe scolaire
+
+Ce contrat initial (notifications multicanal) ne couvrait pas la messagerie
+de groupe/annonces/cahier de liaison : l'audit rétroactif
+(`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1) a constaté que le prototype client
+livré à la place n'avait aucune contrepartie serveur ni les garde-fous de
+protection des mineurs de `ecoshop_flutter` (source). Traité en urgence,
+hors séquencement normal, par la migration
+`20260906000901_m9_patch_securite_messagerie_groupe.sql` :
+
+- Tables : `groupes_discussion`, `messages_groupe`, `signalements_message`.
+- Appartenance dérivée dynamiquement de `affectations_enseignants` +
+  `inscriptions`/`fiches_eleves` — jamais de `relations_parent_eleve`
+  (aucun accès parent, règle absolue #4 de la source).
+- RLS complète dès la création (7 règles absolues détaillées en tête de
+  migration), tests pgTAP `tests/rls/37_m9_patch_messagerie_groupe.sql`.
+- Volet client : `apps/client_flutter/lib/features/coquille/application/session_logout.dart`
+  purge le prototype local (`communication_locale`) à la déconnexion — la
+  fuite entre comptes successifs sur un même appareil (clé de cache non
+  isolée par profil) est corrigée indépendamment de la migration serveur.
+- Le prototype local pré-existant (`ecran_messagerie_prototype.dart` et
+  consorts) n'est pas encore raccordé à ce nouveau schéma serveur — ce
+  raccordement (remplacer le stockage local par des appels RPC/Postgrest
+  vers ces tables) reste à faire avant d'exposer une vraie messagerie de
+  groupe dans l'app ; ce patch ferme le trou de sécurité serveur, il ne
+  livre pas encore l'écran final.

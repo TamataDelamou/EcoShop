@@ -34,6 +34,10 @@ class CommunicationLocaleRepository {
   Future<void> marquerAccuseReception(TypeEntreeLocale type, String id) =>
       _mettreAJour(type, id, (e) => e.copierAvec(accuseReception: true));
 
+  /// Purge tout le domaine (`communication_locale`) — patch de sécurité M9,
+  /// appelé à la déconnexion (voir `session_logout.dart`).
+  Future<void> purgerTout() => _cache.purgerTout();
+
   Future<void> _mettreAJour(
     TypeEntreeLocale type,
     String id,
