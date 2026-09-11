@@ -1,10 +1,16 @@
 /// Projection cliente de `public.indicateurs_cles` (M10) — KPI pré-calculés
 /// par la RPC `consolider_indicateurs_etablissement` (`effectifs`,
 /// `taux_reussite`, `absentisme`, `turnover`, `masse_salariale`,
-/// `engagement_parents`). Lecture seule côté client : la RPC est le seul
-/// point d'écriture légitime (`indicateurs_insert`/`update` exigent
-/// `rapports.administrer`, jamais accordée pour une écriture directe
-/// depuis l'IHM).
+/// `engagement_parents`, `eleves_a_risque` — M16, consomme
+/// `statistiques_agregats.risque_reussite`). Lecture seule côté client : la
+/// RPC est le seul point d'écriture légitime (`indicateurs_insert`/`update`
+/// exigent `rapports.administrer`, jamais accordée pour une écriture
+/// directe depuis l'IHM).
+///
+/// `eleves_a_risque` n'apparaît pas dans la grille générique de KPI
+/// (`_CarteIndicateur`) : `EcranTableauBordRapports` l'extrait pour l'
+/// afficher en bannière IA dédiée (`_BanniereRisque`), conformément au
+/// cahier M16 — pas un simple chiffre parmi d'autres.
 class IndicateurCle {
   const IndicateurCle({
     required this.id,
@@ -50,6 +56,7 @@ class IndicateurCle {
         'turnover' => 'Turn-over RH',
         'masse_salariale' => 'Masse salariale',
         'engagement_parents' => 'Engagement des parents',
+        'eleves_a_risque' => 'Élèves à risque',
         _ => code,
       };
 

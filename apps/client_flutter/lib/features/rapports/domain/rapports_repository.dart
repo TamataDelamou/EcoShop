@@ -35,7 +35,8 @@ abstract interface class RapportsRepository {
   /// Indicateurs clés d'un établissement pour une année (personnel).
   Future<List<IndicateurCle>> indicateursEtablissement(String etablissementId, String anneeScolaireId);
 
-  /// Recalcule les 6 indicateurs clés (RPC `consolider_indicateurs_etablissement`).
+  /// Recalcule les 7 indicateurs clés, dont `eleves_a_risque` (M16) (RPC
+  /// `consolider_indicateurs_etablissement`).
   Future<int> consoliderIndicateurs(String etablissementId, String anneeScolaireId);
 
   /// Anomalies statistiques d'un établissement pour une année (personnel).

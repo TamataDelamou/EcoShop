@@ -281,7 +281,7 @@ délivré** par migrations SQL est le suivant.
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 | M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré, retiré, puis reconstruit après M15quater, voir M15ter §7 |
 | M15quater | Inscription, réinscription & encaissement de scolarité | `20260906001501_m15quater_inscription_encaissement.sql` | [M15quater](./docs/contrats/M15quater_inscription_encaissement.md) | inséré hors plan §4.3, entre M15ter et M16, devant les ~8 autres écarts de l'audit |
-| M16 | IA à rôles (en cours) — sous-livrable 1/7 : score de risque par élève | `20260906001504_m16_materialisation_risque_reussite.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
+| M16 | IA à rôles (en cours) — sous-livrables 1-2/7 : score de risque par élève, bannière dashboard directeur | `20260906001504_m16_materialisation_risque_reussite.sql`, `20260906001505_m16_banniere_eleves_a_risque.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -405,6 +405,27 @@ recalculerRisqueEchec`) — décision : ne pas remplacer la formule
 introduire un second score divergent sur le même élève ni changer le
 comportement déjà éprouvé de `alertes_decrochage`. Poids/seuil de M7
 inchangés. Suite complète reconfirmée verte (39 fichiers, 222 assertions).
+
+*Sous-livrable 2/7 — bannière dashboard directeur* (clos le 2026-09-11, cf.
+`supabase/migrations/20260906001505_m16_banniere_eleves_a_risque.sql`,
+`tests/rls/40_m16_banniere_eleves_a_risque.sql`) : ajoute un 7e indicateur
+(`eleves_a_risque`) au mécanisme de consolidation déjà existant
+(`consolider_indicateurs_etablissement`, M10) plutôt qu'un second
+mécanisme parallèle — rafraîchit `statistiques_agregats.risque_reussite`
+(sous-livrable 1/7) puis compte au seuil 0.6 (identique à
+`generer_alertes_decrochage`, même population « à risque »). Côté client,
+extrait de la grille générique de KPI et affiché en bannière IA dédiée
+(`_BanniereRisque`, `ecran_tableau_bord_rapports.dart`) — pas un chiffre
+parmi d'autres, conforme au cahier. Écart source documenté et non porté :
+le sous-compte « dontDonneeFiable » d'`ecoshop_flutter` (fiabilité liée à
+Parent IA/mesure device) n'a pas d'équivalent, `calculer_score_decrochage`
+ne portant aucun indicateur de fiabilité — absence assumée, pas oubliée.
+Suite pgTAP reconfirmée verte (40 fichiers, 227 assertions) ; côté Flutter,
+`flutter analyze` propre et test de domaine ajouté
+(`test/features/rapports/domain_json_test.dart`) — **le rendu visuel de la
+bannière n'a pas été vérifié dans un run applicatif réel** (nécessiterait
+une session direction connectée avec données seedées), à garder en tête si
+un écart d'affichage apparaît en usage réel.
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

@@ -77,12 +77,28 @@ class _Contenu extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Text('Indicateurs indisponibles hors connexion pour le moment.'),
             ),
-            data: (liste) => liste.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('Aucun indicateur calculé — utilisez « Recalculer ».'),
-                  )
-                : GridView.count(
+            data: (liste) {
+              // Bannière IA « élèves à risque » (M16) : extraite de la
+              // grille générique, affichée à part — pas un simple chiffre
+              // parmi les autres KPI (cahier M16, voir indicateur_cle.dart).
+              final risque = liste.where((i) => i.code == 'eleves_a_risque').firstOrNull;
+              final autres = liste.where((i) => i.code != 'eleves_a_risque').toList();
+
+              if (liste.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text('Aucun indicateur calculé — utilisez « Recalculer ».'),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (risque != null) ...[
+                    _BanniereRisque(indicateur: risque),
+                    const SizedBox(height: 12),
+                  ],
+                  GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -90,10 +106,13 @@ class _Contenu extends ConsumerWidget {
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
                     children: [
-                      for (var i = 0; i < liste.length; i++)
-                        EntreeAnimee(index: i, enfant: _CarteIndicateur(indicateur: liste[i])),
+                      for (var i = 0; i < autres.length; i++)
+                        EntreeAnimee(index: i, enfant: _CarteIndicateur(indicateur: autres[i])),
                     ],
                   ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           Card(
@@ -206,4 +225,54 @@ class _CarteIndicateur extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Bannière IA « élèves à risque » (M16, cahier) — consomme l'indicateur
+/// `eleves_a_risque` (RPC `consolider_indicateurs_etablissement`, qui
+/// matérialise `statistiques_agregats.risque_reussite` puis compte au seuil
+/// 0.6, identique à `generer_alertes_decrochage`, M7). Aucun calcul côté
+/// client : seulement la mise en forme d'un chiffre déjà produit côté
+/// serveur — jamais une décision automatisée (`BadgeSignalIa`, même
+/// discipline que le reste de ce tableau de bord).
+class _BanniereRisque extends StatelessWidget {
+  const _BanniereRisque({required this.indicateur});
+
+  final IndicateurCle indicateur;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = (indicateur.valeurNumeric ?? 0).round();
+
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
+      enfant: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              color: total > 0 ? context.palette.accent : context.palette.succes),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const BadgeSignalIa(texte: 'Signal IA — validation humaine requise'),
+                const SizedBox(height: 8),
+                Text(_texteRisque(total), style: const TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _texteRisque(int total) {
+    if (total == 0) return 'Aucun élève à risque d\'échec détecté';
+    if (total == 1) return '1 élève à risque d\'échec détecté';
+    return '$total élèves à risque d\'échec détectés';
+  }
+}
+
+extension _FirstOrNull<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

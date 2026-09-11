@@ -65,6 +65,20 @@ void main() {
       expect(effectif.estUnTaux, isFalse);
       expect(taux.libelle, 'Taux de réussite');
     });
+
+    test('eleves_a_risque (M16) est un effectif brut, jamais un taux', () {
+      final risque = IndicateurCle.depuisJson({
+        'id': 'i3',
+        'etablissement_id': 'et1',
+        'annee_scolaire_id': 'a1',
+        'code': 'eleves_a_risque',
+        'valeur_numeric': 3,
+        'calcule_le': '2026-03-01T00:00:00Z',
+      });
+
+      expect(risque.estUnTaux, isFalse);
+      expect(risque.libelle, 'Élèves à risque');
+    });
   });
 
   group('AnomalieStatistique', () {

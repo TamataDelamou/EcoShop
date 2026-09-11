@@ -2,7 +2,9 @@
 -- EcoShop — Test 23 : fonctions IA des rapports & statistiques (M10)
 --
 -- Vérifie les fonctions :
---   • consolider_indicateurs_etablissement : 6 KPI calculés ;
+--   • consolider_indicateurs_etablissement : 7 KPI calculés (dont
+--     'eleves_a_risque', M16 sous-livrable 2/7 — consomme
+--     statistiques_agregats.risque_reussite, pas un second calcul) ;
 --   • detecter_anomalies : détection d'absentéisme excessif (> 30 %) ;
 --   • risque_classe : score prédictif pondéré (niveau « faible » ici) ;
 --   • recommander_actions : aucune action pour une classe saine ;
@@ -29,7 +31,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(6);
+SELECT plan(7);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classe + comptes + 3 fiches inscrites
@@ -101,8 +103,18 @@ SELECT set_config('request.jwt.claims',
 
 SELECT is(
   public.consolider_indicateurs_etablissement(:'etab_id'::uuid, :'annee_id'::uuid),
-  6,
-  'IA descriptive : 6 indicateurs clés consolidés'
+  7,
+  'IA descriptive : 7 indicateurs clés consolidés (dont eleves_a_risque, M16)'
+);
+
+-- M16 sous-livrable 2/7 : classe saine (tous sous le seuil 0.6 de
+-- calculer_score_decrochage) → 0 élève à risque compté.
+SELECT is(
+  (SELECT valeur_numeric FROM public.indicateurs_cles
+     WHERE etablissement_id = :'etab_id'::uuid AND annee_scolaire_id = :'annee_id'::uuid
+       AND code = 'eleves_a_risque'),
+  0::numeric,
+  'M16 : bannière eleves_a_risque à 0 pour une classe saine'
 );
 
 SELECT is(
