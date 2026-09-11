@@ -281,7 +281,7 @@ délivré** par migrations SQL est le suivant.
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 | M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré, retiré, puis reconstruit après M15quater, voir M15ter §7 |
 | M15quater | Inscription, réinscription & encaissement de scolarité | `20260906001501_m15quater_inscription_encaissement.sql` | [M15quater](./docs/contrats/M15quater_inscription_encaissement.md) | inséré hors plan §4.3, entre M15ter et M16, devant les ~8 autres écarts de l'audit |
-| M16 | IA à rôles (en cours) — sous-livrables 1-2/7 : score de risque par élève, bannière dashboard directeur | `20260906001504_m16_materialisation_risque_reussite.sql`, `20260906001505_m16_banniere_eleves_a_risque.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
+| M16 | IA à rôles (en cours) — sous-livrables 1-3/7 : score de risque par élève, bannière dashboard directeur, Edge Functions IA + Tuteur IA/Directeur-Adviser | `20260906001504...`, `20260906001505...`, `20260906001506_m16_edge_functions_ia_infra.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -426,6 +426,62 @@ Suite pgTAP reconfirmée verte (40 fichiers, 227 assertions) ; côté Flutter,
 bannière n'a pas été vérifié dans un run applicatif réel** (nécessiterait
 une session direction connectée avec données seedées), à garder en tête si
 un écart d'affichage apparaît en usage réel.
+
+*Sous-livrable 3/7 — Edge Functions IA + Tuteur IA/Directeur-Adviser*
+(clos le 2026-09-11, cf. `supabase/migrations/20260906001506_m16_edge_
+functions_ia_infra.sql`, `supabase/functions/envoyer_message_ia/`,
+`supabase/functions/demarrer_analyse_risque_echec/`, `tests/rls/
+41_m16_edge_functions_ia.sql`) : porte l'architecture à 3 couches de
+`CHAT_IA_GROUNDING.md` (déclenchement structuré → réponse groundée,
+chiffres réels injectés sans outil → détail nominatif optionnel via
+tool_use, pseudonymisation stricte). Décisions de cadrage actées et
+tenues :
+
+- **Correctif de sécurité construit dès la conception, pas après coup**
+  (contrairement à la source, qui l'a trouvé et corrigé APRÈS le premier
+  ship — voir §6 de `CHAT_IA_GROUNDING.md`) : la policy RLS d'écriture
+  cliente sur `ai_conversations` force `grounding = false` et cibles
+  nulles — seule la fonction `preparer_analyse_risque_echec` (SECURITY
+  DEFINER, jamais appelable directement par le client) peut poser ces
+  champs. Isolation stricte par auteur, même entre deux comptes direction
+  du même établissement (aucun partage de conversation).
+- **Aucune nouvelle formule de risque** : `preparer_analyse_risque_echec`
+  rafraîchit et consomme `materialiser_risque_reussite`/
+  `statistiques_agregats.risque_reussite` (sous-livrable 1/7), seuil 0.6
+  inchangé.
+- **Rôle IA réel recalculé côté serveur** (`determiner_role_ia`), jamais
+  celui envoyé par le client — un compte sans rôle IA dans l'établissement
+  (ex. parent) reste sans accès au chat, même comportement que
+  `PROMPTS[role]` absent côté source.
+- **Hors périmètre, assumé** : le second rapport groundé « échéances de
+  paiement » de la source (généralisation ultérieure du même mécanisme,
+  pas présente dans le périmètre M16 d'origine) — extension future de la
+  même infrastructure si besoin, pas un écart oublié. Le ciblage
+  `cible_type = 'eleve'` n'est pas non plus exposé (même limite déjà
+  documentée côté source).
+- **Prof-Assistant (enseignant) ajouté** comme 3ᵉ persona sur la même
+  infrastructure, au-delà des 5 rôles listés au cahier M16 — coût marginal
+  nul (un prompt système de plus), pour ne pas perdre une fonctionnalité
+  source sans raison.
+- **Testé jusqu'à la frontière de l'appel Anthropic avec une réponse HTTP
+  simulée**, sans clé API réelle (câblage du secret en production différé,
+  étape de déploiement séparée) — le CLI Deno autonome restant indisponible
+  sur ce poste (même blocage réseau que Docker Desktop, §0.4/§0.6 de
+  `docs/AUDIT_ECOSHOP_FLUTTER.md`), la vérification a été faite via
+  `supabase functions serve` (fonctionne sans binaire Deno séparé) + un
+  serveur Node jetable simulant l'API Anthropic + un JWT signé à la main —
+  un aller-retour RÉEL (vrai HTTP, vraie auth, vraie RLS, vrai Postgres) a
+  confirmé le flux complet (déclenchement, réponse groundée avec les
+  vrais chiffres du fixture, tool-use, pseudonymisation) et l'absence de
+  toute fuite nominative (nom/matricule réels) dans ce qui est effectivement
+  envoyé côté simulation Anthropic — vérifié par recherche explicite dans
+  les logs de la simulation, pas seulement par lecture de code.
+- **Non construit dans cette passe, à trancher avant M16 4/7 ou en fin de
+  module** : les écrans Flutter du chat (équivalent `AiChatScreen`/
+  `ai_service.dart`) — le cadrage validé portait sur l'architecture serveur,
+  pas explicitement sur l'IHM cliente.
+
+Suite pgTAP reconfirmée verte (41 fichiers, 257 assertions).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

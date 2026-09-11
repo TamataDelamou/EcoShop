@@ -291,6 +291,28 @@ RETURNING` échoue — `sanctions` et `contrats` ont une forme quasi identique
 Toute correction future de ce type doit être vérifiée empiriquement,
 table par table, pas généralisée par supposition.
 
+### 0.6 M16 sous-livrable 3/7 — Edge Functions IA, `supabase functions serve` sans Deno CLI (2026-09-11)
+
+Construction de l'architecture à 3 couches de `CHAT_IA_GROUNDING.md`
+(déclenchement structuré → réponse groundée → détail nominatif pseudonymisé
+via tool-use) côté EcoShop — voir `ANALYSE_GLOBALE.md` §4.4 pour le détail
+complet. Point de méthode à retenir pour tout futur test d'Edge Function
+sur ce poste : le CLI Deno autonome (`deno`) reste indisponible ici — deux
+tentatives d'installation (npm, script officiel `install.ps1`) ont échoué,
+la seconde pour la même raison que Docker Desktop en §0.4 (téléchargement
+d'un binaire de ~40 Mo throttlé à ~15 Ko/s, jamais abouti). **Contournement
+trouvé et validé, pas un contournement théorique** : `supabase functions
+serve` fonctionne sans binaire Deno séparé — il réutilise le conteneur
+`edge-runtime` déjà présent localement. Combiné à un serveur Node
+jetable simulant l'API Anthropic (conteneur sur le même réseau podman,
+`host.containers.internal`/l'IP de la gateway ne fonctionnant pas de
+manière fiable depuis ce conteneur vers l'hôte Windows) et un JWT HS256
+signé à la main (même secret que `supabase start`), ceci a permis une
+vérification **de bout en bout réelle** (vrai réseau HTTP, vraie
+authentification, vraie RLS, vrai Postgres) des deux Edge Functions et de
+l'absence de fuite nominative vers l'appel Anthropic simulé — plus probant
+qu'un test unitaire Deno mocké, obtenu malgré l'indisponibilité du CLI.
+
 ---
 
 ## 1. Méthode et limites

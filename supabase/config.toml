@@ -58,5 +58,17 @@ uri = "pg-functions://postgres/public/custom_access_token_hook"
 enabled = true
 verify_jwt = false   # la fonction vérifie elle-même la signature via JWKS (ch. 5.5)
 
+# M16 — Edge Functions IA (sous-livrable 3/7) : verify_jwt = true (défaut),
+# la plateforme vérifie la signature avant même d'invoquer la fonction —
+# le rôle réel est ensuite revérifié côté SQL (`determiner_role_ia`),
+# jamais celui envoyé par le client.
+[functions.envoyer_message_ia]
+enabled = true
+verify_jwt = true
+
+[functions.demarrer_analyse_risque_echec]
+enabled = true
+verify_jwt = true
+
 [edge_runtime]
 policy = "oneshot"
