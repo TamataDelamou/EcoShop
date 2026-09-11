@@ -37,7 +37,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(15);
+SELECT plan(16);
 
 -- ---------------------------------------------------------------------------
 -- Établissement (id fixe), année, deux classes (A = celle du groupe,
@@ -58,6 +58,13 @@ INSERT INTO public.classes (id, etablissement_id, annee_scolaire_id, code, nom)
 VALUES ('41000000-0000-0000-0000-000000000004', '41000000-0000-0000-0000-000000000001',
         '41000000-0000-0000-0000-000000000002', '6B-MSG', '6e B');
 
+-- Classe C : dédiée au test de non-régression ci-dessous (INSERT ...
+-- RETURNING), pour ne pas entrer en conflit avec l'unique groupe actif
+-- classe+année déjà créé sur la classe A.
+INSERT INTO public.classes (id, etablissement_id, annee_scolaire_id, code, nom)
+VALUES ('41000000-0000-0000-0000-000000000008', '41000000-0000-0000-0000-000000000001',
+        '41000000-0000-0000-0000-000000000002', '6C-MSG', '6e C');
+
 -- ---------------------------------------------------------------------------
 -- Comptes : enseignant créateur (affecté classe A), élève membre (inscrit
 -- classe A), parent du membre, élève étranger (inscrit classe B seulement).
@@ -77,6 +84,12 @@ INSERT INTO public.affectations_enseignants
   (etablissement_id, annee_scolaire_id, enseignant_profile_id, classe_id, role_affectation)
 VALUES ('41000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000002',
         :'prof_id'::uuid, '41000000-0000-0000-0000-000000000003', 'titulaire');
+
+-- Affectation sur la classe C, uniquement pour le test de non-régression.
+INSERT INTO public.affectations_enseignants
+  (etablissement_id, annee_scolaire_id, enseignant_profile_id, classe_id, role_affectation)
+VALUES ('41000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000002',
+        :'prof_id'::uuid, '41000000-0000-0000-0000-000000000008', 'titulaire');
 
 INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
 VALUES ('41000000-0000-0000-0000-000000000001', 'M9-MSG-001', 'DIALLO', 'Fatoumata', '2013-03-02', :'eleve_id'::uuid, now())
@@ -132,6 +145,26 @@ SELECT is((SELECT count(*) FROM public.groupes_discussion
 SELECT is((SELECT count(*) FROM public.messages_groupe
            WHERE groupe_id = '41000000-0000-0000-0000-000000000005')::int, 2,
   'enseignant créateur : voit les 2 messages');
+
+-- 2bis. Non-régression (patch 20260906001503) : INSERT ... RETURNING réussit
+-- pour l'enseignant créateur — la policy SELECT s'appuyait auparavant sur
+-- membre_groupe(id), auto-référentielle (re-interroge groupes_discussion
+-- par id), qui ne voyait pas la ligne tout juste insérée au moment où
+-- Postgres vérifie implicitement la policy SELECT pour construire le
+-- résultat de RETURNING (INSERT seul réussissait, RETURNING échouait en
+-- 42501 pour tout le monde). Classe C dédiée + savepoint pour ne pas
+-- perturber les comptages des assertions suivantes.
+SAVEPOINT avant_regression_returning;
+INSERT INTO public.groupes_discussion
+  (etablissement_id, classe_id, annee_scolaire_id, nom, enseignant_createur_id)
+VALUES ('41000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000008',
+        '41000000-0000-0000-0000-000000000002', 'Classe 6e C (non-régression)', :'prof_id'::uuid)
+RETURNING id AS groupe_regression_id \gset
+SELECT ok(
+  :'groupe_regression_id' IS NOT NULL,
+  'non-régression : INSERT ... RETURNING réussit pour le créateur (policy SELECT non auto-référentielle)'
+);
+ROLLBACK TO SAVEPOINT avant_regression_returning;
 
 -- 3-4. L'élève membre (inscrit dans la classe) voit le groupe et les messages.
 SELECT set_config('request.jwt.claims',

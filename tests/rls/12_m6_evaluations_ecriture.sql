@@ -27,7 +27,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(7);
+SELECT plan(8);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classe
@@ -81,6 +81,28 @@ INSERT INTO public.evaluations
 VALUES (:'etab_id'::uuid, :'annee_id'::uuid, :'classe_id'::uuid, :'ens1_id'::uuid,
         'controle', 'Contrôle n°1', 2, 20, 'publiee', now());
 SELECT is((SELECT count(*) FROM public.evaluations)::int, 1, 'évaluation : créée par l''affecté');
+
+-- 2bis. Non-régression (patch 20260906001503) : INSERT ... RETURNING
+-- réussit aussi — la policy SELECT s'appuyait auparavant sur
+-- evaluation_visible(id), auto-référentielle (re-interroge evaluations par
+-- id), qui ne voyait pas la ligne tout juste insérée au moment où Postgres
+-- vérifie implicitement la policy SELECT pour construire le résultat de
+-- RETURNING (INSERT seul réussissait, RETURNING échouait en 42501 pour
+-- tout le monde) — exactement le chemin réel qu'emprunte
+-- SupabaseNotesRepository (.insert(...).select().single()). Isolée dans une
+-- savepoint : ne doit pas laisser de ligne qui fausserait les comptages des
+-- assertions suivantes (3 et 5).
+SAVEPOINT avant_regression_returning;
+INSERT INTO public.evaluations
+  (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, type, libelle, coefficient, bareme, statut)
+VALUES (:'etab_id'::uuid, :'annee_id'::uuid, :'classe_id'::uuid, :'ens1_id'::uuid,
+        'controle', 'Contrôle non-régression RETURNING', 1, 20, 'brouillon')
+RETURNING id AS eval_regression_id \gset
+SELECT ok(
+  :'eval_regression_id' IS NOT NULL,
+  'non-régression : INSERT ... RETURNING réussit pour l''enseignant affecté (policy SELECT non auto-référentielle)'
+);
+ROLLBACK TO SAVEPOINT avant_regression_returning;
 
 -- 3. L'enseignant non affecté est bloqué.
 SELECT set_config('request.jwt.claims',

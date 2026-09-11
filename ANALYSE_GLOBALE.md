@@ -344,6 +344,38 @@ entre comptes successifs sur un même appareil corrigée côté client
 (purge à la déconnexion). Réserve assumée : les écrans du prototype local ne
 sont pas encore raccordés à ce nouveau backend.
 
+**Patch transversal — `INSERT ... RETURNING` sur policies auto-référentielles
+et replis `est_direction()` manquants** (résolu le 2026-09-11, cf.
+`docs/AUDIT_ECOSHOP_FLUTTER.md` addendum et
+`docs/ETAT_PHASE_C.md` §4bis/§4ter) : traité en urgence, même priorité que le
+patch de sécurité M9 ci-dessus — bloquait M16. Origine : le déblocage de
+l'outillage Docker/Podman local (§4bis de `docs/ETAT_PHASE_C.md`) a permis de
+trouver, sur M15quater, deux défauts jamais détectés (ni en local ni en CI, ce
+module n'avait jusque-là jamais tourné nulle part) — une policy UPDATE
+(`inscriptions`) sans repli `est_direction()`, et une policy SELECT
+(`encaissements_scolarite`) auto-référentielle qui cassait `INSERT ...
+RETURNING` pour tout le monde, y compris le vrai chemin de code de l'app.
+Recherche systémique du même symptôme sur les autres tables suivant la même
+forme (`policy SELECT` basée sur une fonction `xxx_visible(id)`
+auto-référentielle) : **chaque table vérifiée empiriquement avant correction,
+pas supposée identique par ressemblance de code** — la ressemblance s'est
+révélée trompeuse (`sanctions` et `contrats` ont une forme quasi identique à
+`encaissements_scolarite`/`notifications` mais ne présentaient PAS le défaut
+RETURNING). Résultat, cinq tables corrigées :
+
+- `notifications` (M9), `evaluations` (M6), `groupes_discussion` (M9-patch,
+  pas encore exposé côté Flutter mais corrigé pour ne pas laisser la dette
+  s'accumuler) : policy SELECT auto-référentielle cassant `INSERT ...
+  RETURNING` — remplacée par une forme inline.
+- `sanctions` (M7), `relations_parent_eleve` (M5) : policy d'écriture sans
+  repli `est_direction()` (même défaut que sur `inscriptions`) — repli
+  ajouté.
+- `contrats` (M8) : vérifié, aucun défaut des deux types — laissé tel quel.
+
+Chaque correction accompagnée d'un test pgTAP de non-régression explicite
+(`INSERT ... RETURNING` réel, ou compte direction sans poste RH). Suite
+complète (38 fichiers, 211 assertions) reconfirmée verte après coup.
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

@@ -46,7 +46,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(27);
+SELECT plan(28);
 
 -- ---------------------------------------------------------------------------
 -- Établissement (id fixe), 2 années scolaires, 2 classes, comptes.
@@ -275,25 +275,29 @@ SELECT is(
   'encaissement : invisible à un tiers'
 );
 
--- Fixture admin (même précédent que `frais_scolarite_config` en §7) : ce
--- lien parent↔élève est un préalable au test de visibilité ci-dessous, pas
--- ce qui est testé. Deux raisons de sortir du contexte `authenticated`
--- ici plutôt que de rester sur `dir_id` :
---  1. le trigger `relations_verifie_tenant` (M5) n'est pas SECURITY
---     DEFINER (comme la majorité des triggers `*_verifie_tenant` du
---     projet — seuls M9-patch et M15quater dérogent, avec justification
---     explicite) : son lookup sur `fiches_eleves` est filtré par RLS, donc
---     resterait sur les claims d'`etranger_id` (laissés actifs par
---     l'assertion précédente) échouerait avec un `FICHE_AUTRE_ETABLISSEMENT`
---     trompeur ;
---  2. la policy d'écriture de `relations_parent_eleve` exige
---     `a_permission(etablissement_id, 'scolarite.relation.gerer')` — SANS
---     repli `est_direction()` (`dir_id` n'a pas ce poste dans ce test) ;
---     hors périmètre de ce patch de signaler/corriger cette policy-là.
-RESET ROLE;
+-- Remettre les claims sur dir_id avant cet INSERT de fixture : le trigger
+-- `relations_verifie_tenant` (M5) n'est pas SECURITY DEFINER (comme la
+-- majorité des triggers `*_verifie_tenant` du projet — seuls M9-patch et
+-- M15quater dérogent, avec justification explicite) — son lookup sur
+-- `fiches_eleves` est donc filtré par RLS ; rester sur les claims
+-- d'`etranger_id` (laissés actifs par l'assertion précédente) échouerait
+-- avec un `FICHE_AUTRE_ETABLISSEMENT` trompeur, faute de visibilité.
+--
+-- Non-régression (patch 20260906001503) : ce même dir_id (toujours sans
+-- poste RH) réussit maintenant cet INSERT ... RETURNING directement via
+-- RLS — la policy `relations_scolarite` n'avait auparavant PAS le repli
+-- `est_direction()` (même défaut que `inscriptions_ecriture_scolarite`
+-- avant 20260906001502) : seul un compte avec `scolarite.relation.gerer`
+-- explicite pouvait écrire, une direction sans poste échouait en 42501.
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
 INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise)
-VALUES ('42000000-0000-0000-0000-000000000001', :'parent_id'::uuid, :'fiche_id'::uuid, 'parent', 'confirmee', true);
-SET LOCAL ROLE authenticated;
+VALUES ('42000000-0000-0000-0000-000000000001', :'parent_id'::uuid, :'fiche_id'::uuid, 'parent', 'confirmee', true)
+RETURNING id AS relation_regression_id \gset
+SELECT ok(
+  :'relation_regression_id' IS NOT NULL,
+  'non-régression : direction sans poste peut lier un parent (repli est_direction() sur relations_scolarite)'
+);
 
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'parent_id', 'role', 'authenticated')::text, true);

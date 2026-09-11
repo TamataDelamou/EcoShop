@@ -249,6 +249,48 @@ alternative sans Docker (ex. Postgres natif Windows + extension pgTAP
 installée manuellement) — à arbitrer avec le porteur de projet si la preuve
 d'exécution locale reste requise avant le prochain push.
 
+### 0.5 Déblocage Docker/Podman, première exécution locale réelle, deux patches RLS — **RÉSOLU** (2026-09-11)
+
+> **Statut : corrigé et poussé sur `origin/main`.** Suite directe de §0.4,
+> même soirée. Détail complet dans `docs/ETAT_PHASE_C.md` §4/§4bis/§4ter —
+> résumé ici pour la traçabilité de l'audit.
+
+**Déblocage** : les trois facteurs bloquants de §0.4 restent vrais pour
+**Docker Desktop** (toujours bloqué — son installeur exige une élévation UAC
+interactive, impossible en session automatisée, échec confirmé exit code
+`4294967291`), mais **Podman CLI 5.8.3 s'installe et fonctionne sans
+élévation**, et `podman machine start` (backend WSL2) a été rendu
+fonctionnel sur ce poste — le réseau, lui, n'est plus bridé (mesuré à
+~1,1 Mo/s contre ~14 Ko/s en §0.4).
+
+**Conséquence directe** : `main` local avait alors 13 commits d'avance sur
+`origin/main`, jamais poussés — la CI n'avait donc **jamais exécuté**
+M15quater ni son test pgTAP. Première exécution réelle, nulle part avant
+cette date : **échec** (13/25 assertions exécutées, 2 échecs explicites,
+puis erreur RLS bloquante). Deux défauts trouvés et corrigés (policy UPDATE
+`inscriptions` sans repli `est_direction()` ; policy SELECT
+`encaissements_scolarite` auto-référentielle cassant `INSERT ...
+RETURNING` pour tout le monde, y compris le vrai chemin de code de l'app) —
+migration `20260906001502...sql`, test porté à 27 assertions, confirmé
+27/27 puis **poussé vers `origin/main`** (commit `97ea026`).
+
+**Recherche systémique immédiate** (même symptôme, autres tables) : demandée
+et traitée en second patch, même urgence — voir `ANALYSE_GLOBALE.md` §4.4
+« Patch transversal » et `docs/ETAT_PHASE_C.md` §4ter pour le détail
+complet (méthode empirique table par table, tableau des 6 tables vérifiées,
+5 corrigées dont 3 pour le défaut RETURNING et 2 pour le repli
+`est_direction()` manquant, 1 saine). Migration
+`20260906001503_patch_transversal_returning_et_repli_direction.sql`, 5 tests
+de non-régression ajoutés, suite complète reconfirmée à 211/211 assertions.
+
+**Point important pour la suite de cet audit** : la ressemblance de code
+(une policy SELECT basée sur une fonction `xxx_visible(id)`
+auto-référentielle) **ne prédit pas de façon fiable** si `INSERT ...
+RETURNING` échoue — `sanctions` et `contrats` ont une forme quasi identique
+à `encaissements_scolarite`/`notifications` mais n'avaient PAS ce défaut.
+Toute correction future de ce type doit être vérifiée empiriquement,
+table par table, pas généralisée par supposition.
+
 ---
 
 ## 1. Méthode et limites

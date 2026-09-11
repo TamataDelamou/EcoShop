@@ -255,12 +255,57 @@ Files=38, Tests=206, Result: PASS
 **27/27 pour le test 38, et les 37 autres fichiers (dont 31-33) toujours
 tous verts** — les deux correctifs n'ont rien cassé ailleurs.
 
-**Reste ouvert, hors périmètre de ce patch** : le même anti-pattern
+**Reste ouvert à l'issue de ce patch** : le même anti-pattern
 auto-référentiel sur `notifications`/`sanctions`/`evaluations`/`contrats`
 (et `groupes_discussion`, non exposé), ainsi que l'absence de repli
-`est_direction()` sur `relations_parent_eleve`. Le point de contrôle
+`est_direction()` sur `relations_parent_eleve` — **traité et clos par un
+second patch transversal, voir §4ter ci-dessous.** Le point de contrôle
 M15quater proprement dit (rapport d'écart fonctionnel, etc.) reste à
 statuer séparément.
+
+## 4ter. Addendum — patch transversal, même symptôme sur 5 autres tables (2026-09-11)
+
+Suite immédiate de §4bis, même soirée, même urgence que le patch de sécurité
+M9 : le §4bis signalait mais ne corrigeait pas volontairement le même
+anti-pattern potentiel sur `notifications`/`sanctions`/`evaluations`/
+`contrats`/`groupes_discussion`/`relations_parent_eleve`. Demandé et traité
+séparément, bloquant M16 en plus de la clôture de M15quater.
+
+**Méthode imposée et suivie** : vérifier EMPIRIQUEMENT chaque table
+(transaction annulée, `INSERT ... RETURNING` vs `INSERT` seul) avant de
+corriger quoi que ce soit — ne pas supposer l'identité du bug par
+ressemblance de code. **Cette précaution s'est révélée décisive** :
+
+| Table | Policy SELECT auto-référentielle ? | `INSERT...RETURNING` cassé ? (vérifié) | Repli `est_direction()` manquant ? | Correctif |
+|---|---|---|---|---|
+| `notifications` (M9) | oui (`notif_visible(id)`) | **oui**, confirmé | non (`est_comm` l'a déjà) | policy SELECT inline |
+| `evaluations` (M6) | oui (`evaluation_visible(id)`) | **oui**, confirmé | n/a (chemin enseignant existe) | policy SELECT inline |
+| `groupes_discussion` (M9-patch) | oui (`membre_groupe(id)`) | **oui**, confirmé | non (déjà présent) | policy SELECT inline |
+| `sanctions` (M7) | oui (`sanction_visible(id)`) | **non** — RETURNING réussissait en fait, mécanisme exact non élucidé | **oui**, confirmé | repli `est_direction()` ajouté |
+| `contrats` (M8) | oui (`contrat_visible(id)`) | **non** — RETURNING réussissait | non (`est_rh` l'a déjà) | **aucun — table saine** |
+| `relations_parent_eleve` (M5) | non (policy directe sur colonnes) | non applicable | **oui**, confirmé | repli `est_direction()` ajouté |
+
+La ressemblance de code entre `sanction_visible`/`contrat_visible` et
+`encaissement_visible`/`notif_visible` (même forme, même style) ne prédit
+donc PAS de façon fiable le défaut RETURNING — sans cette vérification table
+par table, `sanctions` et `contrats` auraient été « corrigées » pour un
+problème qu'elles n'avaient pas.
+
+**Correctif appliqué** : migration
+`supabase/migrations/20260906001503_patch_transversal_returning_et_repli_direction.sql`.
+5 tests de non-régression pgTAP ajoutés/étendus (fichiers 12, 13, 19, 37, et
+38 — ce dernier converti d'un contournement `RESET ROLE` en véritable preuve
+que `dir_id`, toujours sans poste RH, réussit maintenant l'INSERT via RLS).
+
+**Confirmation finale** (`supabase test db --local tests/rls`) :
+```text
+Files=38, Tests=211, Result: PASS
+```
+Tous verts, y compris les fichiers touchés (12, 13, 19, 37, 38) et
+l'ensemble des 33 autres, inchangés.
+
+**Reste ouvert** : aucun défaut connu et non traité sur ces six tables à
+l'issue de ce patch.
 
 ## 5. Reste à faire
 

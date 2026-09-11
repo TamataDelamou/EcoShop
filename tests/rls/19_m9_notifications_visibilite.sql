@@ -28,7 +28,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(5);
+SELECT plan(6);
 
 -- ---------------------------------------------------------------------------
 -- Tenants (ids fixes) + comptes
@@ -94,6 +94,23 @@ SELECT is(
   (SELECT count(*) FROM public.notifications WHERE etablissement_id = '30000000-0000-0000-0000-000000000002')::int,
   0,
   'isolation : aucune notification visible hors établissement'
+);
+
+-- 6. Non-régression (patch 20260906001503) : la direction peut réellement
+-- enregistrer une notification via INSERT ... RETURNING — la policy SELECT
+-- s'appuyait auparavant sur notif_visible(id), une fonction auto-
+-- référentielle (re-interroge notifications par id) qui ne voit pas la
+-- ligne tout juste insérée au moment où Postgres vérifie implicitement la
+-- policy SELECT pour construire le résultat de RETURNING : l'INSERT seul
+-- réussissait, mais INSERT ... RETURNING échouait en 42501 pour tout le
+-- monde — exactement le chemin réel qu'emprunte
+-- SupabaseCommRepository.creerNotification() (.insert(...).select().single()).
+INSERT INTO public.notifications (etablissement_id, destinataire, type, canal, contenu)
+VALUES ('30000000-0000-0000-0000-000000000001', :'parent1_id'::uuid, 'absence', 'sms', 'non-regression RETURNING')
+RETURNING id AS notif_regression_id \gset
+SELECT ok(
+  :'notif_regression_id' IS NOT NULL,
+  'non-régression : INSERT ... RETURNING réussit pour la direction (policy SELECT non auto-référentielle)'
 );
 
 RESET ROLE;

@@ -24,7 +24,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(6);
+SELECT plan(7);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classe
@@ -44,6 +44,7 @@ SELECT pg_temp.creer_compte('224600001091', 'eleve')      AS eleve_id \gset
 SELECT pg_temp.creer_compte('224600001092', 'parent')     AS parent_id \gset
 SELECT pg_temp.creer_compte('224600001093', 'enseignant') AS prof_id \gset
 SELECT pg_temp.creer_compte('224600001094', 'eleve')      AS etranger_id \gset
+SELECT pg_temp.creer_compte('224600001095', 'direction')  AS dir_id \gset
 
 INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
 VALUES (:'etab_id'::uuid, 'M7-VIS-001', 'CAMARA', 'Mory', '2010-09-14', :'eleve_id'::uuid, now())
@@ -56,7 +57,9 @@ INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, 
 VALUES (:'etab_id'::uuid, :'parent_id'::uuid, :'fiche_id'::uuid, 'tuteur_legal', 'confirmee', true);
 
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
-VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant');
+VALUES
+  (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant'),
+  (:'dir_id'::uuid, :'etab_id'::uuid, 'direction');
 
 -- ---------------------------------------------------------------------------
 -- Données : présence, retard, sanction
@@ -92,6 +95,23 @@ SELECT is((SELECT count(*) FROM public.presences)::int, 1, 'enseignant : voit le
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'etranger_id', 'role', 'authenticated')::text, true);
 SELECT is((SELECT count(*) FROM public.presences)::int, 0, 'étranger : aucune présence visible');
+
+-- Non-régression (patch 20260906001503) : une direction SANS poste RH
+-- explicite (dir_id n'a aucun `poste_id`/`poste_permissions`) peut tout de
+-- même créer une sanction via INSERT ... RETURNING — la policy
+-- `sanctions_ecriture_scolarite` n'avait auparavant PAS le repli
+-- `est_direction()` (même défaut que `inscriptions_ecriture_scolarite`
+-- avant 20260906001502) : seul un compte avec `scolarite.sanction.gerer`
+-- explicite pouvait écrire, une direction sans poste échouait en 42501.
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
+INSERT INTO public.sanctions (etablissement_id, fiche_eleve_id, annee_scolaire_id, type_sanction, motif, decisionnaire_id)
+VALUES (:'etab_id'::uuid, :'fiche_id'::uuid, :'annee_id'::uuid, 'avertissement', 'non-régression RETURNING', :'dir_id'::uuid)
+RETURNING id AS sanction_regression_id \gset
+SELECT ok(
+  :'sanction_regression_id' IS NOT NULL,
+  'non-régression : direction sans poste peut créer une sanction (repli est_direction() sur sanctions_ecriture_scolarite)'
+);
 
 RESET ROLE;
 SELECT * FROM finish();
