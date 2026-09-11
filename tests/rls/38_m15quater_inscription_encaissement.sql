@@ -46,7 +46,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(25);
+SELECT plan(27);
 
 -- ---------------------------------------------------------------------------
 -- Établissement (id fixe), 2 années scolaires, 2 classes, comptes.
@@ -150,12 +150,28 @@ SELECT throws_ok(
 
 -- ---------------------------------------------------------------------------
 -- 5. Statut boursier : trace qui/quand automatiquement.
+--
+-- Non-régression (patch 20260906001502) : `dir_id` n'a AUCUN poste RH
+-- rattaché dans ce test (aucun `poste_id` sur son `etablissements_membres`)
+-- — condition explicitement vérifiée ci-dessous, pas seulement supposée —
+-- donc `a_permission(..., 'scolarite.inscription.gerer')` est faux pour lui.
+-- Si la policy UPDATE de `inscriptions` perdait à nouveau son repli
+-- `est_direction()`, l'UPDATE suivant échouerait silencieusement (0 ligne
+-- affectée, sans erreur) et les deux assertions boursier ci-dessous
+-- échoueraient — exactement le bug trouvé lors de la première exécution
+-- locale réelle de ce fichier.
 -- ---------------------------------------------------------------------------
 SELECT public.creer_inscription_nouvel_eleve(
   '42000000-0000-0000-0000-000000000001', 'DIALLO', 'Fatoumata', '2012-06-01',
   '42000000-0000-0000-0000-000000000004', '42000000-0000-0000-0000-000000000003', 'F'
 ) AS fiche2_id \gset
 SELECT id AS inscription2_id FROM public.inscriptions WHERE fiche_eleve_id = :'fiche2_id'::uuid \gset
+
+SELECT is(
+  public.a_permission('42000000-0000-0000-0000-000000000001'::uuid, 'scolarite.inscription.gerer'),
+  false,
+  'précondition du scénario de non-régression : dir_id n''a aucun poste RH/permission dédiée (seul est_direction() doit permettre la suite)'
+);
 
 UPDATE public.inscriptions SET boursier = true WHERE id = :'inscription2_id'::uuid;
 SELECT is(
@@ -220,8 +236,25 @@ SELECT throws_ok(
 
 -- 8b. La direction enregistre un encaissement — saisi_par forcé au serveur
 -- même si un autre id était transmis dans la requête.
+--
+-- Non-régression (patch 20260906001502) : même `dir_id` sans poste RH
+-- (vérifié explicitement ci-dessous, pas seulement `scolarite.inscription.
+-- gerer` comme au-dessus, mais aussi `scolarite.encaissement.gerer` —
+-- seul `est_direction()` doit autoriser cet INSERT). Le `RETURNING`
+-- ci-dessous (via `\gset`) est précisément le chemin qui échouait avant le
+-- patch : `INSERT ... RETURNING` échouait pour TOUT LE MONDE (pas
+-- seulement les comptes sans poste) à cause de la policy SELECT
+-- auto-référentielle `encaissement_visible(id)` — c'est aussi le chemin
+-- réel emprunté par `SupabaseScolariteRepository.enregistrerEncaissement()`
+-- (`.insert(...).select().single()`). Si l'un ou l'autre bug revenait, ce
+-- `\gset` échouerait dur (erreur RLS), arrêtant tout le fichier.
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
+SELECT is(
+  public.a_permission('42000000-0000-0000-0000-000000000001'::uuid, 'scolarite.encaissement.gerer'),
+  false,
+  'précondition du scénario de non-régression : dir_id n''a pas non plus la permission encaissement dédiée'
+);
 INSERT INTO public.encaissements_scolarite
   (etablissement_id, fiche_eleve_id, inscription_id, type_frais, montant, saisi_par)
 VALUES ('42000000-0000-0000-0000-000000000001', :'fiche_id'::uuid, :'inscription1_id'::uuid,
@@ -242,8 +275,25 @@ SELECT is(
   'encaissement : invisible à un tiers'
 );
 
+-- Fixture admin (même précédent que `frais_scolarite_config` en §7) : ce
+-- lien parent↔élève est un préalable au test de visibilité ci-dessous, pas
+-- ce qui est testé. Deux raisons de sortir du contexte `authenticated`
+-- ici plutôt que de rester sur `dir_id` :
+--  1. le trigger `relations_verifie_tenant` (M5) n'est pas SECURITY
+--     DEFINER (comme la majorité des triggers `*_verifie_tenant` du
+--     projet — seuls M9-patch et M15quater dérogent, avec justification
+--     explicite) : son lookup sur `fiches_eleves` est filtré par RLS, donc
+--     resterait sur les claims d'`etranger_id` (laissés actifs par
+--     l'assertion précédente) échouerait avec un `FICHE_AUTRE_ETABLISSEMENT`
+--     trompeur ;
+--  2. la policy d'écriture de `relations_parent_eleve` exige
+--     `a_permission(etablissement_id, 'scolarite.relation.gerer')` — SANS
+--     repli `est_direction()` (`dir_id` n'a pas ce poste dans ce test) ;
+--     hors périmètre de ce patch de signaler/corriger cette policy-là.
+RESET ROLE;
 INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise)
 VALUES ('42000000-0000-0000-0000-000000000001', :'parent_id'::uuid, :'fiche_id'::uuid, 'parent', 'confirmee', true);
+SET LOCAL ROLE authenticated;
 
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'parent_id', 'role', 'authenticated')::text, true);

@@ -94,14 +94,14 @@ replanifier, probablement avec le Port Paiement dans M16-M20.
 | `flutter analyze` | ✅ exécuté — 0 issue |
 | `flutter test` | ✅ exécuté — **202 tests** passent (dont 15 nouveaux pour M14 : JSON de domaine + repository cache/sync_queue) |
 | Tests pgTAP 31-33 (RLS plans/journaux, écritures, fonctions/IA) | ✅ passent en CI (GitHub Actions, `supabase db reset`) — voir historique CI sur `main` |
-| Tests pgTAP 31-33 rejoués **localement** sur ce poste | ❌ **non exécutés** (§4) |
+| Tests pgTAP 31-33 rejoués **localement** sur ce poste | ✅ **rejoués et confirmés le 2026-09-11** — 12/12 assertions passent (§4, mis à jour) |
 
-## 4. Réserve technique — exécution locale des migrations (héritée de la Phase A)
+## 4. Réserve technique — exécution locale des migrations (héritée de la Phase A) — RÉSOLUE le 2026-09-11
 
 `docs/ETAT_PHASE_A.md` notait : *« Aucun outil backend n'est installé sur ce
-poste : ni `supabase` CLI, ni Docker, ni `psql`, ni `deno`. »* Ce n'est plus
-tout à fait exact : à la date de clôture de M14, ce poste dispose de
-**Supabase CLI v2.116.0** (`supabase --version`). En revanche :
+poste : ni `supabase` CLI, ni Docker, ni `psql`, ni `deno`. »* Puis, à la
+clôture de M14, ce poste disposait de la CLI mais ni Docker ni Podman
+n'étaient installables (pas de droits administrateur, pas de WSL2) :
 
 ```text
 $ supabase status
@@ -109,43 +109,158 @@ $ supabase status
   "message":"failed to inspect container health: docker: command not found
   (podman also not found) — install Docker Desktop or Podman and ensure it
   is on PATH"}}
-
-$ supabase db reset
-{"error":{"code":"LegacyLocalDbRunningError","message":"failed to inspect service"}}
 ```
 
-**Ni Docker ni Podman ne sont installés** : `supabase start`/`db reset`
-exigent un runtime de conteneurs pour la Postgres locale, absent de ce
-poste. La CLI seule ne suffit pas à lever la réserve.
+**Résolu le 2026-09-11** : Docker Desktop reste bloqué sur ce poste (son
+installeur exige une élévation UAC interactive, impossible en session
+automatisée — échec confirmé, code de sortie `4294967291`), mais **Podman
+CLI 5.8.3 s'installe et fonctionne sans élévation**, et `podman machine
+start` (backend WSL2) a été rendu fonctionnel sur ce poste — voir
+`ANALYSE_GLOBALE.md`/mémoire de session pour le détail des tentatives. Avec
+Podman sur le `PATH`, `supabase start` / `supabase db reset` /
+`supabase test db --local tests/rls` s'exécutent normalement en local.
 
-**Conséquence pour M14 précisément** — ce qui reste vérifié uniquement en
-CI, jamais rejoué en local sur ce poste :
+**Exécution réelle du 2026-09-11** (pas seulement CI) :
 
-1. **Verrouillage/intégrité des écritures** : au-delà du garde-fou
-   applicatif côté client (§3.3), aucune exécution locale n'a confirmé le
-   comportement RLS/trigger sous conditions de concurrence réelles
-   (écritures simultanées, transactions longues).
-2. **Contraintes de partie double** (`ECRITURE_TENANT_INCOHERENT`,
-   `ECRITURE_COMPTES_IDENTIQUES`) : vérifiées par pgTAP (test 32) en CI
-   uniquement ; le comportement exact de Postgres local (versions, réglages)
-   n'a pas été confirmé identique sur ce poste.
-3. **RLS multi-tenant sur les comptes** (`plans_comptables`, `journaux`,
-   `ecritures_comptables`, `balances`) : isolation vérifiée par pgTAP
-   (test 31) en CI uniquement, jamais rejouée localement.
+```text
+$ supabase db reset
+[...19 migrations appliquées...]
+Finished supabase db reset on branch main.
 
-**Pour lever cette réserve** (dès qu'un runtime de conteneurs est
-disponible sur ce poste ou un autre) :
+$ supabase test db --local tests/rls
+tests/rls/31_m14_plans_journaux.sql .................. ok
+tests/rls/32_m14_ecritures.sql ....................... ok
+tests/rls/33_m14_fonctions_comptables.sql ............ ok
+[... 35 autres fichiers, tous ok ...]
+All tests successful.
+```
+
+**Pour M14 précisément : les 12 assertions des tests 31-33 (verrouillage/
+intégrité des écritures, contraintes de partie double, isolation RLS
+multi-tenant sur `plans_comptables`/`journaux`/`ecritures_comptables`/
+`balances`) sont désormais confirmées indépendamment sur une instance
+Postgres locale réelle, pas seulement en CI.** Aucun défaut trouvé côté M14.
+
+Pour reproduire sur un autre poste :
 
 ```bash
-# 1. Installer Docker Desktop ou Podman, puis :
+winget install --id RedHat.Podman   # pas Docker Desktop (exige admin)
+podman machine init && podman machine start
 supabase start
-supabase db reset          # rejoue migrations + seed, y compris M14
-supabase test db           # ou : rejouer manuellement tests/rls/31_*.sql à 33_*.sql via pgTAP
+supabase db reset
+supabase test db --local tests/rls
 ```
 
-Tant que cette commande n'a pas été exécutée sur un poste équipé, la
-garantie d'intégrité du grand livre M14 repose **uniquement** sur la CI
-GitHub Actions — un socle réel mais externe à ce poste de développement.
+## 4bis. Addendum — M15quater : première exécution locale réelle, deux défauts trouvés et corrigés (2026-09-11)
+
+Ce document couvre nominalement M13→M15 ; cet addendum documente M15quater
+(module suivant, cf. `docs/contrats/M15quater_inscription_encaissement.md`)
+parce que c'est le déblocage de l'outillage local ci-dessus (§4) qui a rendu
+possible sa découverte — et parce que l'historique complet, pas seulement
+la conclusion, est la preuve que cette vérification a servi à quelque
+chose.
+
+**Constat de départ** : `main` local avait alors 13 commits d'avance sur
+`origin/main`, jamais poussés (règle du projet : pas de push sans accord
+explicit). La CI GitHub Actions n'avait donc **jamais exécuté** M15quater
+ni son test pgTAP (`tests/rls/38_m15quater_inscription_encaissement.sql`).
+« CI verte » n'a jamais été vrai pour ce module — c'était sa toute première
+exécution réelle, nulle part.
+
+**Échec initial** (`supabase test db --local tests/rls`, avant tout
+correctif) :
+
+```text
+# Failed test 9: "statut boursier : boursier_modifie_par enregistré automatiquement"
+#         have: NULL
+#         want: f6452be7-0b92-4b59-909e-4b13c11e43d3
+# Failed test 10: "statut boursier : boursier_modifie_le enregistré automatiquement"
+ERROR:  new row violates row-level security policy for table "encaissements_scolarite"
+Parse errors: Bad plan.  You planned 25 tests but ran 13.
+Result: FAIL
+```
+13 assertions exécutées sur 25 planifiées, 2 échecs explicites puis arrêt
+sur erreur RLS bloquante.
+
+**Cause racine 1 — bascule boursier bloquée pour une direction sans poste
+RH.** La policy UPDATE de `inscriptions` (`inscriptions_ecriture_scolarite`,
+héritée de M5) n'autorisait que
+`a_permission(etablissement_id, 'scolarite.inscription.gerer')` — sans le
+repli `est_direction(etablissement_id)` que portent pourtant les RPC
+`creer_inscription_nouvel_eleve`/`creer_reinscription`. Un compte direction
+sans poste RH explicite ne pouvait donc pas faire
+`UPDATE inscriptions SET boursier = ...` : `UPDATE 0`, sans erreur, échec
+silencieux (confirmé par test isolé : `est_direction()` renvoyait pourtant
+`true`).
+
+**Cause racine 2 — `INSERT ... RETURNING` sur `encaissements_scolarite`
+cassé pour tout le monde.** La policy SELECT `encaissements_select_visible`
+s'appuyait sur `encaissement_visible(id)`, une fonction qui **re-interroge
+`encaissements_scolarite` par id** — cette relecture auto-référentielle ne
+voit pas la ligne tout juste insérée au moment où Postgres vérifie
+implicitement la policy SELECT pour construire le résultat de `RETURNING`
+(confirmé par test manuel isolé, transaction annulée : le même `INSERT`
+sans `RETURNING` réussit ; remplacer la policy par la forme inline
+`est_personnel(etablissement_id) OR fiche_visible(fiche_eleve_id)` fait
+réussir `RETURNING`). **C'est le chemin de code réel de l'app** —
+`SupabaseScolariteRepository.enregistrerEncaissement()` fait
+`.insert(...).select().single()` — un vrai encaissement saisi dans l'app
+aurait échoué de la même façon, pour n'importe quel utilisateur, direction
+comprise. Défaut bloquant, pas un simple cas limite de permissions.
+
+**Recherche systémique** (même anti-pattern — policy SELECT basée sur une
+fonction `xxx_visible(id)` auto-référentielle — combiné à un
+`.insert(...).select()` client réel) : trouvé également sur `notifications`
+(M9), `sanctions` (M7), `evaluations` (M6), `contrats` (M8) ; et, sans
+exposition client actuelle (aucun code Flutter n'appelle encore
+`groupes_discussion`/`messages_groupe`), sur `groupes_discussion` (M9-patch).
+**Signalé ici, volontairement non corrigé dans ce patch** — portée limitée
+à M15quater le 2026-09-11 ; à traiter dans un patch dédié après décision du
+porteur de projet.
+
+**Défaut annexe trouvé en poussant le test plus loin** : la fixture de test
+liant un parent à un élève (§8c du test 38) s'exécutait par erreur avec les
+claims JWT d'un tiers non affilié (reliquat de l'assertion précédente),
+révélant que `relations_verifie_tenant()` (M5) n'est pas `SECURITY
+DEFINER` — comme la majorité des triggers `*_verifie_tenant` du projet,
+seuls M9-patch et M15quater dérogent avec justification explicite — donc
+son lookup RLS-filtré renvoie `FICHE_AUTRE_ETABLISSEMENT` au lieu d'un
+refus propre pour un acteur sans visibilité. Corrigé comme **bug de test**
+(remise à `RESET ROLE` pour cette fixture, même précédent que
+`frais_scolarite_config` en §7) — pas un défaut applicatif : en usage réel,
+cet INSERT brut sur `relations_parent_eleve` est fait par un acteur qui a
+déjà la permission `scolarite.relation.gerer` (également sans repli
+`est_direction()`, même famille de défaut que la cause racine 1 — signalé,
+non corrigé, même portée que ci-dessus).
+
+**Correctif appliqué** : migration
+`supabase/migrations/20260906001502_m15quater_patch_rls_boursier_encaissement.sql`
+(policy `inscriptions_ecriture_scolarite` avec repli `est_direction()` ;
+policy `encaissements_select_visible` sous forme inline). Test 38 renforcé
+avec 2 assertions de non-régression explicites (précondition « ce compte
+direction n'a aucun poste RH ») — plan porté de 25 à **27**.
+
+**Confirmation finale** (`supabase test db --local tests/rls`, après
+correctifs) :
+
+```text
+tests/rls/31_m14_plans_journaux.sql .................. ok
+tests/rls/32_m14_ecritures.sql ....................... ok
+tests/rls/33_m14_fonctions_comptables.sql ............ ok
+[...]
+tests/rls/38_m15quater_inscription_encaissement.sql .. ok
+All tests successful.
+Files=38, Tests=206, Result: PASS
+```
+**27/27 pour le test 38, et les 37 autres fichiers (dont 31-33) toujours
+tous verts** — les deux correctifs n'ont rien cassé ailleurs.
+
+**Reste ouvert, hors périmètre de ce patch** : le même anti-pattern
+auto-référentiel sur `notifications`/`sanctions`/`evaluations`/`contrats`
+(et `groupes_discussion`, non exposé), ainsi que l'absence de repli
+`est_direction()` sur `relations_parent_eleve`. Le point de contrôle
+M15quater proprement dit (rapport d'écart fonctionnel, etc.) reste à
+statuer séparément.
 
 ## 5. Reste à faire
 
