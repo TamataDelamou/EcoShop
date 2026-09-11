@@ -281,6 +281,7 @@ délivré** par migrations SQL est le suivant.
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 | M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré, retiré, puis reconstruit après M15quater, voir M15ter §7 |
 | M15quater | Inscription, réinscription & encaissement de scolarité | `20260906001501_m15quater_inscription_encaissement.sql` | [M15quater](./docs/contrats/M15quater_inscription_encaissement.md) | inséré hors plan §4.3, entre M15ter et M16, devant les ~8 autres écarts de l'audit |
+| M16 | IA à rôles (en cours) — sous-livrable 1/7 : score de risque par élève | `20260906001504_m16_materialisation_risque_reussite.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -375,6 +376,35 @@ RETURNING). Résultat, cinq tables corrigées :
 Chaque correction accompagnée d'un test pgTAP de non-régression explicite
 (`INSERT ... RETURNING` réel, ou compte direction sans poste RH). Suite
 complète (38 fichiers, 211 assertions) reconfirmée verte après coup.
+
+**M16 — IA à rôles** (ouvert le 2026-09-11, cf.
+`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.5) : ordre de construction établi à partir
+d'un état des lieux `ecoshop_flutter` des 5 rôles IA (pas l'ordre du cahier) —
+score de risque par élève → bannière dashboard directeur → Edge Functions
+IA/Tuteur IA/Directeur-Adviser → Parent IA → Scan d'exercice.
+
+*Sous-livrable 1/7 — score de risque par élève* (clos le 2026-09-11, cf.
+`supabase/migrations/20260906001504_m16_materialisation_risque_reussite.sql`,
+`tests/rls/39_m16_risque_reussite.sql`) : **ce n'est pas l'ajout d'un score
+qui n'existait pas** — `calculer_score_decrochage` (M7, 50 % absences non
+justifiées + 20 % retards non justifiés + 30 % moyenne) et le type d'agrégat
+`statistiques_agregats.risque_reussite` (M6) existaient déjà, antérieurs à
+M16, mais n'étaient jamais matérialisés ni consommés par aucun écran ni
+aucune fonction IA. Ce sous-livrable **persiste et expose un score par
+élève qui existait déjà côté backend** : `materialiser_risque_reussite`
+(service_role, même pattern que `generer_alertes_decrochage`) écrit le
+résultat de `calculer_score_decrochage` dans `statistiques_agregats` (une
+ligne par fiche/année, upsert versionné) ; `risque_reussite_actuel` l'expose
+en relecture (SECURITY DEFINER — visibilité personnel/`fiche_visible`
+revérifiée explicitement dans la fonction, la RLS de la table ne s'appliquant
+pas à l'intérieur d'une fonction SECURITY DEFINER). Écart source documenté
+et **assumé, pas importé** : `ecoshop_flutter` calcule un score différent
+(70 % tendance des moyennes sur ~3 mois + 30 % présence, `NotesService.
+recalculerRisqueEchec`) — décision : ne pas remplacer la formule
+`calculer_score_decrochage` déjà testée en production M7, pour ne pas
+introduire un second score divergent sur le même élève ni changer le
+comportement déjà éprouvé de `alertes_decrochage`. Poids/seuil de M7
+inchangés. Suite complète reconfirmée verte (39 fichiers, 222 assertions).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
