@@ -34,9 +34,18 @@ class EcranSuiviVieScolaire extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.gavel_outlined),
             tooltip: 'Sanctions',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => EcranSanctions(fiche: fiche)),
-            ),
+            onPressed: () async {
+              final inscriptions = await ref.read(inscriptionsDeFicheProvider(fiche.id).future);
+              if (!context.mounted) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EcranSanctions(
+                    fiche: fiche,
+                    anneeScolaireId: inscriptions.isEmpty ? null : inscriptions.first.anneeScolaireId,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

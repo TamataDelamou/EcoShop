@@ -151,6 +151,40 @@ Presence construirePresenceSaisie({
   );
 }
 
+/// Construit une [Sanction] déclarée manuellement (origine humaine, jamais
+/// `ia`) — l'`id` fourni est un simple placeholder, ignoré par
+/// `SupabaseVieScolaireRepository.proposerSanction` (qui le retire du
+/// payload avant insertion, le serveur générant le vrai id) : contrairement
+/// à `construirePresenceSaisie`/`construireRetardSaisie`, aucune sémantique
+/// d'upsert hors-ligne n'existe ici (une sanction exige une connexion active,
+/// voir `CachedVieScolaireRepository`).
+Sanction construireSanctionDeclaree({
+  required String etablissementId,
+  required String ficheEleveId,
+  required String anneeScolaireId,
+  required String decisionnaireId,
+  required TypeSanction typeSanction,
+  required String motif,
+  required DateTime dateDebut,
+  DateTime? dateFin,
+  String? contexteEducatif,
+  StatutSanction statut = StatutSanction.notifiee,
+}) {
+  return Sanction(
+    id: '',
+    etablissementId: etablissementId,
+    ficheEleveId: ficheEleveId,
+    anneeScolaireId: anneeScolaireId,
+    typeSanction: typeSanction,
+    motif: motif,
+    dateDebut: dateDebut,
+    dateFin: dateFin,
+    decisionnaireId: decisionnaireId,
+    contexteEducatif: contexteEducatif,
+    statut: statut,
+  );
+}
+
 /// Construit un [Retard] prêt à être enregistré (un par fiche et par jour,
 /// contrainte `retards_fiche_date_unique`).
 Retard construireRetardSaisie({
