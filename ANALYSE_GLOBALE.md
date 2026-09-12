@@ -823,17 +823,37 @@ la tentative d'exécution locale (Docker/Podman).
 `docs/AUDIT_ECOSHOP_FLUTTER.md` §0.1) : schéma RLS complet + purge de la
 fuite locale entre comptes à la déconnexion, 15 assertions pgTAP dédiées.
 
-**M16 — IA à rôles** reste **bloqué** tant que le reste du rapport d'écart
-rétroactif [`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md)
-(M0 → M15, règle transversale §4.2.5) n'a pas été examiné et arbitré module
-par module par le porteur de projet — les points les plus sensibles
-(protection des mineurs en M9, génération PDF des bulletins/reçus,
-inscription/encaissement de scolarité) sont désormais traités, mais ~8
-autres écarts restent à arbitrer un par un (parcours d'entrée rôles à
-privilège, onboarding enseignant/direction, paie RH dégradée, exceptions
-d'emploi du temps, etc. — liste complète §11 de l'audit). L'ouverture de M16
-devra aussi intégrer les conclusions de cet audit concernant Parent IA
-(vérifier que l'implémentation `ecoshop_flutter` existante, cf.
-`PARENT_IA.md`, n'est pas une base à ignorer), ainsi que la replanification
-des verticaux décalés déjà identifiée (§4.4) : Port Paiement, moteur de
+**M16 — IA à rôles** a été **ouvert le 2026-09-11** (cf. §4.4 ci-dessus,
+`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.5) sur un critère plus étroit que la règle
+transversale §4.2.5 ne le prévoyait à la lettre : le déblocage Docker/Podman
+et les deux patches RLS (M15quater, patch transversal) empiriquement vérifiés
+— pas l'arbitrage complet du rapport d'écart rétroactif
+[`docs/AUDIT_ECOSHOP_FLUTTER.md`](./docs/AUDIT_ECOSHOP_FLUTTER.md) (M0 → M15).
+Les points les plus sensibles (protection des mineurs en M9, génération PDF
+des bulletins/reçus, inscription/encaissement de scolarité) étaient déjà
+traités à cette date ; ~9 autres écarts (§11 de l'audit) restaient non
+arbitrés au moment de l'ouverture, et les 5 sous-livrables M16 1/7 → 5/7 ont
+été construits pendant que cet arbitrage restait en suspens — écart de
+processus par rapport à §4.2.5, constaté et documenté ici le 2026-09-12
+(clôture du sous-livrable 5/7), pas retrouvé plus tôt car ce paragraphe
+lui-même n'avait pas été mis à jour depuis l'audit initial.
+
+**Mise à jour du 2026-09-12** (vérification croisée avec le carnet de
+gouvernance du porteur de projet) : sur ces ~9 écarts, **5 avaient déjà été
+arbitrés ailleurs** (carnet de gouvernance), simplement jamais répercutés
+dans ce document ni dans `AUDIT_ECOSHOP_FLUTTER.md` §11-§12 — désormais fait,
+tous différés avec une cible (parcours d'entrée → M2/M3 ; plafond de comptes
+parents → futur module d'accueil ; paie RH → M8bis ; séances ponctuelles →
+M11 ; stocks/anti-survente → M15). **Les 4 écarts restants sont en cours
+d'arbitrage explicite dans le cadre de M16 sous-livrable 6/7** (rapport
+d'écart global de clôture de M16, qui les traitera un par un avec une
+décision implémenter/différer/abandonner, pas seulement en les mentionnant) :
+génération de bulletins pour une classe entière (M6), déclaration/changement
+de statut d'une sanction disciplinaire (M7), raccordement de l'écran
+prototype de messagerie de groupe au backend sécurisé du patch M9, et
+tableau de bord directeur consolidé Finances+Scolarité (M10). Le
+sous-livrable 6/7 devra aussi intégrer les conclusions de cet audit
+concernant Parent IA (déjà fait en 4/7 — état des lieux `ecoshop_flutter`
+mené avant construction, voir §4.4 ci-dessus) et la replanification des
+verticaux décalés déjà identifiée (§4.4) : Port Paiement, moteur de
 questions/quiz, profil de maîtrise, préparation aux examens.

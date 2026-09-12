@@ -512,17 +512,17 @@ Ces écarts ont été proposés en priorité haute par les agents d'audit (impac
 utilisateur élevé, coût de mise en œuvre raisonnable ou brique serveur déjà
 prête) — **à confirmer un par un avec le porteur de projet** :
 
-1. Parcours d'entrée Enseignant/Direction/Vendeur/Fondateur réseau (M0-M3)
-2. Plafond de comptes parents liés à une fiche élève (M0-M3)
+1. Parcours d'entrée Enseignant/Direction/Vendeur/Fondateur réseau (M0-M3) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée, cible M2/M3**
+2. Plafond de comptes parents liés à une fiche élève (M0-M3) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée avec le mécanisme anti-brute-force existant (ch. 5.8), cible un futur module d'accueil (numéro de module pas encore attribué)**
 3. ~~Création d'inscription + détection de double inscription (M5)~~ — **corrigé** (M15quater)
-4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6, non résolu).
-5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7)
-6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8)
-7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend.
-8. Tableau de bord directeur consolidé Finances+Scolarité (M10)
-9. Séances ponctuelles / annulation d'un cours (M11)
+4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
+5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
+6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée, cible M8bis**
+7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
+8. Tableau de bord directeur consolidé Finances+Scolarité (M10) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**. Distinct du « tableau de bord réseau multi-établissements » ci-dessus (hors périmètre de cet audit, futur audit réseau dédié) : celui-ci consolide Finances+Scolarité pour UN SEUL établissement, l'autre agrège PLUSIEURS établissements pour un rôle réseau.
+9. Séances ponctuelles / annulation d'un cours (M11) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée sous « planification », cible M11**
 10. ~~Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14)~~ — **corrigé** (M15quater : entité `encaissements_scolarite` dédiée, reçu PDF reconstruit dessus — voir §0.2).
-11. Gestion des stocks et anti-survente (M13)
+11. Gestion des stocks et anti-survente (M13) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée avec le stock marketplace, cible M15**
 
 ---
 
@@ -530,10 +530,10 @@ prête) — **à confirmer un par un avec le porteur de projet** :
 
 Ce rapport doit être examiné par le porteur de projet, écart par écart. Les
 décisions (implémenter maintenant / différer vers quel module / abandonner et
-pourquoi) seront reportées dans `ANALYSE_GLOBALE.md` §4.4 au fur et à mesure.
-**M16 (IA à rôles) reste bloqué tant que cet arbitrage n'a pas eu lieu.**
-M15bis (thèmes internationaux & dark mode) n'est pas concerné par ce blocage et
-a été traité en parallèle (cf. `docs/contrats/M15bis_themes_dark_mode.md`).
+pourquoi) sont reportées dans `ANALYSE_GLOBALE.md` §4.4 au fur et à mesure.
+M15bis (thèmes internationaux & dark mode) n'était pas concerné par le
+blocage transversal de M16 et a été traité en parallèle (cf.
+`docs/contrats/M15bis_themes_dark_mode.md`).
 
 **M15quater — Inscription, réinscription & encaissement de scolarité** est
 livré (cf. `docs/contrats/M15quater_inscription_encaissement.md`) : création
@@ -547,10 +547,17 @@ tests renforcés (§0.4) ; installation locale de Docker/Podman tentée et
 bloquée par trois facteurs vérifiés (§0.4) — non exécutées localement, non
 plus par manque de tentative.
 
-**~8 écarts restants** (parcours d'entrée rôles à privilège, paie RH, tableau
-de bord directeur, séances ponctuelles, gestion des stocks, etc. — liste
-complète §11) restent en attente d'arbitrage par le porteur de projet, non
-traités.
+**Statut de l'arbitrage au 2026-09-12** (mise à jour suite à une vérification
+croisée avec le carnet de gouvernance du porteur de projet, en parallèle de
+la clôture de M16 sous-livrable 5/7 — voir `ANALYSE_GLOBALE.md` §4.4) : sur
+les 9 écarts non pleinement résolus listés ci-dessus, **5 avaient déjà été
+arbitrés ailleurs** (carnet de gouvernance) mais jamais répercutés dans ce
+document ni dans `ANALYSE_GLOBALE.md` — c'est désormais fait (items 1, 2, 6,
+9, 11 ci-dessus, tous différés avec une cible). **Les 4 restants (items 4
+reste, 5, 7 reste, 8) sont en cours d'arbitrage explicite dans le cadre de
+M16 sous-livrable 6/7** (rapport d'écart global de clôture de M16), avec un
+paragraphe de contexte dédié à chacun avant décision — voir
+`ANALYSE_GLOBALE.md` §4.4.
 
 ---
 
