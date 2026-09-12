@@ -12,6 +12,8 @@ import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
+import '../../chat_ia/domain/persona_ia.dart';
+import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
@@ -324,6 +326,25 @@ class _VueProfil extends ConsumerWidget {
             MaterialPageRoute(builder: (_) => const EcranPreferencesApparence()),
           ),
         ),
+        if (PersonaIa.depuisRoleRacine(p.roleRacine) != null)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              final persona = PersonaIa.depuisRoleRacine(p.roleRacine)!;
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.auto_awesome_outlined),
+                title: Text(persona.libelle),
+                subtitle: const Text('Assistant IA — signal, pas une décision automatisée'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranChatIa(etablissementId: etablissement.id, persona: persona),
+                  ),
+                ),
+              );
+            },
+          ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.notifications_outlined),

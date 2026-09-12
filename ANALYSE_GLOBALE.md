@@ -476,12 +476,57 @@ tenues :
   toute fuite nominative (nom/matricule réels) dans ce qui est effectivement
   envoyé côté simulation Anthropic — vérifié par recherche explicite dans
   les logs de la simulation, pas seulement par lecture de code.
-- **Non construit dans cette passe, à trancher avant M16 4/7 ou en fin de
-  module** : les écrans Flutter du chat (équivalent `AiChatScreen`/
-  `ai_service.dart`) — le cadrage validé portait sur l'architecture serveur,
-  pas explicitement sur l'IHM cliente.
+- **Non construit dans cette passe initiale** : les écrans Flutter du chat
+  (équivalent `AiChatScreen`/`ai_service.dart`) — le cadrage validé portait
+  sur l'architecture serveur, pas explicitement sur l'IHM cliente. Complété
+  juste après, voir ci-dessous.
 
 Suite pgTAP reconfirmée verte (41 fichiers, 257 assertions).
+
+*Complément sous-livrable 3/7 — écrans Flutter du chat* (même jour) :
+`lib/features/chat_ia/` (domaine `MessageChatIa`/`DetailElevePseudonymise`/
+`PersonaIa`, port `ChatIaRepository` + implémentation Supabase,
+`EcranChatIa`), branché dans `_VueProfil` de `coquille_app.dart` pour les 3
+rôles couverts (élève/enseignant/direction).
+
+- **Un seul écran pour les 3 personas** — le flux et les garanties de
+  sécurité sont identiques, seul `PersonaIa.libelle` change l'affichage ;
+  le rôle réel reste re-dérivé côté serveur à chaque appel, jamais choisi ni
+  transmis par cet écran.
+- **Couleurs/texte exclusivement via `context.palette`/`Theme.of(context)`**
+  (thème M15bis) — aucune constante `AppColors` codée en dur, cohérent avec
+  la migration déjà actée dans ce thème (`app_palette.dart`) qui a
+  entièrement supprimé cette ancienne classe.
+- **Flux à 3 couches côté UI** : le bouton structuré (icône « analyser »,
+  direction uniquement) ouvre un dialogue de ciblage
+  (établissement/classe) puis appelle `demarrer_analyse_risque_echec` —
+  jamais un texte libre ; la réponse groundée s'affiche normalement ; une
+  puce d'action « Qui sont-ils ? », visible seulement une fois la
+  conversation groundée, envoie ensuite un message ordinaire à
+  `envoyer_message_ia` — c'est le serveur (rôle + `grounding` relus en base)
+  qui décide d'exposer l'outil, jamais l'écran.
+- **Mapping pseudonyme → identité affiché uniquement côté client**, replié
+  par défaut, jamais réinjecté dans une requête à l'IA — reçu une fois en
+  retour de `envoyer_message_ia`, gardé en mémoire locale de l'écran
+  seulement (pas persisté dans `ai_messages`, dont le contenu ne contient
+  que le texte, lui-même toujours en pseudonymes).
+- **Volontairement sans décorateur de cache/file hors-ligne** (contrairement
+  à `RapportsRepository`) : un chat IA suppose une connexion active, il n'y
+  a rien de sensé à mettre en file d'attente hors-ligne pour ce port.
+- **Portée limitée assumée** : une conversation par ouverture d'écran, pas
+  de liste de conversations passées à reprendre — le flux à 3 couches est
+  entièrement couvert, une liste d'historique est un complément UI
+  indépendant, pas un pré-requis de sécurité ; à ajouter plus tard si
+  besoin exprimé.
+- **Vérifié** : `flutter analyze` propre (0 erreur/avertissement, seulement
+  des notes de style déjà présentes ailleurs dans le code base) ; suite
+  `flutter test` complète verte (272 tests, dont 9 nouveaux — 7 tests de
+  domaine + 2 tests de widget qui rejouent réellement le tap utilisateur :
+  envoi libre côté élève, puis côté direction le déclenchement structuré →
+  réponse groundée → tap sur « Qui sont-ils ? » → révélation du détail
+  pseudonymisé — avec un faux port `ChatIaRepository`, la couche SQL/Edge
+  Functions elle-même ayant déjà été vérifiée bout-en-bout en local dans la
+  passe précédente).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
