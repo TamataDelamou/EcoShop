@@ -11,7 +11,6 @@ import '../../communication/presentation/ecran_preferences_canaux.dart';
 import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
-import '../../communication/prototype/presentation/ecran_messagerie_prototype.dart';
 import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
@@ -458,18 +457,6 @@ class _VueProfil extends ConsumerWidget {
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => EcranPreferencesCanaux(profileId: p.id),
-            ),
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.forum_outlined),
-          title: const Text('Messagerie'),
-          subtitle: const Text('Prototype local — non synchronisé'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  EcranMessagerie(profileId: p.id, profileNom: p.nomAffiche),
             ),
           ),
         ),
