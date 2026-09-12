@@ -751,6 +751,101 @@ lieux à faire, à la différence des sous-livrables précédents.
   (+2 nouveaux — consentement bloquant tant que texte ou case manquent,
   démarrage du scan puis continuité du guidage via `ChatIaRepository`).
 
+*Sous-livrable 6/7 — Rapport d'écart global de clôture M16* (clos le
+2026-09-12) : n'ajoute aucune fonctionnalité IA nouvelle — clôt l'arbitrage
+transversal §4.2.5 resté ouvert pendant la construction des 5 sous-livrables
+précédents, consolide le jalon de QA pré-lancement, et récapitule le module.
+
+**1. Arbitrage des écarts `AUDIT_ECOSHOP_FLUTTER.md` §11-§12 — désormais
+clos.** Sur les ~9 écarts non pleinement résolus identifiés à l'ouverture de
+M16 (2026-09-11), vérification croisée avec le carnet de gouvernance du
+porteur de projet le 2026-09-12 :
+
+- **5 étaient déjà arbitrés ailleurs**, simplement jamais répercutés dans le
+  dépôt — corrigé dans `AUDIT_ECOSHOP_FLUTTER.md` §11-§12 : parcours
+  d'entrée rôles à privilège → différé, cible M2/M3 ; plafond de comptes
+  parents → différé avec l'anti-brute-force existant, cible un futur module
+  d'accueil ; paie RH → différé, cible M8bis ; séances ponctuelles/
+  annulation de cours → différé, cible M11 ; gestion des stocks/
+  anti-survente → différé, cible M15.
+- **2 ont été corrigés dans le cadre de ce sous-livrable**, après un
+  paragraphe de contexte par écart (nature du manque, ampleur, risque) pour
+  éviter un arbitrage à l'aveugle :
+  - **Déclaration/changement de statut d'une sanction disciplinaire (M7)**
+    — manque purement UI (`proposerSanction()`/`changerStatutSanction()` et
+    la policy RLS existaient déjà, testés) : formulaire de déclaration +
+    menu de changement de statut ajoutés à `EcranSanctions`, même règle de
+    visibilité que le reste de l'écran (`estDirection`). 313 assertions
+    pgTAP inchangées (aucun backend touché) ; 7 tests Flutter ajoutés.
+  - **Écran prototype de messagerie de groupe non raccordé (M9)** — vérifié
+    directement reachable par tout rôle y compris élève (aucune garde),
+    contrairement à la propre recommandation de l'audit (§0.1). Le
+    prototype étant 100 % local et non synchronisé (aucune fuite réseau
+    réelle possible, la fuite inter-comptes sur appareil partagé étant déjà
+    corrigée par `session_logout.dart`), l'entrée « Messagerie » a été
+    retirée du menu Profil pour tous les rôles — le raccordement réel au
+    backend sécurisé (`groupes_discussion`/`messages_groupe`) reste un
+    chantier séparé, différé, cible à définir.
+- **2 différés, avec une cible distincte chacun** :
+  - **Génération de bulletins pour une classe entière (M6)** — différé vers
+    D5 (Phase D, moteur d'impression multi-formats). Ampleur bornée : les
+    briques par élève existent déjà et sont testées (`construireBulletinPdf`,
+    `EcranBulletins`), il ne manque qu'un point d'entrée classe + une boucle
+    d'assemblage, aucun nouveau backend. Aucune échéance de fin de trimestre
+    imminente signalée par le porteur de projet à ce jour — priorité
+    inchangée, à réévaluer si une échéance réelle apparaît.
+  - **Tableau de bord directeur consolidé Finances+Scolarité (M10)** —
+    différé, **nouveau backlog distinct** (ni D5, ni le futur audit réseau
+    →M19 : celui-ci consolide deux domaines pour UN établissement, M19
+    agrège plusieurs établissements pour un rôle réseau — aucun
+    recouvrement). Le plus gros des 4 : nécessite d'exposer les KPI
+    financiers (M14) à côté des KPI scolarité existants ET un concept
+    réellement nouveau (seuils d'alerte configurables par établissement,
+    inexistant aujourd'hui) — hors périmètre d'un « petit complément ».
+
+**2. Jalon de QA pré-lancement consolidé — point ouvert, transversal aux
+trois sous-livrables conversationnels.** Constat fait à la clôture de 5/7,
+qui s'applique en réalité identiquement à 3/7 et 4/7 : tout comportement qui
+dépend du raisonnement réel du modèle Anthropic (garde-fou pédagogique du
+Tuteur-IA/Scan-Exercice — jamais la solution/réponse finale sans guidage
+progressif sauf demande explicite et répétée ; jugement de l'IA sur le
+grounding/l'usage excessif en Parent IA) n'a été vérifié QUE par relecture
+des prompts système, jamais en conditions réelles — les trois sous-livrables
+utilisent exclusivement le stub Anthropic local
+(`ANTHROPIC_URL_OVERRIDE`/`supabase/functions/.env`) pour tous leurs tests,
+y compris les vérifications bout-en-bout par appel HTTP réel. Décision
+explicite (2026-09-12) : ne pas exposer/chercher de clé API réelle pendant
+la construction. **Reporté formellement à un jalon de QA pré-lancement
+unique, avec une vraie clé Anthropic, avant toute ouverture réelle de
+Tuteur-IA/Directeur-Adviser (3/7), Parent IA (4/7) et Scan-Exercice (5/7)
+à de vrais élèves/enseignants/directions** — ni résolu, ni non applicable,
+condition de passage explicite avant mise en production de ces trois
+sous-livrables.
+
+**3. Récapitulatif des 5 sous-livrables clos (1/7 → 5/7)**, tous vérifiés
+localement (podman/WSL2, `supabase db reset` + pgTAP) sans régression
+cumulée : score de risque par élève (1/7, réutilise `calculer_score_
+decrochage` de M7 sans nouvelle formule) → bannière dashboard directeur
+(2/7, 7ᵉ indicateur sur `consolider_indicateurs_etablissement`) → Edge
+Functions IA à 3 couches + Tuteur-IA/Directeur-Adviser (3/7, garde-fou
+RLS conçu dès le départ, jamais découvert après coup) + son **complément**
+écrans Flutter (`EcranChatIa`, un seul écran pour les 3 personas) et
+correctif de continuité de conversation (`obtenir_conversation_libre`,
+trouvé et corrigé le jour même) → Parent IA (4/7, déclaration manuelle,
+verrou 30 jours non contournable, bug réel de trigger non `SECURITY
+DEFINER` trouvé et corrigé par les vérifications demandées) → Scan et
+résolution d'exercice (5/7, fonctionnalité entièrement nouvelle, photo
+jamais transmise, isolation inter-établissement renforcée par un test
+dédié). pgTAP : `Files=44, Tests=313, PASS` à la clôture de ce 6/7 (313
+inclut les 26 assertions de 5/7 renforcé, inchangé par les corrections
+Flutter #5/#7 de ce sous-livrable, aucun backend touché). `flutter test` :
+294 tests PASS (+7 pour la correction #5).
+
+**Commits** (locaux, non poussés sauf mention contraire) : `4882982`/
+`bb15226`/`89c9d49` (5/7, **poussés sur `origin/main`**), `44efcdd`
+(réconciliation gouvernance §11-§12), `78fc8d1` (correction #5, sanctions),
+`5164ddb` (correction #7, masquage Messagerie).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 
@@ -844,16 +939,13 @@ arbitrés ailleurs** (carnet de gouvernance), simplement jamais répercutés
 dans ce document ni dans `AUDIT_ECOSHOP_FLUTTER.md` §11-§12 — désormais fait,
 tous différés avec une cible (parcours d'entrée → M2/M3 ; plafond de comptes
 parents → futur module d'accueil ; paie RH → M8bis ; séances ponctuelles →
-M11 ; stocks/anti-survente → M15). **Les 4 écarts restants sont en cours
-d'arbitrage explicite dans le cadre de M16 sous-livrable 6/7** (rapport
-d'écart global de clôture de M16, qui les traitera un par un avec une
-décision implémenter/différer/abandonner, pas seulement en les mentionnant) :
-génération de bulletins pour une classe entière (M6), déclaration/changement
-de statut d'une sanction disciplinaire (M7), raccordement de l'écran
-prototype de messagerie de groupe au backend sécurisé du patch M9, et
-tableau de bord directeur consolidé Finances+Scolarité (M10). Le
-sous-livrable 6/7 devra aussi intégrer les conclusions de cet audit
-concernant Parent IA (déjà fait en 4/7 — état des lieux `ecoshop_flutter`
-mené avant construction, voir §4.4 ci-dessus) et la replanification des
-verticaux décalés déjà identifiée (§4.4) : Port Paiement, moteur de
-questions/quiz, profil de maîtrise, préparation aux examens.
+M11 ; stocks/anti-survente → M15). **Les 4 écarts restants ont été tranchés
+dans le cadre de M16 sous-livrable 6/7** (rapport d'écart global de clôture,
+détaillé ci-dessous) : 2 corrigés immédiatement (sanctions M7, écran
+Messagerie masqué M9), 2 différés avec une cible propre (bulletins classe
+entière M6 → D5, tableau de bord directeur consolidé M10 → nouveau backlog
+distinct). **Plus aucun écart de `AUDIT_ECOSHOP_FLUTTER.md` §11 n'est sans
+arbitrage** — la règle transversale §4.2.5 est désormais satisfaite. La
+replanification des verticaux décalés déjà identifiée ailleurs dans ce
+document : Port Paiement, moteur de questions/quiz, profil de maîtrise,
+préparation aux examens — reste hors périmètre de M16, inchangée.

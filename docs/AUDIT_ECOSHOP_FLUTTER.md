@@ -515,11 +515,11 @@ prête) — **à confirmer un par un avec le porteur de projet** :
 1. Parcours d'entrée Enseignant/Direction/Vendeur/Fondateur réseau (M0-M3) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée, cible M2/M3**
 2. Plafond de comptes parents liés à une fiche élève (M0-M3) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée avec le mécanisme anti-brute-force existant (ch. 5.8), cible un futur module d'accueil (numéro de module pas encore attribué)**
 3. ~~Création d'inscription + détection de double inscription (M5)~~ — **corrigé** (M15quater)
-4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
-5. Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
+4. ~~Export PDF des bulletins~~ — **corrigé** (M15ter, export individuel). Reste : génération de bulletins pour une classe entière (M6) — **arbitré 2026-09-12 (M16 6/7) : différé, cible D5 (Phase D, moteur d'impression multi-formats)**. Ampleur bornée (briques par élève déjà testées, il ne manque qu'un point d'entrée classe + une boucle d'assemblage) ; aucune échéance de fin de trimestre imminente signalée à ce jour — à réévaluer si une échéance réelle apparaît.
+5. ~~Déclaration manuelle et changement de statut d'une sanction disciplinaire (M7)~~ — **corrigé 2026-09-12** (M16 6/7, commit `78fc8d1`) : formulaire de déclaration + menu de changement de statut ajoutés à `EcranSanctions`, réutilisant `proposerSanction()`/`changerStatutSanction()` déjà existants et testés (aucun backend touché).
 6. Paie RH — vérifier si M14 comble le trou annoncé, sinon implémenter (M8) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée, cible M8bis**
-7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**.
-8. Tableau de bord directeur consolidé Finances+Scolarité (M10) — **en cours d'arbitrage, voir `ANALYSE_GLOBALE.md` §4.4, M16 sous-livrable 6/7**. Distinct du « tableau de bord réseau multi-établissements » ci-dessus (hors périmètre de cet audit, futur audit réseau dédié) : celui-ci consolide Finances+Scolarité pour UN SEUL établissement, l'autre agrège PLUSIEURS établissements pour un rôle réseau.
+7. ~~Protection des mineurs — table serveur + RLS pour les groupes de classe~~ — **corrigé** (patch de sécurité d'urgence, voir §0.1). Reste : raccorder l'écran du prototype local à ce nouveau backend — **corrigé partiellement 2026-09-12** (M16 6/7, commit `5164ddb`) : l'entrée « Messagerie », reachable par tout rôle y compris élève sans aucune garde, a été retirée du menu Profil (le prototype n'exposait de toute façon aucune fuite réseau réelle, étant 100 % local). Le raccordement réel au backend sécurisé (`groupes_discussion`/`messages_groupe`) reste différé, cible à définir.
+8. Tableau de bord directeur consolidé Finances+Scolarité (M10) — **arbitré 2026-09-12 (M16 6/7) : différé, nouveau backlog distinct** (ni D5, ni le futur audit réseau →M19 — voir la distinction explicite ci-dessous). Le plus gros des 4 écarts examinés dans ce sous-livrable : expose des KPI financiers (M14) jamais combinés aux KPI scolarité existants ET un concept réellement nouveau (seuils d'alerte configurables par établissement, inexistant aujourd'hui) — hors périmètre d'un petit complément.
 9. Séances ponctuelles / annulation d'un cours (M11) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée sous « planification », cible M11**
 10. ~~Écran d'encaissement de frais de scolarité + reçu PDF (M13/M14)~~ — **corrigé** (M15quater : entité `encaissements_scolarite` dédiée, reçu PDF reconstruit dessus — voir §0.2).
 11. Gestion des stocks et anti-survente (M13) — **arbitré (carnet de gouvernance, répercuté ici le 2026-09-12) : différé, dette tracée avec le stock marketplace, cible M15**
@@ -547,17 +547,22 @@ tests renforcés (§0.4) ; installation locale de Docker/Podman tentée et
 bloquée par trois facteurs vérifiés (§0.4) — non exécutées localement, non
 plus par manque de tentative.
 
-**Statut de l'arbitrage au 2026-09-12** (mise à jour suite à une vérification
-croisée avec le carnet de gouvernance du porteur de projet, en parallèle de
-la clôture de M16 sous-livrable 5/7 — voir `ANALYSE_GLOBALE.md` §4.4) : sur
-les 9 écarts non pleinement résolus listés ci-dessus, **5 avaient déjà été
-arbitrés ailleurs** (carnet de gouvernance) mais jamais répercutés dans ce
-document ni dans `ANALYSE_GLOBALE.md` — c'est désormais fait (items 1, 2, 6,
-9, 11 ci-dessus, tous différés avec une cible). **Les 4 restants (items 4
-reste, 5, 7 reste, 8) sont en cours d'arbitrage explicite dans le cadre de
-M16 sous-livrable 6/7** (rapport d'écart global de clôture de M16), avec un
-paragraphe de contexte dédié à chacun avant décision — voir
-`ANALYSE_GLOBALE.md` §4.4.
+**Arbitrage clos le 2026-09-12** (M16 sous-livrable 6/7, rapport d'écart
+global de clôture — voir `ANALYSE_GLOBALE.md` §4.4) : les 9 écarts non
+pleinement résolus listés ci-dessus ont tous reçu une décision explicite.
+5 avaient déjà été arbitrés ailleurs (carnet de gouvernance du porteur de
+projet) et sont désormais répercutés ici (items 1, 2, 6, 9, 11 — tous
+différés avec une cible). Les 4 restants ont été tranchés un par un après
+un paragraphe de contexte dédié (nature du manque, ampleur, risque) : 2
+corrigés immédiatement (item 5 — sanctions, commit `78fc8d1` ; item 7
+reste — masquage de l'écran Messagerie, commit `5164ddb`) et 2 différés
+avec une cible propre (item 4 reste → D5 ; item 8 → nouveau backlog
+distinct, ni D5 ni M19). **Plus aucun écart de cette table n'est sans
+arbitrage.** La règle transversale §4.2.5 est désormais satisfaite pour
+M0 → M15 vis-à-vis de M16 — voir `ANALYSE_GLOBALE.md` §4.4 pour le
+paragraphe qui documente aussi, sans le masquer, le fait que les 5
+sous-livrables 1/7 → 5/7 de M16 ont été construits pendant que cet
+arbitrage restait ouvert.
 
 ---
 
