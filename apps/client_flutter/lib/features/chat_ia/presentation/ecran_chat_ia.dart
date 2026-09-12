@@ -22,13 +22,22 @@ import 'widgets/bulle_message_ia.dart';
 /// icône) et est cohérent par construction avec `RoleRacine` du profil actif
 /// (voir `PersonaIa.depuisRoleRacine`, appelé par l'appelant).
 ///
-/// Portée volontairement limitée à cette passe : une conversation par
-/// ouverture d'écran (pas de liste de conversations passées à reprendre) —
-/// le flux à 3 couches (déclenchement structuré → réponse groundée → détail
-/// nominatif sur demande) est entièrement couvert, une liste d'historique
-/// est un complément UI indépendant, pas un pré-requis de sécurité.
+/// À l'ouverture, recharge la conversation LIBRE stable de l'élève/
+/// enseignant/direction pour cet établissement (`obtenirConversationLibre`,
+/// jamais une nouvelle conversation vide — voir migration `20260906001507`,
+/// complément 3/7) ainsi que son historique complet, jamais résumé.
+///
+/// Portée volontairement limitée à cette passe : pas de liste de
+/// conversations PASSÉES à choisir parmi plusieurs (la source elle-même n'en
+/// a pas — une seule conversation "courante" par rôle, exactement ce que ce
+/// complément reproduit) — le flux à 3 couches (déclenchement structuré →
+/// réponse groundée → détail nominatif sur demande) est entièrement couvert.
 class EcranChatIa extends ConsumerStatefulWidget {
-  const EcranChatIa({super.key, required this.etablissementId, required this.persona});
+  const EcranChatIa({
+    super.key,
+    required this.etablissementId,
+    required this.persona,
+  });
 
   final String etablissementId;
   final PersonaIa persona;
@@ -52,12 +61,40 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
   String? _conversationId;
   bool _grounding = false;
   bool _envoiEnCours = false;
+  bool _chargementInitial = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerConversation();
+  }
 
   @override
   void dispose() {
     _controleur.dispose();
     _defilement.dispose();
     super.dispose();
+  }
+
+  Future<void> _chargerConversation() async {
+    final depot = ref.read(chatIaRepositoryProvider);
+    try {
+      final id = await depot.obtenirConversationLibre(widget.etablissementId);
+      final messages = await depot.historique(id);
+      if (!mounted) return;
+      setState(() {
+        _conversationId = id;
+        _entrees
+          ..clear()
+          ..addAll(messages.map((m) => _EntreeChat(message: m)));
+        _chargementInitial = false;
+      });
+      _defilerVersLeBas();
+    } on ErreurChatIa catch (e) {
+      if (!mounted) return;
+      setState(() => _chargementInitial = false);
+      _afficherErreur(e.code);
+    }
   }
 
   void _defilerVersLeBas() {
@@ -88,7 +125,9 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
     try {
       final reponse = await depot.envoyerMessage(
         conversationId: _conversationId,
-        etablissementId: _conversationId == null ? widget.etablissementId : null,
+        etablissementId: _conversationId == null
+            ? widget.etablissementId
+            : null,
         message: saisie,
       );
       _conversationId = reponse.conversationId;
@@ -107,7 +146,12 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
       if (!mounted) return;
       setState(() {
         _entrees.add(_EntreeChat(message: messageUtilisateur));
-        _entrees.add(_EntreeChat(message: messageAssistant, detailEleves: reponse.detailEleves));
+        _entrees.add(
+          _EntreeChat(
+            message: messageAssistant,
+            detailEleves: reponse.detailEleves,
+          ),
+        );
       });
       _defilerVersLeBas();
     } on ErreurChatIa catch (e) {
@@ -117,7 +161,10 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
     }
   }
 
-  Future<void> _demarrerAnalyseRisque({required String cibleType, String? cibleId}) async {
+  Future<void> _demarrerAnalyseRisque({
+    required String cibleType,
+    String? cibleId,
+  }) async {
     setState(() => _envoiEnCours = true);
     final depot = ref.read(chatIaRepositoryProvider);
     try {
@@ -182,7 +229,9 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
                 value: 'classe',
                 groupValue: cibleType,
                 title: const Text('Une classe précise'),
-                onChanged: classes.isEmpty ? null : (v) => setDialogState(() => cibleType = v!),
+                onChanged: classes.isEmpty
+                    ? null
+                    : (v) => setDialogState(() => cibleType = v!),
               ),
               if (cibleType == 'classe')
                 DropdownButton<Classe>(
@@ -190,7 +239,8 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
                   value: classeChoisie,
                   hint: const Text('Choisir une classe'),
                   items: [
-                    for (final c in classes) DropdownMenuItem(value: c, child: Text(c.nom)),
+                    for (final c in classes)
+                      DropdownMenuItem(value: c, child: Text(c.nom)),
                   ],
                   onChanged: (c) => setDialogState(() => classeChoisie = c),
                 ),
@@ -245,25 +295,35 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
             ),
           ),
           Expanded(
-            child: _entrees.isEmpty
+            child: _chargementInitial
+                ? const Center(child: CircularProgressIndicator())
+                : _entrees.isEmpty
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
                         estDirection
                             ? "Discutez librement, ou lancez « Analyser le risque d'échec » "
-                                "(icône en haut) pour une analyse groundée sur des chiffres réels."
+                                  "(icône en haut) pour une analyse groundée sur des chiffres réels."
                             : 'Posez votre première question à ${widget.persona.libelle}.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: context.palette.encreSecondaire),
+                        style: TextStyle(
+                          color: context.palette.encreSecondaire,
+                        ),
                       ),
                     ),
                   )
                 : ListView.builder(
                     controller: _defilement,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     itemCount: _entrees.length,
-                    itemBuilder: (context, i) => BulleMessageIa(entree: _entrees[i].message, detailEleves: _entrees[i].detailEleves),
+                    itemBuilder: (context, i) => BulleMessageIa(
+                      entree: _entrees[i].message,
+                      detailEleves: _entrees[i].detailEleves,
+                    ),
                   ),
           ),
           if (_grounding)
@@ -274,7 +334,9 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
                 child: ActionChip(
                   avatar: const Icon(Icons.groups_outlined, size: 16),
                   label: const Text('Qui sont-ils ?'),
-                  onPressed: _envoiEnCours ? null : () => _envoyer('Qui sont-ils ?'),
+                  onPressed: _envoiEnCours
+                      ? null
+                      : () => _envoyer('Qui sont-ils ?'),
                 ),
               ),
             ),
@@ -283,7 +345,10 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: GlassCard(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 enfant: Row(
                   children: [
                     Expanded(
@@ -309,7 +374,10 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
                             ),
                           )
                         : IconButton(
-                            icon: Icon(Icons.send, color: context.palette.primaire),
+                            icon: Icon(
+                              Icons.send,
+                              color: context.palette.primaire,
+                            ),
                             onPressed: () => _envoyer(_controleur.text),
                           ),
                   ],

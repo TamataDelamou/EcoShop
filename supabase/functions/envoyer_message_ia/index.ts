@@ -95,22 +95,26 @@ Deno.serve(async (req) => {
       if (!etablissementId) {
         return reponseJson(400, { error: "etablissement_id_requis" }, origine);
       }
-      const { data: nouvelle, error: creationError } = await supabase
-        .from("ai_conversations")
-        .insert({ etablissement_id: etablissementId, profile_id: userData.user.id })
-        .select("id")
-        .single();
+      // Réutilise la conversation libre stable de cet élève/établissement
+      // plutôt que d'en créer une nouvelle à chaque tour sans conversationId
+      // (voir migration 20260906001507 — continuité de conversation, complément
+      // 3/7) : le type reste toujours 'libre'/grounding=false par construction
+      // pour tout ce que cette fonction renvoie, aucune relecture nécessaire.
+      const { data: idConversation, error: conversationError } = await supabase.rpc(
+        "obtenir_conversation_libre",
+        { p_etablissement_id: etablissementId },
+      );
 
-      if (creationError || !nouvelle) {
+      if (conversationError || !idConversation) {
         console.error(JSON.stringify({
           fn: "envoyer_message_ia",
           niveau: "error",
-          message: "echec creation conversation",
-          detail: creationError?.message,
+          message: "echec resolution conversation libre",
+          detail: conversationError?.message,
         }));
         return reponseJson(500, { error: "erreur_interne" }, origine);
       }
-      conversationId = nouvelle.id;
+      conversationId = idConversation as string;
     }
 
     // --- Rôle IA réel — jamais celui du client ---

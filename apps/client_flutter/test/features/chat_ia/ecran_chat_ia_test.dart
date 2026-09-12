@@ -17,8 +17,17 @@ import 'package:ecoshop_client/features/scolarite/application/scolarite_provider
 /// Flutter construit dans ce complément (envoi, affichage, déclenchement
 /// structuré, action « qui sont-ils ? », affichage du détail pseudonymisé).
 class _FauxChatIaRepository implements ChatIaRepository {
+  _FauxChatIaRepository({this.messagesExistants = const []});
+
   final List<String> messagesEnvoyes = [];
+  final List<MessageChatIa> messagesExistants;
   int _compteurMessage = 0;
+
+  @override
+  Future<String> obtenirConversationLibre(String etablissementId) async => 'conv-libre-$etablissementId';
+
+  @override
+  Future<List<MessageChatIa>> historique(String conversationId) async => messagesExistants;
 
   @override
   Future<ReponseChatIa> envoyerMessage({
@@ -146,6 +155,38 @@ void main() {
       await tester.tap(find.textContaining('voir les identités'));
       await tester.pumpAndSettle();
       expect(find.text('Élève A → Jean Dupont (MAT001)'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Continuité (complément 3/7) : réouvrir l\'écran recharge la conversation libre existante, jamais vide',
+    (tester) async {
+      final depot = _FauxChatIaRepository(
+        messagesExistants: [
+          MessageChatIa(
+            id: 'm1',
+            conversationId: 'conv-libre-et1',
+            sender: 'user',
+            content: 'Question posée hier',
+            createdAt: DateTime(2026, 3, 1),
+          ),
+          MessageChatIa(
+            id: 'm2',
+            conversationId: 'conv-libre-et1',
+            sender: 'assistant',
+            content: 'Réponse donnée hier',
+            createdAt: DateTime(2026, 3, 1, 0, 1),
+          ),
+        ],
+      );
+
+      await monter(tester, persona: PersonaIa.eleve, depot: depot);
+
+      // Aucun envoi n'a eu lieu dans ce test : ces messages viennent
+      // uniquement du rechargement d'historique à l'ouverture de l'écran.
+      expect(depot.messagesEnvoyes, isEmpty);
+      expect(find.text('Question posée hier'), findsOneWidget);
+      expect(find.text('Réponse donnée hier'), findsOneWidget);
     },
   );
 }

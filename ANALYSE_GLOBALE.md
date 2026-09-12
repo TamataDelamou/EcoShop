@@ -513,11 +513,11 @@ rôles couverts (élève/enseignant/direction).
 - **Volontairement sans décorateur de cache/file hors-ligne** (contrairement
   à `RapportsRepository`) : un chat IA suppose une connexion active, il n'y
   a rien de sensé à mettre en file d'attente hors-ligne pour ce port.
-- **Portée limitée assumée** : une conversation par ouverture d'écran, pas
-  de liste de conversations passées à reprendre — le flux à 3 couches est
-  entièrement couvert, une liste d'historique est un complément UI
-  indépendant, pas un pré-requis de sécurité ; à ajouter plus tard si
-  besoin exprimé.
+- **Portée limitée assumée, tenue** : pas de liste de conversations PASSÉES
+  à choisir parmi plusieurs — la source elle-même n'en a pas non plus (son
+  propre commentaire de code le dit explicitement : *« aucune "liste de mes
+  conversations" n'existe sur ce projet »*), donc rien à corriger sur ce
+  point précis.
 - **Vérifié** : `flutter analyze` propre (0 erreur/avertissement, seulement
   des notes de style déjà présentes ailleurs dans le code base) ; suite
   `flutter test` complète verte (272 tests, dont 9 nouveaux — 7 tests de
@@ -527,6 +527,44 @@ rôles couverts (élève/enseignant/direction).
   pseudonymisé — avec un faux port `ChatIaRepository`, la couche SQL/Edge
   Functions elle-même ayant déjà été vérifiée bout-en-bout en local dans la
   passe précédente).
+
+*Complément 3/7 — continuité de conversation, TROUVÉ ET CORRIGÉ* (même jour,
+suite à une vérification demandée explicitement sur ce point précis) :
+en confirmant si la source avait un cache hors-ligne et/ou une liste
+multi-conversations pour `AiChatScreen`, la lecture directe du code
+(`ai_service.dart`) a révélé un écart RÉEL et plus significatif que « pas de
+liste » : la source rouvre **toujours la même conversation**
+(`conversationId = 'default'`, fixe par rôle) — l'historique complet
+réapparaît donc à chaque ouverture d'écran, même après redémarrage de l'app
+(et brièvement hors ligne, via la persistance automatique du SDK Firestore,
+un comportement par défaut de ce SDK plutôt qu'une décision d'architecture
+dédiée — Postgres/Supabase n'a pas d'équivalent). L'implémentation initiale
+de `EcranChatIa`, elle, créait une **nouvelle conversation vide à chaque
+ouverture** et ne rechargeait jamais l'historique — pas juste « pas de
+liste », mais « pas de continuité » du tout. Corrigé plutôt que laissé en
+l'état :
+
+- `obtenir_conversation_libre(etablissement_id)` (migration `20260906
+  001507`, `SECURITY DEFINER`) : renvoie la conversation `'libre'` stable de
+  l'appelant pour cet établissement, la crée si elle n'existe pas encore.
+  Index unique partiel (`... where type = 'libre'`) empêchant structurellement
+  toute duplication — y compris sous course concurrente (`unique_violation`
+  rattrapée par une relecture). Les conversations `'risque_echec'` restent
+  volontairement hors de cet index : chaque déclenchement structuré reste
+  une nouvelle ligne, comportement déjà voulu et documenté par la source
+  elle-même pour celles-ci.
+- `envoyer_message_ia` appelle désormais cette fonction au lieu d'un INSERT
+  direct quand `conversationId` est absent.
+- `EcranChatIa` recharge la conversation + son historique COMPLET (jamais
+  résumé) dès `initState`, avant tout envoi — un spinner s'affiche pendant
+  ce chargement.
+- **Vérifié** : `Files=42, Tests=265, PASS` côté pgTAP (nouveau fichier `tests/
+  rls/42_m16_continuite_conversation_libre.sql`, 8 assertions — idempotence
+  sur 2 appels successifs, isolation stricte entre deux élèves, non-régression
+  des conversations `risque_echec`, échec sans authentification) ; `flutter
+  analyze` propre ; suite `flutter test` verte, 273 tests (+1, un test de
+  widget qui pré-remplit un historique existant et vérifie qu'il s'affiche
+  sans qu'aucun envoi n'ait eu lieu dans le test).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

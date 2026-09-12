@@ -60,6 +60,18 @@ class ReponseAnalyseRisque {
 /// (contrairement à `RapportsRepository`) : un chat IA suppose une
 /// connexion active, rien de sensé à mettre en file d'attente hors-ligne.
 abstract interface class ChatIaRepository {
+  /// Renvoie l'identifiant de la conversation libre STABLE de l'appelant
+  /// pour cet établissement (créée si elle n'existe pas encore, jamais
+  /// dupliquée — voir migration `20260906001507`, complément 3/7). N'appelle
+  /// jamais Anthropic : à utiliser à l'ouverture de l'écran, avant
+  /// [historique], pour recharger la conversation en cours plutôt que d'en
+  /// ouvrir une nouvelle vide à chaque fois.
+  Future<String> obtenirConversationLibre(String etablissementId);
+
+  /// Historique complet d'une conversation, ordre chronologique — jamais
+  /// résumé ni tronqué côté client.
+  Future<List<MessageChatIa>> historique(String conversationId);
+
   /// Envoie un message dans une conversation libre — crée la conversation si
   /// [conversationId] est nul (auquel cas [etablissementId] est requis).
   Future<ReponseChatIa> envoyerMessage({
