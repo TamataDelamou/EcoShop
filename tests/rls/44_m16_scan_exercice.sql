@@ -34,7 +34,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(23);
+SELECT plan(26);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + comptes
@@ -59,6 +59,18 @@ RETURNING id AS fiche1_id \gset
 INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
 VALUES (:'etab_id'::uuid, 'M16-SCAN-002', 'BARRY', 'Ibrahima', '2012-06-02', :'eleve2_id'::uuid, now())
 RETURNING id AS fiche2_id \gset
+
+-- Second établissement, totalement distinct — isolation inter-établissement
+-- réelle (même méthode que le test 38, M15quater) : un élève réel, mais
+-- sans aucun lien avec le premier établissement.
+INSERT INTO public.etablissements (nom, slug) VALUES ('École Scan Exercice M16 Bis', 'ecole-scan-exercice-m16-bis')
+RETURNING id AS etab2_id \gset
+
+SELECT pg_temp.creer_compte('224600002585', 'eleve') AS eleve3_id \gset
+
+INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
+VALUES (:'etab2_id'::uuid, 'M16-SCAN-BIS-001', 'CAMARA', 'Fatoumata', '2012-07-03', :'eleve3_id'::uuid, now())
+RETURNING id AS fiche3_id \gset
 
 SET LOCAL ROLE authenticated;
 
@@ -129,6 +141,42 @@ SELECT throws_ok(
 SELECT set_config('request.jwt.claims', json_build_object('sub', :'eleve2_id', 'role', 'authenticated')::text, true);
 SELECT throws_ok(
   format($$ SELECT public.preparer_scan_exercice('%s', '%s', 'texte forgé', true) $$, :'etab_id', :'fiche1_id'),
+  '42501',
+  NULL
+);
+
+-- ---------------------------------------------------------------------------
+-- 4bis) Élève d'un AUTRE établissement (eleve3, rôle élève réel, aucun lien
+--       avec le premier établissement) — trois angles distincts, même
+--       méthode que l'isolation inter-établissement du test 38 (M15quater) :
+--       a) usurpe l'établissement de la victime (etab_id) avec sa propre
+--          fiche (fiche3, réellement dans etab2) : `determiner_role_ia
+--          (etab_id)` doit renvoyer null pour eleve3 (aucune fiche à lui
+--          dans cet établissement) → ACCES_REFUSE avant même la
+--          vérification de propriété de la fiche.
+--       b) rôle élève bien réel et valide dans SON PROPRE établissement
+--          (etab2_id), mais cible la fiche de la victime (fiche1, réellement
+--          dans etab_id) : le rôle passe, mais le rattachement
+--          établissement/fiche/auteur échoue (fiche1 n'appartient pas à
+--          etab2_id) → FICHE_INTROUVABLE, toujours 42501.
+--       c) tente de renseigner l'identification d'un scan qui n'est pas le
+--          sien (celui d'eleve1, établissement 1) → rejeté par la
+--          vérification de propriété (auth.uid()), tenant-agnostique par
+--          construction.
+-- ---------------------------------------------------------------------------
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'eleve3_id', 'role', 'authenticated')::text, true);
+SELECT throws_ok(
+  format($$ SELECT public.preparer_scan_exercice('%s', '%s', 'texte forgé inter-établissement', true) $$, :'etab_id', :'fiche3_id'),
+  '42501',
+  NULL
+);
+SELECT throws_ok(
+  format($$ SELECT public.preparer_scan_exercice('%s', '%s', 'texte forgé inter-établissement', true) $$, :'etab2_id', :'fiche1_id'),
+  '42501',
+  NULL
+);
+SELECT throws_ok(
+  format($$ SELECT public.renseigner_identification_scan_exercice('%s', 'Matière forgée', 'Chapitre forgé') $$, :'scan1_id'),
   '42501',
   NULL
 );
