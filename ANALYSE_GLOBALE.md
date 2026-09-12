@@ -281,7 +281,7 @@ délivré** par migrations SQL est le suivant.
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 | M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré, retiré, puis reconstruit après M15quater, voir M15ter §7 |
 | M15quater | Inscription, réinscription & encaissement de scolarité | `20260906001501_m15quater_inscription_encaissement.sql` | [M15quater](./docs/contrats/M15quater_inscription_encaissement.md) | inséré hors plan §4.3, entre M15ter et M16, devant les ~8 autres écarts de l'audit |
-| M16 | IA à rôles (en cours) — sous-livrables 1-4/7 : score de risque par élève, bannière dashboard directeur, Edge Functions IA + Tuteur IA/Directeur-Adviser, Parent IA (déclaration manuelle) | `20260906001504...`, `20260906001505...`, `20260906001506...`, `20260906001507_m16_continuite_conversation_libre.sql`, `20260906001508_m16_parent_ia.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
+| M16 | IA à rôles — **clos le 2026-09-12 (7/7 sous-livrables)** : score de risque par élève, bannière dashboard directeur, Edge Functions IA + Tuteur IA/Directeur-Adviser (+ complément continuité de conversation), Parent IA (déclaration manuelle), Scan et résolution d'exercice, rapport d'écart global de clôture (§11-§12 arbitré), clôture formelle | `20260906001504...` → `20260906001509_m16_scan_exercice.sql` (6 migrations) | *(à consolider — pas de contrat dédié écrit pour ce module)* | livré et vérifié (pgTAP `Files=44, Tests=313, PASS` ; `flutter test` 294/294 ; `flutter analyze` propre) ; 2 dettes transversales explicitement ouvertes, voir narratif ci-dessous (QA pré-lancement conditions réelles, facturation/quota IA) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -841,10 +841,68 @@ inclut les 26 assertions de 5/7 renforcé, inchangé par les corrections
 Flutter #5/#7 de ce sous-livrable, aucun backend touché). `flutter test` :
 294 tests PASS (+7 pour la correction #5).
 
-**Commits** (locaux, non poussés sauf mention contraire) : `4882982`/
-`bb15226`/`89c9d49` (5/7, **poussés sur `origin/main`**), `44efcdd`
-(réconciliation gouvernance §11-§12), `78fc8d1` (correction #5, sanctions),
-`5164ddb` (correction #7, masquage Messagerie).
+**Commits** : `4882982`/`bb15226`/`89c9d49` (5/7), `44efcdd` (réconciliation
+gouvernance §11-§12), `78fc8d1` (correction #5, sanctions), `5164ddb`
+(correction #7, masquage Messagerie) — **tous poussés sur `origin/main`**
+(voir la clôture 7/7 ci-dessous).
+
+*Sous-livrable 7/7 — Clôture formelle du module M16* (clos le 2026-09-12,
+aucun nouveau code métier — vérification, documentation et arbitrage final
+uniquement).
+
+**a) Statut définitif du complément de continuité de conversation (3/7)**
+— resté sans confirmation claire malgré deux relances antérieures : **fait
+et vérifié**, aucun écart. La fonctionnalité (`obtenir_conversation_libre`,
+migration `20260906001507`, index unique partiel `type='libre'`,
+`EcranChatIa` qui recharge conversation + historique complet dès
+`initState`) est en place depuis le commit `c4b0410`, **déjà mergé sur
+`origin/main` avant l'ouverture de cette session**. Reconfirmée
+empiriquement aujourd'hui, à neuf, plutôt que citée depuis l'ancien message
+de commit :
+- pgTAP `tests/rls/42_m16_continuite_conversation_libre.sql` rejoué seul :
+  8/8 assertions vertes (idempotence sur 2 appels, isolation stricte
+  eleve1/eleve2, non-régression des conversations `risque_echec`, échec
+  sans authentification).
+- Suite pgTAP complète rejouée : `Files=44, Tests=313, PASS`, aucune
+  régression.
+- `flutter analyze` : propre.
+- `flutter test test/features/chat_ia/` rejoué seul : 10/10, dont
+  explicitement *« Continuité (complément 3/7) : réouvrir l'écran recharge
+  la conversation libre existante, jamais vide »*. Suite complète :
+  294/294 PASS.
+
+**b) Poussé vers `origin/main`** : `44efcdd`, `78fc8d1`, `5164ddb`,
+`91c13fc` (tout ce qui restait local à l'ouverture de ce sous-livrable).
+
+**c) Deux dettes transversales restent explicitement ouvertes** — la
+clôture de M16 ne les résout pas, elle les rend visibles et leur donne un
+jalon :
+- **QA pré-lancement en conditions réelles** (comportement réel du modèle
+  Anthropic — garde-fou pédagogique de 3/7/5/7, jugement d'usage de 4/7 —
+  jamais vérifié que par relecture de prompt, stub local pour tous les
+  tests des trois sous-livrables). Jalon : vraie clé API Anthropic, avant
+  toute ouverture réelle de Tuteur-IA/Directeur-Adviser, Parent IA et
+  Scan-Exercice à de vrais élèves/enseignants/direction.
+- **Facturation/quota IA** (accès ouvert depuis 3/7, aucune fondation
+  d'abonné/quota posée pour l'ensemble du module). **Aucun jalon assigné à
+  ce jour** — contrairement aux écarts §11 différés (6/7), ce point n'a pas
+  de cible de module connue ; à arbitrer explicitement par le porteur de
+  projet (Phase D ? un futur module de facturation dédié ? autre ?) plutôt
+  que d'en inventer une ici.
+
+**d) Arbitrage `AUDIT_ECOSHOP_FLUTTER.md` §11-§12 confirmé clos** (voir
+6/7 ci-dessus) — rien de nouveau à ce sujet, rappelé ici pour que cette
+entrée de clôture soit auto-suffisante.
+
+**M16 — IA à rôles est formellement clos le 2026-09-12** : 7/7
+sous-livrables livrés et vérifiés localement sans régression cumulée
+(pgTAP `Files=44, Tests=313, PASS` ; `flutter test` 294/294 PASS ;
+`flutter analyze` propre), le rapport d'écart rétroactif §4.2.5 intégralement
+arbitré, les deux dettes transversales ci-dessus explicitement tracées avec
+leur jalon (ou l'absence assumée de jalon pour la seconde) plutôt que
+silencieusement oubliées. **La Phase D n'est pas démarrée** : son ouverture
+exige une demande explicite et distincte du porteur de projet, jamais
+déduite de la clôture de M16.
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
