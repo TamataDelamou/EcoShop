@@ -709,8 +709,40 @@ lieux à faire, à la différence des sous-livrables précédents.
   rejeu appelle exactement la même Edge Function qu'un appel en ligne normal.
 - **Facturation** : accès ouvert pour cette passe, comme 3/7 — aucune
   fondation d'abonné/quota posée ici (chantier transversal distinct).
+- **Vérifications de sécurité supplémentaires demandées explicitement,
+  faites AVANT clôture** (même discipline qu'en 1/7 et 4/7 — la même
+  catégorie de test avait trouvé un vrai bug dans ces deux sous-livrables) :
+  - *Consentement* : confirmé porté côté serveur, pas seulement une case à
+    cocher côté client — `preparer_scan_exercice` rejette
+    `CONSENTEMENT_REQUIS` (22023) si `p_consentement is not true`, la table
+    porte en plus la contrainte `scan_exercices_consentement_requis check
+    (consentement)`, et l'Edge Function coerce strictement
+    (`corps.consentement === true`) avant transmission. Aucun changement
+    nécessaire.
+  - *Isolation inter-établissement* : un deuxième établissement totalement
+    distinct (`eleve3`, aucun lien avec le premier) a été ajouté au test 44
+    (même méthode que le test 38, M15quater) — usurpation de l'établissement
+    de la victime avec sa propre fiche, rôle élève valide chez lui mais
+    ciblant la fiche de la victime, et `renseigner_identification_scan_
+    exercice` sur le scan d'un élève d'un autre établissement : les 3 sont
+    rejetées (42501) sans modification de code, `determiner_role_ia` et la
+    vérification de propriété tenaient déjà la charge.
+- **Point ouvert, assumé, transféré à un jalon distinct — PAS résolu, PAS
+  non applicable** : le garde-fou pédagogique (jamais la solution finale
+  sans guidage progressif, sauf demande explicite ET répétée) n'a été
+  vérifié QUE par relecture du prompt système (`PROMPT_SCAN_EXERCICE`),
+  jamais en conditions réelles. Tous les appels IA de ce sous-livrable, comme
+  en 3/7 et 4/7, passent par le stub Anthropic local
+  (`ANTHROPIC_URL_OVERRIDE`, `supabase/functions/.env`) — un stub ne simule
+  que la plomberie (payload transmis, absence de fuite), jamais le
+  raisonnement réel du modèle sur plusieurs tours. Vérifier ce comportement
+  précis exige un vrai appel à l'API Anthropic (vraie clé, coût réel) :
+  décision explicite de ne pas exposer/chercher de clé réelle pour cette
+  passe. **Reporté à un jalon de QA pré-lancement distinct, avec une vraie
+  clé API, avant toute ouverture réelle du Scan-Exercice aux élèves** — à
+  reprendre explicitement dans le rapport d'écart global de clôture de M16.
 - **Vérifié** : migration rejouée par `supabase db reset` (podman/WSL2) sans
-  erreur ; pgTAP `Files=44, Tests=310, PASS` (suite complète rejouée, aucune
+  erreur ; pgTAP `Files=44, Tests=313, PASS` (suite complète rejouée, aucune
   régression sur les 43 fichiers précédents) ; Edge Function testée en vrai
   via `curl` contre le runtime local (`parametres_requis` sur corps vide,
   `authentification_requise` sur JWT anonyme — confirme le chargement et la
