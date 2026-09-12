@@ -649,6 +649,76 @@ d'abord, comme pour chaque sous-livrable :
   sans `Material` propre ont aussi été trouvés et corrigés par ces tests de
   widget, pas seulement par relecture visuelle.
 
+*Sous-livrable 5/7 — Scan et résolution d'exercice* (clos le 2026-09-12, cf.
+`supabase/migrations/20260906001509_m16_scan_exercice.sql`, `supabase/
+functions/demarrer_scan_exercice/`, `tests/rls/44_m16_scan_exercice.sql`) —
+fonctionnalité ENTIÈREMENT NOUVELLE (absorbée du module M14 d'EduRéussite,
+cahier §21.5), sans équivalent côté source `ecoshop_flutter` : aucun état des
+lieux à faire, à la différence des sous-livrables précédents.
+
+- **Flux respecté à la lettre** : photo → reconnaissance de texte →
+  identification matière/chapitre → analyse du problème → proposition de
+  méthode → guidage progressif → correction finale détaillée.
+- **Protection mineur strictement supérieure à ce qu'imposait le cahier
+  littéral, actée avec l'utilisateur avant codage** : reconnaissance de texte
+  100% EMBARQUÉE sur l'appareil (Google ML Kit, hors ligne par construction).
+  Conséquence structurante : LA PHOTO NE QUITTE JAMAIS L'APPAREIL — seul le
+  texte déjà reconnu (jamais une image) est envoyé au serveur puis à
+  Anthropic ; aucun stockage Supabase Storage, donc aucune fuite possible de
+  la photo elle-même (même philosophie de minimisation des données que
+  Parent IA, 4/7, chiffres agrégés uniquement).
+- **Chapitre/matière en texte libre, jamais persistés dans un référentiel** :
+  aucune table `chapitres_matieres` n'existe dans le M4 (référentiel
+  pédagogique) ; en créer une sans contenu curaté derrière serait une fausse
+  promesse de structure (décision explicite de l'utilisateur). Dette
+  explicite, à reprendre quand le futur module référentiel pédagogique/CMS
+  posera une vraie notion de chapitre.
+- **Garde-fou réponse finale : aucun mécanisme structurel nouveau** — même
+  discipline que le Tuteur-IA conversationnel (3/7) : l'interdiction de
+  donner la solution brute avant d'être passé par méthode+guidage est portée
+  par le prompt système (`PROMPT_SCAN_EXERCICE`), appliquée par le modèle à
+  partir de l'historique déjà reçu à chaque tour — aucun compteur serveur
+  ajouté.
+- **Consentement capturé À CHAQUE scan** (donnée scolaire d'un mineur) —
+  volontairement différent du verrou persistant de Parent IA : pas de notion
+  d'engagement ici, un consentement par exercice photographié, avec
+  contrainte SQL (`scan_exercices_consentement_requis`) en plus de la
+  vérification côté fonction.
+- **Réutilise intégralement l'infrastructure IA du sous-livrable 3/7**
+  (`ai_conversations`/`ai_messages`, `determiner_role_ia`, RLS, `envoyer_
+  message_ia`) — un nouveau type de conversation (`scan_exercice`) est
+  ajouté, jamais une table de conversation parallèle ; les tours de guidage
+  suivant le premier passent par `envoyer_message_ia` (persona dédié
+  `PROMPT_SCAN_EXERCICE`), jamais un second appel à `demarrer_scan_exercice`.
+- **Garde-fou tenant SECURITY DEFINER dès la conception** (leçon du test 43,
+  4/7) : le trigger `scan_exercices_verifie_tenant` est `SECURITY DEFINER`
+  dès sa première version, jamais après coup.
+- **Écran Flutter construit** (`features/scan_exercice/`) : capture photo
+  (`image_picker`, caméra ou galerie) → OCR embarqué (`google_mlkit_text_
+  recognition`) → texte reconnu affiché et modifiable avant envoi (l'OCR
+  n'est jamais parfait) → case de consentement obligatoire → écran de
+  guidage réutilisant les mêmes widgets que le chat IA (`BulleMessageIa`),
+  la suite des tours passant par `ChatIaRepository` (aucun port dupliqué).
+  Point d'entrée ajouté au profil élève (`coquille_app.dart`), à côté de
+  Tuteur-IA et Parent IA. Permissions caméra ajoutées (`AndroidManifest.xml`,
+  `Info.plist`).
+- **Hors ligne** : la reconnaissance de texte elle-même fonctionne déjà hors
+  ligne (ML Kit) ; un appel hors ligne à `demarrer_scan_exercice` est mis en
+  file par le même mécanisme de synchronisation différée que le reste de la
+  plateforme (`sync_queue`/`SyncEngine`) — rien à modéliser côté SQL, le
+  rejeu appelle exactement la même Edge Function qu'un appel en ligne normal.
+- **Facturation** : accès ouvert pour cette passe, comme 3/7 — aucune
+  fondation d'abonné/quota posée ici (chantier transversal distinct).
+- **Vérifié** : migration rejouée par `supabase db reset` (podman/WSL2) sans
+  erreur ; pgTAP `Files=44, Tests=310, PASS` (suite complète rejouée, aucune
+  régression sur les 43 fichiers précédents) ; Edge Function testée en vrai
+  via `curl` contre le runtime local (`parametres_requis` sur corps vide,
+  `authentification_requise` sur JWT anonyme — confirme le chargement et la
+  validation, pas seulement une relecture de code) ; `flutter analyze`
+  propre (0 erreur/avertissement) ; suite `flutter test` verte, 287 tests
+  (+2 nouveaux — consentement bloquant tant que texte ou case manquent,
+  démarrage du scan puis continuité du guidage via `ChatIaRepository`).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

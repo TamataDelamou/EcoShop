@@ -27,6 +27,7 @@ import '../../planification/presentation/ecran_salles.dart';
 import '../../rapports/presentation/ecran_rapports.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
+import '../../scan_exercice/presentation/ecran_scan_exercice.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
@@ -352,6 +353,33 @@ class _VueProfil extends ConsumerWidget {
                     ),
                   ),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.eleve)
+          Consumer(
+            builder: (context, ref, _) {
+              final fiche = ref.watch(maFicheProvider).value;
+              final etablissement = ref.watch(etablissementActifProvider);
+              return ListTile(
+                leading: const Icon(Icons.document_scanner_outlined),
+                title: const Text('Scan-Exercice'),
+                subtitle: const Text('Photographiez un exercice, résolvez-le pas à pas'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: fiche == null || etablissement == null
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lie d\'abord ton compte à ta fiche élève.'),
+                        ),
+                      )
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EcranScanExercice(
+                            etablissementId: etablissement.id,
+                            ficheEleveId: fiche.id,
+                          ),
+                        ),
+                      ),
               );
             },
           ),

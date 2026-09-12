@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Scan d'exercice (M16 5/7) — capture photo côté appareil uniquement,
+         voir la migration `20260906001509` : la photo ne quitte jamais
+         l'appareil, seul le texte reconnu par OCR embarqué est transmis. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="ecoshop_client"
         android:name="${applicationName}"

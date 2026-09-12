@@ -38,6 +38,7 @@ import {
 import { construirePayloadPseudonymise, type EleveARisqueBrut } from "../_shared/grounding_risque_echec.ts";
 import {
   NOM_OUTIL_DETAIL_NOMINATIF_RISQUE_ECHEC,
+  PROMPT_SCAN_EXERCICE,
   PROMPTS,
   SCHEMA_OUTIL_DETAIL_NOMINATIF_RISQUE_ECHEC,
 } from "../_shared/prompts.ts";
@@ -125,7 +126,13 @@ Deno.serve(async (req) => {
       return reponseJson(403, { error: "aucun_assistant_pour_ce_role" }, origine);
     }
 
-    const systemPrompt = PROMPTS[role];
+    // Scan-Exercice (M16 5/7) réutilise cette même Edge Function pour les
+    // tours de guidage suivant le premier (créé par `demarrer_scan_
+    // exercice`) — persona dédié, jamais celui du rôle (qui reste 'eleve',
+    // déjà imposé à la création par `preparer_scan_exercice`).
+    const systemPrompt = typeConversation === "scan_exercice"
+      ? (role === "eleve" ? PROMPT_SCAN_EXERCICE : undefined)
+      : PROMPTS[role];
     if (!systemPrompt) {
       return reponseJson(403, { error: "aucun_assistant_pour_ce_role" }, origine);
     }

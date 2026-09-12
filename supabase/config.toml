@@ -74,5 +74,10 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 
+# M16 — Scan et résolution d'exercice (sous-livrable 5/7).
+[functions.demarrer_scan_exercice]
+enabled = true
+verify_jwt = true
+
 [edge_runtime]
 policy = "oneshot"
