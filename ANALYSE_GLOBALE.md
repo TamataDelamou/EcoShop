@@ -281,7 +281,7 @@ délivré** par migrations SQL est le suivant.
 | M15bis | Thèmes internationaux & Dark Mode | *(aucune — module client pur)* | [M15bis](./docs/contrats/M15bis_themes_dark_mode.md) | inséré hors plan §4.3, entre M15 et M16 (cf. règle transversale §4.2.5) |
 | M15ter | Export PDF (bulletins & reçus) | *(aucune — module client pur)* | [M15ter](./docs/contrats/M15ter_export_pdf.md) | inséré hors plan §4.3, entre M15bis et M16, en réponse au point d'écart §0.2 de l'audit — volet « reçu PDF » livré, retiré, puis reconstruit après M15quater, voir M15ter §7 |
 | M15quater | Inscription, réinscription & encaissement de scolarité | `20260906001501_m15quater_inscription_encaissement.sql` | [M15quater](./docs/contrats/M15quater_inscription_encaissement.md) | inséré hors plan §4.3, entre M15ter et M16, devant les ~8 autres écarts de l'audit |
-| M16 | IA à rôles (en cours) — sous-livrables 1-3/7 : score de risque par élève, bannière dashboard directeur, Edge Functions IA + Tuteur IA/Directeur-Adviser | `20260906001504...`, `20260906001505...`, `20260906001506_m16_edge_functions_ia_infra.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
+| M16 | IA à rôles (en cours) — sous-livrables 1-4/7 : score de risque par élève, bannière dashboard directeur, Edge Functions IA + Tuteur IA/Directeur-Adviser, Parent IA (déclaration manuelle) | `20260906001504...`, `20260906001505...`, `20260906001506...`, `20260906001507_m16_continuite_conversation_libre.sql`, `20260906001508_m16_parent_ia.sql` | *(à consolider en fin de module)* | conforme au plan §4.3, ordre de construction réordonné selon l'état des lieux `ecoshop_flutter` (voir narratif ci-dessous) |
 
 **Non encore livrés** (replanifier dans M16 → M20) : le Port Paiement hexagonal
 (CinetPay + Mobile Money, ex-M14), et les verticaux EduRéussite décalés — moteur
@@ -565,6 +565,89 @@ l'état :
   analyze` propre ; suite `flutter test` verte, 273 tests (+1, un test de
   widget qui pré-remplit un historique existant et vérifie qu'il s'affiche
   sans qu'aucun envoi n'ait eu lieu dans le test).
+
+*Sous-livrable 4/7 — Parent IA (déclaration manuelle)* (clos le 2026-09-12,
+cf. `supabase/migrations/20260906001508_m16_parent_ia.sql`, `supabase/
+functions/analyser_usage_parent_ia/`, `tests/rls/43_m16_parent_ia.sql`) —
+état des lieux `ecoshop_flutter` (`PARENT_IA.md`, cahier §15.3) fait
+d'abord, comme pour chaque sous-livrable :
+
+- **Principe repris à l'identique** : autolimitation numérique activée par
+  l'ÉLÈVE lui-même (jamais un parent, jamais l'établissement), verrou
+  d'engagement de 30 jours non contournable, parent en lecture seule.
+- **Score de risque RÉUTILISÉ** (`risque_reussite_actuel`, sous-livrable
+  1/7, matérialisation rafraîchie avant lecture comme en 3/7) — la source
+  lit sa propre formule (`NotesService.recalculerRisqueEchec`, 70% évolution
+  des moyennes + 30% présence), distincte de `calculer_score_decrochage` :
+  pas importée, la formule EcoShop déjà matérialisée est exposée telle
+  quelle, repli neutre 50/100 identique en l'absence de données.
+- **Correctif de sécurité construit dès la conception** (comme en 3/7,
+  au lieu de le découvrir après coup comme la source l'a fait) : AUCUNE
+  policy d'écriture cliente sur `parent_ia_config`/`parent_ia_historique` —
+  seules 3 fonctions `SECURITY DEFINER` (`activer_parent_ia`,
+  `desactiver_parent_ia`, `enregistrer_restriction_parent_ia`) peuvent
+  écrire, verrou de 30 jours calculé et posé UNIQUEMENT côté serveur.
+- **Notifications réutilisées** : écrit dans la table `notifications`
+  existante (M9, `type = 'parent_ia_restriction'`), aucun mécanisme
+  parallèle inventé pour ce module.
+- **Visibilité élève + parent confirmé UNIQUEMENT, jamais le personnel** —
+  divergence délibérée de `fiche_visible()` (qui inclut le personnel),
+  reprise à l'identique de la source : le bien-être numérique d'un mineur
+  reste une donnée plus sensible que ses notes/absences, exclue du
+  personnel de l'établissement même pour la direction.
+- **Client n'appelle jamais Anthropic directement** : nouvelle Edge
+  Function `analyser_usage_parent_ia`, prompt technique interne porté mot
+  pour mot (`PARENT_IA_ANALYSIS_PROMPT` → `PROMPT_ANALYSE_USAGE_PARENT_IA`),
+  distinct des 3 personas officiels, jamais exposé en conversation.
+- **Périmètre confirmé pour cette passe** : déclaration manuelle
+  uniquement (formulaire app + minutes estimées). **Écart documenté,
+  reporté après discussion explicite** : mesure automatique Android
+  (`usage_stats`/`UsageStatsManager`, permission système
+  `PACKAGE_USAGE_STATS`) — non triviale (nécessite un plugin natif Android
+  + un appareil/émulateur réel avec la permission accordée pour être
+  vérifiée empiriquement, ce que l'outillage local actuel ne permet pas) ;
+  la déclaration manuelle construite ici couvre déjà exactement le chemin
+  de repli qu'utilisait la source pour iOS et pour Android sans permission
+  — jamais un mur « indisponible ».
+- **Vérifications de sécurité supplémentaires demandées explicitement,
+  faites AVANT clôture** (même discipline qu'en 1/7 et 3/7) :
+  - *Abus inter-comptes des 3 fonctions SECURITY DEFINER* — testé par
+    pgTAP (`tests/rls/43_m16_parent_ia.sql`, 22 assertions) : un autre
+    élève, la direction de l'établissement, et même le PARENT CONFIRMÉ (et
+    autorisé) de l'élève concerné se voient tous refuser
+    `activer_parent_ia`/`desactiver_parent_ia`/
+    `enregistrer_restriction_parent_ia` sur une fiche qui n'est pas la
+    leur — seul le `profile_id` de la fiche compte, jamais une relation
+    parentale même confirmée. Un tiers non lié (`parent_b`) ne lit NI la
+    configuration NI l'historique, avant et après l'écriture d'une vraie
+    restriction. Un bug réel a été trouvé et corrigé pendant cette
+    vérification : les triggers `_verifie_tenant` de ce module
+    n'étaient pas `SECURITY DEFINER`, donc leur lecture de
+    `fiches_eleves` (table étroitement protégée par RLS) s'exécutait sous
+    les droits de l'appelant — invisible pour un tiers ciblant la fiche
+    d'un autre élève, ce qui masquait le vrai rejet RLS (42501) derrière un
+    faux `FICHE_AUTRE_ETABLISSEMENT` (23514). Corrigé en rendant ces deux
+    triggers `SECURITY DEFINER` (leur rôle n'est qu'une vérification de
+    cohérence de données déjà garantie par la contrainte de clé étrangère,
+    jamais une décision d'autorisation — aucun risque à le faire).
+  - *Absence de fuite d'identité vers Anthropic* — vérifiée par un vrai
+    appel HTTP bout-en-bout (`supabase functions serve` + conteneur stub
+    Anthropic + JWT signé à la main, même méthodologie que 3/7) puis par
+    **recherche explicite dans les logs du stub** (`grep`, pas seulement
+    lecture de code) du nom, prénom, matricule et des deux UUID de
+    l'élève fixture : zéro occurrence des cinq ; confirmation positive que
+    les chiffres agrégés attendus (« 180 minutes », « 50/100 ») sont bien
+    ce qui a été transmis. La ligne `parent_ia_historique` et la
+    notification créées par cet appel réel ont aussi été vérifiées en
+    base.
+- **Vérifié** : `Files=43, Tests=287, PASS` côté pgTAP ; `flutter analyze`
+  propre (0 erreur/avertissement) ; suite `flutter test` verte, 285 tests
+  (+12 nouveaux — domaine + widgets couvrant consentement obligatoire,
+  verrou affiché et non contournable même par le propriétaire légitime,
+  déclaration, historique partagé élève/parent). Un vrai bug d'overflow
+  d'affichage (`RenderFlex`) et un `ListTile` peignant sur un fond opaque
+  sans `Material` propre ont aussi été trouvés et corrigés par ces tests de
+  widget, pas seulement par relecture visuelle.
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

@@ -16,6 +16,8 @@ import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
+import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
+import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
 import '../../planification/presentation/ecran_choix_classe.dart';
 import '../../planification/presentation/ecran_conflits_emploi.dart';
@@ -62,13 +64,13 @@ enum OngletCoquille {
 
   /// Onglets pertinents pour un rôle racine.
   static List<OngletCoquille> pourRole(RoleRacine? role) => switch (role) {
-        RoleRacine.eleve => const [accueil, scolarite, revision, boutique, profil],
-        RoleRacine.parent => const [accueil, scolarite, boutique, profil],
-        RoleRacine.enseignant => const [accueil, scolarite, profil],
-        RoleRacine.direction => const [accueil, scolarite, boutique, profil],
-        RoleRacine.vendeur => const [accueil, boutique, profil],
-        _ => const [accueil, profil],
-      };
+    RoleRacine.eleve => const [accueil, scolarite, revision, boutique, profil],
+    RoleRacine.parent => const [accueil, scolarite, boutique, profil],
+    RoleRacine.enseignant => const [accueil, scolarite, profil],
+    RoleRacine.direction => const [accueil, scolarite, boutique, profil],
+    RoleRacine.vendeur => const [accueil, boutique, profil],
+    _ => const [accueil, profil],
+  };
 }
 
 /// Coquille applicative : navigation adaptative (barre en bas sur mobile,
@@ -131,7 +133,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                     children: [
                       NavigationRail(
                         selectedIndex: index,
-                        onDestinationSelected: (i) => setState(() => _index = i),
+                        onDestinationSelected: (i) =>
+                            setState(() => _index = i),
                         labelType: NavigationRailLabelType.all,
                         destinations: [
                           for (final o in onglets)
@@ -267,16 +270,16 @@ class _CorpsOnglet extends ConsumerWidget {
   }
 
   static String _moduleAttendu(OngletCoquille onglet) => switch (onglet) {
-        OngletCoquille.accueil =>
-          'Tableau de bord — livré avec le module M20 (Reporting).',
-        OngletCoquille.scolarite =>
-          'Scolarité, notes et vie scolaire — modules M5 à M9.',
-        OngletCoquille.revision =>
-          'Quiz, profil de maîtrise et préparation aux examens — modules M10 à M12.',
-        OngletCoquille.boutique =>
-          'Marketplace AssoShop et paiements — modules M13 et M14.',
-        OngletCoquille.profil => '',
-      };
+    OngletCoquille.accueil =>
+      'Tableau de bord — livré avec le module M20 (Reporting).',
+    OngletCoquille.scolarite =>
+      'Scolarité, notes et vie scolaire — modules M5 à M9.',
+    OngletCoquille.revision =>
+      'Quiz, profil de maîtrise et préparation aux examens — modules M10 à M12.',
+    OngletCoquille.boutique =>
+      'Marketplace AssoShop et paiements — modules M13 et M14.',
+    OngletCoquille.profil => '',
+  };
 }
 
 /// Vue Profil — état civil, rôle, identité fédérée et déconnexion.
@@ -323,7 +326,9 @@ class _VueProfil extends ConsumerWidget {
           subtitle: const Text('Clair, sombre, système'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const EcranPreferencesApparence()),
+            MaterialPageRoute(
+              builder: (_) => const EcranPreferencesApparence(),
+            ),
           ),
         ),
         if (PersonaIa.depuisRoleRacine(p.roleRacine) != null)
@@ -335,13 +340,74 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.auto_awesome_outlined),
                 title: Text(persona.libelle),
-                subtitle: const Text('Assistant IA — signal, pas une décision automatisée'),
+                subtitle: const Text(
+                  'Assistant IA — signal, pas une décision automatisée',
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => EcranChatIa(etablissementId: etablissement.id, persona: persona),
+                    builder: (_) => EcranChatIa(
+                      etablissementId: etablissement.id,
+                      persona: persona,
+                    ),
                   ),
                 ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.eleve)
+          Consumer(
+            builder: (context, ref, _) {
+              final fiche = ref.watch(maFicheProvider).value;
+              return ListTile(
+                leading: const Icon(Icons.phonelink_lock_outlined),
+                title: const Text('PARENT IA'),
+                subtitle: const Text(
+                  'Autolimitation numérique — activable par toi seul(e)',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: fiche == null
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Lie d\'abord ton compte à ta fiche élève.',
+                          ),
+                        ),
+                      )
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EcranParentIaActivation(ficheEleveId: fiche.id),
+                        ),
+                      ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.parent)
+          Consumer(
+            builder: (context, ref, _) {
+              final enfant = ref.watch(enfantActifProvider);
+              return ListTile(
+                leading: const Icon(Icons.phonelink_lock_outlined),
+                title: const Text('PARENT IA'),
+                subtitle: const Text(
+                  'Historique des restrictions — lecture seule',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: enfant == null
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lie d\'abord un enfant à ton compte.'),
+                        ),
+                      )
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EcranParentIaHistorique(
+                            ficheEleveId: enfant.id,
+                            nomEleve: enfant.nomComplet,
+                          ),
+                        ),
+                      ),
               );
             },
           ),
@@ -351,7 +417,9 @@ class _VueProfil extends ConsumerWidget {
           title: const Text('Notifications'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => EcranNotifications(profileId: p.id)),
+            MaterialPageRoute(
+              builder: (_) => EcranNotifications(profileId: p.id),
+            ),
           ),
         ),
         ListTile(
@@ -360,7 +428,9 @@ class _VueProfil extends ConsumerWidget {
           subtitle: const Text('Canaux, horaires, fréquence'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => EcranPreferencesCanaux(profileId: p.id)),
+            MaterialPageRoute(
+              builder: (_) => EcranPreferencesCanaux(profileId: p.id),
+            ),
           ),
         ),
         ListTile(
@@ -369,7 +439,10 @@ class _VueProfil extends ConsumerWidget {
           subtitle: const Text('Prototype local — non synchronisé'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => EcranMessagerie(profileId: p.id, profileNom: p.nomAffiche)),
+            MaterialPageRoute(
+              builder: (_) =>
+                  EcranMessagerie(profileId: p.id, profileNom: p.nomAffiche),
+            ),
           ),
         ),
         ListTile(
@@ -387,14 +460,20 @@ class _VueProfil extends ConsumerWidget {
             ),
           ),
         ),
-        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.enseignant)
+        if (p.roleRacine == RoleRacine.parent ||
+            p.roleRacine == RoleRacine.enseignant)
           ListTile(
             leading: const Icon(Icons.menu_book_outlined),
             title: const Text('Cahier de liaison'),
             subtitle: const Text('Prototype local — non synchronisé'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => EcranCahierLiaison(profileId: p.id, profileNom: p.nomAffiche)),
+              MaterialPageRoute(
+                builder: (_) => EcranCahierLiaison(
+                  profileId: p.id,
+                  profileNom: p.nomAffiche,
+                ),
+              ),
             ),
           ),
         if (p.roleRacine == RoleRacine.direction)
@@ -409,13 +488,16 @@ class _VueProfil extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => EcranTableauBordCommunication(etablissementId: etablissement.id),
+                    builder: (_) => EcranTableauBordCommunication(
+                      etablissementId: etablissement.id,
+                    ),
                   ),
                 ),
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant ||
+            p.roleRacine == RoleRacine.direction)
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
@@ -427,7 +509,9 @@ class _VueProfil extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => EcranTableauBordRapports(etablissementId: etablissement.id),
+                    builder: (_) => EcranTableauBordRapports(
+                      etablissementId: etablissement.id,
+                    ),
                   ),
                 ),
               );
@@ -437,9 +521,12 @@ class _VueProfil extends ConsumerWidget {
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
-              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final structure = ref
+                  .watch(structureEtablissementProvider(null))
+                  .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              if (etablissement == null || anneeId == null)
+                return const SizedBox.shrink();
               return ListTile(
                 leading: const Icon(Icons.calendar_view_week_outlined),
                 title: const Text('Mon emploi du temps'),
@@ -456,13 +543,17 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant ||
+            p.roleRacine == RoleRacine.direction)
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
-              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final structure = ref
+                  .watch(structureEtablissementProvider(null))
+                  .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              if (etablissement == null || anneeId == null)
+                return const SizedBox.shrink();
               return ListTile(
                 leading: const Icon(Icons.class_outlined),
                 title: const Text('Classes — emploi du temps & progression'),
@@ -471,30 +562,35 @@ class _VueProfil extends ConsumerWidget {
                   MaterialPageRoute(
                     builder: (_) => EcranChoixClasse(
                       titre: 'Choisir une classe',
-                      onSelectionner: (context, classe) => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => EcranPlanificationClasse(
-                            classeId: classe.id,
-                            anneeId: anneeId,
-                            titre: classe.nom,
-                            etablissementId: etablissement.id,
-                            peutVoirProgression: true,
+                      onSelectionner: (context, classe) =>
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => EcranPlanificationClasse(
+                                classeId: classe.id,
+                                anneeId: anneeId,
+                                titre: classe.nom,
+                                etablissementId: etablissement.id,
+                                peutVoirProgression: true,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
                     ),
                   ),
                 ),
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant ||
+            p.roleRacine == RoleRacine.direction)
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
-              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final structure = ref
+                  .watch(structureEtablissementProvider(null))
+                  .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              if (etablissement == null || anneeId == null)
+                return const SizedBox.shrink();
               return Column(
                 children: [
                   ListTile(
@@ -503,7 +599,10 @@ class _VueProfil extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => EcranSalles(etablissementId: etablissement.id, anneeId: anneeId),
+                        builder: (_) => EcranSalles(
+                          etablissementId: etablissement.id,
+                          anneeId: anneeId,
+                        ),
                       ),
                     ),
                   ),
@@ -529,9 +628,12 @@ class _VueProfil extends ConsumerWidget {
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
-              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final structure = ref
+                  .watch(structureEtablissementProvider(null))
+                  .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              if (etablissement == null || anneeId == null)
+                return const SizedBox.shrink();
               return ListTile(
                 leading: const Icon(Icons.rule_outlined),
                 title: const Text('Conflits d\'occupation'),
@@ -539,7 +641,10 @@ class _VueProfil extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => EcranConflitsEmploi(etablissementId: etablissement.id, anneeId: anneeId),
+                    builder: (_) => EcranConflitsEmploi(
+                      etablissementId: etablissement.id,
+                      anneeId: anneeId,
+                    ),
                   ),
                 ),
               );
@@ -556,7 +661,9 @@ class _VueProfil extends ConsumerWidget {
                 onTap: enfant == null
                     ? null
                     : () async {
-                        final inscriptions = await ref.read(inscriptionsDeFicheProvider(enfant.id).future);
+                        final inscriptions = await ref.read(
+                          inscriptionsDeFicheProvider(enfant.id).future,
+                        );
                         if (inscriptions.isEmpty || !context.mounted) return;
                         final inscription = inscriptions.first;
                         Navigator.of(context).push(
@@ -583,7 +690,9 @@ class _VueProfil extends ConsumerWidget {
                 onTap: fiche == null
                     ? null
                     : () async {
-                        final inscriptions = await ref.read(inscriptionsDeFicheProvider(fiche.id).future);
+                        final inscriptions = await ref.read(
+                          inscriptionsDeFicheProvider(fiche.id).future,
+                        );
                         if (inscriptions.isEmpty || !context.mounted) return;
                         final inscription = inscriptions.first;
                         Navigator.of(context).push(
@@ -611,8 +720,11 @@ class _VueProfil extends ConsumerWidget {
                 onTap: enfant == null
                     ? null
                     : () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => EcranMesRapports(ficheEleveId: enfant.id)),
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EcranMesRapports(ficheEleveId: enfant.id),
                         ),
+                      ),
               );
             },
           ),
@@ -628,19 +740,25 @@ class _VueProfil extends ConsumerWidget {
                 onTap: fiche == null
                     ? null
                     : () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => EcranMesRapports(ficheEleveId: fiche.id)),
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              EcranMesRapports(ficheEleveId: fiche.id),
                         ),
+                      ),
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant ||
+            p.roleRacine == RoleRacine.direction)
           ListTile(
             leading: const Icon(Icons.apartment_outlined),
             title: const Text('Structures & annuaire'),
             subtitle: const Text('Campus, années, périodes, classes'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const EcranStructureEtablissement()),
+              MaterialPageRoute(
+                builder: (_) => const EcranStructureEtablissement(),
+              ),
             ),
           ),
         if (p.roleRacine == RoleRacine.direction)
@@ -655,7 +773,9 @@ class _VueProfil extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => EcranAlertesDecrochage(etablissementId: etablissement.id),
+                    builder: (_) => EcranAlertesDecrochage(
+                      etablissementId: etablissement.id,
+                    ),
                   ),
                 ),
               );
@@ -671,22 +791,30 @@ class _VueProfil extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.badge_outlined),
                     title: const Text('Personnel & RH'),
-                    subtitle: const Text('Annuaire, contrats, congés, absences'),
+                    subtitle: const Text(
+                      'Annuaire, contrats, congés, absences',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => EcranAnnuairePersonnel(etablissementId: etablissement.id),
+                        builder: (_) => EcranAnnuairePersonnel(
+                          etablissementId: etablissement.id,
+                        ),
                       ),
                     ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.insights_outlined),
                     title: const Text('Tableau de bord RH'),
-                    subtitle: const Text('Effectifs et remplacements — signal IA'),
+                    subtitle: const Text(
+                      'Effectifs et remplacements — signal IA',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => EcranTableauBordRh(etablissementId: etablissement.id),
+                        builder: (_) => EcranTableauBordRh(
+                          etablissementId: etablissement.id,
+                        ),
                       ),
                     ),
                   ),
@@ -694,7 +822,8 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant ||
+            p.roleRacine == RoleRacine.direction)
           Consumer(
             builder: (context, ref, _) {
               return ListTile(
@@ -703,16 +832,22 @@ class _VueProfil extends ConsumerWidget {
                 subtitle: const Text('Contrat, congés, absences, paie'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
-                  final employe = await ref.read(monEmployeProvider(p.id).future);
+                  final employe = await ref.read(
+                    monEmployeProvider(p.id).future,
+                  );
                   if (!context.mounted) return;
                   if (employe == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Aucun dossier RH associé à ce compte.')),
+                      const SnackBar(
+                        content: Text('Aucun dossier RH associé à ce compte.'),
+                      ),
                     );
                     return;
                   }
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => EcranFicheEmploye(employe: employe)),
+                    MaterialPageRoute(
+                      builder: (_) => EcranFicheEmploye(employe: employe),
+                    ),
                   );
                 },
               );
@@ -726,10 +861,15 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.calculate_outlined),
                 title: const Text('Comptabilité'),
-                subtitle: const Text('Journal, grand livre, balance — supervision IA'),
+                subtitle: const Text(
+                  'Journal, grand livre, balance — supervision IA',
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => EcranComptabilite(etablissementId: etablissement.id)),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        EcranComptabilite(etablissementId: etablissement.id),
+                  ),
                 ),
               );
             },
@@ -740,7 +880,9 @@ class _VueProfil extends ConsumerWidget {
             title: const Text('Nouvelle inscription'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const EcranCreationInscription()),
+              MaterialPageRoute(
+                builder: (_) => const EcranCreationInscription(),
+              ),
             ),
           ),
         if (p.roleRacine == RoleRacine.direction)
@@ -756,9 +898,12 @@ class _VueProfil extends ConsumerWidget {
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
-              final structure = ref.watch(structureEtablissementProvider(null)).value;
+              final structure = ref
+                  .watch(structureEtablissementProvider(null))
+                  .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null) return const SizedBox.shrink();
+              if (etablissement == null || anneeId == null)
+                return const SizedBox.shrink();
               return Column(
                 children: [
                   ListTile(
@@ -781,7 +926,9 @@ class _VueProfil extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => EcranCahierEncaissements(etablissementId: etablissement.id),
+                        builder: (_) => EcranCahierEncaissements(
+                          etablissementId: etablissement.id,
+                        ),
                       ),
                     ),
                   ),

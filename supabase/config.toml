@@ -70,5 +70,9 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 
+[functions.analyser_usage_parent_ia]
+enabled = true
+verify_jwt = true
+
 [edge_runtime]
 policy = "oneshot"

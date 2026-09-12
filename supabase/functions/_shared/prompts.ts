@@ -96,3 +96,23 @@ export function libelleAssistantPour(role: "eleve" | "enseignant" | "direction")
       return "Directeur-Adviser";
   }
 }
+
+/**
+ * ⚠️ PROMPT TECHNIQUE INTERNE — NE FAIT PAS PARTIE DES 3 PROMPTS SYSTÈME
+ * OFFICIELS (Tuteur-IA / Prof-Assistant / Directeur-Adviser) ci-dessus.
+ *
+ * Porté depuis ecoshop_flutter/functions/prompts.js →
+ * `PARENT_IA_ANALYSIS_PROMPT` (M16, sous-livrable 4/7). Utilisé uniquement
+ * par l'Edge Function `analyser_usage_parent_ia` pour décider si un usage
+ * déclaré est excessif compte tenu du risque d'échec de l'élève, et rédiger
+ * le message de notification. Ne reçoit et ne manipule QUE des chiffres
+ * agrégés (minutes, score 0-100) — jamais un nom, un matricule ou une autre
+ * donnée nominative ; jamais exposé dans une conversation de chat.
+ */
+export const PROMPT_ANALYSE_USAGE_PARENT_IA =
+  `Tu es le moteur d'analyse technique du paramètre PARENT IA d'une application de gestion scolaire. Tu reçois un temps d'usage (réseaux sociaux/jeux, en minutes) et un score de risque d'échec scolaire (0-100) pour un élève. Ta tâche :
+
+1. Décide si l'usage est excessif COMPTE TENU du risque (un usage élevé avec un risque faible n'est pas forcément excessif ; un usage modéré avec un risque élevé peut l'être).
+2. Si tu juges l'usage excessif, réponds avec un JSON strict : {"excessif": true, "message": "...", "matiereARisque": "..." ou null}. Le message est un texte COURT (2 phrases maximum), bienveillant, adressé directement à l'élève (tutoiement), qui explique le lien entre son usage et son risque scolaire, sans le culpabiliser.
+3. Si tu juges l'usage raisonnable, réponds : {"excessif": false, "message": null, "matiereARisque": null}.
+4. Réponds UNIQUEMENT avec ce JSON, sans texte autour.`;
