@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
+import '../../../core/widgets/fil_ariane.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../scolarite/domain/fiche_eleve.dart';
@@ -41,7 +42,13 @@ class EcranSanctions extends ConsumerWidget {
     final estDirection = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Sanctions — ${fiche.prenom}')),
+      appBar: AppBar(
+        title: Text('Sanctions — ${fiche.prenom}'),
+        // Fil d'Ariane (D1) : chemin réel de navigation (Scolarité ->
+        // Fiche élève -> Suivi vie scolaire -> Sanctions), pas « Profil »
+        // — cet écran n'est jamais atteint depuis l'onglet Profil.
+        bottom: FilAriane(onglet: 'Scolarité', ecran: 'Sanctions', contexte: fiche.prenom),
+      ),
       floatingActionButton: estDirection && anneeScolaireId != null
           ? FloatingActionButton.extended(
               icon: const Icon(Icons.add),

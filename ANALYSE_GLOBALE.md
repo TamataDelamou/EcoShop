@@ -900,9 +900,89 @@ sous-livrables livrés et vérifiés localement sans régression cumulée
 `flutter analyze` propre), le rapport d'écart rétroactif §4.2.5 intégralement
 arbitré, les deux dettes transversales ci-dessus explicitement tracées avec
 leur jalon (ou l'absence assumée de jalon pour la seconde) plutôt que
-silencieusement oubliées. **La Phase D n'est pas démarrée** : son ouverture
-exige une demande explicite et distincte du porteur de projet, jamais
-déduite de la clôture de M16.
+silencieusement oubliées. La Phase D a été ouverte séparément et
+explicitement par le porteur de projet le 2026-09-12 (voir D1 ci-dessous) —
+jamais déduite de la clôture de M16.
+
+---
+
+## 4.5 Phase D — Expérience utilisateur & configuration (D1 → D6)
+
+Ouverte le 2026-09-12, sur demande explicite et distincte du porteur de
+projet (M16 est clos, ses dettes tracées). Modules distincts D1 → D6, même
+discipline que M16 : 5 livrables habituels (code, tests, doc, dette
+résolue, rapport d'écart vs `ecoshop_flutter`) + point de contrôle formel,
+vérification empirique avant clôture, tout écart posé en question plutôt
+que tranché seul.
+
+*D1 — Navigation & en-tête dynamique* (clos le 2026-09-12) : TopBar enrichi,
+fil d'Ariane dynamique, en-tête de page (titre + descriptif), sélecteur
+grille/liste/cartes.
+
+- **État des lieux `ecoshop_flutter`** : aucun équivalent. La coquille
+  source (`lib/core/navigation/app_shell.dart`) n'a aucun AppBar au niveau
+  shell (chaque écran gère le sien individuellement), aucun fil d'Ariane
+  nulle part dans `lib/`, et le catalogue marketplace source
+  (`catalogue_screen.dart`) affiche un `GridView` fixe sans aucune bascule
+  de vue. **Écart posé en question avant codage** (aucun précédent à
+  trancher seul) : 4 points de cadrage validés par le porteur de projet le
+  2026-09-12 — profondeur du fil d'Ariane (2-3 niveaux réels, jamais sur les
+  5 onglets racine, format « Onglet > Écran(— Entité) »), périmètre du
+  `PageHeader` (5 onglets racine uniquement pour cette passe, pas les
+  écrans poussés), premier terrain d'application du sélecteur de vue
+  (catalogue marketplace), contenu du TopBar enrichi (notifications +
+  avatar, pas de recherche).
+- **`FilAriane`** (`core/widgets/fil_ariane.dart`, `PreferredSizeWidget`
+  pour un usage direct en `AppBar(bottom: ...)`) — câblé sur UN écran cette
+  passe : `EcranSanctions` (« Scolarité > Sanctions — Aissatou »). Écart
+  factuel corrigé par rapport à l'exemple de cadrage donné (qui citait
+  « Profil > Sanctions ») : vérifié dans le code que `EcranSanctions` n'est
+  jamais atteint depuis l'onglet Profil, seulement via Scolarité → Fiche
+  élève → Suivi vie scolaire → Sanctions — l'onglet réel du fil d'Ariane
+  reflète ce chemin, pas l'exemple. Les autres écrans poussés l'adopteront
+  au fil de l'eau, même logique que `PageHeader` ci-dessous — pas un
+  balayage exhaustif dans cette passe.
+- **`PageHeader`** (`core/widgets/page_header.dart`) — appliqué aux 5
+  onglets racine via `_CorpsOnglet` (`coquille_app.dart`), jamais retouché
+  dans `EcranScolarite`/`EcranMarketplace`/`_VueProfil` eux-mêmes. **Décision
+  d'implémentation documentée** (au-delà du cadrage explicite, pour éviter
+  une redondance visuelle) : le titre dynamique de l'onglet, auparavant
+  affiché dans l'AppBar, en a été retiré (l'AppBar affiche désormais
+  l'identité statique « EcoShop ») puisque `PageHeader` le porte maintenant
+  — sinon le nom de l'onglet apparaissait deux fois à l'écran. **Conséquence
+  assumée, pas corrigée dans cette passe** : `EcranMarketplace` et
+  `EcranStructureEtablissement` (onglet Scolarité, rôle direction)
+  embarquent chacun leur propre `Scaffold`/`AppBar` interne
+  (« Marketplace », « Structures & annuaire ») — un empilement visuel
+  `PageHeader` + AppBar interne en résulte pour ces deux cas. Retoucher ces
+  écrans est hors périmètre de ce sous-livrable (coquille uniquement) ; à
+  consolider quand ils seront eux-mêmes retouchés pour d'autres raisons,
+  même logique que le rollout progressif de `PageHeader`.
+- **`SelecteurVue`/`ModeAffichage`** (`core/widgets/selecteur_vue.dart`,
+  `SegmentedButton` à 3 segments liste/grille/cartes) — widget générique
+  sans connaissance du contenu, conçu explicitement pour que D2 le
+  réutilise tel quel. Premier terrain d'application : `EcranCatalogue`
+  (marketplace), mode par défaut « cartes » pour préserver le rendu
+  existant tant que personne ne bascule le sélecteur ; mode « liste »
+  ajouté (lignes denses sans `Card`) et mode « grille » ajouté (nouveau,
+  2 colonnes, 4 sur grand écran ≥ 720 px).
+- **TopBar enrichi** (`coquille_app.dart`) — raccourci notifications
+  (`IconButton` → `EcranNotifications`, système M9 existant, aucune
+  nouvelle logique de comptage non lu ajoutée — un raccourci, pas un
+  badge) et raccourci avatar/menu profil compact (`_RaccourciAvatar`,
+  initiales dérivées de `Profil.nomAffiche`, menu « Mon profil »/« Se
+  déconnecter » réutilisant `session_logout.dart` sans dupliquer sa
+  logique). Pas de recherche, comme convenu.
+- **Dette résolue** : aucune dette préexistante ciblée par ce sous-livrable
+  (N/A) — l'empilement `PageHeader`/AppBar interne relevé ci-dessus est une
+  dette **nouvellement identifiée**, pas résolue, à traiter avec les écrans
+  concernés.
+- **Vérifié** : `flutter analyze` propre (0 erreur/avertissement) ; suite
+  `flutter test` verte, 302 tests (+8 nouveaux — `FilAriane` avec/sans
+  contexte, `PageHeader`, `SelecteurVue` et ses 3 segments, `EcranCatalogue`
+  dans ses 3 modes) ; aucun backend touché — suite pgTAP tout de même
+  rejouée par précaution : `Files=44, Tests=313, PASS`, sans changement
+  (aucune migration/RLS modifiée dans ce sous-livrable).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

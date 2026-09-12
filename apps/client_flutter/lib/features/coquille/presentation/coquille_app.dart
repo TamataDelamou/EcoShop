@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/role_racine.dart';
 import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
+import '../../../core/widgets/page_header.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../communication/presentation/ecran_notifications.dart';
@@ -50,17 +51,46 @@ import '../application/sync_composition.dart';
 /// ce que le rôle couvre. Ce filtrage est **ergonomique**, pas sécuritaire —
 /// atteindre un onglet ne donne accès à aucune donnée que RLS refuse.
 enum OngletCoquille {
-  accueil('Accueil', Icons.home_outlined, Icons.home),
-  scolarite('Scolarité', Icons.school_outlined, Icons.school),
-  revision('Révision', Icons.psychology_outlined, Icons.psychology),
-  boutique('Boutique', Icons.storefront_outlined, Icons.storefront),
-  profil('Profil', Icons.person_outline, Icons.person);
+  accueil(
+    'Accueil',
+    Icons.home_outlined,
+    Icons.home,
+    'Tableau de bord et indicateurs clés de votre établissement',
+  ),
+  scolarite(
+    'Scolarité',
+    Icons.school_outlined,
+    Icons.school,
+    'Inscriptions, notes, absences et suivi de la vie scolaire',
+  ),
+  revision(
+    'Révision',
+    Icons.psychology_outlined,
+    Icons.psychology,
+    'Quiz, profil de maîtrise et préparation aux examens',
+  ),
+  boutique(
+    'Boutique',
+    Icons.storefront_outlined,
+    Icons.storefront,
+    "Marketplace AssoShop et paiements de l'établissement",
+  ),
+  profil(
+    'Profil',
+    Icons.person_outline,
+    Icons.person,
+    'Votre compte, vos préférences et vos outils IA',
+  );
 
-  const OngletCoquille(this.libelle, this.icone, this.iconeActive);
+  const OngletCoquille(this.libelle, this.icone, this.iconeActive, this.descriptif);
 
   final String libelle;
   final IconData icone;
   final IconData iconeActive;
+
+  /// Descriptif court affiché par `PageHeader` (D1) — appliqué uniquement
+  /// aux 5 onglets racine pour cette passe.
+  final String descriptif;
 
   /// Onglets pertinents pour un rôle racine.
   static List<OngletCoquille> pourRole(RoleRacine? role) => switch (role) {
@@ -120,8 +150,32 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(onglets[index].libelle),
-        actions: const [_IndicateurEtablissement()],
+        // TopBar enrichi (D1) : le titre dynamique de l'onglet vit
+        // désormais dans `PageHeader` (voir `_CorpsOnglet`), pour ne pas le
+        // répéter à l'identique deux fois à l'écran — l'AppBar porte
+        // uniquement l'identité de l'app + les raccourcis globaux.
+        title: const Text('EcoShop'),
+        actions: [
+          const _IndicateurEtablissement(),
+          if (profil != null)
+            IconButton(
+              tooltip: 'Notifications',
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EcranNotifications(profileId: profil.id),
+                ),
+              ),
+            ),
+          if (profil != null)
+            _RaccourciAvatar(
+              profil: profil,
+              onOuvrirProfil: () {
+                final i = onglets.indexOf(OngletCoquille.profil);
+                if (i >= 0) setState(() => _index = i);
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -226,6 +280,50 @@ class _IndicateurEtablissement extends ConsumerWidget {
   }
 }
 
+/// Raccourci avatar/menu profil compact (TopBar enrichi, D1) — ouvre l'onglet
+/// Profil ou déclenche la déconnexion (`session_logout.dart`, mécanisme déjà
+/// existant, jamais dupliqué ici). Pas de photo de profil dans `Profil` :
+/// avatar à initiales, dérivé de `nomAffiche` (déjà robuste au repli sur
+/// l'identifiant canonique si aucun nom n'est renseigné).
+class _RaccourciAvatar extends ConsumerWidget {
+  const _RaccourciAvatar({required this.profil, required this.onOuvrirProfil});
+
+  final Profil profil;
+  final VoidCallback onOuvrirProfil;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      tooltip: 'Mon compte',
+      onSelected: (valeur) {
+        if (valeur == 'profil') onOuvrirProfil();
+        if (valeur == 'deconnexion') ref.deconnecterEtPurgerDonneesLocales();
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(value: 'profil', child: Text('Mon profil')),
+        PopupMenuItem(value: 'deconnexion', child: Text('Se déconnecter')),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: CircleAvatar(
+          radius: 16,
+          child: Text(
+            _initiales(profil.nomAffiche),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _initiales(String nomAffiche) {
+    final mots = nomAffiche.trim().split(RegExp(r'\s+')).where((m) => m.isNotEmpty).toList();
+    if (mots.isEmpty) return '?';
+    if (mots.length == 1) return mots.first.substring(0, 1).toUpperCase();
+    return (mots.first.substring(0, 1) + mots[1].substring(0, 1)).toUpperCase();
+  }
+}
+
 /// Contenu de l'onglet courant.
 ///
 /// Chaque onglet est un point d'ancrage : les verticaux (scolarité M5-M9,
@@ -238,6 +336,22 @@ class _CorpsOnglet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // PageHeader (D1) : titre + descriptif, appliqué aux 5 onglets racine
+    // UNIQUEMENT dans cette passe — les écrans délégués ci-dessous
+    // (EcranScolarite direction, EcranMarketplace) portent parfois déjà
+    // leur propre AppBar interne (« Structures & annuaire », « Marketplace »)
+    // : un empilement visuel en résulte, assumé et documenté dans le
+    // rapport d'écart de ce sous-livrable plutôt que corrigé en douce en
+    // retouchant ces écrans, hors périmètre ici.
+    return Column(
+      children: [
+        PageHeader(titre: onglet.libelle, descriptif: onglet.descriptif),
+        Expanded(child: _contenu(context)),
+      ],
+    );
+  }
+
+  Widget _contenu(BuildContext context) {
     if (onglet == OngletCoquille.profil) {
       return _VueProfil(profil: profil);
     }
@@ -256,8 +370,6 @@ class _CorpsOnglet extends ConsumerWidget {
           children: [
             Icon(onglet.iconeActive, size: 56),
             const SizedBox(height: 16),
-            Text(onglet.libelle, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
             Text(
               _moduleAttendu(onglet),
               textAlign: TextAlign.center,
