@@ -6,6 +6,7 @@ import '../../../core/sync/sync_engine.dart';
 import '../domain/appreciation.dart';
 import '../domain/bulletin.dart';
 import '../domain/classement_eleve.dart';
+import '../domain/detail_matiere_bulletin.dart';
 import '../domain/enums_notes.dart';
 import '../domain/evaluation.dart';
 import '../domain/note.dart';
@@ -202,6 +203,18 @@ class CachedNotesRepository implements NotesRepository {
         periodeId: periodeId,
         type: type,
       );
+
+  @override
+  Future<List<DetailMatiereBulletin>> detailBulletinMatieres(
+    String ficheEleveId,
+    String classeId, {
+    String? periodeId,
+  }) =>
+      _distant.detailBulletinMatieres(ficheEleveId, classeId, periodeId: periodeId);
+
+  @override
+  Future<bool> bulletinsExistentPourClasse(String classeId, {String? periodeId}) =>
+      _distant.bulletinsExistentPourClasse(classeId, periodeId: periodeId);
 
   @override
   Future<bool> saisirNote(Note note) async {

@@ -1,6 +1,7 @@
 import 'appreciation.dart';
 import 'bulletin.dart';
 import 'classement_eleve.dart';
+import 'detail_matiere_bulletin.dart';
 import 'enums_notes.dart';
 import 'evaluation.dart';
 import 'note.dart';
@@ -70,6 +71,27 @@ abstract interface class NotesRepository {
     String? periodeId,
     TypeBulletin type,
   });
+
+  /// Détail du bulletin par matière (D5, cahier — tableau matière avant le
+  /// tableau moyenne/rang) : moyenne déléguée à [moyenneEleve] (aucun
+  /// nouveau calcul), nom et email de l'enseignant affecté. RPC serveur
+  /// `detail_bulletin_matieres`, silencieuse plutôt que bloquante : renvoie
+  /// une liste vide pour un cycle primaire (ISCED 1 — un seul maître de
+  /// classe, déjà couvert par le bloc signatures, pas de tableau par
+  /// matière), une classe sans niveau renseigné, ou un appelant non
+  /// personnel.
+  Future<List<DetailMatiereBulletin>> detailBulletinMatieres(
+    String ficheEleveId,
+    String classeId, {
+    String? periodeId,
+  });
+
+  /// Un bulletin existe-t-il déjà pour cette classe et cette période (D5,
+  /// cahier §12.3) ? Sert uniquement à avertir l'utilisateur avant une
+  /// régénération (une note reste modifiable par le responsable jusqu'à la
+  /// proclamation de fin d'année — la génération met à jour en place, voir
+  /// [genererBulletinsClasse], jamais un doublon).
+  Future<bool> bulletinsExistentPourClasse(String classeId, {String? periodeId});
 
   /// Crée une évaluation (enseignant affecté ou permission scolarité).
   Future<Evaluation> creerEvaluation(Evaluation evaluation);

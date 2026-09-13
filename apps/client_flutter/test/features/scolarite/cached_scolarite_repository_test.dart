@@ -75,6 +75,12 @@ class _FauxDistant implements ScolariteRepository {
   }
 
   @override
+  Future<int?> classeIsced(String classeId) async {
+    if (horsLigne) throw const ErreurScolarite('ERREUR_RESEAU');
+    return null;
+  }
+
+  @override
   Future<List<AffectationEnseignant>> affectationsDeClasse(String classeId) async {
     if (horsLigne) throw const ErreurScolarite('ERREUR_RESEAU');
     return const [];

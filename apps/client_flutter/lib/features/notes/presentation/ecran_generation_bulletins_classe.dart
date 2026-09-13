@@ -5,6 +5,7 @@ import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../export_pdf/data/bulletin_pdf_builder.dart';
 import '../../export_pdf/presentation/ecran_apercu_pdf.dart';
+import '../../referentiel/application/referentiel_providers.dart';
 import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/domain/classe.dart';
 import '../../scolarite/domain/enums_scolarite.dart';
@@ -36,6 +37,13 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
   bool _exportEnCours = false;
   String? _erreur;
   List<Bulletin>? _bulletinsGeneres;
+  bool _bulletinExistant = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _verifierExistant(null);
+  }
 
   TypeBulletin _typeBulletinPour(PeriodeScolaire? periode) {
     if (periode == null) return TypeBulletin.annuel;
@@ -46,7 +54,41 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
     };
   }
 
+  /// Avertissement avant régénération (cahier §12.3 : une note reste
+  /// modifiable par le responsable jusqu'à la proclamation de fin d'année —
+  /// relancer recalcule tout à partir des notes actuelles, sans créer de
+  /// doublon, voir `NotesRepository.genererBulletinsClasse`). Ne remplace
+  /// pas la garantie backend, purement informatif côté écran.
+  Future<void> _verifierExistant(String? periodeId) async {
+    final existe = await ref.read(notesRepositoryProvider).bulletinsExistentPourClasse(
+          widget.classe.id,
+          periodeId: periodeId,
+        );
+    if (mounted) setState(() => _bulletinExistant = existe);
+  }
+
+  Future<bool> _confirmerSiExistant() async {
+    if (!_bulletinExistant) return true;
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Bulletins déjà générés'),
+        content: const Text(
+          'Un bulletin existe déjà pour cette période. La relance recalculera '
+          "l'ensemble des moyennes et rangs à partir des notes actuelles.",
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Continuer')),
+        ],
+      ),
+    );
+    return confirme ?? false;
+  }
+
   Future<void> _generer(PeriodeScolaire? periode) async {
+    if (!await _confirmerSiExistant()) return;
+
     setState(() {
       _enCours = true;
       _erreur = null;
@@ -60,7 +102,10 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
             type: _typeBulletinPour(periode),
           );
       if (!mounted) return;
-      setState(() => _bulletinsGeneres = bulletins);
+      setState(() {
+        _bulletinsGeneres = bulletins;
+        _bulletinExistant = bulletins.isNotEmpty;
+      });
       ref.invalidate(bulletinsDeFicheProvider);
     } catch (_) {
       if (!mounted) return;
@@ -79,22 +124,41 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
 
     setState(() => _exportEnCours = true);
     try {
-      final inscriptions = await ref.read(scolariteRepositoryProvider).inscriptionsDeClasse(widget.classe.id);
+      final notes = ref.read(notesRepositoryProvider);
+      final scolarite = ref.read(scolariteRepositoryProvider);
+      final periodeId = bulletins.first.periodeId;
+
+      final inscriptions = await scolarite.inscriptionsDeClasse(widget.classe.id);
       final fichesParId = {
         for (final i in inscriptions)
           if (i.fiche != null) i.ficheEleveId: i.fiche!,
       };
 
-      final paires = [
+      final isced = await scolarite.classeIsced(widget.classe.id);
+      final pays = await ref.read(paysPedagogiquesProvider.future);
+      final paysEtablissement = etablissement.paysCode == null
+          ? null
+          : pays.where((p) => p.codeIso == etablissement.paysCode).firstOrNull;
+
+      final bulletinsAvecFiche = [
         for (final b in bulletins)
           if (fichesParId[b.ficheEleveId] != null) (bulletin: b, fiche: fichesParId[b.ficheEleveId]!),
       ]..sort((a, b) => a.fiche.nom.compareTo(b.fiche.nom));
+
+      final paires = await Future.wait([
+        for (final p in bulletinsAvecFiche)
+          notes
+              .detailBulletinMatieres(p.bulletin.ficheEleveId, widget.classe.id, periodeId: periodeId)
+              .then((details) => (bulletin: p.bulletin, fiche: p.fiche, detailMatieres: details)),
+      ]);
 
       final octets = await construireBulletinsClassePdf(
         paires: paires,
         etablissement: etablissement,
         variante: variante,
         titreClasse: 'Bulletins - ${widget.classe.nom}',
+        pays: paysEtablissement,
+        isced: isced,
       );
       if (!mounted) return;
       await Navigator.of(context).push(
@@ -148,7 +212,15 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
                     const DropdownMenuItem<String?>(value: null, child: Text('Bulletin annuel (aucune période)')),
                     for (final p in periodes) DropdownMenuItem<String?>(value: p.id, child: Text(p.libelle)),
                   ],
-                  onChanged: _enCours ? null : (v) => setState(() => _periodeId = v),
+                  onChanged: _enCours
+                      ? null
+                      : (v) {
+                          setState(() {
+                            _periodeId = v;
+                            _bulletinsGeneres = null;
+                          });
+                          _verifierExistant(v);
+                        },
                 ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
@@ -156,7 +228,11 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
                   icon: _enCours
                       ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.fact_check_outlined),
-                  label: const Text('Générer les bulletins de la classe'),
+                  label: Text(
+                    _bulletinExistant
+                        ? 'Mettre à jour / Recalculer les bulletins'
+                        : 'Générer les bulletins de la classe',
+                  ),
                 ),
                 if (_erreur != null) ...[
                   const SizedBox(height: 12),

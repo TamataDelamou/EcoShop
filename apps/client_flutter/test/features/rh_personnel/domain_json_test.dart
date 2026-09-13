@@ -42,6 +42,53 @@ void main() {
 
       expect(employe.versJsonEcriture().containsKey('nom_affiche'), isFalse);
     });
+
+    test('téléphone et email (D5) : versJsonCache/depuisJsonCache fidèles, distincts', () {
+      final employe = Employe(
+        id: 'e1',
+        etablissementId: 'et1',
+        profileId: 'p1',
+        matricule: 'MAT-001',
+        dateEmbauche: DateTime(2020, 9, 1),
+        telephone: '+224600000001',
+        email: 'aicha.diallo@ecole-test.gn',
+      );
+
+      final relu = Employe.depuisJsonCache(employe.versJsonCache());
+
+      expect(relu.telephone, '+224600000001');
+      expect(relu.email, 'aicha.diallo@ecole-test.gn');
+      expect(relu.telephone, isNot(equals(relu.email)));
+    });
+
+    test('téléphone et email (D5) : versJsonEcriture les inclut tous les deux', () {
+      final employe = Employe(
+        id: 'e1',
+        etablissementId: 'et1',
+        profileId: 'p1',
+        matricule: 'MAT-001',
+        dateEmbauche: DateTime(2020, 9, 1),
+        telephone: '+224600000001',
+        email: 'aicha.diallo@ecole-test.gn',
+      );
+
+      final json = employe.versJsonEcriture();
+      expect(json['telephone'], '+224600000001');
+      expect(json['email'], 'aicha.diallo@ecole-test.gn');
+    });
+
+    test('téléphone et email absents par défaut (résilience — aucune valeur inventée)', () {
+      final employe = Employe(
+        id: 'e1',
+        etablissementId: 'et1',
+        profileId: 'p1',
+        matricule: 'MAT-001',
+        dateEmbauche: DateTime(2020, 9, 1),
+      );
+
+      expect(employe.telephone, isNull);
+      expect(employe.email, isNull);
+    });
   });
 
   group('Contrat', () {

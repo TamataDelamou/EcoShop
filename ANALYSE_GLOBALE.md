@@ -1381,6 +1381,83 @@ officiels (chapitre 18) est différée en bloc, pas construite dans D5.
   panne réseau) ; suite `flutter test` complète rejouée : **344/344**,
   verte (332 + 12).
 
+*D5 — complément de contenu réglementaire du bulletin* (clos le
+2026-09-13, avant tout push de D5) : exigences spécifiées après coup par le
+porteur de projet, absentes de f8968e1 — le document produit jusque-là était
+incomplet pour un usage réel.
+
+- **Pays + Ministère de tutelle en en-tête** — nouvelle colonne
+  `pays_pedagogiques.ministere_tutelle` (nullable, jamais bloquante :
+  absente → ligne simplement omise, même principe que les champs de fusion
+  du chapitre 18). Vérifié avant d'ajouter : distincte de
+  `organisme_examinateur` (déjà existant, mais c'est l'organisme
+  certificateur d'un examen, pas l'autorité de tutelle administrative) —
+  aucune valeur n'a été inventée pour la peupler, elle reste NULL tant
+  qu'une source ministérielle fiable n'est pas intégrée.
+- **Tableau par matière (secondaire uniquement)** — vérification demandée
+  explicitement contre la classification de cycle réelle avant de coder :
+  le code de cycle littéral (`cycles_educatifs.code`) varie par pays
+  (« college »/« moyen »/« junior_high » désignent tous le palier
+  secondaire 1er cycle) — la clé technique correcte est le **niveau ISCED
+  normalisé** (`niveaux_educatifs.isced`, 1/2/3), confirmé et utilisé tel
+  quel, pas une supposition tranchée seul. Nouvelle RPC `classe_isced`
+  (personnel uniquement, résiliente : NULL si niveau non renseigné ou
+  appelant non personnel) et `detail_bulletin_matieres` (matière,
+  coefficient officiel du programme, moyenne de la matière **déléguée à
+  `calculer_moyenne_eleve`** — aucun nouveau calcul —, nom + email de
+  l'enseignant). Vide pour un cycle primaire (ISCED 1, un seul maître de
+  classe déjà couvert par le bloc signatures).
+- **Téléphone vs email — clarification du porteur en cours de route** :
+  le cadrage initial demandait le téléphone du professeur sur le bulletin ;
+  le porteur a ensuite précisé que le téléphone sert uniquement aux
+  responsables scolaires en interne (jamais imprimé sur un document
+  distribué à toute une classe) et que c'est l'**email** qui apparaît sur
+  le bulletin. Ce changement résout de lui-même la question de
+  confidentialité posée avant de coder cette partie (numéro personnel vs
+  professionnel diffusé à une classe entière) — elle ne se pose plus
+  puisque le téléphone n'est jamais imprimé. Deux colonnes ajoutées à
+  `employes` (`telephone`, `email`), dette tracée depuis D2 ; écran d'édition
+  ajouté sur `EcranFicheEmploye` (aucun écran d'édition employé n'existait
+  auparavant — `RhRepository.creerOuModifierEmploye` existait déjà côté
+  repository mais n'était appelé par aucun écran).
+- **Mention « Non duplicata. »** après le bloc signatures, comme demandé.
+- **Bloc signatures par cycle** — nouvelle colonne
+  `pays_pedagogiques.signatures_bulletin` (jsonb, libellés par défaut
+  Primaire : Directeur + Maître de classe ; Collège : Proviseur + Directeur
+  des Études ; Lycée : Proviseur + Censeur — ajustables par pays, pas par
+  établissement dans cette passe). Rendu comme deux lignes de signature
+  vierges sous le libellé du rôle : aucun nom de titulaire n'est résolu
+  pour Proviseur/Censeur/Directeur/Directeur des Études (rôles non
+  modélisés individuellement dans le schéma) ; seul « Maître de classe »
+  aurait pu être résolu via `Classe.enseignantPrincipalId`, délibérément pas
+  fait pour garder un traitement cohérent des 6 libellés plutôt que d'en
+  résoudre un seul.
+- **Régénération (cahier §12.3) — avertissement UX** : `EcranGenerationBulletinsClasse`
+  vérifie désormais si un bulletin existe déjà pour la classe/période avant
+  de lancer la génération ; si oui, un dialogue reprend le texte exact
+  demandé (« Un bulletin existe déjà pour cette période. La relance
+  recalculera l'ensemble des moyennes et rangs à partir des notes
+  actuelles. ») et le bouton devient « Mettre à jour / Recalculer les
+  bulletins ». Purement informatif côté écran — la garantie réelle
+  (mise à jour en place, jamais de doublon) reste celle déjà vérifiée
+  empiriquement dans le correctif précédent (3947f02), non refaite ici.
+- **Vérifié** : migration `20260906001511_d5_contenu_reglementaire_bulletin.sql`
+  rejouée par `supabase db reset` sans erreur ; nouveau fichier pgTAP
+  `tests/rls/46_d5_contenu_reglementaire_bulletin.sql` (16 assertions :
+  ISCED exact pour les 3 cycles, résilience niveau absent/appelant non
+  personnel, tableau par matière vide en primaire, contenu conforme en
+  secondaire — matière/coefficient/moyenne/email —, résilience enseignant
+  sans dossier RH, opacité pour un étranger, valeurs par défaut de
+  `ministere_tutelle`/`signatures_bulletin`) — suite complète rejouée :
+  `Files=46, Tests=347, PASS`, aucune régression sur les 45 fichiers
+  précédents. `flutter analyze` propre (mêmes 12 infos pré-existantes) ;
+  16 nouveaux tests Flutter (roundtrip `Employe.telephone/email`, 5
+  smoke-tests `construireBulletinsClassePdf` — tableau matière, pays +
+  Ministère, résilience Ministère absent, bloc signatures, isced sans
+  libellé pour ce cycle —, 4 tests de l'avertissement de régénération, 4
+  tests de l'écran d'édition du contact employé) ; suite `flutter test`
+  complète rejouée : **360/360**, verte (344 + 16).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

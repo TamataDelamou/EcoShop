@@ -8,6 +8,7 @@ import 'package:ecoshop_client/features/notes/application/notes_providers.dart';
 import 'package:ecoshop_client/features/notes/domain/appreciation.dart';
 import 'package:ecoshop_client/features/notes/domain/bulletin.dart';
 import 'package:ecoshop_client/features/notes/domain/classement_eleve.dart';
+import 'package:ecoshop_client/features/notes/domain/detail_matiere_bulletin.dart';
 import 'package:ecoshop_client/features/notes/domain/enums_notes.dart';
 import 'package:ecoshop_client/features/notes/domain/evaluation.dart';
 import 'package:ecoshop_client/features/notes/domain/note.dart';
@@ -132,6 +133,9 @@ class _FauxScolariteRepository implements ScolariteRepository {
       throw UnimplementedError();
   @override
   Future<void> annulerEncaissement({required String encaissementId, required String motif}) async {}
+
+  @override
+  Future<int?> classeIsced(String classeId) async => null;
 }
 
 /// Faux port [NotesRepository] — seul [genererBulletinsClasse] (D5) est
@@ -139,11 +143,27 @@ class _FauxScolariteRepository implements ScolariteRepository {
 /// directement par l'écran (encapsulé dans [genererBulletinsClasse] côté
 /// implémentation Supabase), volontairement absent de la logique testée ici.
 class _FauxNotesRepository implements NotesRepository {
-  _FauxNotesRepository({this.bulletinsAGenerer = const [], this.leverErreur = false});
+  _FauxNotesRepository({
+    this.bulletinsAGenerer = const [],
+    this.leverErreur = false,
+    this.bulletinExistant = false,
+  });
 
   final List<Bulletin> bulletinsAGenerer;
   final bool leverErreur;
+  final bool bulletinExistant;
   final List<({String classeId, String? periodeId, TypeBulletin type})> appelsGeneration = [];
+
+  @override
+  Future<bool> bulletinsExistentPourClasse(String classeId, {String? periodeId}) async => bulletinExistant;
+
+  @override
+  Future<List<DetailMatiereBulletin>> detailBulletinMatieres(
+    String ficheEleveId,
+    String classeId, {
+    String? periodeId,
+  }) async =>
+      const [];
 
   @override
   Future<List<Bulletin>> genererBulletinsClasse({
@@ -329,5 +349,62 @@ void main() {
 
     expect(find.text('Impossible de générer les bulletins de la classe — réessayez.'), findsOneWidget);
     expect(find.textContaining('généré(s) et publié(s)'), findsNothing);
+  });
+
+  group('régénération (D5, cahier §12.3 — avertissement UX)', () {
+    testWidgets('bulletin déjà existant : le bouton propose « Mettre à jour / Recalculer »', (tester) async {
+      final notes = _FauxNotesRepository(bulletinExistant: true);
+      await monter(tester, scolarite: _FauxScolariteRepository(), notes: notes);
+
+      expect(find.text('Mettre à jour / Recalculer les bulletins'), findsOneWidget);
+      expect(find.text('Générer les bulletins de la classe'), findsNothing);
+    });
+
+    testWidgets('aucun bulletin existant : le bouton garde son libellé initial, pas d\'avertissement',
+        (tester) async {
+      final notes = _FauxNotesRepository(bulletinsAGenerer: [_bulletin('f1')]);
+      await monter(tester, scolarite: _FauxScolariteRepository(), notes: notes);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Générer les bulletins de la classe'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(notes.appelsGeneration, hasLength(1));
+    });
+
+    testWidgets('bulletin déjà existant : annuler l\'avertissement n\'appelle pas la génération', (tester) async {
+      final notes = _FauxNotesRepository(bulletinExistant: true, bulletinsAGenerer: [_bulletin('f1')]);
+      await monter(tester, scolarite: _FauxScolariteRepository(), notes: notes);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Mettre à jour / Recalculer les bulletins'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Un bulletin existe déjà pour cette période. La relance recalculera '
+          "l'ensemble des moyennes et rangs à partir des notes actuelles.",
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(notes.appelsGeneration, isEmpty);
+    });
+
+    testWidgets('bulletin déjà existant : confirmer l\'avertissement déclenche la régénération', (tester) async {
+      final notes = _FauxNotesRepository(bulletinExistant: true, bulletinsAGenerer: [_bulletin('f1')]);
+      await monter(tester, scolarite: _FauxScolariteRepository(), notes: notes);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Mettre à jour / Recalculer les bulletins'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(notes.appelsGeneration, hasLength(1));
+      expect(find.text('1 bulletin(s) généré(s) et publié(s).'), findsOneWidget);
+    });
   });
 }

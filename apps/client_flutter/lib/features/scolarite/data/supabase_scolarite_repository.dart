@@ -201,6 +201,13 @@ class SupabaseScolariteRepository implements ScolariteRepository {
   }
 
   @override
+  Future<int?> classeIsced(String classeId) {
+    return _executer(() async {
+      return _client.rpc<int?>('classe_isced', params: {'p_classe': classeId});
+    });
+  }
+
+  @override
   Future<String> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,

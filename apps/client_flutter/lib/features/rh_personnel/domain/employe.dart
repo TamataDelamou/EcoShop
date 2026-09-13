@@ -14,6 +14,8 @@ class Employe {
     required this.dateEmbauche,
     this.statut = StatutEmploye.actif,
     this.nomAffiche,
+    this.telephone,
+    this.email,
   });
 
   factory Employe.depuisJson(Map<String, dynamic> json) {
@@ -27,6 +29,8 @@ class Employe {
       dateEmbauche: DateTime.parse(json['date_embauche'] as String),
       statut: StatutEmploye.depuisCode(json['statut'] as String?),
       nomAffiche: profil == null ? null : '${profil['prenom']} ${profil['nom']}',
+      telephone: json['telephone'] as String?,
+      email: json['email'] as String?,
     );
   }
 
@@ -39,6 +43,8 @@ class Employe {
         dateEmbauche: DateTime.parse(json['date_embauche'] as String),
         statut: StatutEmploye.depuisCode(json['statut'] as String?),
         nomAffiche: json['nom_affiche'] as String?,
+        telephone: json['telephone'] as String?,
+        email: json['email'] as String?,
       );
 
   Map<String, dynamic> versJsonCache() => {
@@ -50,6 +56,8 @@ class Employe {
         'date_embauche': _dateIso(dateEmbauche),
         'statut': statut.code,
         'nom_affiche': nomAffiche,
+        'telephone': telephone,
+        'email': email,
       };
 
   /// Colonnes réelles de `public.employes` — pour la création/édition.
@@ -61,6 +69,8 @@ class Employe {
         'categorie': categorie.code,
         'date_embauche': _dateIso(dateEmbauche),
         'statut': statut.code,
+        'telephone': telephone,
+        'email': email,
       };
 
   final String id;
@@ -73,6 +83,15 @@ class Employe {
 
   /// Peuplé via l'embed `profiles(prenom, nom)` — affichage uniquement.
   final String? nomAffiche;
+
+  /// Contact professionnel interne, à l'usage des responsables scolaires
+  /// (D5) — jamais imprimé sur un document distribué aux familles.
+  final String? telephone;
+
+  /// Ce qui apparaît sur le bulletin (tableau par matière, D5) — décision
+  /// explicite du porteur de projet, qui écarte le téléphone (personnel vs
+  /// professionnel) de tout document distribué à une classe entière.
+  final String? email;
 
   static String _dateIso(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-'

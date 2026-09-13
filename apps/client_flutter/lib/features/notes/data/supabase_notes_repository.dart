@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/appreciation.dart';
 import '../domain/bulletin.dart';
 import '../domain/classement_eleve.dart';
+import '../domain/detail_matiere_bulletin.dart';
 import '../domain/enums_notes.dart';
 import '../domain/evaluation.dart';
 import '../domain/note.dart';
@@ -212,6 +213,37 @@ class SupabaseNotesRepository implements NotesRepository {
         },
       );
       return lignes.map((l) => Bulletin.depuisJson(l as Map<String, dynamic>)).toList(growable: false);
+    });
+  }
+
+  @override
+  Future<List<DetailMatiereBulletin>> detailBulletinMatieres(
+    String ficheEleveId,
+    String classeId, {
+    String? periodeId,
+  }) {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'detail_bulletin_matieres',
+        params: {
+          'p_fiche': ficheEleveId,
+          'p_classe': classeId,
+          'p_periode': periodeId,
+        },
+      );
+      return lignes
+          .map((l) => DetailMatiereBulletin.depuisJson(l as Map<String, dynamic>))
+          .toList(growable: false);
+    });
+  }
+
+  @override
+  Future<bool> bulletinsExistentPourClasse(String classeId, {String? periodeId}) {
+    return _executer(() async {
+      var requete = _client.from('bulletins').select('id').eq('classe_id', classeId);
+      requete = periodeId == null ? requete.isFilter('periode_id', null) : requete.eq('periode_id', periodeId);
+      final lignes = await requete.limit(1);
+      return lignes.isNotEmpty;
     });
   }
 

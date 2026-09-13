@@ -21,13 +21,46 @@ import 'widgets/pastille_statut_employe.dart';
 /// Fiche employé (M8) — infos, contrat en cours, charge horaire, et pour la
 /// RH/direction : signaux IA (risque de turn-over, recommandation de
 /// formation), toujours présentés comme des signaux à valider humainement.
-class EcranFicheEmploye extends ConsumerWidget {
+class EcranFicheEmploye extends ConsumerStatefulWidget {
   const EcranFicheEmploye({super.key, required this.employe});
 
   final Employe employe;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EcranFicheEmploye> createState() => _EcranFicheEmployeState();
+}
+
+class _EcranFicheEmployeState extends ConsumerState<EcranFicheEmploye> {
+  late Employe _employe;
+
+  @override
+  void initState() {
+    super.initState();
+    _employe = widget.employe;
+  }
+
+  Future<void> _modifierContact() async {
+    final resultat = await showDialog<Employe>(
+      context: context,
+      builder: (_) => _DialogueContact(employe: _employe),
+    );
+    if (resultat == null) return;
+    try {
+      await ref.read(rhRepositoryProvider).creerOuModifierEmploye(resultat);
+      ref.invalidate(employeProvider(_employe.id));
+      ref.invalidate(employesEtablissementProvider);
+      if (mounted) setState(() => _employe = resultat);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d\'enregistrer le contact — réessayez.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final employe = _employe;
     final profil = ref.watch(profilProvider).value;
     final estRh = profil?.roleRacine == RoleRacine.direction;
     final estSoiMeme = profil != null && profil.id == employe.profileId;
@@ -82,6 +115,29 @@ class EcranFicheEmploye extends ConsumerWidget {
                       style: TextStyle(color: context.palette.encreSecondaire),
                     ),
                   ),
+                  if (estRh) ...[
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Contact', style: Theme.of(context).textTheme.titleSmall),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          tooltip: 'Modifier le contact',
+                          onPressed: _modifierContact,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Téléphone (usage interne) : ${employe.telephone?.isNotEmpty ?? false ? employe.telephone : 'Non renseigné'}',
+                      style: TextStyle(color: context.palette.encreSecondaire),
+                    ),
+                    Text(
+                      'Email (affiché sur le bulletin, matières secondaires) : ${employe.email?.isNotEmpty ?? false ? employe.email : 'Non renseigné'}',
+                      style: TextStyle(color: context.palette.encreSecondaire),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -157,6 +213,83 @@ class EcranFicheEmploye extends ConsumerWidget {
 
   static String _formatDate(DateTime date) =>
       '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+}
+
+/// Édition du contact (D5) — téléphone (usage interne, jamais imprimé) et
+/// email (affiché sur le bulletin pour les matières du secondaire).
+class _DialogueContact extends StatefulWidget {
+  const _DialogueContact({required this.employe});
+
+  final Employe employe;
+
+  @override
+  State<_DialogueContact> createState() => _DialogueContactState();
+}
+
+class _DialogueContactState extends State<_DialogueContact> {
+  late final TextEditingController _telephoneCtrl =
+      TextEditingController(text: widget.employe.telephone ?? '');
+  late final TextEditingController _emailCtrl = TextEditingController(text: widget.employe.email ?? '');
+
+  @override
+  void dispose() {
+    _telephoneCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Modifier le contact'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _telephoneCtrl,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Téléphone',
+              helperText: 'Usage interne — jamais imprimé sur un document',
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              helperText: 'Affiché sur le bulletin (tableau par matière)',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annuler')),
+        FilledButton(
+          onPressed: () {
+            final telephone = _telephoneCtrl.text.trim();
+            final email = _emailCtrl.text.trim();
+            Navigator.of(context).pop(
+              Employe(
+                id: widget.employe.id,
+                etablissementId: widget.employe.etablissementId,
+                profileId: widget.employe.profileId,
+                matricule: widget.employe.matricule,
+                categorie: widget.employe.categorie,
+                dateEmbauche: widget.employe.dateEmbauche,
+                statut: widget.employe.statut,
+                nomAffiche: widget.employe.nomAffiche,
+                telephone: telephone.isEmpty ? null : telephone,
+                email: email.isEmpty ? null : email,
+              ),
+            );
+          },
+          child: const Text('Enregistrer'),
+        ),
+      ],
+    );
+  }
 }
 
 class _LienDossier extends StatelessWidget {

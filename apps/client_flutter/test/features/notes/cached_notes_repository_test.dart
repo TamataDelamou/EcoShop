@@ -8,6 +8,7 @@ import 'package:ecoshop_client/features/notes/data/cached_notes_repository.dart'
 import 'package:ecoshop_client/features/notes/domain/appreciation.dart';
 import 'package:ecoshop_client/features/notes/domain/bulletin.dart';
 import 'package:ecoshop_client/features/notes/domain/classement_eleve.dart';
+import 'package:ecoshop_client/features/notes/domain/detail_matiere_bulletin.dart';
 import 'package:ecoshop_client/features/notes/domain/enums_notes.dart';
 import 'package:ecoshop_client/features/notes/domain/evaluation.dart';
 import 'package:ecoshop_client/features/notes/domain/note.dart';
@@ -105,6 +106,22 @@ class _FauxDistant implements NotesRepository {
   }) async {
     if (horsLigne) throw const ErreurNotes('ERREUR_RESEAU');
     return const [];
+  }
+
+  @override
+  Future<List<DetailMatiereBulletin>> detailBulletinMatieres(
+    String ficheEleveId,
+    String classeId, {
+    String? periodeId,
+  }) async {
+    if (horsLigne) throw const ErreurNotes('ERREUR_RESEAU');
+    return const [];
+  }
+
+  @override
+  Future<bool> bulletinsExistentPourClasse(String classeId, {String? periodeId}) async {
+    if (horsLigne) throw const ErreurNotes('ERREUR_RESEAU');
+    return false;
   }
 
   @override

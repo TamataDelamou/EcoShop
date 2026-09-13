@@ -60,6 +60,13 @@ abstract interface class ScolariteRepository {
   /// Fiche d'un élève donné (rafraîchissement ponctuel).
   Future<FicheEleve?> ficheEleve(String ficheId);
 
+  /// Palier ISCED normalisé du niveau d'une classe (1 = primaire, 2 =
+  /// collège, 3 = lycée — D5, cahier §6.4 : le code de cycle littéral varie
+  /// par pays, l'ISCED non). `null` si la classe n'a pas de niveau renseigné
+  /// ou si l'appelant n'est pas personnel de l'établissement — un appelant
+  /// n'a pas à distinguer les deux causes (RPC serveur `classe_isced`).
+  Future<int?> classeIsced(String classeId);
+
   /// Lie le parent connecté à un nouvel enfant (RPC `lier_parent_a_fiche`,
   /// double facteur matricule + date de naissance). Renvoie l'id de la relation.
   Future<String> lierEnfant({

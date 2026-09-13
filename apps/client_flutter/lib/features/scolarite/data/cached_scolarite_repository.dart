@@ -123,6 +123,12 @@ class CachedScolariteRepository implements ScolariteRepository {
     }
   }
 
+  /// Exige la connectivité, comme les autres actions ponctuelles d'export/
+  /// administration (ex. `creerEvaluation`) : pas de repli hors ligne pour
+  /// une donnée consultée uniquement au moment de générer un bulletin.
+  @override
+  Future<int?> classeIsced(String classeId) => _distant.classeIsced(classeId);
+
   @override
   Future<FicheEleve?> maFiche() async {
     try {
