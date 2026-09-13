@@ -95,4 +95,16 @@ void main() {
     expect(find.text('CI', skipOffstage: false), findsOneWidget);
     expect(find.text('XOF', skipOffstage: false), findsOneWidget);
   });
+
+  testWidgets('D4 : section Accessibilité ajoutée (contraste + taille du texte)', (tester) async {
+    await monter(tester, overrides: [
+      etablissementActifProvider.overrideWithValue(null),
+      paysPedagogiquesProvider.overrideWith((ref) async => const []),
+    ]);
+
+    expect(find.text('Accessibilité', skipOffstage: false), findsOneWidget);
+    expect(find.text('Contraste élevé', skipOffstage: false), findsOneWidget);
+    expect(find.text('Taille du texte', skipOffstage: false), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Très grand', skipOffstage: false), findsOneWidget);
+  });
 }

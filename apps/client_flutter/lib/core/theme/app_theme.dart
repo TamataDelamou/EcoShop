@@ -11,8 +11,17 @@ import 'app_theme_variant.dart';
 /// statique `AppColors`, ce qui permet au thème de changer réellement à
 /// l'exécution (variante d'établissement, bascule clair/sombre) sans redémarrer
 /// l'application.
-ThemeData construireThemeData(AppThemeVariant variante, Brightness brightness) {
-  final palette = AppPalettes.pour(variante, brightness);
+ThemeData construireThemeData(
+  AppThemeVariant variante,
+  Brightness brightness, {
+  bool contrasteEleve = false,
+}) {
+  // Contraste élevé (D4, §34.9) : remplace la charte d'établissement par une
+  // palette dédiée à lisibilité maximale, indépendante de la variante —
+  // l'objectif est l'accessibilité, pas l'identité visuelle.
+  final palette = contrasteEleve
+      ? AppPalettes.hauteVisibilite(brightness)
+      : AppPalettes.pour(variante, brightness);
   final base = ThemeData(useMaterial3: true, brightness: brightness);
   // Sur fond sombre, une couleur d'action assombrie perd son contraste : le
   // bouton reste dans la teinte de la palette (déjà éclaircie pour le mode

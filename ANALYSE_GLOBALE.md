@@ -1156,6 +1156,82 @@ seule dérivés de l'établissement, étape légère d'onboarding non bloquante.
   **314/314**, verte ; aucun backend touché, pgTAP non rejoué (aucune
   migration/RLS modifiée dans ce sous-livrable).
 
+*D4 — Accessibilité* (clos le 2026-09-13) : contraste élevé (palette
+alternative dédiée) et taille du texte (échelle discrète), seul écart
+confirmé du périmètre « Expérience utilisateur & Configuration » restant
+après D1-D3.
+
+- **État des lieux, contrairement à D1-D3 : pas de cadrage initial à
+  vérifier, un périmètre entier à établir.** L'étiquette provisoire
+  « Centre d'aide & guides utilisateur », jamais confirmée par un cadrage
+  dédié, est **abandonnée comme périmètre D4** — tracée séparément comme
+  idée à cadrer plus tard si un besoin réel émerge, pas construite
+  maintenant. Le chapitre 31 du cahier (Paramétrage et personnalisation)
+  passé en revue point par point : logo/thèmes/templates de documents
+  officiels → déjà tracés pour D5 ; système de notation → déjà couvert,
+  plus finement même que demandé (`Evaluation.bareme` réglable par
+  enseignant, pas un réglage global figé) ; langues → fondation posée par
+  D3 ; déclaration niveaux/postes, classes/cycles/services, sélection du
+  référentiel, échéances paiement/bibliothèque/transport → configuration
+  structurelle déjà livrée par M4-M15, hors périmètre « expérience
+  utilisateur ». Seul point du chapitre 31 sans domicile : « Animations
+  d'interface, intégrées aux paramètres globaux » — **dette tracée, pas de
+  cible définie, pas dans D4** (aucun écart aussi net que l'accessibilité).
+  §34.9 du cahier : « Contraste et taille de police ajustables » confirmé
+  absent partout — ni `ecoshop_flutter` (aucune mention
+  accessibilité/contraste/taille de police dans tout `lib/`), ni le client
+  actuel (palettes fixes, vérifiées WCAG AA au design mais non ajustables)
+  — **seul écart réel identifié, donc le périmètre retenu pour D4.**
+- **Contraste élevé** — option (a) du cadrage : une bascule vers UNE
+  palette alternative dédiée (`AppPalettes.hauteVisibiliteLight/Dark`,
+  `core/theme/app_palettes.dart`), indépendante des 3 variantes
+  d'établissement, pas un curseur continu (qui aurait cassé la garantie
+  WCAG déjà vérifiée palette par palette). **Vérifiée avant livraison**,
+  comme demandé : tous les couples texte/fond dépassent largement le
+  seuil AA de 4,5:1 (`encre`/`fond` = 21:1, les autres ≥ 6,25:1 — mesures
+  dans le test dédié `app_palettes_test.dart`, même méthode WCAG que les 6
+  palettes existantes), avec une marge volontairement large plutôt que des
+  teintes en limite basse. `construireThemeData` accepte un paramètre
+  `contrasteEleve` optionnel (défaut `false`, aucun appelant existant
+  cassé) qui substitue cette palette à celle de la variante, quelle
+  qu'elle soit.
+- **Taille du texte** — échelle discrète `EchelleTexte`
+  (Petit ×0,85 / Normal ×1 / Grand ×1,15 / Très grand ×1,3), stockée
+  localement, même mécanisme que langue/thème (D3). Appliquée
+  **globalement** via le `textScaler` ambiant posé sur le `builder` du
+  `MaterialApp` racine (`main.dart`) — un seul point d'application pour
+  toute l'app, comme demandé, pas un réglage écran par écran.
+- **Vérification empirique du non-débordement à l'échelle maximale**
+  (Très grand, ×1,3), comme explicitement demandé — pas une relecture de
+  code : 3 nouveaux tests montent la coquille complète (rôles direction et
+  élève, 4 et 5 onglets racine respectivement, tous les onglets visités)
+  et `EcranPreferencesApparence` lui-même (l'écran le plus chargé en
+  sections depuis D3/D4) sous ce facteur d'échelle, et vérifient qu'aucune
+  erreur de rendu (`RenderFlex overflowed`) n'est signalée
+  (`tester.takeException()`). **Portée assumée** : couvre les 5 onglets
+  racine et l'écran de préférences, pas un balayage exhaustif de tous les
+  écrans de l'application — signalé explicitement plutôt que présenté
+  comme une garantie totale.
+- **Emplacement** : `SectionAccessibilite` ajoutée à
+  `EcranPreferencesApparence`, aux côtés de Thème/Langue/Région — l'écran
+  accumule désormais 5 sections, choix assumé du porteur de projet, pas
+  une dérive.
+- **Dette résolue** : contraste et taille de police ajustables (§34.9,
+  cahier v4.1) — confirmés absents partout avant cette passe, donc une
+  **vraie correction d'écart**, pas seulement une nouveauté.
+- **Hors périmètre D4, tracé séparément, pas construit** : « Centre
+  d'aide & guides utilisateur » (jamais cadré) et « Animations
+  d'interface » (chapitre 31, aucun réglage nulle part mais aucun écart
+  aussi net constaté).
+- **Vérifié** : `flutter analyze` propre (mêmes 12 infos pré-existantes
+  hors zone touchée) ; 18 nouveaux tests (stores contraste/échelle,
+  providers, `SectionAccessibilite`, palette haute visibilité + WCAG,
+  `construireThemeData` avec `contrasteEleve`, non-débordement à ×1,3, et
+  1 test d'intégration dans `EcranPreferencesApparence`) ; suite
+  `flutter test` complète rejouée : **332/332**, verte (314 + 18) ; aucun
+  backend touché, pgTAP non rejoué (aucune migration/RLS modifiée dans ce
+  sous-livrable).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

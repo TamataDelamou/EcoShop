@@ -123,6 +123,34 @@ void main() {
         }
       }
     });
+
+    test('contrasteEleve : ignore la variante, applique la palette haute visibilité (D4)', () {
+      for (final variante in AppThemeVariant.values) {
+        for (final brightness in Brightness.values) {
+          final theme = construireThemeData(variante, brightness, contrasteEleve: true);
+          expect(theme.extension<AppPalette>(), AppPalettes.hauteVisibilite(brightness));
+        }
+      }
+    });
+  });
+
+  group('AppPalettes.hauteVisibilite (D4, §34.9)', () {
+    test('sélectionne la bonne paire clair/sombre', () {
+      expect(AppPalettes.hauteVisibilite(Brightness.light), AppPalettes.hauteVisibiliteLight);
+      expect(AppPalettes.hauteVisibilite(Brightness.dark), AppPalettes.hauteVisibiliteDark);
+    });
+
+    test('contraste WCAG AA (≥ 4.5:1) sur les deux luminosités', () {
+      for (final p in [AppPalettes.hauteVisibiliteLight, AppPalettes.hauteVisibiliteDark]) {
+        expect(_ratioContraste(p.encre, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.encreSecondaire, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.accent, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.succes, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.premium, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.erreur, p.fond), greaterThanOrEqualTo(4.5));
+        expect(_ratioContraste(p.encre, p.surface), greaterThanOrEqualTo(4.5));
+      }
+    });
   });
 
   group('BuildContext.palette', () {

@@ -6,6 +6,8 @@ import 'core/config/env.dart';
 import 'core/theme/app_palette.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_variant.dart';
+import 'features/accessibilite/application/accessibilite_providers.dart';
+import 'features/accessibilite/domain/echelle_texte.dart';
 import 'features/coquille/presentation/garde_session.dart';
 import 'features/themes/application/theme_providers.dart';
 
@@ -39,13 +41,33 @@ class EcoShopApp extends ConsumerWidget {
     final mode = Env.estConfigure
         ? ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system
         : ThemeMode.system;
+    // Accessibilité (D4, §34.9) : mêmes garde-fous qu'au-dessus en mode
+    // diagnostic — regarder ces providers sans Supabase planterait sur des
+    // dépendances jamais initialisées.
+    final contrasteEleve = Env.estConfigure
+        ? ref.watch(contrasteEleveProvider).valueOrNull ?? false
+        : false;
+    final echelleTexte = Env.estConfigure
+        ? ref.watch(echelleTexteProvider).valueOrNull ?? EchelleTexte.normal
+        : EchelleTexte.normal;
 
     return MaterialApp(
       title: 'EcoShop',
-      theme: construireThemeData(variante, Brightness.light),
-      darkTheme: construireThemeData(variante, Brightness.dark),
+      theme: construireThemeData(variante, Brightness.light, contrasteEleve: contrasteEleve),
+      darkTheme: construireThemeData(variante, Brightness.dark, contrasteEleve: contrasteEleve),
       themeMode: mode,
       debugShowCheckedModeBanner: false,
+      // Taille de texte (D4, §34.9) : appliquée globalement via le
+      // `textScaler` ambiant plutôt qu'écran par écran — un seul point
+      // d'application, cohérent avec tout le reste de l'app (y compris les
+      // écrans qui n'ont pas encore été retouchés depuis D1).
+      builder: (context, enfant) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(textScaler: TextScaler.linear(echelleTexte.facteur)),
+          child: enfant!,
+        );
+      },
       // Sans configuration Supabase, aucun provider d'authentification ne peut
       // fonctionner : on affiche l'écran de diagnostic du socle plutôt que de
       // laisser l'application planter sur `Supabase.instance`.
