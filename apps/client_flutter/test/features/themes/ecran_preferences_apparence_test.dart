@@ -73,4 +73,26 @@ void main() {
 
     expect(find.textContaining('Anglophone WAEC'), findsOneWidget);
   });
+
+  testWidgets('D3 : sections Langue et Région ajoutées, pays/devise dérivés en lecture seule', (tester) async {
+    await monter(tester, overrides: [
+      etablissementActifProvider.overrideWithValue(
+        const Etablissement(id: 'e1', nom: 'École test', slug: 'test', paysCode: 'CI', deviseCode: 'XOF'),
+      ),
+      paysPedagogiquesProvider.overrideWith((ref) async => const []),
+    ]);
+
+    // `ListView` (sliver) ne construit que ce qui est proche du viewport : les
+    // sections D3, ajoutées en bas d'un écran déjà long, sont hors-champ dans
+    // la surface de test par défaut — `skipOffstage: false` vérifie leur
+    // présence dans l'arbre sans dépendre d'un défilement.
+    expect(find.text('Langue', skipOffstage: false), findsOneWidget);
+    expect(
+      find.widgetWithText(RadioListTile<String>, 'Français', skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(find.text('Région', skipOffstage: false), findsOneWidget);
+    expect(find.text('CI', skipOffstage: false), findsOneWidget);
+    expect(find.text('XOF', skipOffstage: false), findsOneWidget);
+  });
 }

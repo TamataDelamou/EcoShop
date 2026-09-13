@@ -11,12 +11,14 @@ void main() {
     Profil? profil,
     bool fiche = true,
     int etablissements = 0,
+    bool regionalisationVue = true,
   }) {
     return GardeSession.resoudre(
       sessionOuverte: session,
       profil: profil,
       ficheLiee: fiche,
       nombreEtablissements: etablissements,
+      regionalisationVue: regionalisationVue,
     );
   }
 
@@ -109,6 +111,32 @@ void main() {
       expect(
         resoudre(profil: profilTest(role: RoleRacine.parent)),
         DestinationSession.accueil,
+      );
+    });
+
+    test('étape Langue/Région (D3) non vue, oriente vers elle avant l’accueil', () {
+      expect(
+        resoudre(profil: profilTest(role: RoleRacine.parent), regionalisationVue: false),
+        DestinationSession.regionalisation,
+      );
+    });
+
+    test('étape Langue/Région (D3) déjà vue, accès direct à l’accueil', () {
+      expect(
+        resoudre(profil: profilTest(role: RoleRacine.parent), regionalisationVue: true),
+        DestinationSession.accueil,
+      );
+    });
+
+    test('étape Langue/Région (D3) : la sélection d’établissement reste prioritaire', () {
+      expect(
+        resoudre(
+          profil: profilTest(role: RoleRacine.enseignant),
+          etablissements: 3,
+          regionalisationVue: false,
+        ),
+        DestinationSession.selectionEtablissement,
+        reason: 'pays/devise dépendent de l’établissement résolu — pas encore le cas ici',
       );
     });
   });

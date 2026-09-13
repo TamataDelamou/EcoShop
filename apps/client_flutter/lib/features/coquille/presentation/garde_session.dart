@@ -7,6 +7,7 @@ import '../../auth/presentation/ecran_choix_espace.dart';
 import '../../auth/presentation/ecran_choix_role.dart';
 import '../../auth/presentation/ecran_liaison_fiche.dart';
 import '../../etablissement/presentation/ecran_selection_etablissement.dart';
+import '../../regionalisation/presentation/ecran_onboarding_regionalisation.dart';
 import '../application/session_logout.dart';
 import 'coquille_app.dart';
 
@@ -31,6 +32,8 @@ class RacineApp extends ConsumerWidget {
       DestinationSession.liaisonFiche => const EcranLiaisonFiche(),
       DestinationSession.selectionEtablissement =>
         const EcranSelectionEtablissement(),
+      DestinationSession.regionalisation =>
+        const EcranOnboardingRegionalisation(),
       DestinationSession.accueil => const CoquilleApp(),
     };
   }

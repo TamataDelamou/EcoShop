@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../etablissement/domain/etablissement.dart';
+import '../../regionalisation/application/regionalisation_providers.dart';
 import '../data/supabase_auth_repository.dart';
 import '../domain/auth_repository.dart';
 import '../domain/destination_session.dart';
@@ -66,10 +67,11 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final profil = ref.watch(profilProvider);
   final fiche = ref.watch(ficheLieeProvider);
   final etablissements = ref.watch(mesEtablissementsProvider);
+  final regionalisationVue = ref.watch(onboardingRegionalisationVuProvider);
 
-  // Tant qu'une des trois lectures est en cours, on n'oriente pas : afficher
+  // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
-  if (profil.isLoading || fiche.isLoading || etablissements.isLoading) {
+  if (profil.isLoading || fiche.isLoading || etablissements.isLoading || regionalisationVue.isLoading) {
     return DestinationSession.chargement;
   }
 
@@ -78,6 +80,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     profil: profil.value,
     ficheLiee: fiche.value ?? false,
     nombreEtablissements: etablissements.value?.length ?? 0,
+    regionalisationVue: regionalisationVue.value ?? true,
   );
 });
 

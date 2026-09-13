@@ -1069,6 +1069,93 @@ expansion, animation Hero, filtrage multi-critères, chips — sur
   (302 + 6) ; aucun backend touché, pgTAP non rejoué (aucune
   migration/RLS modifiée dans ce sous-livrable).
 
+*D3 — Onboarding & régionalisation* (clos le 2026-09-13) : préférence de
+langue (stockée localement, pas encore traduite), pays/devise en lecture
+seule dérivés de l'établissement, étape légère d'onboarding non bloquante.
+
+- **État des lieux** : `ecoshop_flutter` n'a **aucune** langue ni
+  sélecteur de langue nulle part (son `onboarding_service.dart` couvre un
+  tout autre sujet — demande d'établissement/invitations, item #1 déjà
+  arbitré, sans rapport avec D3). En revanche `EtablissementModel`
+  (`countryCode`, `currency`) y est déjà consommé en lecture seule pour le
+  formatage — **précédent direct** du « pays/devise dérivés, non
+  modifiables » de D3. Côté client actuel, `Etablissement` a déjà
+  `paysCode`/`deviseCode`/`langueCode` (commentaire existant : « jamais
+  déduits côté client ») et `EcranPreferencesApparence` applique déjà
+  exactement ce patron (préférence modifiable `themeModeProvider` à côté
+  d'un dérivé non modifiable `themeVariantProvider`) — réutilisé tel quel
+  plutôt que réinventé. Aucune infrastructure de localisation
+  (`l10n.yaml`, `.arb`, `flutter_localizations`) n'existe dans ce projet :
+  point bloquant soulevé avant codage, tranché par le porteur de projet
+  (option 1 : préférence stockée sans traduction réelle — fondation posée,
+  traduction = chantier distinct non commencé ici).
+- **`langueProvider`** (`features/regionalisation/`, persistance Drift
+  partagée `preferences`/`regionalisation`/`langue`, même mécanisme que
+  `ThemePreferenceStore`) — une seule option opérante (`fr`, « Français »)
+  dans `languesDisponibles`, widget `SectionLangue` déjà générique pour en
+  accueillir d'autres sans être reconstruit.
+- **`SectionRegion`** — pays/devise lus directement sur
+  `etablissementActifProvider` (codes bruts, cohérent avec
+  `Etablissement.localisation` qui les affiche déjà ainsi ailleurs),
+  jamais modifiables.
+- **Emplacement** : `SectionLangue`/`SectionRegion` ajoutées telles
+  quelles à `EcranPreferencesApparence` (pas de nouvel écran
+  « Régionalisation » séparé, comme demandé) ET à une nouvelle étape
+  d'onboarding `EcranOnboardingRegionalisation` — la même paire de widgets
+  aux deux endroits, aucune logique dupliquée.
+- **Onboarding** : nouvelle destination `DestinationSession.regionalisation`
+  dans `GardeSession.resoudre` (`destination_session.dart`), insérée APRÈS
+  `selectionEtablissement` et avant `accueil` (pays/devise dépendent de
+  l'établissement déjà résolu, comme demandé) ; non bloquante — bouton
+  « Continuer » qui marque l'étape vue **par profil**
+  (`OnboardingRegionalisationStore`, clé = `profileId`, pas une clé
+  globale : un second compte sur le même appareil revoit sa propre
+  région) et laisse `RacineApp` réorienter vers l'accueil sans navigation
+  explicite, même logique déclarative que le reste de la garde de
+  session. Paramètre `regionalisationVue` par défaut `true` dans
+  `GardeSession.resoudre` pour ne casser aucun appelant existant qui
+  l'ignore.
+- **Deux bugs trouvés et corrigés pendant la vérification empirique** (ni
+  l'un ni l'autre de simple relecture de code) :
+  1. Le premier lancement de la suite complète a révélé que
+     `destinationProvider` touchant désormais la base Drift locale via
+     `onboardingRegionalisationVuProvider` faisait *diverger*
+     `pumpAndSettle` dans `garde_session_widget_test.dart` (base réelle
+     tentant `path_provider`, indisponible en test). Corrigé en
+     surchargeant `databaseProvider` par une base en mémoire
+     (`AppDatabase.pourTests`, patron déjà établi ailleurs dans ce
+     projet) et en figeant `onboardingRegionalisationVuProvider` à
+     « déjà vue » dans ce fichier, qui teste la progression de session
+     par rôle, pas D3 lui-même.
+  2. Le nouveau test de l'écran d'onboarding a révélé un vrai piège :
+     taper « Continuer » avant que `profilProvider` n'ait jamais été
+     sollicité (rien dans l'arbre de cet écran ne le lit avant l'action)
+     faisait diverger `pumpAndSettle` indéfiniment. En production, cet
+     écran n'est jamais atteint avant que `destinationProvider` ait déjà
+     confirmé `profil` chargé — le bug était donc spécifique à l'isolement
+     du test, corrigé en pré-chauffant `profilProvider` dans le montage
+     du test plutôt qu'en modifiant l'écran réel.
+  3. (Mineur, découvert au même passage) `find.text()` par défaut ignore
+     le contenu hors-champ d'un `ListView` (sliver, ne construit que ce
+     qui est proche du viewport) : le test D3 ajouté à
+     `ecran_preferences_apparence_test.dart` échouait à tort sur les
+     sections ajoutées en bas d'un écran déjà long — corrigé avec
+     `skipOffstage: false`, aucun changement de l'écran réel.
+- **Dette résolue** : N/A — nouvelle fonctionnalité, mais deux écarts
+  réels vs `ecoshop_flutter` absorbés au passage (pays/devise lecture
+  seule déjà précédenté côté source, filtre/préférence de langue jamais
+  présent côté source ni côté client).
+- **Vérifié** : `flutter analyze` propre (0 erreur/avertissement, mêmes 12
+  infos pré-existantes hors zone touchée) ; 2 nouveaux tests
+  `GardeSession.resoudre` (régionalisation non vue/vue,
+  sélection-établissement prioritaire) + 2 nouveaux tests
+  `EcranOnboardingRegionalisation` (rendu, persistance par profil) + 1
+  nouveau test `EcranPreferencesApparence` (sections D3) + 2 tests
+  adaptés dans `garde_session_widget_test.dart` (surcharge DB/notifier,
+  sans changement d'intention) ; suite `flutter test` complète rejouée :
+  **314/314**, verte ; aucun backend touché, pgTAP non rejoué (aucune
+  migration/RLS modifiée dans ce sous-livrable).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

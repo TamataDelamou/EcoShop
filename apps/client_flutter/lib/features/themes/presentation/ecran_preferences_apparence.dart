@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_theme_variant.dart';
+import '../../regionalisation/presentation/section_langue.dart';
+import '../../regionalisation/presentation/section_region.dart';
 import '../application/theme_providers.dart';
 
-/// Écran de préférence d'apparence : bascule clair/sombre/système et rappel
+/// Écran de préférence d'apparence : bascule clair/sombre/système, rappel
 /// de la charte graphique active (dérivée de l'établissement, non modifiable
-/// ici — voir [themeVariantProvider]).
+/// ici — voir [themeVariantProvider]) et, depuis D3, langue (modifiable) et
+/// région (pays/devise, lecture seule) — mêmes sections `SectionLangue`/
+/// `SectionRegion` que l'étape d'onboarding, pas de logique dupliquée.
 class EcranPreferencesApparence extends ConsumerWidget {
   const EcranPreferencesApparence({super.key});
 
@@ -69,6 +73,10 @@ class EcranPreferencesApparence extends ConsumerWidget {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          const SectionLangue(),
+          const SizedBox(height: 24),
+          const SectionRegion(),
         ],
       ),
     );

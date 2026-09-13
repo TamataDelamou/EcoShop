@@ -20,6 +20,11 @@ enum DestinationSession {
   /// Plusieurs établissements et aucun sélectionné (ch. 4).
   selectionEtablissement,
 
+  /// Étape d'onboarding Langue/Région (D3), non bloquante — affichée une
+  /// fois par profil, après l'établissement résolu (pays/devise en
+  /// dépendent).
+  regionalisation,
+
   /// Coquille applicative.
   accueil,
 }
@@ -39,6 +44,10 @@ abstract final class GardeSession {
     required Profil? profil,
     required bool ficheLiee,
     required int nombreEtablissements,
+    // Défaut `true` (= déjà vue) pour ne casser aucun appelant existant qui
+    // ignore ce paramètre (tests notamment) : en production,
+    // `destinationProvider` transmet toujours la valeur réellement lue.
+    bool regionalisationVue = true,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -59,6 +68,8 @@ abstract final class GardeSession {
     if (profil.etablissementActifId == null && nombreEtablissements > 1) {
       return DestinationSession.selectionEtablissement;
     }
+
+    if (!regionalisationVue) return DestinationSession.regionalisation;
 
     return DestinationSession.accueil;
   }
