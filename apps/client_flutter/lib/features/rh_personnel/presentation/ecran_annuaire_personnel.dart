@@ -287,22 +287,26 @@ class _CarteEmployeAccordeon extends StatelessWidget {
                 // Pas de champ "poste" distinct de la catégorie ni de champ
                 // contact (téléphone/email) dans le modèle `Employe` actuel
                 // (public.employes) — l'aperçu se limite aux données réelles
-                // disponibles plutôt que d'inventer un contenu.
+                // disponibles plutôt que d'inventer un contenu. Icônes
+                // volontairement neutres (badge/calendrier), jamais
+                // téléphone/email : matricule et date d'embauche ne sont pas
+                // des coordonnées de contact.
                 Text('Poste : ${employe.categorie.libelle}'),
                 const SizedBox(height: 4),
                 Text('Statut : ${employe.statut.libelle}'),
+                const SizedBox(height: 8),
+                _LigneIconTexte(icone: Icons.badge_outlined, texte: 'Matricule ${employe.matricule}'),
                 const SizedBox(height: 4),
-                Text(
-                  'Aperçu : matricule ${employe.matricule} — '
-                  'embauché le ${_formaterDate(employe.dateEmbauche)}',
-                  style: TextStyle(color: context.palette.encreSecondaire),
+                _LigneIconTexte(
+                  icone: Icons.event_outlined,
+                  texte: 'Embauché le ${_formaterDate(employe.dateEmbauche)}',
                 ),
                 const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () => _ouvrirFiche(context, employe),
-                    icon: const Icon(Icons.badge_outlined),
+                    icon: const Icon(Icons.arrow_forward),
                     label: const Text('Voir la fiche complète'),
                   ),
                 ),
@@ -404,11 +408,15 @@ class _CarteEmployeRiche extends StatelessWidget {
                       'Poste : ${employe.categorie.libelle}',
                       style: TextStyle(color: context.palette.encreSecondaire),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Matricule ${employe.matricule} — '
-                      'embauché le ${_formaterDate(employe.dateEmbauche)}',
-                      style: TextStyle(fontSize: 12, color: context.palette.encreSecondaire),
+                    const SizedBox(height: 6),
+                    // Icônes neutres (badge/calendrier), jamais
+                    // téléphone/email : ce ne sont pas des coordonnées de
+                    // contact, ne pas les présenter comme telles.
+                    _LigneIconTexte(icone: Icons.badge_outlined, texte: 'Matricule ${employe.matricule}'),
+                    const SizedBox(height: 2),
+                    _LigneIconTexte(
+                      icone: Icons.event_outlined,
+                      texte: 'Embauché le ${_formaterDate(employe.dateEmbauche)}',
                     ),
                   ],
                 ),
@@ -417,6 +425,29 @@ class _CarteEmployeRiche extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Ligne icône neutre + texte, réutilisée pour l'aperçu matricule/embauche
+/// (accordéon et cartes riches) — jamais une icône de contact
+/// (téléphone/email) : ces données n'en sont pas.
+class _LigneIconTexte extends StatelessWidget {
+  const _LigneIconTexte({required this.icone, required this.texte});
+
+  final IconData icone;
+  final String texte;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icone, size: 14, color: context.palette.encreSecondaire),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(texte, style: TextStyle(fontSize: 12, color: context.palette.encreSecondaire)),
+        ),
+      ],
     );
   }
 }

@@ -1039,8 +1039,13 @@ expansion, animation Hero, filtrage multi-critères, chips — sur
   en cartes riches — faute de ces deux champs, `categorie.libelle` sert de
   substitut à « poste » (pas dupliqué avec une ligne « catégorie »
   redondante) et l'aperçu contact est remplacé par matricule + date
-  d'embauche, seules données réellement disponibles. Documenté ici plutôt
-  que reporté silencieusement à plus tard.
+  d'embauche, seules données réellement disponibles — avec des icônes
+  volontairement neutres (`Icons.badge_outlined`, `Icons.event_outlined`),
+  jamais téléphone/email, pour ne pas présenter ces deux champs comme des
+  coordonnées de contact qu'ils ne sont pas (correction demandée avant
+  clôture, appliquée en `_LigneIconTexte`). **Dette tracée pour plus tard**
+  (pas ce sous-livrable) : ajouter de vrais champs téléphone/email à
+  `Employe` pour compléter l'aperçu contact tel qu'initialement visé.
 - **Hero** (`heroAvatarEmploye(id)`, tag partagé) : câblé sur l'avatar à
   initiales dans les trois modes (`_CarteEmployeAccordeon`,
   `_TuileEmployeGrille`, `_CarteEmployeRiche`) et, côté destination, sur
