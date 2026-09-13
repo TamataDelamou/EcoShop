@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecoshop_client/core/auth/e164_validator.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../planification/presentation/ecran_choix_classe.dart';
@@ -10,15 +11,17 @@ import '../domain/fiche_eleve.dart';
 import '../domain/scolarite_repository.dart';
 import '../domain/verifications_reinscription.dart';
 
-/// Réinscription annuelle d'une fiche existante (M15quater) — écart signalé
-/// par l'audit (`docs/AUDIT_ECOSHOP_FLUTTER.md`, M4/M5 point 2).
+/// Réinscription annuelle d'une fiche existante (M15quater, fast-track D6).
 ///
-/// Recherche par **matricule** plutôt que par téléphone parent (source) —
-/// simplification assumée, documentée dans le rapport d'écart du module :
-/// le matricule est déjà l'identifiant canonique de la fiche côté cible.
-/// Les vérifications (impayé, sanction, statut boursier précédent) sont
-/// **informatives** — la réinscription reste possible après lecture, comme
-/// documenté côté source.
+/// Point d'entrée principal : recherche par **téléphone du parent** (cahier
+/// §7.1) — fait apparaître tous les enfants rattachés à ce numéro, avec une
+/// vraie sélection quand plusieurs enfants le partagent (le prototype source
+/// ne résolvait jamais ce cas : `eleves.first`, TODO jamais levé — corrigé
+/// ici plutôt que reproduit). La recherche par **matricule** (ancien point
+/// d'entrée unique, cf. rapport d'écart M15quater) reste disponible en
+/// option secondaire, sans régression. Les vérifications (impayé, sanction,
+/// statut boursier précédent) restent **informatives** — la réinscription
+/// reste possible après lecture, comme documenté côté source.
 class EcranReinscription extends ConsumerStatefulWidget {
   const EcranReinscription({super.key});
 
@@ -27,7 +30,12 @@ class EcranReinscription extends ConsumerStatefulWidget {
 }
 
 class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
+  final _indicatifCtrl = TextEditingController(text: '+224');
+  final _telephoneCtrl = TextEditingController();
   final _matriculeCtrl = TextEditingController();
+  bool _parMatricule = false;
+
+  List<FicheEleve>? _candidats;
   FicheEleve? _fiche;
   VerificationsReinscription? _verifications;
   Classe? _classe;
@@ -37,11 +45,65 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
 
   @override
   void dispose() {
+    _indicatifCtrl.dispose();
+    _telephoneCtrl.dispose();
     _matriculeCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _rechercher() async {
+  void _basculerMode(bool parMatricule) {
+    setState(() {
+      _parMatricule = parMatricule;
+      _erreur = null;
+      _candidats = null;
+    });
+  }
+
+  Future<void> _rechercherParTelephone() async {
+    final etablissement = ref.read(etablissementActifProvider);
+    final telephone = Validators.normalizeE164(
+      indicatifPays: _indicatifCtrl.text,
+      numeroLocal: _telephoneCtrl.text,
+    );
+    if (etablissement == null) return;
+    if (telephone == null) {
+      setState(() => _erreur = 'Numéro de téléphone invalide.');
+      return;
+    }
+
+    setState(() {
+      _recherche = true;
+      _erreur = null;
+      _fiche = null;
+      _verifications = null;
+      _candidats = null;
+    });
+
+    try {
+      final repository = ref.read(scolariteRepositoryProvider);
+      final enfants = await repository.rechercherEnfantsParTelephoneParent(
+        etablissementId: etablissement.id,
+        telephone: telephone,
+      );
+      if (enfants.isEmpty) {
+        setState(() => _erreur = 'Aucun enfant trouvé pour ce numéro.');
+        return;
+      }
+      if (enfants.length == 1) {
+        await _selectionnerFiche(enfants.first);
+        return;
+      }
+      setState(() => _candidats = enfants);
+    } on ErreurScolarite catch (e) {
+      setState(() => _erreur = e.code == 'PERMISSION_REFUSEE'
+          ? "Vous n'avez pas le droit de consulter cette fiche."
+          : 'Recherche impossible pour le moment.');
+    } finally {
+      if (mounted) setState(() => _recherche = false);
+    }
+  }
+
+  Future<void> _rechercherParMatricule() async {
     final etablissement = ref.read(etablissementActifProvider);
     if (etablissement == null || _matriculeCtrl.text.trim().isEmpty) return;
 
@@ -50,6 +112,7 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
       _erreur = null;
       _fiche = null;
       _verifications = null;
+      _candidats = null;
     });
 
     try {
@@ -62,21 +125,7 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
         setState(() => _erreur = 'Aucun élève trouvé avec ce matricule.');
         return;
       }
-
-      final historique = await repository.inscriptionsDeFiche(fiche.id);
-      final derniere = historique.isEmpty ? null : historique.first;
-      VerificationsReinscription? verifications;
-      if (derniere != null) {
-        verifications = await repository.verificationsReinscription(
-          ficheEleveId: fiche.id,
-          anneePrecedenteId: derniere.anneeScolaireId,
-        );
-      }
-
-      setState(() {
-        _fiche = fiche;
-        _verifications = verifications;
-      });
+      await _selectionnerFiche(fiche);
     } on ErreurScolarite catch (e) {
       setState(() => _erreur = e.code == 'PERMISSION_REFUSEE'
           ? "Vous n'avez pas le droit de consulter cette fiche."
@@ -84,6 +133,26 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
     } finally {
       if (mounted) setState(() => _recherche = false);
     }
+  }
+
+  Future<void> _selectionnerFiche(FicheEleve fiche) async {
+    setState(() {
+      _candidats = null;
+      _fiche = fiche;
+    });
+
+    final repository = ref.read(scolariteRepositoryProvider);
+    final historique = await repository.inscriptionsDeFiche(fiche.id);
+    final derniere = historique.isEmpty ? null : historique.first;
+    VerificationsReinscription? verifications;
+    if (derniere != null) {
+      verifications = await repository.verificationsReinscription(
+        ficheEleveId: fiche.id,
+        anneePrecedenteId: derniere.anneeScolaireId,
+      );
+    }
+    if (!mounted) return;
+    setState(() => _verifications = verifications);
   }
 
   Future<void> _choisirClasse() async {
@@ -138,6 +207,7 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
   Widget build(BuildContext context) {
     final fiche = _fiche;
     final verifications = _verifications;
+    final candidats = _candidats;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Réinscription')),
@@ -146,27 +216,96 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _matriculeCtrl,
-                    decoration: const InputDecoration(labelText: 'Matricule de l\'élève'),
-                    onSubmitted: (_) => _rechercher(),
+            if (!_parMatricule) ...[
+              Text('Téléphone du parent', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 90,
+                    child: TextField(
+                      controller: _indicatifCtrl,
+                      decoration: const InputDecoration(labelText: 'Indicatif'),
+                      keyboardType: TextInputType.phone,
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _telephoneCtrl,
+                      decoration: const InputDecoration(labelText: 'Numéro', hintText: '620 00 00 00'),
+                      keyboardType: TextInputType.phone,
+                      onSubmitted: (_) => _rechercherParTelephone(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _recherche ? null : _rechercherParTelephone,
+                    child: _recherche
+                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Chercher'),
+                  ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => _basculerMode(true),
+                  child: const Text('Rechercher plutôt par matricule'),
                 ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _recherche ? null : _rechercher,
-                  child: _recherche
-                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Chercher'),
+              ),
+            ] else ...[
+              Text('Matricule de l\'élève', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _matriculeCtrl,
+                      decoration: const InputDecoration(labelText: 'Matricule de l\'élève'),
+                      onSubmitted: (_) => _rechercherParMatricule(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _recherche ? null : _rechercherParMatricule,
+                    child: _recherche
+                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Chercher'),
+                  ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => _basculerMode(false),
+                  child: const Text('Rechercher plutôt par téléphone du parent'),
                 ),
-              ],
-            ),
+              ),
+            ],
             if (_erreur != null) ...[
               const SizedBox(height: 12),
               Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+            if (candidats != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Plusieurs enfants partagent ce numéro — choisissez :',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              for (final candidat in candidats)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(candidat.nomComplet),
+                    subtitle: Text('Matricule ${candidat.matricule}'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _selectionnerFiche(candidat),
+                  ),
+                ),
             ],
             if (fiche != null) ...[
               const SizedBox(height: 20),

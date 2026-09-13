@@ -9,6 +9,7 @@ import '../data/cached_scolarite_repository.dart';
 import '../data/supabase_scolarite_repository.dart';
 import '../domain/affectation_enseignant.dart';
 import '../domain/encaissement_scolarite.dart';
+import '../domain/enums_scolarite.dart';
 import '../domain/fiche_eleve.dart';
 import '../domain/frais_scolarite_config.dart';
 import '../domain/inscription.dart';
@@ -139,4 +140,21 @@ final encaissementsDeInscriptionProvider =
 final encaissementsRecentsProvider =
     FutureProvider.family<List<EncaissementScolarite>, String>((ref, etablissementId) {
   return ref.watch(scolariteRepositoryProvider).encaissementsRecents(etablissementId);
+});
+
+// ---------------------------------------------------------------------------
+// D6 — perception des frais par classe (consultation uniquement, cf. rapport
+// d'écart : aucune saisie groupée). Combine les inscriptions déjà exposées
+// (`inscriptionsDeClasseProvider`) et le solde par inscription (RPC
+// `solde_scolarite`, désormais protégée — cf. migration D6) : aucun nouveau
+// calcul, aucune nouvelle RPC de liste.
+// ---------------------------------------------------------------------------
+final soldesClasseProvider = FutureProvider.family<Map<String, SoldeScolarite>, String>((ref, classeId) async {
+  final inscriptions = await ref.watch(inscriptionsDeClasseProvider(classeId).future);
+  final actives = inscriptions.where((i) => i.statut == StatutInscription.active).toList(growable: false);
+  final repository = ref.watch(scolariteRepositoryProvider);
+  final soldes = await Future.wait(actives.map((i) => repository.soldeScolarite(i.id)));
+  return {
+    for (var i = 0; i < actives.length; i++) actives[i].id: soldes[i],
+  };
 });

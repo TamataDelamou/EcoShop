@@ -77,12 +77,22 @@ abstract interface class ScolariteRepository {
 
   // --- M15quater : inscription, réinscription, doublon -----------------
 
-  /// Recherche une fiche par matricule (point d'entrée de la réinscription —
-  /// équivalent du matricule au lieu du téléphone parent utilisé côté
-  /// source, cf. rapport d'écart M15quater).
+  /// Recherche une fiche par matricule (option secondaire de la
+  /// réinscription depuis D6 — la recherche par téléphone parent, ci-dessous,
+  /// est désormais le point d'entrée principal, conforme au cahier §7.1).
   Future<FicheEleve?> ficheParMatricule({
     required String etablissementId,
     required String matricule,
+  });
+
+  /// Recherche tous les enfants rattachés à un numéro de téléphone parent
+  /// (cahier §7.1, RPC `rechercher_enfants_par_telephone_parent`) — fratrie
+  /// complète, jamais un seul enfant pris arbitrairement (écart résolu par
+  /// rapport au prototype source, qui ne tranchait jamais ce cas). [telephone]
+  /// doit déjà être normalisé E.164 par l'appelant (même règle que l'OTP).
+  Future<List<FicheEleve>> rechercherEnfantsParTelephoneParent({
+    required String etablissementId,
+    required String telephone,
   });
 
   /// Crée un nouvel élève et sa première inscription (RPC

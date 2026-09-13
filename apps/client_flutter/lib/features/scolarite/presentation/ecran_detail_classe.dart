@@ -13,6 +13,7 @@ import '../application/scolarite_providers.dart';
 import '../domain/affectation_enseignant.dart';
 import '../domain/classe.dart';
 import '../domain/inscription.dart';
+import 'ecran_perception_classe.dart';
 
 /// Détail d'une classe : élèves inscrits et enseignants affectés (M5).
 ///
@@ -56,6 +57,17 @@ class EcranDetailClasse extends ConsumerWidget {
                 tooltip: 'Bulletins de la classe',
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => EcranGenerationBulletinsClasse(classe: classe)),
+                ),
+              ),
+            // D6 : perception des frais par classe (consultation + navigation
+            // vers l'encaissement individuel existant, même garde que les
+            // bulletins de D5 — pas de saisie groupée dans cette passe).
+            if (estDirection)
+              IconButton(
+                icon: const Icon(Icons.payments_outlined),
+                tooltip: 'Frais de la classe',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranPerceptionClasse(classe: classe)),
                 ),
               ),
           ],

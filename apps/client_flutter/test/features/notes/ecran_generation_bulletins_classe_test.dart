@@ -71,6 +71,12 @@ class _FauxScolariteRepository implements ScolariteRepository {
   @override
   Future<FicheEleve?> ficheParMatricule({required String etablissementId, required String matricule}) async => null;
   @override
+  Future<List<FicheEleve>> rechercherEnfantsParTelephoneParent({
+    required String etablissementId,
+    required String telephone,
+  }) async =>
+      const [];
+  @override
   Future<String> creerInscriptionNouvelEleve({
     required String etablissementId,
     required String nom,

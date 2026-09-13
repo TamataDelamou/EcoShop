@@ -116,6 +116,18 @@ class _FauxDistant implements ScolariteRepository {
     return _ficheTest();
   }
 
+  int appelsRechercheTelephone = 0;
+
+  @override
+  Future<List<FicheEleve>> rechercherEnfantsParTelephoneParent({
+    required String etablissementId,
+    required String telephone,
+  }) async {
+    appelsRechercheTelephone++;
+    if (horsLigne) throw const ErreurScolarite('ERREUR_RESEAU');
+    return [_ficheTest()];
+  }
+
   @override
   Future<String> creerInscriptionNouvelEleve({
     required String etablissementId,
@@ -337,5 +349,17 @@ void main() {
 
     final fiche = await repository.ficheParMatricule(etablissementId: 'e1', matricule: 'MAT-1');
     expect(fiche?.matricule, 'MAT-1');
+  });
+
+  test('rechercherEnfantsParTelephoneParent (D6) retombe sur le cache hors ligne', () async {
+    await repository.rechercherEnfantsParTelephoneParent(etablissementId: 'e1', telephone: '+224600000001');
+    distant.horsLigne = true;
+
+    final enfants = await repository.rechercherEnfantsParTelephoneParent(
+      etablissementId: 'e1',
+      telephone: '+224600000001',
+    );
+    expect(enfants, hasLength(1));
+    expect(enfants.single.matricule, 'MAT-1');
   });
 }

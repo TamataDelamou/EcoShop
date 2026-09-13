@@ -1458,6 +1458,89 @@ incomplet pour un usage réel.
   tests de l'écran d'édition du contact employé) ; suite `flutter test`
   complète rejouée : **360/360**, verte (344 + 16).
 
+*D6 — Perception des frais par classe & fast-track d'inscription* (clos le
+2026-09-13) : dernier module de la Phase D.
+
+- **État des lieux avant codage** : perception (ch. 17) — tables/RPC déjà en
+  place depuis M15quater (`encaissements_scolarite`, `frais_scolarite_config`,
+  `paliers_paiement_config`, RPC `solde_scolarite`), mais flux strictement
+  élève-par-élève (`EcranEncaissementScolarite` ouvert depuis une fiche
+  précise) ; `EcranDetailClasse` n'avait aucun accès aux frais. **Silence du
+  cahier sur une vue « par classe » — vérifié aussi absent côté source**
+  (`paiement_screen.dart`/`cahier_journal_screen.dart` : zéro occurrence de
+  « classe »), donc traité comme une fonctionnalité nouvelle, pas un
+  rattrapage. Inscription (ch. 7.1) — **vrai écart cahier celui-là** :
+  réinscription cible recherchait par matricule uniquement ; le cahier exige
+  la recherche par téléphone du parent avec la fratrie complète. Vérifié par
+  lecture directe du prototype source : `reinscription_screen.dart` cherchait
+  bien par téléphone, mais ne résolvait jamais le cas de plusieurs enfants
+  (`eleves.first`, TODO explicite jamais levé) — l'écart n'était donc pas
+  seulement absent côté cible, il était non résolu côté source aussi.
+- **Perception par classe** — nouvel écran `EcranPerceptionClasse`, accessible
+  depuis `EcranDetailClasse` au même emplacement que le bouton Bulletins de
+  D5 (direction uniquement). Consultation + navigation vers l'encaissement
+  individuel existant **uniquement** — décision explicite du porteur de
+  projet : pas de saisie groupée dans cette passe (une correction de solde
+  erronée sur toute une classe serait plus difficile à défaire qu'un export
+  PDF groupé, et rien ne la demandait). Aucune nouvelle RPC de liste : le
+  solde par élève vient exclusivement de `solde_scolarite` (déjà existante,
+  M15quater), appelée une fois par inscription active de la classe — même
+  principe de délégation que `calculer_moyenne_eleve` en D5, aucun nouveau
+  calcul financier écrit.
+- **Correctif de sécurité trouvé en construisant ce point** (pas une dérive
+  de périmètre — la fonction que ce module expose pour la première fois à
+  l'échelle d'une classe entière méritait d'être creusée avant d'être
+  exploitée plus largement, même réflexe qu'en D5 avec `a_permission`) :
+  `solde_scolarite(p_inscription_id)` n'avait **aucune vérification
+  d'autorisation** depuis M15quater — tout compte authentifié pouvait lire
+  le solde de n'importe quelle inscription de n'importe quel établissement
+  en connaissant seulement son UUID (fuite financière inter-établissements).
+  Corrigé en appliquant exactement la frontière déjà retenue pour
+  `encaissements_scolarite` (`est_personnel(etablissement) or
+  fiche_visible(fiche)`, 20260906001502) — pas une règle inventée, la même
+  déjà actée pour la même donnée sur la table adjacente. Fonction convertie
+  de `sql` à `plpgsql` (contrôle de flux nécessaire), calcul inchangé.
+- **Fast-track d'inscription (§7.1)** — nouvelle RPC
+  `rechercher_enfants_par_telephone_parent` (même frontière de permission que
+  `creer_reinscription` : gestion de la scolarité, ou direction), renvoyant
+  la fratrie confirmée+autorisée complète (`relations_parent_eleve`, statut
+  `confirmee`, `autorise = true`) — jamais un seul enfant pris
+  arbitrairement. `EcranReinscription` restructuré : recherche par téléphone
+  devient le point d'entrée par défaut (indicatif + numéro, normalisation
+  E.164 via `Validators.normalizeE164`, déjà utilisé par l'écran de
+  connexion) ; un seul résultat sélectionne automatiquement la fiche,
+  plusieurs résultats affichent une vraie liste de choix. La recherche par
+  matricule reste disponible en option secondaire (« Rechercher plutôt par
+  matricule »), sans aucune régression sur le chemin déjà utilisé. Une fois
+  la fiche identifiée par l'une ou l'autre voie, le flux de réinscription
+  (alertes informatives + choix de classe + `creer_reinscription`) est
+  strictement inchangé.
+- **Vérifié** : migration
+  `20260906001512_d6_perception_classe_et_fasttrack_inscription.sql` rejouée
+  par `supabase db reset` sans erreur ; nouveau fichier pgTAP
+  `tests/rls/47_d6_perception_classe_et_fasttrack_inscription.sql`
+  (14 assertions : fratrie complète jamais un seul enfant, exclusion d'une
+  relation non autorisée, exclusion d'une relation non confirmée, numéro
+  inconnu renvoie un ensemble vide sans erreur, recherche bien scopée à
+  l'établissement demandé, refus 42501 sans droit ; côté `solde_scolarite` —
+  non-régression du calcul après conversion plpgsql, lecture autorisée pour
+  la direction et pour le parent confirmé, **refus 42501 pour un tiers sans
+  lien** — c'est la fuite corrigée —, refus 42501 pour la direction d'un
+  autre établissement, erreur dédiée sur une inscription inexistante) — suite
+  complète rejouée : `Files=47, Tests=361, PASS`, aucune régression sur les
+  46 fichiers précédents. `flutter analyze` propre (mêmes 12 infos
+  pré-existantes) ; 9 nouveaux tests Flutter (`ecran_perception_classe_test`
+  — liste + solde, navigation vers l'encaissement individuel, classe vide ;
+  `ecran_reinscription_test` — téléphone par défaut, sélection automatique à
+  1 résultat, vraie sélection de fratrie à 2 résultats, numéro inconnu,
+  numéro invalide rejeté avant tout appel réseau, matricule en secondaire) ;
+  suite `flutter test` complète rejouée : **369/369**, verte (360 + 9).
+
+Phase D close avec D6 — les six modules (D1 → D6) sont clos, vérifiés et
+prêts pour le feu vert de push, selon la même discipline à chaque étape :
+état des lieux avant code, écart posé en question plutôt que tranché seul,
+vérification empirique avant clôture.
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

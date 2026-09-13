@@ -245,6 +245,20 @@ class SupabaseScolariteRepository implements ScolariteRepository {
   }
 
   @override
+  Future<List<FicheEleve>> rechercherEnfantsParTelephoneParent({
+    required String etablissementId,
+    required String telephone,
+  }) {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'rechercher_enfants_par_telephone_parent',
+        params: {'p_etablissement': etablissementId, 'p_telephone': telephone},
+      );
+      return lignes.cast<Map<String, dynamic>>().map(FicheEleve.depuisJson).toList(growable: false);
+    });
+  }
+
+  @override
   Future<String> creerInscriptionNouvelEleve({
     required String etablissementId,
     required String nom,

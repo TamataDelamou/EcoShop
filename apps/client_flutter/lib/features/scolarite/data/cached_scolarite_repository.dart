@@ -244,6 +244,7 @@ class CachedScolariteRepository implements ScolariteRepository {
   // --- M15quater : lectures avec repli cache -------------------------------
 
   static const _typeFicheParMatricule = 'fiche_par_matricule';
+  static const _typeEnfantsParTelephone = 'enfants_par_telephone';
   static const _typeFraisConfig = 'frais_config';
   static const _typePaliersConfig = 'paliers_config';
   static const _typeSolde = 'solde_scolarite';
@@ -267,6 +268,23 @@ class CachedScolariteRepository implements ScolariteRepository {
       if (document == null) rethrow;
       return FicheEleve.depuisJson(document);
     }
+  }
+
+  @override
+  Future<List<FicheEleve>> rechercherEnfantsParTelephoneParent({
+    required String etablissementId,
+    required String telephone,
+  }) {
+    return _listeAvecCache(
+      type: _typeEnfantsParTelephone,
+      cle: '$etablissementId::$telephone',
+      lire: () => _distant.rechercherEnfantsParTelephoneParent(
+        etablissementId: etablissementId,
+        telephone: telephone,
+      ),
+      versJson: (f) => f.versJson(),
+      depuisJson: FicheEleve.depuisJson,
+    );
   }
 
   @override
