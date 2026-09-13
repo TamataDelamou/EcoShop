@@ -171,53 +171,47 @@ class SupabaseNotesRepository implements NotesRepository {
     });
   }
 
-  /// Publie directement chaque bulletin généré (`statut = 'publie'`) : la
-  /// source (`ecoshop_flutter`) n'a jamais eu de cycle brouillon/publication
-  /// séparé pour les bulletins — un bulletin y est visible dès sa génération.
-  /// Le cycle brouillon/aperçu/publication du chapitre 18 est hors périmètre
-  /// D5 (différé) ; générer en `brouillon` ici rendrait le bulletin
-  /// invisible pour l'élève/parent (`bulletin_visible` exige `publie`) sans
-  /// qu'aucune action de publication n'existe pour l'en sortir — une
-  /// régression par rapport à la source, pas un choix par défaut neutre.
+  /// Composition ET écriture entièrement côté serveur, via la RPC
+  /// `generer_bulletins_classe` — PAS un upsert direct depuis le client
+  /// comme initialement construit : les index uniques de `bulletins` sont
+  /// partiels (`where periode_id is [not] null`), et PostgREST génère un
+  /// `ON CONFLICT (colonnes)` sans le prédicat de l'index partiel, que
+  /// Postgres refuse alors d'inférer (`42P10`) — vérifié empiriquement,
+  /// y compris pour la toute première génération, pas seulement la
+  /// régénération. La RPC exécute l'`INSERT ... ON CONFLICT` en SQL brut,
+  /// seul endroit où le prédicat peut être précisé.
   ///
-  /// N'effectue aucun calcul : [classerElevesClasse] (RPC serveur) a déjà
-  /// produit moyenne et rang, recopiés tels quels dans `contenu`.
+  /// Publie directement chaque bulletin (`statut = 'publie'`) : la source
+  /// (`ecoshop_flutter`) n'a jamais eu de cycle brouillon/publication séparé
+  /// pour les bulletins — un bulletin y est visible dès sa génération. Le
+  /// cycle brouillon/aperçu/publication du chapitre 18 est hors périmètre D5
+  /// (différé) ; générer en `brouillon` ici rendrait le bulletin invisible
+  /// pour l'élève/parent (`bulletin_visible` exige `publie`) sans qu'aucune
+  /// action de publication n'existe pour l'en sortir.
+  ///
+  /// Régénération (cahier §12.3 — une note reste modifiable par le
+  /// responsable jusqu'à la proclamation de fin d'année) : la RPC met à jour
+  /// EN PLACE le même bulletin (même id, `contenu`/`genere_le` rafraîchis),
+  /// jamais un doublon — vérifié empiriquement contre l'instance locale, pas
+  /// seulement pour la première génération sur des notes vierges.
   @override
   Future<List<Bulletin>> genererBulletinsClasse({
     required String classeId,
-    required String etablissementId,
     required String anneeScolaireId,
     String? periodeId,
     TypeBulletin type = TypeBulletin.trimestriel,
   }) {
     return _executer(() async {
-      final classement = await classerElevesClasse(classeId, periodeId: periodeId);
-      if (classement.isEmpty) return const <Bulletin>[];
-
-      final effectif = classement.length;
-      final maintenant = DateTime.now().toUtc().toIso8601String();
-      final lignes = classement
-          .map((e) => {
-                'etablissement_id': etablissementId,
-                'annee_scolaire_id': anneeScolaireId,
-                'periode_id': periodeId,
-                'classe_id': classeId,
-                'fiche_eleve_id': e.ficheEleveId,
-                'type': type.code,
-                'statut': StatutBulletin.publie.code,
-                'contenu': {
-                  'moyenne_generale': e.moyenne,
-                  'rang': e.rang,
-                  'effectif_classe': effectif,
-                },
-                'genere_le': maintenant,
-                'publie_le': maintenant,
-              })
-          .toList(growable: false);
-
-      final onConflict = periodeId == null ? 'fiche_eleve_id,type' : 'fiche_eleve_id,periode_id,type';
-      final ecrites = await _client.from('bulletins').upsert(lignes, onConflict: onConflict).select();
-      return ecrites.map((l) => Bulletin.depuisJson(l)).toList(growable: false);
+      final lignes = await _client.rpc<List<dynamic>>(
+        'generer_bulletins_classe',
+        params: {
+          'p_classe': classeId,
+          'p_annee': anneeScolaireId,
+          'p_periode': periodeId,
+          'p_type': type.code,
+        },
+      );
+      return lignes.map((l) => Bulletin.depuisJson(l as Map<String, dynamic>)).toList(growable: false);
     });
   }
 

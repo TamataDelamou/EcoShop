@@ -55,7 +55,6 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
     try {
       final bulletins = await ref.read(notesRepositoryProvider).genererBulletinsClasse(
             classeId: widget.classe.id,
-            etablissementId: widget.classe.etablissementId,
             anneeScolaireId: widget.classe.anneeScolaireId,
             periodeId: periode?.id,
             type: _typeBulletinPour(periode),

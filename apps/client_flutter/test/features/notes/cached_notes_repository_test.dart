@@ -99,7 +99,6 @@ class _FauxDistant implements NotesRepository {
   @override
   Future<List<Bulletin>> genererBulletinsClasse({
     required String classeId,
-    required String etablissementId,
     required String anneeScolaireId,
     String? periodeId,
     TypeBulletin type = TypeBulletin.trimestriel,
@@ -201,7 +200,6 @@ void main() {
     test('genererBulletinsClasse relaie le résultat serveur', () async {
       final bulletins = await repository.genererBulletinsClasse(
         classeId: 'c1',
-        etablissementId: 'et1',
         anneeScolaireId: 'a1',
         periodeId: 'p1',
       );
@@ -211,7 +209,7 @@ void main() {
     test('genererBulletinsClasse ne retombe jamais sur un cache hors ligne', () async {
       distant.horsLigne = true;
       expect(
-        repository.genererBulletinsClasse(classeId: 'c1', etablissementId: 'et1', anneeScolaireId: 'a1'),
+        repository.genererBulletinsClasse(classeId: 'c1', anneeScolaireId: 'a1'),
         throwsA(isA<ErreurNotes>()),
       );
     });

@@ -1267,12 +1267,10 @@ officiels (chapitre 18) est différée en bloc, pas construite dans D5.
   l'établissement de la classe (garde plus stricte que
   `calculer_moyenne_eleve`, qui répond pour une seule fiche à tout
   `authenticated` — celle-ci renvoie la classe entière, portée plus large
-  délibérément resserrée). L'écriture du bulletin lui-même n'a pas eu besoin
-  d'une nouvelle RPC : la policy RLS `bulletins_ecriture_scolarite` (M6)
-  permettait déjà l'upsert direct à qui détient
-  `scolarite.bulletin.gerer` — le client recopie tel quel le classement déjà
-  calculé (`moyenne_generale`, `rang`, `effectif_classe`) dans `contenu`,
-  sans aucun calcul.
+  délibérément resserrée). L'écriture est faite par une seconde RPC,
+  `generer_bulletins_classe` — voir le correctif post-relecture ci-dessous
+  pour la raison de ce choix (un upsert direct depuis le client, envisagé
+  initialement, ne fonctionne pas sur cette table).
 - **Publication immédiate, pas de brouillon** : chaque bulletin généré est
   écrit `statut = 'publie'` directement. La source n'a jamais eu de cycle
   brouillon/publication séparé pour les bulletins (visibles dès leur
@@ -1282,6 +1280,42 @@ officiels (chapitre 18) est différée en bloc, pas construite dans D5.
   régression par rapport à la source, pas un choix par défaut neutre. Le
   cycle brouillon/aperçu/publication réel appartient au chapitre 18,
   différé (voir plus bas).
+- **Correctif post-relecture, avant push (question du porteur de projet sur
+  la régénération §12.3)** : la version initialement livrée écrivait le
+  bulletin par un upsert client direct (`bulletins.upsert(..., onConflict:
+  'fiche_eleve_id,periode_id,type')`), en s'appuyant sur la policy RLS
+  `bulletins_ecriture_scolarite` déjà existante — jamais exercée par un
+  test réel (le pgTAP initial testait un `INSERT` brut, pas le chemin
+  d'upsert du client ; le test Flutter passait par un faux port). **Vérifié
+  empiriquement contre l'instance locale (appel REST réel, pas une
+  relecture)** : cet upsert échoue **systématiquement** avec `42P10 — there
+  is no unique or exclusion constraint matching the ON CONFLICT
+  specification`, y compris à la toute première génération, pas seulement
+  à la régénération — les deux index d'unicité de `bulletins` sont
+  partiels (`where periode_id is [not] null`) et PostgREST construit un
+  `ON CONFLICT` sans le prédicat requis pour les cibler. **Plus grave que
+  la question posée ne le supposait** : la fonctionnalité telle que commitée
+  ne pouvait générer aucun bulletin du tout par ce chemin. Corrigé par une
+  nouvelle RPC `generer_bulletins_classe` (SECURITY DEFINER, permission
+  vérifiée explicitement comme `creer_inscription_nouvel_eleve`) qui exécute
+  l'`INSERT ... ON CONFLICT` en SQL brut avec le prédicat exact — seul
+  endroit où Postgres peut réellement cibler ces index partiels. En
+  construisant le correctif, une seconde régression latente a été trouvée
+  et corrigée de la même façon empirique : `if not public.a_permission(...)`
+  laissait passer un appelant sans `role_racine` choisi, parce que
+  `a_permission()` peut renvoyer `NULL` (pas seulement `false`) et `IF NULL`
+  ne déclenche jamais une branche en PL/pgSQL (contrairement à une clause
+  RLS `USING`/`WITH CHECK`, où Postgres traite NULL comme refusé
+  automatiquement) — un compte étranger recevait un tableau vide (200 OK)
+  au lieu d'un refus explicite ; corrigé par `coalesce(a_permission(...),
+  false)`. **Vérifié après coup, avec un scénario dédié** : première
+  génération réussie, correction d'une note (10 → 17, comme le permet le
+  cahier §12.3 avant proclamation), régénération de la même classe/période
+  — même `id` de bulletin conservé, `contenu` mis à jour, aucun doublon —
+  et le refus de permission renvoie désormais bien une erreur explicite
+  (HTTP 403, `PERMISSION_REFUSEE`). Testé aussi bien pour un bulletin de
+  période que pour un bulletin annuel (`periode_id` NULL), les deux index
+  partiels étant concernés.
 - **Conseils de classe / repêchage à seuil paramétrable / règle de
   proclamation des classes d'examen (§12.4)** : contrôle explicite effectué
   côté `ecoshop_flutter` avant de les tracer comme dette, comme demandé —
@@ -1327,13 +1361,20 @@ officiels (chapitre 18) est différée en bloc, pas construite dans D5.
   actuel, gardé par rôle comme le reste de l'app — pas une UI Windows
   dédiée pour un seul écran de configuration.
 - **Vérifié** : migration rejouée par `supabase db reset` (podman/WSL2)
-  sans erreur ; pgTAP nouveau fichier `tests/rls/45_d5_generation_bulletins_
-  classe.sql` (10 assertions : classement exact et réservé au personnel,
-  écriture refusée sans `scolarite.bulletin.gerer` puis acceptée avec,
-  visibilité élève lié + parent confirmé, opacité pour un élève étranger) —
-  suite complète rejouée : `Files=45, Tests=323, PASS`, aucune régression
-  sur les 44 fichiers précédents. `flutter analyze` propre (mêmes 12 infos
-  pré-existantes) ; 12 nouveaux tests Flutter (passthrough
+  sans erreur ; pgTAP `tests/rls/45_d5_generation_bulletins_classe.sql`
+  réécrit après le correctif — **18 assertions** (classement exact et
+  réservé au personnel ; génération refusée sans
+  `scolarite.bulletin.gerer` — y compris le cas `a_permission()` = NULL —
+  puis acceptée avec ; contenu conforme au classement pour les 2 fiches ;
+  **régénération après correction d'une note : mêmes id de bulletins
+  conservés, contenu recalculé, aucun doublon** ; visibilité élève lié +
+  parent confirmé, opacité pour un élève étranger) — suite complète
+  rejouée : `Files=45, Tests=331, PASS`, aucune régression sur les 44
+  fichiers précédents. Avant le correctif, la RPC de génération avait aussi
+  été appelée pour de vrai via l'API REST locale (pas seulement via pgTAP)
+  pour reproduire puis confirmer la résolution du défaut `42P10`, sur les
+  deux variantes (`periode_id` NULL et NOT NULL). `flutter analyze` propre
+  (mêmes 12 infos pré-existantes) ; 12 nouveaux tests Flutter (passthrough
   `CachedNotesRepository` D5, smoke-tests `construireBulletinsClassePdf` à
   1 et plusieurs élèves, écran de génération — sélecteur de période,
   appel avec les bons paramètres, message dédié si aucun élève classable,

@@ -55,14 +55,17 @@ abstract interface class NotesRepository {
   });
 
   /// Génère (ou régénère) les bulletins de toute une classe pour une période
-  /// donnée (D5, cahier §12.4) : recopie tel quel le classement déjà calculé
-  /// côté serveur ([classerElevesClasse]) dans un bulletin par élève,
-  /// aussitôt publié (voir docstring de l'implémentation Supabase pour le
-  /// choix de publication immédiate). Idempotent : régénérer écrase le
-  /// bulletin existant de la même fiche/période.
+  /// donnée (D5, cahier §12.4), via la RPC serveur `generer_bulletins_classe`
+  /// — composition ET écriture entièrement côté serveur (voir docstring de
+  /// l'implémentation Supabase : un upsert direct depuis le client sur les
+  /// index partiels de `bulletins` échoue systématiquement, y compris à la
+  /// première génération). Idempotent au sens du cahier §12.3 (une note
+  /// reste modifiable par le responsable jusqu'à la proclamation de fin
+  /// d'année) : régénérer après correction d'une note **met à jour en place**
+  /// le même bulletin (même id), jamais un doublon — vérifié empiriquement,
+  /// pas seulement pour la première génération.
   Future<List<Bulletin>> genererBulletinsClasse({
     required String classeId,
-    required String etablissementId,
     required String anneeScolaireId,
     String? periodeId,
     TypeBulletin type,

@@ -14,11 +14,22 @@
 -- dédiée plutôt que reproduit côté client, pour ne jamais violer ce contrat
 -- déjà établi par M6.
 --
--- L'écriture du bulletin lui-même (table `bulletins`) n'a pas besoin d'une
--- nouvelle RPC : la politique RLS `bulletins_ecriture_scolarite` (M6) permet
--- déjà l'upsert direct à quiconque détient `scolarite.bulletin.gerer` — le
--- client se contente de recopier les valeurs déjà calculées côté serveur
--- (moyenne, rang, effectif) dans `contenu`, sans aucun calcul.
+-- Écriture du bulletin — RPC dédiée `generer_bulletins_classe`, PAS un upsert
+-- direct depuis le client comme prévu initialement : les deux index uniques
+-- ci-dessous sont partiels (`where periode_id is [not] null`), et PostgREST
+-- construit un `ON CONFLICT (colonnes)` SANS le prédicat de l'index partiel
+-- — Postgres refuse alors d'inférer l'index (`42P10 : there is no unique or
+-- exclusion constraint matching the ON CONFLICT specification`), y compris
+-- pour la toute première génération, jamais seulement la régénération.
+-- Vérifié empiriquement par un appel REST réel contre l'instance locale
+-- avant correction (les deux variantes periode_id NULL et NOT NULL
+-- échouent), pas supposé. La RPC exécute l'INSERT ... ON CONFLICT en SQL
+-- brut, où le prédicat peut être précisé explicitement — seul endroit où
+-- Postgres peut réellement cibler ces index partiels. Répond aussi à la
+-- régénération après correction (cahier §12.3 : une note reste modifiable
+-- par le responsable jusqu'à la proclamation de fin d'année) : rejouer la
+-- RPC met à jour EN PLACE le même bulletin (même clé fiche/période/type),
+-- jamais un doublon.
 --
 -- Statut : la génération publie directement le bulletin (`statut = 'publie'`,
 -- `publie_le = now()`) — la source (ecoshop_flutter) n'a jamais eu de cycle
@@ -68,6 +79,89 @@ as $$
 $$;
 
 grant execute on function public.classer_eleves_classe(uuid, uuid, uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Génère (ou régénère) les bulletins d'une classe entière pour une période
+-- donnée (ou l'année entière si p_periode est NULL) : un bulletin par élève
+-- classé par classer_eleves_classe(), écrit en une seule instruction
+-- (atomique). La permission est vérifiée explicitement ici (comme
+-- creer_inscription_nouvel_eleve, lier_parent_a_fiche…) : SECURITY DEFINER
+-- contourne délibérément la RLS de la table pour pouvoir cibler l'index
+-- partiel correct dans ON CONFLICT — l'autorité n'est donc plus la policy
+-- RLS `bulletins_ecriture_scolarite` (laissée en place pour d'éventuelles
+-- écritures directes futures, ex. correction manuelle d'une appréciation)
+-- mais ce contrôle explicite.
+--
+-- Deux branches (periode_id NULL ou NOT NULL) : une seule instruction ne
+-- peut porter qu'un seul prédicat ON CONFLICT, et l'appel porte toujours sur
+-- UNE période (ou aucune) pour toute la classe — jamais un mélange.
+create or replace function public.generer_bulletins_classe(
+  p_classe uuid,
+  p_annee uuid,
+  p_periode uuid default null,
+  p_type public.type_bulletin default 'trimestriel'
+)
+returns setof public.bulletins
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_etablissement uuid;
+begin
+  select etablissement_id into v_etablissement from public.classes where id = p_classe;
+  if v_etablissement is null then
+    raise exception 'CLASSE_INTROUVABLE' using errcode = '23514';
+  end if;
+
+  -- coalesce(..., false) : a_permission() peut renvoyer NULL (pas seulement
+  -- false) quand l'appelant n'a encore aucun role_racine choisi — un simple
+  -- `if not ...` laisserait alors passer l'appel silencieusement (IF NULL
+  -- ne déclenche jamais la branche en PL/pgSQL), contrairement à une clause
+  -- RLS USING/WITH CHECK où Postgres traite NULL comme refusé
+  -- automatiquement. Vérifié empiriquement : sans ce coalesce, un compte
+  -- étranger obtenait un tableau vide (200 OK) au lieu d'un refus explicite.
+  if not coalesce(public.a_permission(v_etablissement, 'scolarite.bulletin.gerer'), false) then
+    raise exception 'PERMISSION_REFUSEE' using errcode = '42501';
+  end if;
+
+  if p_periode is null then
+    return query
+    insert into public.bulletins
+      (etablissement_id, annee_scolaire_id, periode_id, classe_id, fiche_eleve_id, type, statut, contenu, genere_le, publie_le)
+    select v_etablissement, p_annee, null, p_classe, c.fiche_eleve_id, p_type, 'publie',
+           jsonb_build_object('moyenne_generale', c.moyenne, 'rang', c.rang, 'effectif_classe', count(*) over ()),
+           now(), now()
+    from public.classer_eleves_classe(p_classe, null, null) c
+    on conflict (fiche_eleve_id, type) where periode_id is null
+    do update set
+      annee_scolaire_id = excluded.annee_scolaire_id,
+      classe_id = excluded.classe_id,
+      statut = excluded.statut,
+      contenu = excluded.contenu,
+      genere_le = excluded.genere_le,
+      publie_le = excluded.publie_le
+    returning *;
+  else
+    return query
+    insert into public.bulletins
+      (etablissement_id, annee_scolaire_id, periode_id, classe_id, fiche_eleve_id, type, statut, contenu, genere_le, publie_le)
+    select v_etablissement, p_annee, p_periode, p_classe, c.fiche_eleve_id, p_type, 'publie',
+           jsonb_build_object('moyenne_generale', c.moyenne, 'rang', c.rang, 'effectif_classe', count(*) over ()),
+           now(), now()
+    from public.classer_eleves_classe(p_classe, null, p_periode) c
+    on conflict (fiche_eleve_id, periode_id, type) where periode_id is not null
+    do update set
+      annee_scolaire_id = excluded.annee_scolaire_id,
+      classe_id = excluded.classe_id,
+      statut = excluded.statut,
+      contenu = excluded.contenu,
+      genere_le = excluded.genere_le,
+      publie_le = excluded.publie_le
+    returning *;
+  end if;
+end;
+$$;
+
+grant execute on function public.generer_bulletins_classe(uuid, uuid, uuid, public.type_bulletin) to authenticated;
 
 -- ============================================================================
 -- Fin D5 — génération des bulletins de classe.

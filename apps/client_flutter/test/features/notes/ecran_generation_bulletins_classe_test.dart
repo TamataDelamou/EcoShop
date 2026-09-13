@@ -148,7 +148,6 @@ class _FauxNotesRepository implements NotesRepository {
   @override
   Future<List<Bulletin>> genererBulletinsClasse({
     required String classeId,
-    required String etablissementId,
     required String anneeScolaireId,
     String? periodeId,
     TypeBulletin type = TypeBulletin.trimestriel,
