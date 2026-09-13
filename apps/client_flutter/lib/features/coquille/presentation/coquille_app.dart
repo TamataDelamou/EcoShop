@@ -336,13 +336,10 @@ class _CorpsOnglet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // PageHeader (D1) : titre + descriptif, appliqué aux 5 onglets racine
-    // UNIQUEMENT dans cette passe — les écrans délégués ci-dessous
-    // (EcranScolarite direction, EcranMarketplace) portent parfois déjà
-    // leur propre AppBar interne (« Structures & annuaire », « Marketplace »)
-    // : un empilement visuel en résulte, assumé et documenté dans le
-    // rapport d'écart de ce sous-livrable plutôt que corrigé en douce en
-    // retouchant ces écrans, hors périmètre ici.
+    // PageHeader (D1) : titre + descriptif, appliqué aux 5 onglets racine —
+    // SAUF quand le contenu délégué possède déjà son propre AppBar
+    // (`_delegueSonAppBar`), pour ne jamais superposer deux barres de titre.
+    if (_delegueSonAppBar) return _contenu(context);
     return Column(
       children: [
         PageHeader(titre: onglet.libelle, descriptif: onglet.descriptif),
@@ -350,6 +347,25 @@ class _CorpsOnglet extends ConsumerWidget {
       ],
     );
   }
+
+  /// `true` si l'écran rendu par [_contenu] pour ce couple onglet/rôle a déjà
+  /// son propre `Scaffold`+`AppBar` — l'empilement visuel avec `PageHeader`
+  /// serait sinon un défaut visible dès l'ouverture de l'onglet :
+  /// - Boutique → `EcranMarketplace` (AppBar « Marketplace »), pour tous les
+  ///   rôles qui y accèdent.
+  /// - Scolarité → `EcranFicheEleve` (AppBar = nom de la fiche) pour parent
+  ///   et élève, `EcranStructureEtablissement` (AppBar « Structures &
+  ///   annuaire ») pour la direction. Ne s'applique PAS à l'enseignant :
+  ///   `_VueEnseignant` n'a aucun AppBar propre et dépend de `PageHeader`
+  ///   pour son titre.
+  bool get _delegueSonAppBar => switch (onglet) {
+    OngletCoquille.boutique => true,
+    OngletCoquille.scolarite => switch (profil?.roleRacine) {
+      RoleRacine.direction || RoleRacine.parent || RoleRacine.eleve => true,
+      _ => false,
+    },
+    _ => false,
+  };
 
   Widget _contenu(BuildContext context) {
     if (onglet == OngletCoquille.profil) {

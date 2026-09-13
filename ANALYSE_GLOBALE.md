@@ -949,15 +949,23 @@ grille/liste/cartes.
   une redondance visuelle) : le titre dynamique de l'onglet, auparavant
   affiché dans l'AppBar, en a été retiré (l'AppBar affiche désormais
   l'identité statique « EcoShop ») puisque `PageHeader` le porte maintenant
-  — sinon le nom de l'onglet apparaissait deux fois à l'écran. **Conséquence
-  assumée, pas corrigée dans cette passe** : `EcranMarketplace` et
-  `EcranStructureEtablissement` (onglet Scolarité, rôle direction)
-  embarquent chacun leur propre `Scaffold`/`AppBar` interne
-  (« Marketplace », « Structures & annuaire ») — un empilement visuel
-  `PageHeader` + AppBar interne en résulte pour ces deux cas. Retoucher ces
-  écrans est hors périmètre de ce sous-livrable (coquille uniquement) ; à
-  consolider quand ils seront eux-mêmes retouchés pour d'autres raisons,
-  même logique que le rollout progressif de `PageHeader`.
+  — sinon le nom de l'onglet apparaissait deux fois à l'écran. **Empilement
+  visuel corrigé** (relevé initialement pour `EcranMarketplace` et
+  `EcranStructureEtablissement`, puis élargi lors de la vérification du
+  porteur de projet à un troisième cas non documenté au premier passage,
+  `EcranFicheEleve`) : `_CorpsOnglet` n'affiche `PageHeader` que si l'écran
+  délégué n'a pas déjà son propre `Scaffold`/`AppBar`
+  (`_delegueSonAppBar`) —
+  - Boutique → toujours vrai (`EcranMarketplace`, AppBar « Marketplace »),
+    quel que soit le rôle ;
+  - Scolarité, rôle direction → vrai (`EcranStructureEtablissement`, AppBar
+    « Structures & annuaire ») ;
+  - Scolarité, rôles parent et élève → vrai (`EcranFicheEleve`, AppBar =
+    nom de la fiche) — trouvé en vérifiant les trois branches de rôle de
+    `EcranScolarite`, pas seulement celle de la direction ;
+  - Scolarité, rôle enseignant → **faux, délibérément** : `_VueEnseignant`
+    n'a aucun AppBar propre et dépend de `PageHeader` pour son titre ; le
+    supprimer pour tout l'onglet Scolarité l'aurait laissé sans titre.
 - **`SelecteurVue`/`ModeAffichage`** (`core/widgets/selecteur_vue.dart`,
   `SegmentedButton` à 3 segments liste/grille/cartes) — widget générique
   sans connaissance du contenu, conçu explicitement pour que D2 le
@@ -974,15 +982,20 @@ grille/liste/cartes.
   déconnecter » réutilisant `session_logout.dart` sans dupliquer sa
   logique). Pas de recherche, comme convenu.
 - **Dette résolue** : aucune dette préexistante ciblée par ce sous-livrable
-  (N/A) — l'empilement `PageHeader`/AppBar interne relevé ci-dessus est une
-  dette **nouvellement identifiée**, pas résolue, à traiter avec les écrans
-  concernés.
+  (N/A) au sens du contrat initial — mais l'empilement visuel
+  `PageHeader`/AppBar interne, nouvellement identifié par cette même
+  passe, a été corrigé avant clôture (voir `_delegueSonAppBar` ci-dessus)
+  plutôt que différé, sur demande explicite du porteur de projet.
 - **Vérifié** : `flutter analyze` propre (0 erreur/avertissement) ; suite
   `flutter test` verte, 302 tests (+8 nouveaux — `FilAriane` avec/sans
   contexte, `PageHeader`, `SelecteurVue` et ses 3 segments, `EcranCatalogue`
   dans ses 3 modes) ; aucun backend touché — suite pgTAP tout de même
   rejouée par précaution : `Files=44, Tests=313, PASS`, sans changement
-  (aucune migration/RLS modifiée dans ce sous-livrable).
+  (aucune migration/RLS modifiée dans ce sous-livrable). **Re-vérifié après
+  le correctif `_delegueSonAppBar`** : `flutter analyze` propre (12 infos
+  pré-existantes hors zone touchée, sans rapport avec ce correctif — style
+  `chat_ia`/`coquille_app.dart`, aucune ligne modifiée ici) ; tests ciblés
+  coquille + marketplace + `PageHeader` rejoués : 15/15 verts.
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
