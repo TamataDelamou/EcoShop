@@ -11,6 +11,7 @@ import '../application/rh_providers.dart';
 import '../domain/employe.dart';
 import '../domain/enums_rh.dart';
 import 'ecran_absences_personnel.dart';
+import 'ecran_annuaire_personnel.dart' show heroAvatarEmploye;
 import 'ecran_conges.dart';
 import 'ecran_contrats.dart';
 import 'ecran_paie.dart';
@@ -47,6 +48,20 @@ class EcranFicheEmploye extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
+                      Hero(
+                        tag: heroAvatarEmploye(employe.id),
+                        child: CircleAvatar(
+                          radius: 26,
+                          backgroundColor: context.palette.primaire.withValues(alpha: 0.12),
+                          child: Text(
+                            (employe.nomAffiche?.trim().isNotEmpty ?? false)
+                                ? employe.nomAffiche!.trim().substring(0, 1).toUpperCase()
+                                : employe.matricule.substring(0, 1).toUpperCase(),
+                            style: TextStyle(color: context.palette.primaire, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(employe.nomAffiche ?? employe.matricule,
                             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),

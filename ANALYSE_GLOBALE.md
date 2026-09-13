@@ -997,6 +997,73 @@ grille/liste/cartes.
   `chat_ia`/`coquille_app.dart`, aucune ligne modifiée ici) ; tests ciblés
   coquille + marketplace + `PageHeader` rejoués : 15/15 verts.
 
+*D2 — Galerie interactive de profils* (clos le 2026-09-13) : cartes profil,
+expansion, animation Hero, filtrage multi-critères, chips — sur
+`EcranAnnuairePersonnel` (M8, personnel RH) uniquement pour cette passe.
+
+- **État des lieux** : dans `ecoshop_flutter`, aucun usage de `Hero(...)`
+  nulle part dans tout le code source, et aucune galerie avec expansion. Le
+  seul analogue fonctionnel proche est `personnel_liste_screen.dart` (RH) :
+  deux rangées de `ChoiceChip` **à sélection simple** combinées (statut
+  actif/inactif/archivé **ET** type de personnel), cartes denses poussant
+  vers une fiche détaillée — pas de grille, pas d'expansion, pas de Hero.
+  Côté client actuel, `EcranAnnuairePersonnel` (déjà construit, M8) n'avait
+  qu'**un seul** critère de filtre (catégorie), le filtre statut de la
+  source ayant été perdu. Aucune « galerie élèves » n'existe nulle part
+  (ni source, ni client) — périmètre volontairement exclu par le porteur de
+  projet (données de mineurs, question d'accès réelle, pas un habillage
+  visuel).
+- **Cadrage validé le 2026-09-13** : périmètre = `EcranAnnuairePersonnel`
+  seul ; expansion = les deux comportements nommément désignés, pas une
+  alternative — Hero vers `EcranFicheEmploye` en mode grille/cartes,
+  accordéon en place en mode liste (avec action explicite « Voir la fiche
+  complète », Hero également depuis là) ; filtrage = restauration du
+  filtre statut, combiné au filtre catégorie, chips à sélection simple par
+  groupe — lu à la lettre de `personnel_liste_screen.dart` cité comme
+  modèle (qui n'a jamais utilisé de sélection multiple au sein d'un même
+  groupe, seulement plusieurs groupes combinés) ; rendu par mode précisé
+  pour liste/grille/cartes.
+- **Filtre statut restauré** (`core/widgets/selecteur_vue.dart` réutilisé
+  tel quel + nouvelle rangée de chips `StatutEmploye` dans
+  `ecran_annuaire_personnel.dart`) — **correction d'un écart réel**, pas une
+  nouveauté : documentée comme telle. Défaut « Tous statuts » retenu (pas
+  « Actif » comme la source) pour ne pas masquer silencieusement, dès ce
+  déploiement, des employés jusqu'ici visibles sans aucun filtre — la
+  source, elle, démarrait plus stricte sur « Actifs » seuls ; écart de
+  comportement assumé et documenté, pas repris à l'identique.
+- **Écart de données trouvé en cours d'implémentation** (posé en clair,
+  pas comblé en silence) : le modèle `Employe` (`public.employes`) n'a ni
+  champ « poste » distinct de `categorie`, ni champ contact
+  (téléphone/email). Le cadrage demandait un aperçu « poste, statut,
+  contact » en accordéon et « poste, catégorie, statut, aperçu contact »
+  en cartes riches — faute de ces deux champs, `categorie.libelle` sert de
+  substitut à « poste » (pas dupliqué avec une ligne « catégorie »
+  redondante) et l'aperçu contact est remplacé par matricule + date
+  d'embauche, seules données réellement disponibles. Documenté ici plutôt
+  que reporté silencieusement à plus tard.
+- **Hero** (`heroAvatarEmploye(id)`, tag partagé) : câblé sur l'avatar à
+  initiales dans les trois modes (`_CarteEmployeAccordeon`,
+  `_TuileEmployeGrille`, `_CarteEmployeRiche`) et, côté destination, sur
+  `EcranFicheEmploye`, qui n'avait **aucun avatar** dans son en-tête avant
+  cette passe — ajout nécessaire pour que l'animation ait un point d'arrivée
+  cohérent, dérivé directement de la demande (pas un ajout hors sujet).
+- **Rendu par mode** (`SelecteurVue`, mode par défaut « liste » — préserve
+  le rendu actuel tant que personne ne bascule) : liste = ligne dense
+  existante devenue accordéon, badge statut désormais visible dans le
+  sous-titre (le filtre qu'il reflète étant revenu) ; grille = tuile
+  compacte avatar + nom + catégorie, façon catalogue marketplace (D1) ;
+  cartes = format riche (avatar plus grand, poste, statut, aperçu
+  matricule/embauche), mode où l'animation Hero est la plus visible.
+- **Dette résolue** : restauration du filtre statut (écart réel vs
+  `ecoshop_flutter`, pas du N/A).
+- **Vérifié** : `flutter analyze` propre sur les fichiers touchés (0
+  erreur/avertissement) ; 6 nouveaux tests widgets dédiés (mode liste par
+  défaut, dépliage + navigation Hero vers `EcranFicheEmploye`, filtre
+  statut combiné à catégorie, recherche texte, bascule grille, bascule
+  cartes) ; suite `flutter test` complète rejouée : **308/308**, verte
+  (302 + 6) ; aucun backend touché, pgTAP non rejoué (aucune
+  migration/RLS modifiée dans ce sous-livrable).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 
