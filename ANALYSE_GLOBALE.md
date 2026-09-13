@@ -1232,6 +1232,114 @@ après D1-D3.
   backend touché, pgTAP non rejoué (aucune migration/RLS modifiée dans ce
   sous-livrable).
 
+*D5 — Bulletins PDF classe entière* (clos le 2026-09-13) : composition
+(moyenne + rang) et export PDF groupé d'une classe (cahier §12.4). Périmètre
+réduit par cadrage : la personnalisation des templates de documents
+officiels (chapitre 18) est différée en bloc, pas construite dans D5.
+
+- **État des lieux, écart plus sévère que supposé** : l'arbitrage M16 6/7
+  affirmait une « ampleur bornée (briques par élève déjà testées, il ne
+  manque qu'un point d'entrée classe + une boucle d'assemblage) ». **Faux,
+  vérifié avant d'implémenter** : aucune brique de composition de bulletin
+  n'existait nulle part — ni individuelle, ni de classe. `NotesRepository`
+  n'avait aucune méthode d'écriture pour les bulletins ; la seule ligne
+  jamais insérée dans `public.bulletins` (schéma comme client) était un
+  seed manuel de démo (`supabase/seed_notes_evaluations.sql`). Seule
+  l'impression d'un bulletin **déjà existant** était couverte
+  (`construireBulletinPdf`, M15ter). Écart réel plus large que ce que le
+  carnet laissait supposer, signalé tel quel plutôt que traité comme
+  acquis.
+- **Composition et classement portés depuis `ecoshop_flutter`**
+  (`NotesService.genererBulletin()` + `calculerClassementClasse()`), comme
+  demandé — mais **le calcul lui-même reste côté serveur**, jamais reproduit
+  côté client : la source calcule en Dart contre Firestore, alors que le
+  client actuel est sous contrat M06 §5 (« aucune moyenne n'est calculée
+  côté client », déjà vérifié par `moyenneEleve`/`moyenneClasse` qui
+  délèguent aux RPC `calculer_moyenne_*`). Porter la logique au sens de
+  l'algorithme (moyenne pondérée déjà éprouvée, classement par tri
+  décroissant, rang = index+1) plutôt qu'au sens du mécanisme (calcul en
+  Dart) était la seule façon de respecter les deux consignes à la fois —
+  signalé explicitement plutôt que choisi en silence. Nouvelle RPC
+  `classer_eleves_classe` (migration
+  `20260906001510_d5_generation_bulletins_classe.sql`) : réutilise
+  `calculer_moyenne_eleve` par élève inscrit, ajoute seulement le rang
+  (`rank() over (order by moyenne desc)`), réservée au personnel de
+  l'établissement de la classe (garde plus stricte que
+  `calculer_moyenne_eleve`, qui répond pour une seule fiche à tout
+  `authenticated` — celle-ci renvoie la classe entière, portée plus large
+  délibérément resserrée). L'écriture du bulletin lui-même n'a pas eu besoin
+  d'une nouvelle RPC : la policy RLS `bulletins_ecriture_scolarite` (M6)
+  permettait déjà l'upsert direct à qui détient
+  `scolarite.bulletin.gerer` — le client recopie tel quel le classement déjà
+  calculé (`moyenne_generale`, `rang`, `effectif_classe`) dans `contenu`,
+  sans aucun calcul.
+- **Publication immédiate, pas de brouillon** : chaque bulletin généré est
+  écrit `statut = 'publie'` directement. La source n'a jamais eu de cycle
+  brouillon/publication séparé pour les bulletins (visibles dès leur
+  génération) ; générer en `brouillon` ici aurait rendu le bulletin
+  invisible pour l'élève/parent (RLS `bulletin_visible` exige `publie`)
+  sans qu'aucune action de publication n'existe pour l'en sortir — une
+  régression par rapport à la source, pas un choix par défaut neutre. Le
+  cycle brouillon/aperçu/publication réel appartient au chapitre 18,
+  différé (voir plus bas).
+- **Conseils de classe / repêchage à seuil paramétrable / règle de
+  proclamation des classes d'examen (§12.4)** : contrôle explicite effectué
+  côté `ecoshop_flutter` avant de les tracer comme dette, comme demandé —
+  **absents également de la source** (seule trouvaille : un placeholder
+  `verifAdmisClasseSuperieure` dans `reinscription_screen.dart`,
+  commenté « module Notes/bulletins non encore relié ici », donc jamais
+  une fonctionnalité réelle à préserver). Confirmé hors périmètre D5, dette
+  tracée sans régression possible puisque la source elle-même ne les a
+  jamais implémentés.
+- **Export PDF groupé** : `construireBulletinsClassePdf`
+  (`export_pdf/data/bulletin_pdf_builder.dart`) — un seul PDF multi-pages
+  pour toute la classe, comme `PdfService.genererBulletinsClasseA4()` côté
+  source, pas un fichier par élève. Réutilise l'en-tête/pied de page déjà
+  partagés avec les reçus (`entete_pdf.dart`) — satisfait l'exigence du
+  cahier « même moteur que les reçus » au niveau où ce moteur existe
+  réellement aujourd'hui (texte fixe, sans logo/signature — la
+  personnalisation du chapitre 18 est différée, voir plus bas). Saut de
+  page (`pw.NewPage()`) entre élèves plutôt qu'un `pw.Page` rigide par
+  élève comme la source : si le contenu d'un élève déborde
+  exceptionnellement d'une page, il continue sur la suivante au lieu
+  d'être tronqué.
+- **Emplacement** : `EcranGenerationBulletinsClasse`, atteint depuis
+  `EcranDetailClasse` (icône « Bulletins de la classe »), réservé à la
+  direction — même garde (`estDirection`) que le reste de l'administration
+  scolaire (`EcranSanctions`), la véritable autorité restant la permission
+  serveur `scolarite.bulletin.gerer` (RLS, défense en profondeur).
+- **Hors périmètre D5, différé en bloc, pas construit** : personnalisation
+  des templates de documents officiels (chapitre 18 — logo, en-tête/pied de
+  page, signature/cachet, mentions, champs de fusion, cycle
+  brouillon/aperçu/publication). Deux raisons vérifiées avant de différer,
+  pas supposées : (a) le gate « mode payant » (§18.7) n'a **aucune**
+  fondation dans le schéma ni le client (recherché explicitement —
+  `mode_payant`/`plan_abonnement`/équivalent absent partout) ; construire un
+  simple indicateur payant/gratuit sans facturation réelle derrière aurait
+  été un gate qui ne gate rien, même type de faux choix déjà écarté pour le
+  sélecteur de langue en D3. Dette de la même famille que la fondation
+  facturation/quota IA laissée sans jalon à la clôture de M16. (b) §18.1
+  situe cet espace côté « application Windows, Backoffice établissement » —
+  jamais construite (le dossier `windows/` existe dans `client_flutter`,
+  même socle Flutter mutualisé mobile+Windows du cahier, mais aucune
+  interface Windows n'a jamais été développée). Pour référence future : le
+  jour où ce chantier sera repris, ce sera sur le client mobile/tablette
+  actuel, gardé par rôle comme le reste de l'app — pas une UI Windows
+  dédiée pour un seul écran de configuration.
+- **Vérifié** : migration rejouée par `supabase db reset` (podman/WSL2)
+  sans erreur ; pgTAP nouveau fichier `tests/rls/45_d5_generation_bulletins_
+  classe.sql` (10 assertions : classement exact et réservé au personnel,
+  écriture refusée sans `scolarite.bulletin.gerer` puis acceptée avec,
+  visibilité élève lié + parent confirmé, opacité pour un élève étranger) —
+  suite complète rejouée : `Files=45, Tests=323, PASS`, aucune régression
+  sur les 44 fichiers précédents. `flutter analyze` propre (mêmes 12 infos
+  pré-existantes) ; 12 nouveaux tests Flutter (passthrough
+  `CachedNotesRepository` D5, smoke-tests `construireBulletinsClassePdf` à
+  1 et plusieurs élèves, écran de génération — sélecteur de période,
+  appel avec les bons paramètres, message dédié si aucun élève classable,
+  panne réseau) ; suite `flutter test` complète rejouée : **344/344**,
+  verte (332 + 12).
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 

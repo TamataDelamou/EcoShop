@@ -64,4 +64,64 @@ void main() {
     expect(octets, isNotEmpty);
     expect(String.fromCharCodes(octets.take(5)), '%PDF-');
   });
+
+  group('construireBulletinsClassePdf (D5, export groupé)', () {
+    final fiche2 = FicheEleve(
+      id: 'f2',
+      etablissementId: 'e1',
+      matricule: 'GN-0002',
+      nom: 'DIALLO',
+      prenom: 'Ibrahima',
+      dateNaissance: DateTime(2011, 7, 30),
+    );
+
+    test('génère un seul PDF valide pour toute la classe (un élève)', () async {
+      final octets = await construireBulletinsClassePdf(
+        paires: [(bulletin: bulletinAvec({'moyenne_generale': 18, 'rang': 1, 'effectif_classe': 2}), fiche: fiche)],
+        etablissement: etablissement,
+        variante: AppThemeVariant.francophoneCfa,
+        titreClasse: 'Bulletins - 5e A',
+      );
+
+      expect(octets, isNotEmpty);
+      expect(String.fromCharCodes(octets.take(5)), '%PDF-');
+    });
+
+    test('reste un document valide avec plusieurs élèves (page par élève)', () async {
+      final octets = await construireBulletinsClassePdf(
+        paires: [
+          (bulletin: bulletinAvec({'moyenne_generale': 18, 'rang': 1, 'effectif_classe': 2}), fiche: fiche),
+          (bulletin: bulletinAvec({'moyenne_generale': 10, 'rang': 2, 'effectif_classe': 2}), fiche: fiche2),
+        ],
+        etablissement: etablissement,
+        variante: AppThemeVariant.francophoneCfa,
+        titreClasse: 'Bulletins - 5e A',
+      );
+
+      expect(octets, isNotEmpty);
+      expect(String.fromCharCodes(octets.take(5)), '%PDF-');
+      // Un document multi-pages produit davantage d'octets qu'un document à
+      // un seul élève avec un contenu comparable — vérifie empiriquement que
+      // le second élève a bien été rendu, pas seulement accepté sans erreur.
+      final octetsUnSeul = await construireBulletinsClassePdf(
+        paires: [(bulletin: bulletinAvec({'moyenne_generale': 18, 'rang': 1, 'effectif_classe': 2}), fiche: fiche)],
+        etablissement: etablissement,
+        variante: AppThemeVariant.francophoneCfa,
+        titreClasse: 'Bulletins - 5e A',
+      );
+      expect(octets.length, greaterThan(octetsUnSeul.length));
+    });
+
+    test('ne plante pas avec une liste vide (aucun élève classé)', () async {
+      final octets = await construireBulletinsClassePdf(
+        paires: const [],
+        etablissement: etablissement,
+        variante: AppThemeVariant.francophoneCfa,
+        titreClasse: 'Bulletins - 5e A',
+      );
+
+      expect(octets, isNotEmpty);
+      expect(String.fromCharCodes(octets.take(5)), '%PDF-');
+    });
+  });
 }

@@ -1,5 +1,7 @@
 import 'appreciation.dart';
 import 'bulletin.dart';
+import 'classement_eleve.dart';
+import 'enums_notes.dart';
 import 'evaluation.dart';
 import 'note.dart';
 
@@ -42,6 +44,29 @@ abstract interface class NotesRepository {
 
   /// Bulletins publiés d'une fiche.
   Future<List<Bulletin>> bulletinsDeFiche(String ficheEleveId);
+
+  /// Classement d'une classe (moyenne + rang de chaque élève inscrit), RPC
+  /// serveur `classer_eleves_classe` (D5) — même règle d'or que [moyenneEleve]
+  /// : aucun classement n'est calculé côté client.
+  Future<List<ClassementEleve>> classerElevesClasse(
+    String classeId, {
+    String? programmeMatiereId,
+    String? periodeId,
+  });
+
+  /// Génère (ou régénère) les bulletins de toute une classe pour une période
+  /// donnée (D5, cahier §12.4) : recopie tel quel le classement déjà calculé
+  /// côté serveur ([classerElevesClasse]) dans un bulletin par élève,
+  /// aussitôt publié (voir docstring de l'implémentation Supabase pour le
+  /// choix de publication immédiate). Idempotent : régénérer écrase le
+  /// bulletin existant de la même fiche/période.
+  Future<List<Bulletin>> genererBulletinsClasse({
+    required String classeId,
+    required String etablissementId,
+    required String anneeScolaireId,
+    String? periodeId,
+    TypeBulletin type,
+  });
 
   /// Crée une évaluation (enseignant affecté ou permission scolarité).
   Future<Evaluation> creerEvaluation(Evaluation evaluation);

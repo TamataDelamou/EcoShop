@@ -7,6 +7,8 @@ import 'package:ecoshop_client/core/sync/drift_sync_repository.dart';
 import 'package:ecoshop_client/features/notes/data/cached_notes_repository.dart';
 import 'package:ecoshop_client/features/notes/domain/appreciation.dart';
 import 'package:ecoshop_client/features/notes/domain/bulletin.dart';
+import 'package:ecoshop_client/features/notes/domain/classement_eleve.dart';
+import 'package:ecoshop_client/features/notes/domain/enums_notes.dart';
 import 'package:ecoshop_client/features/notes/domain/evaluation.dart';
 import 'package:ecoshop_client/features/notes/domain/note.dart';
 import 'package:ecoshop_client/features/notes/domain/notes_repository.dart';
@@ -85,6 +87,28 @@ class _FauxDistant implements NotesRepository {
   Future<void> publierEvaluation(String evaluationId) async {}
 
   @override
+  Future<List<ClassementEleve>> classerElevesClasse(
+    String classeId, {
+    String? programmeMatiereId,
+    String? periodeId,
+  }) async {
+    if (horsLigne) throw const ErreurNotes('ERREUR_RESEAU');
+    return const [ClassementEleve(ficheEleveId: 'f1', moyenne: 14.5, rang: 1)];
+  }
+
+  @override
+  Future<List<Bulletin>> genererBulletinsClasse({
+    required String classeId,
+    required String etablissementId,
+    required String anneeScolaireId,
+    String? periodeId,
+    TypeBulletin type = TypeBulletin.trimestriel,
+  }) async {
+    if (horsLigne) throw const ErreurNotes('ERREUR_RESEAU');
+    return const [];
+  }
+
+  @override
   Future<bool> saisirNote(Note note) async {
     appelsSaisirNote++;
     final code = codeErreur;
@@ -159,6 +183,37 @@ void main() {
         throwsA(isA<ErreurNotes>().having((e) => e.code, 'code', 'NOTE_SUP_BAREME')),
       );
       expect(await DriftSyncRepository(db).entreesEnAttente(), isEmpty);
+    });
+  });
+
+  group('classerElevesClasse / genererBulletinsClasse (D5) — exigent la connectivité', () {
+    test('classerElevesClasse relaie le résultat serveur', () async {
+      final classement = await repository.classerElevesClasse('c1', periodeId: 'p1');
+      expect(classement.single.ficheEleveId, 'f1');
+      expect(classement.single.rang, 1);
+    });
+
+    test('classerElevesClasse ne retombe jamais sur un cache hors ligne', () async {
+      distant.horsLigne = true;
+      expect(repository.classerElevesClasse('c1'), throwsA(isA<ErreurNotes>()));
+    });
+
+    test('genererBulletinsClasse relaie le résultat serveur', () async {
+      final bulletins = await repository.genererBulletinsClasse(
+        classeId: 'c1',
+        etablissementId: 'et1',
+        anneeScolaireId: 'a1',
+        periodeId: 'p1',
+      );
+      expect(bulletins, isEmpty);
+    });
+
+    test('genererBulletinsClasse ne retombe jamais sur un cache hors ligne', () async {
+      distant.horsLigne = true;
+      expect(
+        repository.genererBulletinsClasse(classeId: 'c1', etablissementId: 'et1', anneeScolaireId: 'a1'),
+        throwsA(isA<ErreurNotes>()),
+      );
     });
   });
 

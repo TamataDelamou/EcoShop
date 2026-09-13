@@ -56,6 +56,51 @@ Future<Uint8List> construireBulletinPdf({
   return doc.save();
 }
 
+/// Export groupé (D5, cahier §12.4) — UN SEUL PDF multi-pages pour toute une
+/// classe, une page par élève (même mise en page que l'export individuel),
+/// comme `PdfService.genererBulletinsClasseA4()` côté `ecoshop_flutter` : un
+/// seul fichier concaténé plutôt qu'une série de fichiers séparés, cohérent
+/// avec la seule action `PdfPreview`/impression déjà utilisée partout
+/// ailleurs (pas de zip à construire).
+///
+/// [pw.NewPage] force un saut de page entre deux élèves plutôt qu'un
+/// [pw.Page] par élève (choix de la source) : si le contenu d'un élève
+/// déborde exceptionnellement d'une page, il continue sur la suivante au
+/// lieu d'être tronqué — un bulletin par élève dans le cas normal, jamais de
+/// perte de données dans le cas limite.
+Future<Uint8List> construireBulletinsClassePdf({
+  required List<({Bulletin bulletin, FicheEleve fiche})> paires,
+  required Etablissement etablissement,
+  required AppThemeVariant variante,
+  required String titreClasse,
+}) async {
+  final palette = PdfPaletteX.pour(variante);
+  final doc = pw.Document();
+
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(28),
+      header: (context) => enteteDocument(
+        etablissement: etablissement,
+        titre: titreClasse,
+        palette: palette,
+      ),
+      footer: (context) => piedDePage(palette: palette, genereLe: DateTime.now()),
+      build: (context) => [
+        for (var i = 0; i < paires.length; i++) ...[
+          if (i > 0) pw.NewPage(),
+          _identiteEleve(fiche: paires[i].fiche, palette: palette),
+          pw.SizedBox(height: 16),
+          _tableauContenu(bulletin: paires[i].bulletin, palette: palette),
+        ],
+      ],
+    ),
+  );
+
+  return doc.save();
+}
+
 pw.Widget _identiteEleve({required FicheEleve fiche, required PdfPaletteX palette}) {
   final naissance = fiche.dateNaissance;
   final dateAffichee = '${naissance.day.toString().padLeft(2, '0')}/'

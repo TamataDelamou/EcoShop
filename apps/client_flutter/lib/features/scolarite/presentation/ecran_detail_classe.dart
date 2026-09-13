@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
+import '../../../core/auth/role_racine.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
+import '../../auth/application/auth_providers.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
+import '../../notes/presentation/ecran_generation_bulletins_classe.dart';
 import '../../vie_scolaire/presentation/ecran_appel_classe.dart';
 import '../application/scolarite_providers.dart';
 import '../domain/affectation_enseignant.dart';
@@ -15,13 +18,15 @@ import '../domain/inscription.dart';
 ///
 /// Visible par le personnel, et par tout élève/parent ayant un enfant inscrit
 /// (`classe_visible`, contrat M05 §4) — l'écran ne présuppose donc pas un rôle.
-class EcranDetailClasse extends StatelessWidget {
+class EcranDetailClasse extends ConsumerWidget {
   const EcranDetailClasse({super.key, required this.classe});
 
   final Classe classe;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final estDirection = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -42,6 +47,17 @@ class EcranDetailClasse extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => EcranEvaluationsClasse(classe: classe)),
               ),
             ),
+            // D5 (cahier §12.4) : composition + export groupé des bulletins
+            // de la classe, réservé à la direction (même garde que le reste
+            // de l'administration scolaire, cf. EcranSanctions).
+            if (estDirection)
+              IconButton(
+                icon: const Icon(Icons.receipt_long_outlined),
+                tooltip: 'Bulletins de la classe',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranGenerationBulletinsClasse(classe: classe)),
+                ),
+              ),
           ],
           bottom: const TabBar(
             tabs: [

@@ -5,6 +5,8 @@ import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../domain/appreciation.dart';
 import '../domain/bulletin.dart';
+import '../domain/classement_eleve.dart';
+import '../domain/enums_notes.dart';
 import '../domain/evaluation.dart';
 import '../domain/note.dart';
 import '../domain/notes_repository.dart';
@@ -172,6 +174,36 @@ class CachedNotesRepository implements NotesRepository {
 
   @override
   Future<void> publierEvaluation(String evaluationId) => _distant.publierEvaluation(evaluationId);
+
+  /// Exige la connectivité, comme [creerEvaluation]/[publierEvaluation] :
+  /// une action admin explicite, jamais mise en file hors-ligne.
+  @override
+  Future<List<ClassementEleve>> classerElevesClasse(
+    String classeId, {
+    String? programmeMatiereId,
+    String? periodeId,
+  }) =>
+      _distant.classerElevesClasse(
+        classeId,
+        programmeMatiereId: programmeMatiereId,
+        periodeId: periodeId,
+      );
+
+  @override
+  Future<List<Bulletin>> genererBulletinsClasse({
+    required String classeId,
+    required String etablissementId,
+    required String anneeScolaireId,
+    String? periodeId,
+    TypeBulletin type = TypeBulletin.trimestriel,
+  }) =>
+      _distant.genererBulletinsClasse(
+        classeId: classeId,
+        etablissementId: etablissementId,
+        anneeScolaireId: anneeScolaireId,
+        periodeId: periodeId,
+        type: type,
+      );
 
   @override
   Future<bool> saisirNote(Note note) async {

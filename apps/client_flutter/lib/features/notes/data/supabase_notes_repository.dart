@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/appreciation.dart';
 import '../domain/bulletin.dart';
+import '../domain/classement_eleve.dart';
+import '../domain/enums_notes.dart';
 import '../domain/evaluation.dart';
 import '../domain/note.dart';
 import '../domain/notes_repository.dart';
@@ -145,6 +147,77 @@ class SupabaseNotesRepository implements NotesRepository {
         'statut': 'publiee',
         'publie_le': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', evaluationId);
+    });
+  }
+
+  @override
+  Future<List<ClassementEleve>> classerElevesClasse(
+    String classeId, {
+    String? programmeMatiereId,
+    String? periodeId,
+  }) {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'classer_eleves_classe',
+        params: {
+          'p_classe': classeId,
+          'p_matiere': programmeMatiereId,
+          'p_periode': periodeId,
+        },
+      );
+      return lignes
+          .map((l) => ClassementEleve.depuisJson(l as Map<String, dynamic>))
+          .toList(growable: false);
+    });
+  }
+
+  /// Publie directement chaque bulletin généré (`statut = 'publie'`) : la
+  /// source (`ecoshop_flutter`) n'a jamais eu de cycle brouillon/publication
+  /// séparé pour les bulletins — un bulletin y est visible dès sa génération.
+  /// Le cycle brouillon/aperçu/publication du chapitre 18 est hors périmètre
+  /// D5 (différé) ; générer en `brouillon` ici rendrait le bulletin
+  /// invisible pour l'élève/parent (`bulletin_visible` exige `publie`) sans
+  /// qu'aucune action de publication n'existe pour l'en sortir — une
+  /// régression par rapport à la source, pas un choix par défaut neutre.
+  ///
+  /// N'effectue aucun calcul : [classerElevesClasse] (RPC serveur) a déjà
+  /// produit moyenne et rang, recopiés tels quels dans `contenu`.
+  @override
+  Future<List<Bulletin>> genererBulletinsClasse({
+    required String classeId,
+    required String etablissementId,
+    required String anneeScolaireId,
+    String? periodeId,
+    TypeBulletin type = TypeBulletin.trimestriel,
+  }) {
+    return _executer(() async {
+      final classement = await classerElevesClasse(classeId, periodeId: periodeId);
+      if (classement.isEmpty) return const <Bulletin>[];
+
+      final effectif = classement.length;
+      final maintenant = DateTime.now().toUtc().toIso8601String();
+      final lignes = classement
+          .map((e) => {
+                'etablissement_id': etablissementId,
+                'annee_scolaire_id': anneeScolaireId,
+                'periode_id': periodeId,
+                'classe_id': classeId,
+                'fiche_eleve_id': e.ficheEleveId,
+                'type': type.code,
+                'statut': StatutBulletin.publie.code,
+                'contenu': {
+                  'moyenne_generale': e.moyenne,
+                  'rang': e.rang,
+                  'effectif_classe': effectif,
+                },
+                'genere_le': maintenant,
+                'publie_le': maintenant,
+              })
+          .toList(growable: false);
+
+      final onConflict = periodeId == null ? 'fiche_eleve_id,type' : 'fiche_eleve_id,periode_id,type';
+      final ecrites = await _client.from('bulletins').upsert(lignes, onConflict: onConflict).select();
+      return ecrites.map((l) => Bulletin.depuisJson(l)).toList(growable: false);
     });
   }
 
