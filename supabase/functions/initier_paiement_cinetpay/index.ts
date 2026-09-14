@@ -1,11 +1,12 @@
 // ============================================================================
 // EcoShop — Edge Function « initier_paiement_cinetpay »
-// (Facturation/Quota IA, étape (b) : brique CinetPay générique)
+// (Facturation/Quota IA — brique CinetPay générique, étape (b) ; flux
+// individuel abonnement_premium_eleve depuis l'étape (c))
 //
 // Point d'entrée UNIQUE pour démarrer un paiement CinetPay, quel que soit le
-// type d'objet payé (licence_pro_etablissement, frais_ia_admin_etablissement
-// aujourd'hui ; abonnement_premium_eleve étape (c), scolarite chapitre 17
-// plus tard, sans réécriture de cette fonction).
+// type d'objet payé (licence_pro_etablissement, frais_ia_admin_etablissement,
+// abonnement_premium_eleve depuis l'étape (c) ; scolarite chapitre 17 plus
+// tard, sans réécriture de cette fonction).
 //
 //   1. Relaie le JWT de l'appelant vers `initier_transaction_cinetpay`
 //      (SQL) — recalcule le montant SERVEUR, jamais une valeur du client.
@@ -35,6 +36,10 @@ interface CorpsRequete {
   typeObjetPaye?: string;
   etablissementId?: string;
   anneeScolaireId?: string;
+  // Flux individuel (étape c, abonnement_premium_eleve) — jamais
+  // etablissementId pour ce type, voir migration 20260906001519.
+  beneficiaireFicheEleveId?: string;
+  formule?: string;
 }
 
 const STATUT_PAR_ERRCODE: Record<string, number> = {
@@ -56,8 +61,21 @@ Deno.serve(async (req) => {
 
   try {
     const corps = (await req.json()) as CorpsRequete;
-    if (!corps.typeObjetPaye || !corps.etablissementId) {
-      return reponseJson(400, { error: "typeObjetPaye_et_etablissementId_requis" }, origine);
+    if (!corps.typeObjetPaye) {
+      return reponseJson(400, { error: "typeObjetPaye_requis" }, origine);
+    }
+
+    // Flux individuel : ni etablissementId ni anneeScolaireId ne
+    // s'appliquent (voir migration 20260906001519) — bénéficiaire/formule
+    // requis à la place. Le contrôle définitif reste côté SQL
+    // (initier_transaction_cinetpay) ; cette vérification n'est qu'un
+    // retour d'erreur plus lisible avant l'appel réseau.
+    if (corps.typeObjetPaye === "abonnement_premium_eleve") {
+      if (!corps.beneficiaireFicheEleveId || !corps.formule) {
+        return reponseJson(400, { error: "beneficiaireFicheEleveId_et_formule_requis" }, origine);
+      }
+    } else if (!corps.etablissementId) {
+      return reponseJson(400, { error: "etablissementId_requis" }, origine);
     }
 
     const { client: supabase } = clientUtilisateur(req);
@@ -65,8 +83,10 @@ Deno.serve(async (req) => {
     const { data: transaction, error: erreurInitiation } = await supabase
       .rpc("initier_transaction_cinetpay", {
         p_type_objet_paye: corps.typeObjetPaye,
-        p_etablissement: corps.etablissementId,
+        p_etablissement: corps.etablissementId ?? null,
         p_annee_scolaire: corps.anneeScolaireId ?? null,
+        p_beneficiaire_fiche_eleve: corps.beneficiaireFicheEleveId ?? null,
+        p_formule: corps.formule ?? null,
       })
       .single();
 
