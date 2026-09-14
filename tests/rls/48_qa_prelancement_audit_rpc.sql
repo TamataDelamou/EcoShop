@@ -42,7 +42,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(42);
+SELECT plan(43);
 
 -- ---------------------------------------------------------------------------
 -- Fixture : deux établissements réels, comptes de tous types.
@@ -70,6 +70,18 @@ VALUES ('48000000-0000-0000-0000-000000000005', '48000000-0000-0000-0000-0000000
 
 INSERT INTO public.journaux (id, etablissement_id, code, intitule)
 VALUES ('48000000-0000-0000-0000-000000000006', '48000000-0000-0000-0000-000000000001', 'BQ', 'Banque');
+
+-- Fiche « bruit » de l'établissement B, sans aucun lien avec la classe A
+-- testée ci-dessous — reproduit les conditions exactes qui ont laissé
+-- passer la régression classer_eleves_classe()/calculer_moyenne_classe()
+-- corrigée par les migrations 20260906001516/20260906001517 (le
+-- planificateur pouvait évaluer calculer_moyenne_eleve() sur cette fiche
+-- AVANT le filtre de classe, faisant échouer injustement l'appelant
+-- légitime de la classe A). Sans cette fiche, fiches_eleves n'aurait qu'une
+-- seule ligne et le bug resterait invisible, comme il l'a été jusqu'ici.
+INSERT INTO public.fiches_eleves (id, etablissement_id, matricule, nom, prenom, date_naissance)
+VALUES ('48000000-0000-0000-0000-000000000008', '48000000-0000-0000-0000-000000000099',
+        'QA-B-00001', 'ZZZ', 'Etranger', '2013-01-01');
 
 SELECT pg_temp.creer_compte('224600004001', 'direction')  AS dir_a_id      \gset
 SELECT pg_temp.creer_compte('224600004002', 'direction')  AS dir_b_id      \gset
@@ -122,6 +134,12 @@ SELECT throws_ok(
 SELECT throws_ok(
   $$ SELECT public.calculer_moyenne_classe('48000000-0000-0000-0000-000000000003') $$,
   '42501', NULL, 'calculer_moyenne_classe : direction d''un AUTRE établissement refusée'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'dir_a_id', 'role', 'authenticated')::text, true);
+SELECT lives_ok(
+  $$ SELECT public.calculer_moyenne_classe('48000000-0000-0000-0000-000000000003') $$,
+  'calculer_moyenne_classe : direction de SA PROPRE classe autorisée malgré une fiche d''un autre établissement dans la même table (régression 20260906001517)'
 );
 
 -- ===========================================================================
