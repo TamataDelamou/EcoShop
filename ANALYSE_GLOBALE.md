@@ -1529,17 +1529,46 @@ incomplet pour un usage réel.
   autre établissement, erreur dédiée sur une inscription inexistante) — suite
   complète rejouée : `Files=47, Tests=361, PASS`, aucune régression sur les
   46 fichiers précédents. `flutter analyze` propre (mêmes 12 infos
-  pré-existantes) ; 9 nouveaux tests Flutter (`ecran_perception_classe_test`
+  pré-existantes) ; 10 nouveaux tests Flutter (`ecran_perception_classe_test`
   — liste + solde, navigation vers l'encaissement individuel, classe vide ;
   `ecran_reinscription_test` — téléphone par défaut, sélection automatique à
   1 résultat, vraie sélection de fratrie à 2 résultats, numéro inconnu,
-  numéro invalide rejeté avant tout appel réseau, matricule en secondaire) ;
-  suite `flutter test` complète rejouée : **369/369**, verte (360 + 9).
+  numéro invalide rejeté avant tout appel réseau, matricule en secondaire ;
+  `cached_scolarite_repository_test` — `rechercherEnfantsParTelephoneParent`
+  retombe sur le cache hors ligne) ; suite `flutter test` complète rejouée :
+  **370/370**, verte (360 + 10). *Correction (2026-09-14, audit QA
+  ci-dessous) : le compte annoncé ici à la clôture (369/369, 360+9) omettait
+  ce dernier test de cache — corrigé après relecture directe de la diff du
+  commit ; aucun rapport avec l'audit RPC qui suit, qui ne touche aucun
+  fichier Dart.*
 
 Phase D close avec D6 — les six modules (D1 → D6) sont clos, vérifiés et
 prêts pour le feu vert de push, selon la même discipline à chaque étape :
 état des lieux avant code, écart posé en question plutôt que tranché seul,
 vérification empirique avant clôture.
+
+**QA pré-lancement — audit sécurité RPC, toutes RPC du projet** (clos le
+2026-09-14) : balayage systématique déclenché par la fuite `solde_scolarite`
+trouvée en D6, étendu à l'ensemble des RPC (pas seulement M15quater) pour
+deux familles de défaut — absence totale de vérification d'autorisation, et
+l'anti-patron `IF NOT a_permission(...)`/dérivées (`est_rh`/`est_comptable`/
+`est_comptable_ecriture`/`est_comm`/`est_admin_gsg`) sans
+`coalesce(..., false)`. **Trouvaille structurelle** : `profiles.role_racine`
+est nullable **par conception** (« null tant que le rôle n'est pas choisi »)
+— cet anti-patron est donc déclenchable par n'importe quel compte qui vient
+de s'authentifier sans avoir encore choisi de rôle, un état normal de tout
+compte fraîchement créé, pas un cas exotique. **29 fonctions/déclencheurs
+corrigés** (22 CRITIQUE, 1 ÉLEVÉ, 6 MOYEN) — chaque correctif réutilise une
+frontière d'autorisation déjà validée pour une fonction équivalente du même
+domaine (même donnée ou même flux), aucun nouveau patron d'autorisation
+inventé. Migration `20260906001513_qa_prelancement_audit_rpc.sql` ; pgTAP
+`tests/rls/48_qa_prelancement_audit_rpc.sql` (42 assertions, vérifiées dans
+les deux sens qui ont fait leurs preuves sur `solde_scolarite` en D6 : tiers
+sans lien refusé ET établissement légitime différent refusé). Vérifié :
+`supabase db reset` propre (30 migrations), suite pgTAP complète rejouée —
+`Files=48, Tests=403, PASS`, aucune régression sur les 47 fichiers
+précédents ; `flutter test` non concerné par ce volet (aucun fichier Dart
+touché).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
