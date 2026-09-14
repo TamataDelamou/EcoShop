@@ -42,6 +42,29 @@ $$;
 SELECT plan(18);
 
 -- ---------------------------------------------------------------------------
+-- Établissement B, sans aucun lien avec le personnel testé ci-dessous — sa
+-- seule raison d'être est de garantir qu'une fiche d'un AUTRE établissement,
+-- présente dans la même table fiches_eleves, ne fait jamais échouer
+-- classer_eleves_classe() sur la classe de l'établissement A. Régression
+-- réelle trouvée le 2026-09-14 (corrigée migration 20260906001516) :
+-- calculer_moyenne_eleve() (durci par l'audit RPC, migration 20260906001513)
+-- pouvait être évalué par le planificateur sur CETTE fiche AVANT le filtre
+-- de classe, uniquement parce qu'un Seq Scan de fiches_eleves était moins
+-- coûteux qu'un index scan sur une petite table — un bug dépendant du plan
+-- choisi, pas de l'autorisation de l'appelant, invisible tant qu'aucune
+-- fiche étrangère n'existait dans la table pendant le test.
+-- ---------------------------------------------------------------------------
+INSERT INTO public.etablissements (nom, slug) VALUES ('École B (bruit)', 'ecole-bulletins-d5-b') RETURNING id AS etab_b_id \gset
+INSERT INTO public.annees_scolaires (etablissement_id, libelle, date_debut, date_fin, courante)
+VALUES (:'etab_b_id'::uuid, '2026-2027', '2026-10-01', '2027-06-30', true) RETURNING id AS annee_b_id \gset
+INSERT INTO public.classes (etablissement_id, annee_scolaire_id, code, nom)
+VALUES (:'etab_b_id'::uuid, :'annee_b_id'::uuid, '6B', '6e B') RETURNING id AS classe_b_id \gset
+INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance)
+VALUES (:'etab_b_id'::uuid, 'BRUIT-001', 'ZZZ', 'Etranger', '2011-01-01') RETURNING id AS fiche_b_id \gset
+INSERT INTO public.inscriptions (etablissement_id, fiche_eleve_id, classe_id, annee_scolaire_id, statut)
+VALUES (:'etab_b_id'::uuid, :'fiche_b_id'::uuid, :'classe_b_id'::uuid, :'annee_b_id'::uuid, 'active');
+
+-- ---------------------------------------------------------------------------
 -- Tenant + année + période + classe
 -- ---------------------------------------------------------------------------
 INSERT INTO public.etablissements (nom, slug) VALUES ('École Bulletins D5', 'ecole-bulletins-d5') RETURNING id AS etab_id \gset
