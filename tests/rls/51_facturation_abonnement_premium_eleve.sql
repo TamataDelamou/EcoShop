@@ -10,14 +10,21 @@
 --      n'est payeur ou bénéficiaire légitime) ; succès élève lui-même
 --      (même mineur, autorisé explicitement) ET parent confirmé payant pour
 --      un AUTRE enfant que le sien -- payeur (initiateur_id) et bénéficiaire
---      (beneficiaire_fiche_eleve_id) jamais confondus.
+--      (beneficiaire_fiche_eleve_id) jamais confondus. Distinction fine
+--      explicitement vérifiée (demandée en relecture avant push) : un
+--      parent LIÉ à l'élève mais statut en_attente (pas confirmé), et un
+--      parent confirmé mais autorise=false (droit révoqué), sont CHACUN
+--      refusés -- deux clauses distinctes d'est_parent_confirme(), pas
+--      seulement le cas trivial d'un tiers sans aucune ligne.
 --   2. Contrainte CHECK transactions_cinetpay_coherence : refuse en base
 --      même une écriture qui contournerait la RLS (rôle postgres).
---   3. entitlement_premium_eleve_actif() : refus tiers, succès élève/parent/
---      admin GSG.
---   4. RLS abonnements_premium_eleve : élève/parent/admin GSG voient la
---      ligne, PAS le personnel de l'établissement (délibéré, voir migration
---      20260906001519 point 2) ni un tiers sans lien.
+--   3. entitlement_premium_eleve_actif() : refus tiers ET des deux mêmes cas
+--      fins de parent lié mais non confirmé/non autorisé, succès élève/
+--      parent confirmé/admin GSG.
+--   4. RLS abonnements_premium_eleve : élève/parent confirmé/admin GSG
+--      voient la ligne, PAS le personnel de l'établissement (délibéré, voir
+--      migration 20260906001519 point 2), PAS un tiers sans lien, PAS un
+--      parent lié mais non confirmé/non autorisé (mêmes deux cas fins).
 --   5. Renouvellement anticipé : n'écrase jamais du temps déjà payé
 --      (empilement des durées, jamais un simple reset à now()+durée).
 --   6. enregistrer_paiement_abonnement_premium_eleve : refus direction,
@@ -48,7 +55,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(31);
+SELECT plan(37);
 
 -- ---------------------------------------------------------------------------
 -- Fixture : un établissement, trois fiches élèves, un parent confirmé
@@ -65,6 +72,12 @@ SELECT pg_temp.creer_compte('224600007004', 'parent')     AS parent1_id     \gse
 SELECT pg_temp.creer_compte('224600007005', 'eleve')      AS eleve_tiers_id \gset
 SELECT pg_temp.creer_compte('224600007006', 'direction')  AS direction_a_id \gset
 SELECT pg_temp.creer_compte('224600007007', 'admin_gsg')  AS admin_gsg_id   \gset
+-- Distincts d'un tiers totalement étranger : ces deux comptes ONT une ligne
+-- relations_parent_eleve vers l'élève 1, mais chacun échoue sur UN filtre
+-- différent d'est_parent_confirme() (statut, puis autorise) -- la nuance
+-- explicitement demandée en relecture avant push.
+SELECT pg_temp.creer_compte('224600007008', 'parent')     AS parent_en_attente_id    \gset
+SELECT pg_temp.creer_compte('224600007009', 'parent')     AS parent_non_autorise_id  \gset
 
 INSERT INTO public.fiches_eleves (id, etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
 VALUES ('51000000-0000-0000-0000-000000000011', '51000000-0000-0000-0000-000000000001', 'QA51-001', 'DIALLO', 'Aissatou', '2011-04-01', :'eleve1_id'::uuid, now());
@@ -76,6 +89,14 @@ VALUES ('51000000-0000-0000-0000-000000000013', '51000000-0000-0000-0000-0000000
 -- Parent confirmé de l'élève 2 SEULEMENT (jamais de l'élève 1).
 INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise)
 VALUES ('51000000-0000-0000-0000-000000000001', :'parent1_id'::uuid, '51000000-0000-0000-0000-000000000012', 'parent', 'confirmee', true);
+
+-- Lié à l'élève 1, mais PAS encore confirmé (double facteur non complété, M5 §5.8).
+INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise)
+VALUES ('51000000-0000-0000-0000-000000000001', :'parent_en_attente_id'::uuid, '51000000-0000-0000-0000-000000000011', 'parent', 'en_attente', true);
+
+-- Lié à l'élève 1, statut confirmé, mais droit de consultation explicitement révoqué (autorise = false).
+INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise)
+VALUES ('51000000-0000-0000-0000-000000000001', :'parent_non_autorise_id'::uuid, '51000000-0000-0000-0000-000000000011', 'parent', 'confirmee', false);
 
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
 VALUES (:'direction_a_id'::uuid, '51000000-0000-0000-0000-000000000001', 'direction');
@@ -99,6 +120,18 @@ SELECT set_config('request.jwt.claims', json_build_object('sub', :'eleve_tiers_i
 SELECT throws_ok(
   $$ SELECT public.initier_transaction_cinetpay('abonnement_premium_eleve', null, null, '51000000-0000-0000-0000-000000000011', 'mensuel') $$,
   '42501', NULL, 'initier_transaction_cinetpay/abonnement_premium_eleve : tiers sans lien (ni élève, ni parent confirmé) refusé'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_en_attente_id', 'role', 'authenticated')::text, true);
+SELECT throws_ok(
+  $$ SELECT public.initier_transaction_cinetpay('abonnement_premium_eleve', null, null, '51000000-0000-0000-0000-000000000011', 'mensuel') $$,
+  '42501', NULL, 'initier_transaction_cinetpay/abonnement_premium_eleve : parent LIÉ à l''élève mais statut en_attente (PAS confirmé) refusé -- distinct d''un tiers sans aucun lien'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_non_autorise_id', 'role', 'authenticated')::text, true);
+SELECT throws_ok(
+  $$ SELECT public.initier_transaction_cinetpay('abonnement_premium_eleve', null, null, '51000000-0000-0000-0000-000000000011', 'mensuel') $$,
+  '42501', NULL, 'initier_transaction_cinetpay/abonnement_premium_eleve : parent confirmé mais autorise=false (droit de consultation révoqué) refusé'
 );
 
 SELECT set_config('request.jwt.claims', json_build_object('sub', :'direction_a_id', 'role', 'authenticated')::text, true);
@@ -216,6 +249,18 @@ SELECT throws_ok(
   '42501', NULL, 'entitlement_premium_eleve_actif : tiers sans lien refusé'
 );
 
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_en_attente_id', 'role', 'authenticated')::text, true);
+SELECT throws_ok(
+  $$ SELECT public.entitlement_premium_eleve_actif('51000000-0000-0000-0000-000000000011') $$,
+  '42501', NULL, 'entitlement_premium_eleve_actif : parent LIÉ mais statut en_attente (PAS confirmé) refusé, même après crédit réel de l''élève'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_non_autorise_id', 'role', 'authenticated')::text, true);
+SELECT throws_ok(
+  $$ SELECT public.entitlement_premium_eleve_actif('51000000-0000-0000-0000-000000000011') $$,
+  '42501', NULL, 'entitlement_premium_eleve_actif : parent confirmé mais autorise=false (droit révoqué) refusé'
+);
+
 -- ===========================================================================
 -- 4. RLS abonnements_premium_eleve — visibilité élève/parent/admin GSG,
 -- PAS le personnel de l'établissement, PAS un tiers.
@@ -239,6 +284,20 @@ SELECT is(
   (SELECT count(*) FROM public.abonnements_premium_eleve WHERE fiche_eleve_id = '51000000-0000-0000-0000-000000000011'),
   0::bigint,
   'abonnements_premium_eleve : un tiers sans lien ne voit rien'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_en_attente_id', 'role', 'authenticated')::text, true);
+SELECT is(
+  (SELECT count(*) FROM public.abonnements_premium_eleve WHERE fiche_eleve_id = '51000000-0000-0000-0000-000000000011'),
+  0::bigint,
+  'abonnements_premium_eleve : parent LIÉ mais statut en_attente (PAS confirmé) ne voit rien'
+);
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent_non_autorise_id', 'role', 'authenticated')::text, true);
+SELECT is(
+  (SELECT count(*) FROM public.abonnements_premium_eleve WHERE fiche_eleve_id = '51000000-0000-0000-0000-000000000011'),
+  0::bigint,
+  'abonnements_premium_eleve : parent confirmé mais autorise=false (droit révoqué) ne voit rien'
 );
 
 -- Le parent de l'élève 2 ne voit pas la ligne de l'élève 1 (pas son enfant).
