@@ -79,5 +79,18 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 
+# Facturation/Quota IA, étape (b) — brique CinetPay générique. initiation
+# authentifiée normalement ; le webhook est appelé DIRECTEMENT par les
+# serveurs CinetPay (jamais un JWT Supabase) -- verify_jwt = false, la
+# signature CinetPay est la SEULE barrière, vérifiée côté SQL
+# (traiter_webhook_cinetpay, voir migration 20260906001515).
+[functions.initier_paiement_cinetpay]
+enabled = true
+verify_jwt = true
+
+[functions.recevoir_webhook_cinetpay]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 policy = "oneshot"

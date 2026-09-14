@@ -47,6 +47,8 @@ l'outillage Postgres/Supabase sera disponible.
 | `36_m15_panier_invite.sql` | Panier/commande invités (propriétaire = profil public) | M15 |
 | `37_m9_patch_messagerie_groupe.sql` | Patch de sécurité — 7 règles absolues de protection des mineurs sur la messagerie de groupe (membre/parent/non-membre, création réservée adulte, modération, signalements) | M9 (patch) |
 | `38_m15quater_inscription_encaissement.sql` | Création d'inscription (matricule serveur, permission), doublon, réinscription (contrainte unique), statut boursier tracé, paliers ≤ 100 %, solde scolaire serveur, encaissement (auteur forcé, visibilité, immutabilité, annulation motivée), isolation inter-établissement réelle (2 établissements distincts), annulation valide (succès + traçabilité + recalcul de solde) | M15quater |
+| `49_facturation_entitlement_etablissement.sql` | Entitlement établissement (licence Pro/frais IA admin) : garde `est_admin_gsg()` anti-NULL, angle mort auto-déclaration par la direction concernée, isolation inter-établissements, barème par tranche | Facturation étape (a) |
+| `50_facturation_cinetpay_generique.sql` | Brique CinetPay générique : frontière service_role (GRANT/REVOKE, pas `est_appel_service()` — inutilisable dans une fonction elle-même SECURITY DEFINER), recalcul serveur du montant, fonctions privées jamais appelables directement, rejet signature/écart de montant (statut echoue), rejeu webhook idempotent (aucun double crédit), recompte d'effectif EN DIRECT au crédit (jamais la valeur périmée capturée à l'initiation), isolation inter-établissements | Facturation étape (b) |
 
 ## Prérequis
 

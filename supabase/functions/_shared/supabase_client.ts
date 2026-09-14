@@ -48,6 +48,22 @@ export function clientUtilisateur(req: Request): { client: SupabaseClient; jeton
   return { client, jeton };
 }
 
+/**
+ * Client service_role — réservé aux Edge Functions qui doivent appeler des
+ * RPC réservées au serveur (ex. finaliser_initiation_cinetpay,
+ * traiter_webhook_cinetpay, étape (b) facturation/CinetPay). Contourne RLS :
+ * ne JAMAIS l'utiliser pour relayer une action d'un utilisateur authentifié
+ * (voir clientUtilisateur ci-dessus pour ce cas).
+ */
+export function clientService(): SupabaseClient {
+  const SUPABASE_URL = requisEnv("SUPABASE_URL");
+  const SUPABASE_SERVICE_ROLE_KEY = requisEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
 export function entetesCors(origine: string | null): Record<string, string> {
   return {
     "Content-Type": "application/json",
