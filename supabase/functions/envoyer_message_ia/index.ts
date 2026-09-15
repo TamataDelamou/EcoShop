@@ -15,10 +15,16 @@
 //      `grounding = true`) ET que le rôle est `direction` : expose l'outil
 //      de détail nominatif (couche 3) — re-vérifié à CHAQUE tour via la
 //      conversation relue en base, jamais un flag envoyé par le client.
-//   5. Appelle l'API Claude (boucle tool_use plafonnée à un seul
+//   5. Pré-contrôle quota/anti-rafale (`verifier_quota_ia`, étape (d),
+//      migration 20260906001520) — CONFORT UNIQUEMENT, jamais l'autorité :
+//      cette fonction n'écrit jamais dans `ai_messages` (point 7
+//      ci-dessous), donc l'autorité réelle est le trigger BEFORE INSERT
+//      sur cette table, qui s'applique quelle que soit la voie d'écriture.
+//      Évite ici un appel Anthropic facturé pour rien.
+//   6. Appelle l'API Claude (boucle tool_use plafonnée à un seul
 //      aller-retour supplémentaire — jamais de 3e appel, jamais de
 //      fan-out multi-outils).
-//   6. Retourne UNIQUEMENT le texte de réponse (+ le mapping pseudonyme→
+//   7. Retourne UNIQUEMENT le texte de réponse (+ le mapping pseudonyme→
 //      identité, séparé, jamais transmis à Anthropic) — n'écrit JAMAIS
 //      les messages dans `ai_messages` : c'est le CLIENT qui le fait
 //      (même division des responsabilités que la source, voir
@@ -135,6 +141,35 @@ Deno.serve(async (req) => {
       : PROMPTS[role];
     if (!systemPrompt) {
       return reponseJson(403, { error: "aucun_assistant_pour_ce_role" }, origine);
+    }
+
+    // --- Pré-contrôle de quota/anti-rafale (étape d) — PRÉ-CONTRÔLE DE
+    //     CONFORT UNIQUEMENT : évite un appel Anthropic facturé pour rien
+    //     et une réponse affichée puis non enregistrable. L'AUTORITÉ réelle
+    //     est le trigger `ai_messages_verifie_quota_trg` (BEFORE INSERT sur
+    //     ai_messages, migration 20260906001520) — cette fonction n'écrit
+    //     jamais elle-même dans ai_messages (voir en-tête de fichier), donc
+    //     ce contrôle ici ne peut être qu'un avant-goût, jamais la garde
+    //     finale. Même fonction SQL des deux côtés (verifier_quota_ia),
+    //     aucune logique dupliquée.
+    const { error: erreurQuota } = await supabase.rpc("verifier_quota_ia", {
+      p_etablissement_id: etablissementId,
+      p_type: typeConversation,
+    });
+    if (erreurQuota) {
+      if (erreurQuota.code === "54000") {
+        return reponseJson(429, { error: "TROP_DE_MESSAGES_IA" }, origine);
+      }
+      if (erreurQuota.code === "22023") {
+        return reponseJson(402, { error: "QUOTA_TUTEUR_IA_ATTEINT" }, origine);
+      }
+      console.error(JSON.stringify({
+        fn: "envoyer_message_ia",
+        niveau: "error",
+        message: "echec verifier_quota_ia",
+        detail: erreurQuota.message,
+      }));
+      return reponseJson(500, { error: "erreur_interne" }, origine);
     }
 
     // --- Historique court (10 derniers messages) ---
