@@ -4,6 +4,8 @@ import 'package:ecoshop_client/core/db/app_database.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/auth/domain/profil.dart';
+import 'package:ecoshop_client/features/cgu/application/cgu_providers.dart';
+import 'package:ecoshop_client/features/cgu/domain/cgu_statut.dart';
 import 'package:ecoshop_client/features/coquille/presentation/coquille_app.dart';
 import 'package:ecoshop_client/features/coquille/presentation/garde_session.dart';
 import 'package:ecoshop_client/features/auth/presentation/ecran_choix_espace.dart';
@@ -21,6 +23,14 @@ import '../../support/faux_auth_repository.dart';
 class _OnboardingRegionalisationToujoursVu extends OnboardingRegionalisationNotifier {
   @override
   Future<bool> build() async => true;
+}
+
+/// `null` = rien à accepter pour ce compte : ce fichier teste la progression
+/// de session par rôle, pas la garde CGU elle-même (couverte séparément par
+/// `test/features/cgu/ecran_cgu_test.dart` et `garde_session_test.dart`).
+class _CguStatutRienAAccepter extends CguStatutNotifier {
+  @override
+  Future<CguStatut?> build() async => null;
 }
 
 late AppDatabase _db;
@@ -51,6 +61,7 @@ Future<void> monter(
         sessionOuverteProvider.overrideWithValue(session),
         databaseProvider.overrideWithValue(_db),
         onboardingRegionalisationVuProvider.overrideWith(_OnboardingRegionalisationToujoursVu.new),
+        cguStatutProvider.overrideWith(_CguStatutRienAAccepter.new),
       ],
       child: const MaterialApp(home: RacineApp()),
     ),

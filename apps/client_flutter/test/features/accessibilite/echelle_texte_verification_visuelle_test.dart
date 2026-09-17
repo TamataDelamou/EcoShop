@@ -7,6 +7,8 @@ import 'package:ecoshop_client/core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/db/app_database.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
+import 'package:ecoshop_client/features/cgu/application/cgu_providers.dart';
+import 'package:ecoshop_client/features/cgu/domain/cgu_statut.dart';
 import 'package:ecoshop_client/features/coquille/presentation/coquille_app.dart';
 import 'package:ecoshop_client/features/coquille/presentation/garde_session.dart';
 import 'package:ecoshop_client/features/referentiel/application/referentiel_providers.dart';
@@ -18,6 +20,13 @@ import '../../support/faux_auth_repository.dart';
 class _OnboardingRegionalisationToujoursVu extends OnboardingRegionalisationNotifier {
   @override
   Future<bool> build() async => true;
+}
+
+/// `null` = rien à accepter pour ce compte — ce fichier teste le débordement
+/// visuel, pas la garde CGU elle-même (couverte séparément).
+class _CguStatutRienAAccepter extends CguStatutNotifier {
+  @override
+  Future<CguStatut?> build() async => null;
 }
 
 /// Vérification visuelle « aucun texte à taille fixe codée en dur ne casse »
@@ -42,6 +51,7 @@ void main() {
           sessionOuverteProvider.overrideWithValue(true),
           databaseProvider.overrideWithValue(db),
           onboardingRegionalisationVuProvider.overrideWith(_OnboardingRegionalisationToujoursVu.new),
+          cguStatutProvider.overrideWith(_CguStatutRienAAccepter.new),
         ],
         child: MaterialApp(
           builder: (context, enfant) {

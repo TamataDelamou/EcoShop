@@ -201,12 +201,12 @@ SELECT is(
 );
 SELECT is(
   (SELECT contenu FROM public.bulletins WHERE fiche_eleve_id = :'fiche1_id'::uuid),
-  jsonb_build_object('moyenne_generale', 18, 'rang', 1, 'effectif_classe', 2),
+  jsonb_build_object('moyenne_generale', 18, 'rang', 1, 'effectif_classe', 2, 'mention_finale', null),
   'génération : contenu de fiche1 conforme au classement (18/20, rang 1)'
 );
 SELECT is(
   (SELECT contenu FROM public.bulletins WHERE fiche_eleve_id = :'fiche2_id'::uuid),
-  jsonb_build_object('moyenne_generale', 10, 'rang', 2, 'effectif_classe', 2),
+  jsonb_build_object('moyenne_generale', 10, 'rang', 2, 'effectif_classe', 2, 'mention_finale', null),
   'génération : contenu de fiche2 conforme au classement (10/20, rang 2)'
 );
 
@@ -236,12 +236,12 @@ SELECT is((SELECT id FROM public.bulletins WHERE fiche_eleve_id = :'fiche1_id'::
 SELECT is((SELECT id FROM public.bulletins WHERE fiche_eleve_id = :'fiche2_id'::uuid), :'bulletin2_id'::uuid, 'régénération : le bulletin de fiche2 garde le même id (mise à jour en place)');
 SELECT is(
   (SELECT contenu FROM public.bulletins WHERE fiche_eleve_id = :'fiche2_id'::uuid),
-  jsonb_build_object('moyenne_generale', 19, 'rang', 1, 'effectif_classe', 2),
+  jsonb_build_object('moyenne_generale', 19, 'rang', 1, 'effectif_classe', 2, 'mention_finale', null),
   'régénération : fiche2 (19/20) devient rang 1 — le classement est bien recalculé, pas figé'
 );
 SELECT is(
   (SELECT contenu FROM public.bulletins WHERE fiche_eleve_id = :'fiche1_id'::uuid),
-  jsonb_build_object('moyenne_generale', 18, 'rang', 2, 'effectif_classe', 2),
+  jsonb_build_object('moyenne_generale', 18, 'rang', 2, 'effectif_classe', 2, 'mention_finale', null),
   'régénération : fiche1 (18/20) redescend rang 2'
 );
 

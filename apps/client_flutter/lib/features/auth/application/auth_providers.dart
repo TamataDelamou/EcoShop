@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../cgu/application/cgu_providers.dart';
 import '../../etablissement/domain/etablissement.dart';
 import '../../regionalisation/application/regionalisation_providers.dart';
 import '../data/supabase_auth_repository.dart';
@@ -67,19 +68,26 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final profil = ref.watch(profilProvider);
   final fiche = ref.watch(ficheLieeProvider);
   final etablissements = ref.watch(mesEtablissementsProvider);
+  final cguStatut = ref.watch(cguStatutProvider);
   final regionalisationVue = ref.watch(onboardingRegionalisationVuProvider);
 
   // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
-  if (profil.isLoading || fiche.isLoading || etablissements.isLoading || regionalisationVue.isLoading) {
+  if (profil.isLoading ||
+      fiche.isLoading ||
+      etablissements.isLoading ||
+      cguStatut.isLoading ||
+      regionalisationVue.isLoading) {
     return DestinationSession.chargement;
   }
 
+  final statutCgu = cguStatut.value;
   return GardeSession.resoudre(
     sessionOuverte: true,
     profil: profil.value,
     ficheLiee: fiche.value ?? false,
     nombreEtablissements: etablissements.value?.length ?? 0,
+    cguAcceptee: statutCgu == null || statutCgu.acceptee,
     regionalisationVue: regionalisationVue.value ?? true,
   );
 });

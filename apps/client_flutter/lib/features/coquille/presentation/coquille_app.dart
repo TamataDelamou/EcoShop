@@ -7,7 +7,10 @@ import '../../../core/providers.dart';
 import '../../../core/widgets/page_header.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
+import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_notifications.dart';
+import '../../validation_marketplace/presentation/ecran_agrement_vendeurs_etablissement.dart';
+import '../../validation_marketplace/presentation/ecran_validation_vendeurs_gsg.dart';
 import '../../communication/presentation/ecran_preferences_canaux.dart';
 import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
@@ -457,6 +460,15 @@ class _VueProfil extends ConsumerWidget {
             MaterialPageRoute(
               builder: (_) => const EcranPreferencesApparence(),
             ),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.gavel_outlined),
+          title: const Text('Conditions générales d\'utilisation'),
+          subtitle: const Text('Accessibles à tout moment (§34.10)'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const EcranCgu()),
           ),
         ),
         if (PersonaIa.depuisRoleRacine(p.roleRacine) != null)
@@ -1078,6 +1090,39 @@ class _VueProfil extends ConsumerWidget {
                 ],
               );
             },
+          ),
+        // Agrément établissement <-> vendeur (cahier §27.2, palier 2) —
+        // réservé à la Direction, même garde que les entrées ci-dessus.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                leading: const Icon(Icons.storefront_outlined),
+                title: const Text('Vendeurs marketplace'),
+                subtitle: const Text('Agrément des vendeurs déjà validés par GSG'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranAgrementVendeursEtablissement(
+                      etablissementId: etablissement.id,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        // Validation GSG des comptes Vendeur (cahier §27.2/§30.2, palier 1)
+        // — réservée à l'Administrateur GSG, seul rôle qui en a le droit.
+        if (p.roleRacine == RoleRacine.adminGsg)
+          ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
+            title: const Text('Validation des vendeurs'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranValidationVendeursGsg()),
+            ),
           ),
         const Divider(),
         ListTile(

@@ -11,6 +11,7 @@ void main() {
     Profil? profil,
     bool fiche = true,
     int etablissements = 0,
+    bool cguAcceptee = true,
     bool regionalisationVue = true,
   }) {
     return GardeSession.resoudre(
@@ -18,6 +19,7 @@ void main() {
       profil: profil,
       ficheLiee: fiche,
       nombreEtablissements: etablissements,
+      cguAcceptee: cguAcceptee,
       regionalisationVue: regionalisationVue,
     );
   }
@@ -111,6 +113,43 @@ void main() {
       expect(
         resoudre(profil: profilTest(role: RoleRacine.parent)),
         DestinationSession.accueil,
+      );
+    });
+
+    test('CGU non acceptées (§34.10), oriente vers elles avant l’accueil', () {
+      expect(
+        resoudre(profil: profilTest(role: RoleRacine.parent), cguAcceptee: false),
+        DestinationSession.cguNonAcceptees,
+      );
+    });
+
+    test('CGU acceptées, accès direct à l’accueil', () {
+      expect(
+        resoudre(profil: profilTest(role: RoleRacine.parent), cguAcceptee: true),
+        DestinationSession.accueil,
+      );
+    });
+
+    test('CGU : la sélection d’établissement reste prioritaire', () {
+      expect(
+        resoudre(
+          profil: profilTest(role: RoleRacine.enseignant),
+          etablissements: 3,
+          cguAcceptee: false,
+        ),
+        DestinationSession.selectionEtablissement,
+      );
+    });
+
+    test('CGU non acceptées est prioritaire sur l’étape Langue/Région (D3)', () {
+      expect(
+        resoudre(
+          profil: profilTest(role: RoleRacine.parent),
+          cguAcceptee: false,
+          regionalisationVue: false,
+        ),
+        DestinationSession.cguNonAcceptees,
+        reason: 'obligation légale avant un simple confort d’ergonomie',
       );
     });
 

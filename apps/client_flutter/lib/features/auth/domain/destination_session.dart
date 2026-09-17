@@ -20,6 +20,12 @@ enum DestinationSession {
   /// Plusieurs établissements et aucun sélectionné (ch. 4).
   selectionEtablissement,
 
+  /// CGU de la version courante du parcours (simplifié/complet, selon le
+  /// rôle) non encore acceptées (§34.10). Bloquant, contrairement à la
+  /// régionalisation ci-dessous — placé avant elle car il s'agit d'une
+  /// obligation légale, pas d'un confort d'ergonomie.
+  cguNonAcceptees,
+
   /// Étape d'onboarding Langue/Région (D3), non bloquante — affichée une
   /// fois par profil, après l'établissement résolu (pays/devise en
   /// dépendent).
@@ -48,6 +54,10 @@ abstract final class GardeSession {
     // ignore ce paramètre (tests notamment) : en production,
     // `destinationProvider` transmet toujours la valeur réellement lue.
     bool regionalisationVue = true,
+    // Même défaut `true` (= rien à accepter/déjà accepté) et même raison
+    // que `regionalisationVue` : ne casser aucun appelant existant qui
+    // ignore ce paramètre.
+    bool cguAcceptee = true,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -68,6 +78,8 @@ abstract final class GardeSession {
     if (profil.etablissementActifId == null && nombreEtablissements > 1) {
       return DestinationSession.selectionEtablissement;
     }
+
+    if (!cguAcceptee) return DestinationSession.cguNonAcceptees;
 
     if (!regionalisationVue) return DestinationSession.regionalisation;
 

@@ -8,6 +8,7 @@ import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
 import '../../notes/presentation/ecran_generation_bulletins_classe.dart';
+import '../../proclamation/presentation/ecran_proclamation_classe.dart';
 import '../../vie_scolaire/presentation/ecran_appel_classe.dart';
 import '../application/scolarite_providers.dart';
 import '../domain/affectation_enseignant.dart';
@@ -68,6 +69,16 @@ class EcranDetailClasse extends ConsumerWidget {
                 tooltip: 'Frais de la classe',
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => EcranPerceptionClasse(classe: classe)),
+                ),
+              ),
+            // Verrou définitif des notes + mention finale (cahier §12.3,
+            // §12.4) — même garde que les actions ci-dessus.
+            if (estDirection)
+              IconButton(
+                icon: const Icon(Icons.gavel_outlined),
+                tooltip: 'Proclamation',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranProclamationClasse(classe: classe)),
                 ),
               ),
           ],
