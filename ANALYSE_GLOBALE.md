@@ -1586,6 +1586,56 @@ validation lourde type compte Vendeur, responsabilité du sous-compte
 marchand calquée sur le modèle rôle racine/poste du chapitre 4, points
 tarifaires laissés ouverts).
 
+**Chantier « bloquant lancement » — items 1/4 à 4/4 tous clos (2026-09-17,
+commits `54b85c3`/`5eaf2e1`)** : quatre pré-requis avant tout lancement
+réel, désignés « item X/4 » directement dans leurs migrations respectives.
+
+- **Item 1/4 (§34.10)** — CGU/consentement générique : deux parcours
+  (simplifié Élève / complet autres rôles), historique de versions,
+  registre d'acceptation immuable (aucune policy update/delete), blocage à
+  la connexion tant que la version courante n'est pas acceptée
+  (`DestinationSession.cguNonAcceptees`). Texte en placeholder structurel,
+  à remplacer par le porteur avant lancement réel. Migration
+  `20260906001523`, `tests/rls/54` (19 assertions).
+- **Item 2/4 (§12.3, §12.4, §7.3)** — verrou définitif des notes + mention
+  finale admis(e)/recalé(e) pour les classes d'examen : proclamation
+  immuable par (classe, année) sans aucune policy update/delete (déni total
+  y compris admin_gsg), mention saisie manuellement par la Direction
+  (jamais calculée), verrou total de la saisie de notes et de la
+  génération de bulletins après proclamation sans exception. Migration
+  `20260906001522`, `tests/rls/55` (22 assertions).
+- **Item 3/4 (§27.1-27.2, §30.1-30.2)** — validation vendeur (GSG, palier
+  1, globale) puis agrément établissement↔vendeur (Direction, palier 2,
+  décidé établissement par établissement sur un vendeur déjà validé GSG,
+  jamais l'inverse) ; porte RLS sur `commandes_insert` exigeant les deux
+  paliers « valide ». Migration `20260906001524`, `tests/rls/56` (18
+  assertions).
+- **Item 4/4 (§34.8)** — sauvegarde et plan de reprise : documenté dans
+  [`docs/OPERATIONS.md` §3](./docs/OPERATIONS.md). Stratégie primaire =
+  backups automatiques natifs Supabase Cloud (palier Pro, quotidien,
+  rétention 7 jours, RPO ≈ 24 h) ; PITR identifié comme add-on payant
+  séparé, non souscrit à ce jour ; RTO documenté honnêtement comme non
+  mesuré, faute d'environnement de staging pour déclencher une
+  restauration réelle — pas de chiffre inventé. `backup_restore.sh`
+  (pg_dump/pg_restore) explicitement cadré comme un complément ciblé
+  uniquement, jamais un plan de reprise complet, avec deux échecs réels
+  reproduits en local à l'appui (restauration `--clean` contre une
+  instance vivante : non-propriétaire des objets internes Supabase ;
+  restauration du schéma `public` seul vers une base neuve : schéma `auth`
+  absent). Aucun code/migration pour cet item — travail purement
+  documentaire, cohérent avec la nature du point (§34.8 ne porte pas sur
+  une donnée applicative).
+
+**Incident de traçabilité noté ici pour mémoire** : le contenu de l'item
+4/4 avait été rédigé mais était resté non commité entre deux sessions,
+invisible à la reprise suivante jusqu'à relecture explicite du texte des
+migrations 1/4-3/4 (qui se désignent elles-mêmes « item X/4 », révélant le
+4ème item manquant). Cause déclaration du porteur de projet : perte d'un
+disque contenant un autre projet, sans lien avec EcoShop mais qui a motivé
+une règle permanente depuis ce chantier — chaque item ou sous-tâche validé
+et testé est commité **et poussé sur origin** avant de passer au suivant,
+plus d'accumulation locale non poussée même au sein d'une même session.
+
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).
 
