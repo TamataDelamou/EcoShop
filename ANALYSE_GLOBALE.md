@@ -97,8 +97,13 @@ Supabase décrit au chapitre 3. Les migrations Firebase → Supabase suivent le
 
 ### 2.3 Référentiel pédagogique multi-pays (ch. 6)
 
-- 16 pays CEDEAO, 4 systèmes : `francophone_cfa`, `anglophone_waec`,
-  `lusophone`, `arabophone_mixte`.
+- Référentiel conçu pour couvrir l'ensemble des pays CEDEAO, 4 systèmes :
+  `francophone_cfa`, `anglophone_waec`, `lusophone`, `arabophone_mixte`.
+  **Correction de suivi (2026-09-15)** : seuls 3 pays sont réellement seedés
+  à ce jour (`GN` Guinée, `SN` Sénégal — `francophone_cfa` ; `GH` Ghana —
+  `anglophone_waec`), voir `supabase/seed_referentiel_pedagogique.sql`. Les
+  systèmes `lusophone` et `arabophone_mixte` n'ont aucun pays seedé. Ce
+  chapitre annonçait à tort « 16 pays » comme si le seed complet existait.
 - Entités : `pays`, `pays_cycle`, `pays_niveau` (+ `grade_level_normalise`),
   `pays_examen`, `pays_filiere`, `programme_officiel`, `programme_matiere`.
 - Domaine « éducation », **distinct** du Referential Engine générique du Kernel
@@ -234,7 +239,7 @@ Supabase : Auth (OTP E.164) · Postgres + RLS · Storage · Realtime · Edge Fun
 
 | # | Module | Contenu |
 |---|---|---|
-| M4 | **Référentiel pédagogique CEDEAO** | pays/cycle/niveau/filière/examen/programme, 16 pays, 4 systèmes |
+| M4 | **Référentiel pédagogique CEDEAO** | pays/cycle/niveau/filière/examen/programme, 3 pays seedés (GN/SN/GH), 4 systèmes définis |
 | M5 | **Administration & Scolarité** | Élèves, inscriptions/réinscriptions, classes, liaison compte↔fiche |
 | M6 | **Notes & Bulletins** | Saisie, verrouillage progressif, moyennes, bulletins, risque d'échec |
 | M7 | **Emploi du temps** | Grilles, séances, conflits, annulations |
@@ -1569,6 +1574,17 @@ sans lien refusé ET établissement légitime différent refusé). Vérifié :
 `Files=48, Tests=403, PASS`, aucune régression sur les 47 fichiers
 précédents ; `flutter test` non concerné par ce volet (aucun fichier Dart
 touché).
+
+**Extension future consignée, non implémentée (2026-09-13)** : cadrage
+complet d'un « point de retrait non scolaire » pour écoles publiques
+(marketplace, chapitre 27), validé par le porteur de projet puis
+explicitement reporté après validation du modèle économique de base sur le
+marché — documentation seule, aucun code/migration/schéma touché ici. Voir
+[`Cahier_de_Conception_EcoShop_v4.1.md` §27.16](./Cahier_de_Conception_EcoShop_v4.1.md)
+pour le détail (découplage Établissement/Point de retrait, création à
+validation lourde type compte Vendeur, responsabilité du sous-compte
+marchand calquée sur le modèle rôle racine/poste du chapitre 4, points
+tarifaires laissés ouverts).
 
 La liste colonne par colonne des DTOs et RPCs de M4 → M15 est spécifiée dans
 [`docs/contrats/`](./docs/contrats/README.md).

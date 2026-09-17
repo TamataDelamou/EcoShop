@@ -1395,7 +1395,7 @@ La fusion avec le moteur de révision (chapitres 10-11) introduit une masse de r
 
 ## **12.7 Risque d\'échec et statistiques**
 
-Score calculé automatiquement pour chaque élève, pondéré à 70 % sur les notes officielles et 30 % sur le taux de présence, avec un indicateur de fiabilité selon que le compte élève est réellement lié ou non (un score calculé sur un élève dont le compte n\'a jamais été rattaché, ou dont l\'assiduité n\'est que partiellement saisie, est signalé comme moins fiable).
+Score calculé automatiquement pour chaque élève, pondéré à 50 % sur le taux d\'absences, 20 % sur les retards et 30 % sur la moyenne des notes officielles, avec un indicateur de fiabilité selon que le compte élève est réellement lié ou non (un score calculé sur un élève dont le compte n\'a jamais été rattaché, ou dont l\'assiduité n\'est que partiellement saisie, est signalé comme moins fiable). Cette pondération, celle réellement implémentée par `calculer_score_decrochage()` depuis le module 7, a été validée rétroactivement comme référence par le porteur de projet --- elle remplace la répartition 70 %/30 % notes/présence antérieurement décrite ici, qui ne correspondait pas au code livré.
 
 -   Taux de réussite, classement global, performance des enseignants, tableaux de bord dynamiques (voir également chapitre 29 --- Reporting).
 
@@ -2104,6 +2104,24 @@ L\'affiliation d\'un vendeur à un établissement (voir 27.2) ne devient effecti
 Un élève quittant l\'établissement auquel son compte est rattaché, pour rejoindre un établissement non partenaire de la plateforme, bascule automatiquement --- ainsi que son compte parent associé --- sous un statut Visiteur.
 
 > ***Règle de gestion ---** le statut Visiteur ne retire aucun accès à la marketplace : il retire uniquement le rattachement à un établissement pour les modules de gestion scolaire (chapitres 7 à 20), qui perdent leur pertinence hors de la plateforme. L\'accès aux achats marketplace reste possible, à condition que l\'acheteur sélectionne, à chaque commande, un établissement actif de la plateforme comme point de retrait (voir 27.1) --- qui n\'est alors pas nécessairement l\'établissement d\'origine de l\'élève. Ce statut, distinct des rôles racines du chapitre 4, est un état du compte plutôt qu\'un rôle à part entière ; il n\'affecte ni l\'authentification (chapitre 5) ni l\'historique déjà produit par le compte.*
+
+## **27.16 Extension future --- Points de retrait non scolaires (hors périmètre actuel)**
+
+Reportée après validation du modèle économique de base sur le marché, cette extension permettrait à des écoles publiques (qui n\'adoptent généralement pas d\'outil de gestion tiers) de participer à la marketplace comme point de retrait logistique, sans aucune inscription scolaire.
+
+-   **Découplage** : un Établissement Scolaire (pédagogique) est distinct d\'un Point de Retrait (logistique marketplace). Tout établissement classique hérite automatiquement du rôle de point de retrait pour ses membres. Une école publique existerait uniquement comme point de retrait.
+
+-   **Modélisation prévue (non implémentée)** : entité générique « point de retrait » avec un type (école publique / partenaire tiers futur), pour rester extensible sans réécriture, produit verrouillé aux écoles publiques pour la première passe.
+
+-   **Création et validation** : demande écrite précisant le bureau réceptionnaire, confirmation signée du responsable réel si le demandeur est un tiers, validation Global Service Groupe. Le niveau de vérification doit être aligné sur celui d\'un compte Vendeur (identité, autorisation légale d\'exercer, voir 27.2/5.3) et non une simple lettre, car la personne validée devient responsable financière du sous-compte marchand (voir plus bas).
+
+-   **Auto-affiliation acheteur** : réservée aux comptes sans établissement scolaire classique rattaché. Déclenchée au moment de l\'achat, mémorisée par défaut sur le compte, modifiable librement à chaque commande.
+
+-   **Affiliation marchande** : suit la règle lourde de création (demande écrite + confirmation signée), jamais l\'auto-affiliation légère de l\'acheteur.
+
+-   **Responsabilité du sous-compte marchand** : reprise du modèle rôle racine/poste déjà en place (chapitre 4) --- la personne validée à la création porte la responsabilité financière du sous-compte CinetPay (voir 27.11) et signe les conventions vendeur (voir 27.14), équivalent du rôle Direction ; elle peut désigner séparément un agent pour la remise physique des colis (équivalent Économe/Surveillant, 19.4/27.6), qui ne touche jamais à l\'argent.
+
+> ***Points restés ouverts ---** à trancher au moment de l\'activation, pas avant : modèle tarifaire (abonnement fixe / commission par colis / hybride), garde-fou anti-abus optionnel, forme du tableau de bord dédié. Cadrage consigné pour référence future uniquement --- aucune table, aucun champ, aucun écran, pas même un stub, ne doit être créé avant l\'activation explicite de cette extension par le porteur de projet.*
 
 # **28. Établissements indépendants et réseaux d\'établissements**
 
