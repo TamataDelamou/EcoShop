@@ -66,7 +66,6 @@ class _FauxDepot implements PiecesComptablesRepository {
   }
 }
 
-const _caisse = PlanComptable(id: 'c571', etablissementId: 'e1', code: '571', intitule: 'Caisse siège', type: TypeCompte.caisse, reglementaire: true);
 const _regroupement = PlanComptable(id: 'c57', etablissementId: 'e1', code: '57', intitule: 'Caisse', type: TypeCompte.caisse, reglementaire: true);
 const _scolarite = PlanComptable(id: 'c70521', etablissementId: 'e1', code: '70521', intitule: 'Frais de scolarité', type: TypeCompte.produit, reglementaire: true);
 const _cantine = PlanComptable(id: 'c70523', etablissementId: 'e1', code: '70523', intitule: 'Cantine scolaire', type: TypeCompte.produit, reglementaire: true);

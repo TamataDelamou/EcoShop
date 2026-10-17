@@ -355,7 +355,7 @@ class _EcranDetailPieceState extends ConsumerState<EcranDetailPiece> {
                       ? null
                       : () => _action(() async {
                             await depot.supprimerBrouillard(piece.id);
-                            if (mounted) Navigator.of(context).pop(true);
+                            if (context.mounted) Navigator.of(context).pop(true);
                             return null;
                           }),
                   icon: const Icon(Icons.delete_outline),
