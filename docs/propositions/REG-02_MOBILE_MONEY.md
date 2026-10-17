@@ -1,7 +1,7 @@
 # Proposition REG-02 — Implémentation d'un opérateur Mobile Money
 
-**Date** : 2026-10-17. **Statut** : proposition, en attente de validation par
-le porteur de projet. **Registre** : `docs/REGISTRE.md` REG-02.
+**Date** : 2026-10-17. **Statut** : **validée** par le porteur de projet le
+2026-10-17 ; lots L1 à L4 (serveur) livrés le même jour — voir le registre. **Registre** : `docs/REGISTRE.md` REG-02.
 **Marché ciblé en premier** : Guinée (GNF).
 
 ---

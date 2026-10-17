@@ -102,5 +102,8 @@ jobs:
       - name: Tests du module inter-services (KER-MUT K3)
         run: deno test --allow-env supabase/functions/_shared/interservices_test.ts
 
-      - name: Vérification de types — fonctions du Control Plane Kernel
-        run: deno check supabase/functions/kernel-export/index.ts supabase/functions/kernel-control-plane/index.ts
+      - name: Tests du client Orange Money (REG-02)
+        run: deno test --allow-env supabase/functions/_shared/orange_money_client_test.ts
+
+      - name: Vérification de types — Control Plane Kernel et Orange Money
+        run: deno check supabase/functions/kernel-export/index.ts supabase/functions/kernel-control-plane/index.ts supabase/functions/initier_paiement_orange_money/index.ts supabase/functions/recevoir_notification_orange_money/index.ts

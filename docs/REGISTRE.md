@@ -20,7 +20,7 @@ attendue), `clos`.
 | REG-01.1 | K1 — Délestage des dépendances au Kernel (identité, référentiels) | **P0** | clos (2026-10-17) |
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
-| REG-02 | Proposition d'implémentation d'un opérateur Mobile Money | P1 | proposition remise, à valider |
+| REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — serveur livré (L1-L4), client Flutter à venir |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
@@ -128,8 +128,40 @@ Contrat proposé au Kernel (à valider et implémenter côté Kernel) :
 ## REG-02 — Proposition d'implémentation d'un opérateur Mobile Money
 
 **Priorité** : P1 (après REG-01). **Statut** : proposition remise le
-2026-10-17 — `docs/propositions/REG-02_MOBILE_MONEY.md` — en attente de
-validation. Recommandation : **Orange Money Guinée en direct** pour le
+2026-10-17 — `docs/propositions/REG-02_MOBILE_MONEY.md` — **validée sans
+réserve par le porteur de projet le 2026-10-17** (Orange Money est présent
+dans presque toutes les communes rurales).
+
+**Établissement pilote** : **Bambino Emmaüs** — choix à confirmer
+explicitement par le porteur de projet à réception du RCCM et des pièces
+du fondateur (annoncée pour le 2026-10-18).
+
+**Position du porteur de projet sur le point juridique** : GSG ne détient
+jamais l'argent des utilisateurs ; il reste chez l'opérateur, sur le compte
+marchand de l'établissement. C'est pourquoi tout établissement qui veut
+encaisser par CinetPay ou mobile money fournit lui-même ses pièces
+justificatives à l'opérateur (au besoin via le lien d'affiliation de la
+plateforme). Un juriste sera consulté pour confirmation.
+
+**Livré le 2026-10-17 (serveur, testé contre un faux serveur Orange)** :
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| L1 | Migrations `…1528` (valeurs d'énumération) et `…1529` : identifiants marchands par établissement (deny-all), `transactions_mobile_money`, RPC d'activation, d'initiation, de crédit idempotent | pgTAP `58_orange_money_gn` 32/32 |
+| L2 | `_shared/orange_money_client.ts` (jeton OAuth, création de paiement, statut) | Deno 7/7 |
+| L3 | Edge Functions `initier_paiement_orange_money` et `recevoir_notification_orange_money` (notification authentifiée par empreinte puis **reconfirmée auprès d'Orange**) | `deno check` |
+| L4 | Effets d'un paiement réussi : scolarité → encaissement `mobile_money` + reçu ; marketplace → `paiements` + commande payée | pgTAP 58 |
+
+Non-régression : 03 (6/6), 38 (28/28), 50 (32/32), 53 (49/49), 56 (18/18),
+57 (18/18). Non vérifié : appel réel à Orange (bac à sable non encore
+obtenu) et exécution des Edge Functions dans le runtime Supabase.
+
+**Reste à faire** : L5 (écrans Flutter : activation par la Direction, choix
+du moyen de paiement, redirection et retour), L7 (relance des transactions
+restées sans notification, rapprochement quotidien). Points à confirmer sur
+la documentation Orange Guinée : chemins, code pays, devise de test, format
+de la notification — regroupés dans `CONFIG_ORANGE`
+(`_shared/orange_money_client.ts`). Recommandation : **Orange Money Guinée en direct** pour le
 circuit établissement (scolarité, marketplace), CinetPay conservé pour le
 circuit GSG et en repli (couvre aussi l'ex-MTN, devenu Areeba Guinée,
 nationalisé en décembre 2025).

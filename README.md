@@ -71,6 +71,8 @@ supabase db push                    # applique supabase/migrations dans l'ordre
 supabase functions deploy creer_profil_marketplace
 supabase functions deploy kernel-export
 supabase functions deploy kernel-control-plane
+supabase functions deploy initier_paiement_orange_money
+supabase functions deploy recevoir_notification_orange_money
 ```
 
 Après le premier `db push`, activer le **Custom Access Token Hook** :
@@ -88,6 +90,12 @@ Secrets du raccordement au Control Plane du Kernel GSG (`kernel-export`,
 | `GSG_KERNEL_ISSUER` | Émetteur attendu des jetons du Kernel |
 | `KERNEL_EXPORT_DECLENCHEUR_SECRET` | Secret de l'appel planifié à `kernel-export` (en-tête `x-declencheur-secret`) |
 | `GSG_KERNEL_TIMEOUT_MS` | Délai avant abandon d'un envoi (défaut : 10000) |
+
+Orange Money Guinée (REG-02) : les identifiants marchands ne sont **pas** des
+secrets de projet — chaque établissement enregistre les siens
+(`enregistrer_identifiants_orange_money`). Seule variable optionnelle :
+`ORANGE_MONEY_URL_RETOUR` (lien de retour dans l'application, défaut
+`io.gsg.ecoshop://paiement/retour`).
 
 En leur absence, l'export est ignoré et la lecture répond 503 : rien d'autre
 dans EcoShop n'en dépend. La fédération GSG ID (`gsg-id-federate`) a été

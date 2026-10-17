@@ -58,6 +58,18 @@ uri = "pg-functions://postgres/public/custom_access_token_hook"
 # La fédération GSG ID (gsg-id-federate) est retirée. Les deux fonctions
 # ci-dessous vérifient elles-mêmes leur jeton (inter-services ou secret de
 # déclenchement) : la vérification JWT Supabase de la plateforme est désactivée.
+# REG-02 Orange Money Guinée : l'initiation est appelée par le client
+# (JWT vérifié par la plateforme) ; la notification est appelée par Orange
+# (pas de JWT Supabase), authentifiée par empreinte du notif_token puis
+# reconfirmée auprès d'Orange.
+[functions.initier_paiement_orange_money]
+enabled = true
+verify_jwt = true
+
+[functions.recevoir_notification_orange_money]
+enabled = true
+verify_jwt = false
+
 [functions.kernel-export]
 enabled = true
 verify_jwt = false
