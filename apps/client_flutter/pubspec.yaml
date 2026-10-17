@@ -35,6 +35,10 @@ dependencies:
   pdf: ^3.13.0
   printing: ^5.15.0
 
+  # Paiement Orange Money (REG-02) — ouverture de la page de paiement de
+  # l'opérateur hors de l'application (navigateur ou appli Orange Money).
+  url_launcher: ^6.3.1
+
   # Scan d'exercice (M16 5/7) — photo capturée puis OCR 100% embarqué : la
   # photo elle-même ne quitte jamais l'appareil, voir la migration
   # `20260906001509`.

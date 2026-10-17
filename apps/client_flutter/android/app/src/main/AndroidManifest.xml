@@ -25,9 +25,24 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Le lien de retour Orange Money sert uniquement à ramener
+                 l'application au premier plan : aucune route Flutter ne doit
+                 être poussée à partir de son chemin. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Retour depuis la page Orange Money (REG-02) : le lien
+                 io.gsg.ecoshop://paiement/retour ramène l'utilisateur dans
+                 l'application, où l'écran de suivi relit aussitôt le statut. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="io.gsg.ecoshop" android:host="paiement"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -45,6 +60,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Ouverture de la page de paiement Orange Money (url_launcher). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

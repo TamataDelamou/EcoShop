@@ -1,7 +1,11 @@
 /// Fournisseur de paiement — port agnostique (`public.type_fournisseur_paiement`).
 enum TypeFournisseurPaiement {
   cinetpay('cinetpay'),
-  mobileMoney('mobile_money');
+  mobileMoney('mobile_money'),
+
+  /// Orange Money Guinée en intégration directe (REG-02) : configuré par la
+  /// Direction depuis l'écran dédié, jamais par le formulaire générique.
+  orangeMoneyGn('orange_money_gn');
 
   const TypeFournisseurPaiement(this.code);
 
@@ -10,6 +14,7 @@ enum TypeFournisseurPaiement {
   String get libelle => switch (this) {
         TypeFournisseurPaiement.cinetpay => 'CinetPay',
         TypeFournisseurPaiement.mobileMoney => 'Mobile Money',
+        TypeFournisseurPaiement.orangeMoneyGn => 'Orange Money',
       };
 
   static TypeFournisseurPaiement depuisCode(String? code) => TypeFournisseurPaiement.values.firstWhere(

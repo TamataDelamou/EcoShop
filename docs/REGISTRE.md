@@ -20,7 +20,7 @@ attendue), `clos`.
 | REG-01.1 | K1 — Délestage des dépendances au Kernel (identité, référentiels) | **P0** | clos (2026-10-17) |
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
-| REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — serveur livré (L1-L4), client Flutter à venir |
+| REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — serveur (L1-L4) et écrans (L5) livrés ; reste L7 |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
@@ -156,9 +156,35 @@ Non-régression : 03 (6/6), 38 (28/28), 50 (32/32), 53 (49/49), 56 (18/18),
 57 (18/18). Non vérifié : appel réel à Orange (bac à sable non encore
 obtenu) et exécution des Edge Functions dans le runtime Supabase.
 
-**Reste à faire** : L5 (écrans Flutter : activation par la Direction, choix
-du moyen de paiement, redirection et retour), L7 (relance des transactions
-restées sans notification, rapprochement quotidien). Points à confirmer sur
+**L5 — écrans Flutter, livrés le 2026-10-17** (`lib/features/paiement_mobile/`) :
+
+- *Payer avec Orange Money* : bouton sur la fiche élève (parent confirmé ou
+  élève, quand un reste à payer existe) et option « Orange Money » au
+  paiement d'une commande marketplace. Écran de paiement : récapitulatif,
+  montant animé, choix Totalité / Moitié / Autre montant (scolarité,
+  plafonné au reste à payer), étapes expliquées, garantie « l'argent va
+  directement sur le compte de l'établissement », erreurs serveur traduites.
+- *Suivi du paiement* : ouverture de la page Orange Money, statut relu
+  toutes les 3 s et à chaque retour dans l'application, animation
+  d'attente, chronomètre, aide après 5 min, écran de confirmation (montant,
+  référence Orange, date) ou d'échec ; solde/commandes rafraîchis au succès.
+- *Espace Orange Money de la Direction* (menu Direction et Marketplace) :
+  état d'activation, indicateurs du jour animés (montant confirmé,
+  paiements, en cours, non aboutis), formulaire d'activation (mode test /
+  production avec confirmation), identifiants jamais réaffichés, derniers
+  paiements en direct.
+- Android : lien de retour `io.gsg.ecoshop://paiement/retour` qui ramène
+  l'application au premier plan ; dépendance `url_launcher` ajoutée.
+- Tests : `test/features/paiement_mobile/paiement_mobile_test.dart`
+  (domaine, plafonnement du montant, parcours complet jusqu'à la
+  confirmation, montant imposé pour une commande, erreurs, suivi arrêté
+  après un statut final, activation Direction).
+- **À vérifier sur le poste** (aucune chaîne Flutter disponible dans
+  l'environnement de développement assisté) : `flutter pub get`,
+  `flutter analyze`, `flutter test`.
+
+**Reste à faire** : L7 (relance des transactions restées sans
+notification, rapprochement quotidien). Points à confirmer sur
 la documentation Orange Guinée : chemins, code pays, devise de test, format
 de la notification — regroupés dans `CONFIG_ORANGE`
 (`_shared/orange_money_client.ts`). Recommandation : **Orange Money Guinée en direct** pour le

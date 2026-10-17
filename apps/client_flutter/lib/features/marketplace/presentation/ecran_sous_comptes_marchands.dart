@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
 import '../application/marketplace_providers.dart';
 import '../domain/enums_marketplace.dart';
 import '../domain/sous_compte_marchand.dart';
@@ -29,14 +30,31 @@ class EcranSousComptesMarchands extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => const Center(child: Text('Indisponible hors connexion pour le moment.')),
         data: (liste) {
-          if (liste.isEmpty) {
-            return const Center(child: Text('Aucun sous-compte configuré. Ajoutez CinetPay ou Mobile Money.'));
-          }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: liste.length,
-            itemBuilder: (context, i) {
-              final sc = liste[i];
+            itemCount: liste.length + 1,
+            itemBuilder: (context, index) {
+              // Première carte : accès permanent à l'espace Orange Money
+              // (activation par identifiants marchands, jamais par ce formulaire).
+              if (index == 0) {
+                final orangeActif = liste.any((sc) => sc.fournisseur == TypeFournisseurPaiement.orangeMoneyGn);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: ListTile(
+                    leading: const Icon(Icons.phone_iphone_rounded, color: Color(0xFFFF7900)),
+                    title: const Text('Orange Money'),
+                    subtitle: Text(orangeActif ? 'Activé — voir les paiements' : 'Activer le paiement en ligne'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranOrangeMoneyEtablissement(etablissementId: etablissementId),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final sc = liste[index - 1];
+              if (sc.fournisseur == TypeFournisseurPaiement.orangeMoneyGn) return const SizedBox.shrink();
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
@@ -85,6 +103,7 @@ class EcranSousComptesMarchands extends ConsumerWidget {
                 initialValue: fournisseur,
                 decoration: const InputDecoration(labelText: 'Fournisseur'),
                 items: TypeFournisseurPaiement.values
+                    .where((f) => f != TypeFournisseurPaiement.orangeMoneyGn)
                     .map((f) => DropdownMenuItem(value: f, child: Text(f.libelle)))
                     .toList(),
                 onChanged: existant != null ? null : (v) => setState(() => fournisseur = v!),

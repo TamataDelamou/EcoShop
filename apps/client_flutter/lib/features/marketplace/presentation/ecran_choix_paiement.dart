@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 
+import '../../auth/application/auth_providers.dart';
+import '../../paiement_mobile/presentation/ecran_paiement_orange_money.dart';
 import '../application/marketplace_providers.dart';
 import '../domain/enums_marketplace.dart';
 import '../domain/ligne_commande.dart';
@@ -66,6 +68,26 @@ class _EcranChoixPaiementState extends ConsumerState<EcranChoixPaiement> {
                 montantLigne: l.prix * l.quantite,
               ))
           .toList());
+      // Orange Money (REG-02) : la ligne `paiements` n'est créée par le
+      // serveur qu'une fois le paiement confirmé par l'opérateur ; on enchaîne
+      // donc directement sur le parcours de paiement en ligne.
+      if (sousCompte.fournisseur == TypeFournisseurPaiement.orangeMoneyGn) {
+        if (!mounted) return;
+        final profileId = widget.profileId;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => EcranPaiementOrangeMoney.commande(
+              commandeId: creee.id,
+              referenceCommande: creee.reference,
+              montant: creee.montantTotal + creee.montantFrais,
+              devise: ref.read(etablissementActifProvider)?.deviseCode ?? 'GNF',
+              auSucces: (ref) => ref.invalidate(mesCommandesProvider(profileId)),
+            ),
+          ),
+        );
+        return;
+      }
+
       await depot.initierPaiement(construirePaiement(
         etablissementId: widget.etablissementId,
         commandeId: creee.id,

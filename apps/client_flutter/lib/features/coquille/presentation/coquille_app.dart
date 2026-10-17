@@ -37,6 +37,7 @@ import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
 import '../../rh_personnel/presentation/ecran_tableau_bord_rh.dart';
 import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/presentation/ecran_cahier_encaissements.dart';
+import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
 import '../../scolarite/presentation/ecran_creation_inscription.dart';
 import '../../scolarite/presentation/ecran_parametres_financiers.dart';
 import '../../scolarite/presentation/ecran_reinscription.dart';
@@ -1078,6 +1079,20 @@ class _VueProfil extends ConsumerWidget {
                       MaterialPageRoute(
                         builder: (_) => EcranCahierEncaissements(
                           etablissementId: etablissement.id,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.phone_iphone_rounded, color: Color(0xFFFF7900)),
+                    title: const Text('Paiement Orange Money'),
+                    subtitle: const Text('Activation et suivi des paiements en ligne'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranOrangeMoneyEtablissement(
+                          etablissementId: etablissement.id,
+                          devise: etablissement.deviseCode,
                         ),
                       ),
                     ),

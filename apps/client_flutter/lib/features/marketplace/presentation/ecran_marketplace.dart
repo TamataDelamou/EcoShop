@@ -9,6 +9,7 @@ import 'ecran_catalogue.dart';
 import 'ecran_mes_commandes.dart';
 import 'ecran_panier.dart';
 import 'ecran_sous_comptes_marchands.dart';
+import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
 
 /// Point d'entrée de l'onglet Boutique (M13) — catalogue public, accès au
 /// panier et à l'historique de commandes, et, pour la direction, à la
@@ -48,6 +49,12 @@ class EcranMarketplace extends ConsumerWidget {
                   'sous_comptes' => MaterialPageRoute(
                       builder: (_) => EcranSousComptesMarchands(etablissementId: etablissement.id),
                     ),
+                  'orange_money' => MaterialPageRoute(
+                      builder: (_) => EcranOrangeMoneyEtablissement(
+                        etablissementId: etablissement.id,
+                        devise: etablissement.deviseCode,
+                      ),
+                    ),
                   _ => MaterialPageRoute(
                       builder: (_) => EcranAnomaliesCommandes(etablissementId: etablissement.id),
                     ),
@@ -56,6 +63,7 @@ class EcranMarketplace extends ConsumerWidget {
               },
               itemBuilder: (context) => const [
                 PopupMenuItem(value: 'sous_comptes', child: Text('Sous-comptes marchands')),
+                PopupMenuItem(value: 'orange_money', child: Text('Orange Money')),
                 PopupMenuItem(value: 'anomalies', child: Text('Anomalies de commandes')),
               ],
             ),

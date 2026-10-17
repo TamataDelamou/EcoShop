@@ -6,6 +6,8 @@ import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/auth/role_racine.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../paiement_mobile/presentation/ecran_paiement_orange_money.dart';
+import '../../paiement_mobile/presentation/widgets/identite_orange_money.dart';
 import '../application/scolarite_providers.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
 import '../../vie_scolaire/presentation/ecran_suivi_vie_scolaire.dart';
@@ -147,7 +149,7 @@ class EcranFicheEleve extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Text('Aucune inscription active — rien à encaisser.'),
                   )
-                : _CarteFinanciere(inscription: liste.first, estDirection: estDirection),
+                : _CarteFinanciere(inscription: liste.first, estDirection: estDirection, nomEleve: fiche.nomComplet),
           ),
           const SizedBox(height: 20),
           Text('Historique de classes', style: Theme.of(context).textTheme.titleMedium),
@@ -185,15 +187,20 @@ class EcranFicheEleve extends ConsumerWidget {
 /// Carte solde + bouton d'encaissement + statut boursier (M15quater) —
 /// solde toujours calculé côté serveur, jamais recalculé ici.
 class _CarteFinanciere extends ConsumerWidget {
-  const _CarteFinanciere({required this.inscription, required this.estDirection});
+  const _CarteFinanciere({required this.inscription, required this.estDirection, required this.nomEleve});
 
   final Inscription inscription;
   final bool estDirection;
+  final String nomEleve;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final solde = ref.watch(soldeScolariteProvider(inscription.id));
     final palette = context.palette;
+    final role = ref.watch(profilProvider).value?.roleRacine;
+    // Paiement en ligne : réservé au payeur (parent confirmé ou élève), le
+    // serveur le revérifie ; le personnel encaisse au guichet.
+    final peutPayerEnLigne = role == RoleRacine.parent || role == RoleRacine.eleve;
 
     return Card(
       child: Padding(
@@ -219,6 +226,37 @@ class _CarteFinanciere extends ConsumerWidget {
                 ],
               ),
             ),
+            if (peutPayerEnLigne && (solde.value?.solde ?? 0) > 0) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  key: const Key('payer_scolarite_orange'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: CouleursOrangeMoney.orange,
+                    foregroundColor: CouleursOrangeMoney.encre,
+                    textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EcranPaiementOrangeMoney.scolarite(
+                        inscriptionId: inscription.id,
+                        nomEleve: nomEleve,
+                        resteAPayer: solde.value!.solde,
+                        devise: ref.read(etablissementActifProvider)?.deviseCode ?? 'GNF',
+                        auSucces: (ref) {
+                          ref.invalidate(soldeScolariteProvider(inscription.id));
+                          ref.invalidate(encaissementsDeInscriptionProvider(inscription.id));
+                        },
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.phone_iphone_rounded),
+                  label: const Text('Payer avec Orange Money'),
+                ),
+              ),
+            ],
             if (inscription.boursier) ...[
               const SizedBox(height: 8),
               Row(
