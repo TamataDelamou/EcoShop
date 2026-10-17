@@ -22,7 +22,7 @@ attendue), `clos`.
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
-| REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
+| REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17) — à vérifier sur le poste ; courriel de confirmation à venir |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | ouvert |
@@ -280,7 +280,34 @@ lancer sur le poste**.
 
 ## REG-04 — Création et validation d'un nouvel établissement (fondateur)
 
-**Priorité** : P1. **Statut** : ouvert. Dette tracée le 2026-09-17
+**Priorité** : P1. **Statut** : livré le 2026-10-17 (cahier §5.3 et §30.1).
+
+Parcours livré :
+
+1. **Fondateur** — sur l'écran « Qui êtes-vous ? » (compte neuf), carte
+   « Vous dirigez une école ? » → formulaire : nom, pays (référentiel),
+   ville, nombre d'élèves, adresse, n° d'autorisation d'ouverture,
+   téléphone, courriel, message. Puis suivi de la demande (envoyée → examen
+   GSG → ouverture), motif affiché en cas de refus avec possibilité de
+   soumettre une demande corrigée. Une Direction existante peut aussi
+   demander un nouvel établissement (menu Direction).
+2. **Administrateur GSG** — menu « Demandes d'établissement » : fiche
+   complète de chaque demande, Valider (confirmation) ou Refuser (motif
+   obligatoire, transmis au demandeur).
+3. **Validation** — l'établissement est créé avec la devise, la langue et
+   le fuseau du pays ; le demandeur devient Direction (jamais
+   auto-attribué), est rattaché et l'établissement devient son
+   établissement actif : il entre directement dans son espace.
+
+Migration `…1532` (table `demandes_etablissement`, une demande en cours par
+compte, aucune écriture directe ; RPC `soumettre_demande_etablissement`,
+`traiter_demande_etablissement`, `demandes_etablissement_a_traiter`).
+Vérification : pgTAP `61` 20/20 ; tests Flutter
+`test/features/creation_etablissement/` (à lancer sur le poste).
+
+**Reste** : le courriel automatique de confirmation de soumission (§5.3) —
+aucune infrastructure d'envoi de courriel n'existe encore (à décider :
+Resend ou équivalent). Dette tracée le 2026-09-17
 (`docs/AUDIT_ECOSHOP_FLUTTER.md`, commit `7c96c35`) : aucun parcours ne
 permet aujourd'hui de créer un établissement autrement que par insertion SQL
 directe — aucun client réel ne peut être accueilli sans lui.

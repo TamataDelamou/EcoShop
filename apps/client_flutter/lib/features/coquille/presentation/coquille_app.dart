@@ -39,6 +39,8 @@ import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/presentation/ecran_cahier_encaissements.dart';
 import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
 import '../../themes/presentation/ecran_identite_visuelle.dart';
+import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
+import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
 import '../../themes/application/theme_providers.dart';
 import '../../scolarite/presentation/ecran_creation_inscription.dart';
 import '../../scolarite/presentation/ecran_parametres_financiers.dart';
@@ -1106,6 +1108,15 @@ class _VueProfil extends ConsumerWidget {
                     ),
                   ),
                   ListTile(
+                    leading: const Icon(Icons.add_business_outlined),
+                    title: const Text('Ouvrir un nouvel établissement'),
+                    subtitle: const Text('Demande validée par Global Service Groupe'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const EcranDemandeEtablissement()),
+                    ),
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.palette_outlined),
                     title: const Text('Identité visuelle'),
                     subtitle: const Text("Couleur et logo de l'établissement"),
@@ -1158,6 +1169,17 @@ class _VueProfil extends ConsumerWidget {
           ),
         // Validation GSG des comptes Vendeur (cahier §27.2/§30.2, palier 1)
         // — réservée à l'Administrateur GSG, seul rôle qui en a le droit.
+        // Validation GSG des demandes de création d'établissement (REG-04,
+        // cahier §30.1) — même garde que la validation des vendeurs.
+        if (p.roleRacine == RoleRacine.adminGsg)
+          ListTile(
+            leading: const Icon(Icons.add_business_outlined),
+            title: const Text("Demandes d'établissement"),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranValidationEtablissementsGsg()),
+            ),
+          ),
         if (p.roleRacine == RoleRacine.adminGsg)
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),

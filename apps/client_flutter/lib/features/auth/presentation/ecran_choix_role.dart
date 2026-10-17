@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
+import '../../creation_etablissement/presentation/carte_demande_etablissement.dart';
 import '../application/auth_providers.dart';
 import '../application/connexion_controller.dart';
 import '../domain/auth_repository.dart';
@@ -68,8 +69,9 @@ class _EcranChoixRoleState extends ConsumerState<EcranChoixRole> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ce choix est définitif. Un compte enseignant, de direction '
-                  'ou vendeur s’obtient sur invitation de votre établissement.',
+                  'Ce choix est définitif. Un compte enseignant ou vendeur '
+                  's’obtient sur invitation ; pour fonder une école, faites '
+                  'une demande ci-dessous.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
@@ -115,6 +117,10 @@ class _EcranChoixRoleState extends ConsumerState<EcranChoixRole> {
                         )
                       : const Text('Continuer'),
                 ),
+                const SizedBox(height: 28),
+                // Parcours fondateur (REG-04, cahier §5.3) : jamais un rôle
+                // choisi ici, une demande validée par Global Service Groupe.
+                const CarteDemandeEtablissement(),
               ],
             ),
           ),
