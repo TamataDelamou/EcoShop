@@ -29,6 +29,20 @@ dans `docs/REGISTRE.md`).
    `indicateurs_notifications()`.
 4. Les messages terminés sont purgés après 90 jours (`purger_notifications`).
 
+## État au 2026-10-17
+
+- Domaine `globalservicegroupe.com` (DNS chez Cloudflare) **déjà authentifié
+  dans Brevo** : DKIM `brevo1._domainkey`, DMARC `p=none`. Rien à refaire à
+  l'étape 1, sauf supprimer le code `brevo-code` en double quand Brevo
+  confirme lequel est actif.
+- Réception par Cloudflare Email Routing (enregistrements MX + SPF uniques,
+  posés par Cloudflare), adresses testées et fonctionnelles :
+  - `contact@globalservicegroupe.com` — adresse publique de GSG, commune à
+    tous les projets (« Répondre à » des courriels, pied de message) ;
+  - `direction@globalservicegroupe.com` — alertes internes (backoffice) ;
+  - `assoshop@globalservicegroupe.com`.
+- `ne-pas-repondre@` n'a pas de boîte : elle sert uniquement à l'envoi.
+
 ## Étape 1 — Authentifier le domaine dans Brevo (une seule fois)
 
 Dans Brevo : **Paramètres → Expéditeurs, domaines et IP dédiées → Domaines →
@@ -64,7 +78,7 @@ supabase secrets set BREVO_API_KEY=<clé copiée depuis Brevo>
 supabase secrets set NOTIFICATIONS_DECLENCHEUR_SECRET=$(openssl rand -hex 32)
 supabase secrets set COURRIEL_EXPEDITEUR=ne-pas-repondre@globalservicegroupe.com
 supabase secrets set COURRIEL_SUPPORT=contact@globalservicegroupe.com
-supabase secrets set COURRIEL_ADMIN_GSG=<adresse(s) de l'équipe, séparées par des virgules>
+supabase secrets set COURRIEL_ADMIN_GSG=direction@globalservicegroupe.com
 supabase secrets set URL_APPLICATION=https://globalservicegroupe.com
 supabase functions deploy envoyer_notifications
 ```
