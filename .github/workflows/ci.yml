@@ -1,4 +1,4 @@
-name: CI — Socle EcoShop (M0→M15)
+name: CI — EcoShop
 
 on:
   push:
@@ -33,10 +33,10 @@ jobs:
       - name: Démarrer la stack locale
         run: supabase start
 
-      - name: Réinitialiser la base (migrations M0→M15 + seed M0)
+      - name: Réinitialiser la base (toutes les migrations + seed M0)
         run: supabase db reset
 
-      - name: Tests pgTAP (RLS 01→36)
+      - name: Tests pgTAP (tous les scripts de tests/rls)
         run: supabase test db --local tests/rls
 
       - name: Appliquer les seeds complémentaires (M4→M14)
