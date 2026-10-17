@@ -10,15 +10,19 @@ import 'ecran_journal_comptable.dart';
 import 'ecran_journaux.dart';
 import 'ecran_plan_comptable.dart';
 import 'ecran_prevision_tresorerie.dart';
+import 'ecran_referentiel_comptable.dart';
 import 'ecran_tendances.dart';
 
 /// Menu d'entrée de la comptabilité (M14) — partie double sans OHADA,
 /// réservé direction/finance (`est_comptable` côté serveur ; ce gating
 /// client est purement ergonomique).
 class EcranComptabilite extends StatelessWidget {
-  const EcranComptabilite({super.key, required this.etablissementId});
+  const EcranComptabilite({super.key, required this.etablissementId, this.devise = 'GNF'});
 
   final String etablissementId;
+
+  /// Devise de l'établissement — seuil du Système minimal de trésorerie.
+  final String devise;
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +35,10 @@ class EcranComptabilite extends StatelessWidget {
           _tuile(context, Icons.receipt_long_outlined, context.palette.primaire, 'Écritures récentes',
               'Saisie et consultation', () => EcranEcrituresRecentes(etablissementId: etablissementId)),
           _section(context, 'Configuration'),
+          _tuile(context, Icons.gavel_outlined, context.palette.primaire, 'Référentiel comptable',
+              'Simplifié, SYSCOHADA ou SYCEBNL', () => EcranReferentielComptable(etablissementId: etablissementId, devise: devise)),
           _tuile(context, Icons.account_tree_outlined, context.palette.primaire, 'Plan comptable',
-              'Structure ouverte, arborescente', () => EcranPlanComptable(etablissementId: etablissementId)),
+              'Comptes et sous-comptes', () => EcranPlanComptable(etablissementId: etablissementId)),
           _tuile(context, Icons.menu_book_outlined, context.palette.primaire, 'Journaux',
               'Opérations, banque, caisse, achats, ventes', () => EcranJournaux(etablissementId: etablissementId)),
           _section(context, 'Documents'),

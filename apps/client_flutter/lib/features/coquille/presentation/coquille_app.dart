@@ -1042,7 +1042,7 @@ class _VueProfil extends ConsumerWidget {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) =>
-                        EcranComptabilite(etablissementId: etablissement.id),
+                        EcranComptabilite(etablissementId: etablissement.id, devise: etablissement.deviseCode),
                   ),
                 ),
               );

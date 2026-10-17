@@ -4,11 +4,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/widgets/shimmer.dart';
 import '../application/comptabilite_providers.dart';
+import '../domain/comptabilite_repository.dart';
 import '../domain/enums_comptabilite.dart';
 import '../domain/plan_comptable.dart';
 
-/// Plan comptable (M14) — arbre OUVERT de comptes, aucune structure OHADA
-/// imposée. Configuration en ligne uniquement (comme les salles en M11).
+/// Plan comptable (M14, REG-03 C1) — arbre ouvert en référentiel simplifié ;
+/// en référentiel OHADA, comptes réglementaires verrouillés et sous-comptes
+/// seulement. Configuration en ligne uniquement (comme les salles en M11).
 class EcranPlanComptable extends ConsumerWidget {
   const EcranPlanComptable({super.key, required this.etablissementId});
 
@@ -42,13 +44,22 @@ class EcranPlanComptable extends ConsumerWidget {
               return Card(
                 margin: const EdgeInsets.only(bottom: 10),
                 child: ListTile(
+                  contentPadding: EdgeInsets.only(left: 16.0 + 8.0 * (compte.code.length.clamp(1, 6) - 1).toDouble(), right: 8),
                   leading: CircleAvatar(child: Text(compte.type.libelle.substring(0, 1))),
                   title: Text(compte.libelle),
-                  subtitle: Text(compte.type.libelle),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: () => _ouvrirFormulaire(context, ref, compte),
-                  ),
+                  subtitle: Text([
+                    compte.type.libelle,
+                    if (compte.reglementaire) compte.extensionEcoshop ? 'Sous-compte EcoShop' : 'Plan réglementaire',
+                  ].join(' · ')),
+                  trailing: compte.reglementaire
+                      ? const Tooltip(
+                          message: 'Compte réglementaire : non modifiable. Ajoutez un sous-compte avec le bouton +.',
+                          child: Icon(Icons.lock_outline),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _ouvrirFormulaire(context, ref, compte),
+                        ),
                 ),
               );
             },
@@ -84,7 +95,10 @@ class EcranPlanComptable extends ConsumerWidget {
               TextField(
                 controller: codeCtrl,
                 enabled: existant == null,
-                decoration: const InputDecoration(labelText: 'Code (ex. 520)'),
+                decoration: const InputDecoration(
+                  labelText: 'Code (ex. 520)',
+                  helperText: 'En référentiel OHADA : prolongez un compte existant (ex. 52101 sous 521).',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(controller: intituleCtrl, decoration: const InputDecoration(labelText: 'Intitulé')),
@@ -117,7 +131,20 @@ class EcranPlanComptable extends ConsumerWidget {
       intitule: intituleCtrl.text.trim(),
       type: type,
     );
-    await ref.read(comptabiliteRepositoryProvider).enregistrerCompte(compte);
+    try {
+      await ref.read(comptabiliteRepositoryProvider).enregistrerCompte(compte);
+    } on ErreurComptabilite catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(switch (e.code) {
+          'SOUS_COMPTE_INVALIDE' =>
+            'En référentiel OHADA, un nouveau compte doit prolonger un compte du plan (ex. 52101 sous 521).',
+          'COMPTE_REGLEMENTAIRE_PROTEGE' => 'Ce code est un compte réglementaire : il ne peut pas être modifié.',
+          _ => 'Enregistrement impossible pour le moment.',
+        }),
+      ));
+      return;
+    }
     ref.invalidate(planComptableProvider(etablissementId));
   }
 }

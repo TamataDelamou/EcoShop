@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | validé (2026-10-17) : 4 référentiels, lots C1-C5 — à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 livré (2026-10-17) — C2-C5 à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -273,8 +273,36 @@ porté au RCCM). Référentiel présumé : **SYCEBNL** (entité confessionnelle)
 à confirmer à la lecture du RCCM. Le lot SYCEBNL est donc à soigner en
 priorité. Le caractère « réseau » rejoint M19 (Réseau d'établissements).
 
-Prochaine étape : lot **C1** (référentiel par établissement, plans de
-référence, assistant de choix).
+**Lot C1 livré (2026-10-17)** — migration `…1534` :
+- plans de référence en lecture seule (`plans_comptables_reference`) :
+  SYSCOHADA révisé (commun SMT / normal, numéros et intitulés relevés sur le
+  plan officiel) et SYCEBNL (relevé sur une copie non officielle, toutes les
+  lignes `a_relire`), réduits aux comptes utiles à une école, plus des
+  sous-comptes EcoShop signalés (`extension_ecoshop`) : scolarité,
+  inscription, cantine, transport, familles débitrices, Orange Money (5521) ;
+- seuil SMT « services » (`seuils_smt_services`) : 30 M FCFA (XOF/XAF) ;
+  équivalent GNF indicatif 450 M (cours du 2026-10-04), **à confirmer** ;
+- `recommander_referentiel_comptable` (forme juridique, chiffre d'affaires,
+  souhait) : recommande, ne décide pas ; `choisir_referentiel_comptable`
+  (Direction) : charge le plan, retire les comptes libres sans écriture,
+  historise le choix ; SMT ↔ normal toujours possible (même plan) ;
+  changement de plan refusé dès qu'une écriture existe
+  (`ECRITURES_EXISTANTES`, à lever au lot C2 par l'ouverture d'exercice) ;
+- comptes réglementaires verrouillés (`COMPTE_REGLEMENTAIRE_PROTEGE`) ;
+  sous-comptes obligatoirement rattachés à un compte réglementaire, nature
+  et parent hérités (`SOUS_COMPTE_INVALIDE` sinon) ; plan simplifié inchangé.
+- Flutter : écran « Référentiel comptable » (menu Comptabilité >
+  Configuration) — référentiel actuel, trois questions, recommandation
+  motivée, alternatives, confirmation ; plan comptable affiché en arbre avec
+  cadenas sur les comptes réglementaires ; natures actif/passif/capitaux
+  reconnues.
+- Vérification : pgTAP `63` 30/30 (non-régression M14 31-33 : 12/12) ;
+  tests Flutter `test/features/comptabilite/referentiel_comptable_test.dart`
+  — **à lancer sur le poste**.
+
+Prochaine étape : lot **C2** (pièces multi-lignes, validation,
+contre-passation, exercices et clôture ; transition d'un plan à l'autre à
+l'ouverture d'exercice).
 
 ---
 

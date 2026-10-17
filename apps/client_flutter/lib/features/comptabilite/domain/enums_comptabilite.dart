@@ -9,7 +9,10 @@ enum TypeCompte {
   banque('banque'),
   caisse('caisse'),
   charge('charge'),
-  produit('produit');
+  produit('produit'),
+  actif('actif'),
+  passif('passif'),
+  capitaux('capitaux');
 
   const TypeCompte(this.code);
 
@@ -21,6 +24,9 @@ enum TypeCompte {
         TypeCompte.caisse => 'Caisse',
         TypeCompte.charge => 'Charge',
         TypeCompte.produit => 'Produit',
+        TypeCompte.actif => 'Actif',
+        TypeCompte.passif => 'Passif',
+        TypeCompte.capitaux => 'Capitaux',
       };
 
   static TypeCompte depuisCode(String? code) =>

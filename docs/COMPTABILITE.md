@@ -74,3 +74,21 @@ plan OHADA imposé, l'utilisateur crée ses propres comptes.
 Les fonctions retournent des ensembles de lignes ; la mise en forme
 Excel/PDF est réalisée côté client ou par une Edge Function (à livrer en M14
 complément ou M20 reporting), à partir de `exporter_journal_json(...)`.
+
+## 10. Référentiel au choix de l'établissement (REG-03, lot C1)
+
+Depuis le 2026-10-17, le plan ouvert décrit ci-dessus n'est plus que le
+référentiel **simplifié**. L'établissement choisit (menu Comptabilité >
+Référentiel comptable) entre :
+
+| Référentiel | Plan de comptes |
+|---|---|
+| Simplifié | Ouvert (ce document, §1-9) |
+| SYSCOHADA — Système minimal de trésorerie | Plan SYSCOHADA révisé, verrouillé |
+| SYSCOHADA — Système normal | Plan SYSCOHADA révisé, verrouillé |
+| SYCEBNL | Plan des entités à but non lucratif, verrouillé |
+
+Détails, sources et réserves : `docs/propositions/REG-03_COMPTABILITE.md`,
+`docs/REGISTRE.md` (REG-03) et la migration `20260906001534_referentiel_comptable.sql`.
+Les plans de référence doivent être relus par un expert-comptable inscrit
+en Guinée avant la mise en production.
