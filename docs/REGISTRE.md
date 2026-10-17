@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | décidé (2026-10-17) : au choix de l'établissement — à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | validé (2026-10-17) : 4 référentiels, lots C1-C5 — à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -258,6 +258,23 @@ comptabilité ». Les deux référentiels (simplifié actuel et SYSCOHADA révis
 coexistent ; chaque établissement choisit le sien. Développement à engager
 après recherche comparative (règle : rechercher l'état de l'art avant
 chaque implémentation).
+
+**Proposition validée sans réserve (2026-10-17)** —
+`docs/propositions/REG-03_COMPTABILITE.md` : quatre référentiels
+(simplifié, SYSCOHADA SMT, SYSCOHADA normal, **SYCEBNL** ajouté), plans de
+référence pré-remplis, comptabilisation automatique, pièces multi-lignes,
+validation/clôture, états financiers ; lots C1 → C5 ; relecture par un
+expert-comptable inscrit en Guinée avant mise en production.
+
+**Pilote** : Bambino Emmaüs appartient à un **réseau national
+d'établissements de l'Église Protestante Nationale** ; chaque établissement
+est représenté par le pasteur de la localité au moment de sa création (nom
+porté au RCCM). Référentiel présumé : **SYCEBNL** (entité confessionnelle) —
+à confirmer à la lecture du RCCM. Le lot SYCEBNL est donc à soigner en
+priorité. Le caractère « réseau » rejoint M19 (Réseau d'établissements).
+
+Prochaine étape : lot **C1** (référentiel par établissement, plans de
+référence, assistant de choix).
 
 ---
 
