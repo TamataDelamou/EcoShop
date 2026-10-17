@@ -141,13 +141,14 @@ SELECT is((SELECT c.type || '|' || p.code FROM public.plans_comptables c JOIN pu
 -- ---------------------------------------------------------------------------
 -- 5. Changement de référentiel et écritures existantes
 -- ---------------------------------------------------------------------------
+-- (Depuis le lot C2, la saisie OHADA se fait par pièces : migration 1535.)
 INSERT INTO public.journaux (etablissement_id, code, intitule, type) VALUES (:'etab', 'CAI', 'Caisse', 'caisse')
 RETURNING id AS journal \gset
-INSERT INTO public.ecritures_comptables (etablissement_id, libelle, compte_debit_id, compte_credit_id, montant, journal_id)
-SELECT :'etab', 'Scolarité octobre',
-  (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab' AND code = '571'),
-  (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab' AND code = '70521'),
-  500000, :'journal';
+SELECT public.ouvrir_exercice(:'etab', '2026-01-01', '2026-12-31');
+SELECT public.valider_piece(public.enregistrer_piece(:'etab', :'journal', '2026-10-05', 'Scolarité octobre',
+  jsonb_build_array(
+    jsonb_build_object('compte_id', (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab' AND code = '571'), 'debit', 500000),
+    jsonb_build_object('compte_id', (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab' AND code = '70521'), 'credit', 500000))));
 
 SELECT throws_ok(format($$SELECT public.choisir_referentiel_comptable(%L, 'syscohada_normal', 'societe')$$, :'etab'),
   'ECRITURES_EXISTANTES', 'changer de plan avec des écritures est refusé (réservé à l''ouverture d''exercice)');
@@ -159,11 +160,11 @@ SELECT is((SELECT intitule FROM public.plans_comptables WHERE etablissement_id =
   'Frais de scolarité', 'plan SYSCOHADA chargé avec le sous-compte scolarité 70611');
 INSERT INTO public.journaux (etablissement_id, code, intitule, type) VALUES (:'etab2', 'BQ', 'Banque', 'banque')
 RETURNING id AS journal2 \gset
-INSERT INTO public.ecritures_comptables (etablissement_id, libelle, compte_debit_id, compte_credit_id, montant, journal_id)
-SELECT :'etab2', 'Scolarité',
-  (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab2' AND code = '521'),
-  (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab2' AND code = '70611'),
-  750000, :'journal2';
+SELECT public.ouvrir_exercice(:'etab2', '2026-01-01', '2026-12-31');
+SELECT public.valider_piece(public.enregistrer_piece(:'etab2', :'journal2', '2026-10-05', 'Scolarité',
+  jsonb_build_array(
+    jsonb_build_object('compte_id', (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab2' AND code = '521'), 'debit', 750000),
+    jsonb_build_object('compte_id', (SELECT id FROM public.plans_comptables WHERE etablissement_id = :'etab2' AND code = '70611'), 'credit', 750000))));
 SELECT is(public.choisir_referentiel_comptable(:'etab2', 'syscohada_normal')->>'comptes_charges', '0',
   'SMT → normal : même plan, aucun rechargement, autorisé malgré les écritures');
 SELECT is(public.referentiel_comptable_de(:'etab2'), 'syscohada_normal', 'passage au Système normal enregistré');

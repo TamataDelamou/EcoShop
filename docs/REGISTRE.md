@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 livré (2026-10-17) — C2-C5 à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 et C2 livrés (2026-10-17) — C3-C5 à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -300,9 +300,42 @@ priorité. Le caractère « réseau » rejoint M19 (Réseau d'établissements).
   tests Flutter `test/features/comptabilite/referentiel_comptable_test.dart`
   — **à lancer sur le poste**.
 
-Prochaine étape : lot **C2** (pièces multi-lignes, validation,
-contre-passation, exercices et clôture ; transition d'un plan à l'autre à
-l'ouverture d'exercice).
+**Lot C2 livré (2026-10-17)** — migration `…1535`, exigences de l'Acte
+uniforme relatif au droit comptable traduites une à une :
+- pièces à N lignes (`pieces_comptables`, `lignes_pieces_comptables`) :
+  brouillard modifiable, validation seulement si débit = crédit ;
+  **numérotation continue** par journal et exercice attribuée à la
+  validation (art. 66 ; un brouillard supprimé ne laisse pas de trou) ;
+  référence `JOURNAL-AAAA-NNNNNN` ;
+- **irréversibilité** (art. 22) : pièce validée et lignes figées, y compris
+  hors des fonctions (déclencheurs) ; aucune écriture directe ;
+- **contre-passation en négatif** (art. 20), motivée, unique, liée à la
+  pièce d'origine ; impossible sur un exercice clôturé (report à nouveau) ;
+- OHADA : imputation sur comptes de détail seulement ; saisie M14 à deux
+  comptes fermée (`SAISIE_PAR_PIECES_OBLIGATOIRE`) ; elle reste ouverte en
+  simplifié ;
+- **exercices** contigus ; OHADA : année civile (art. 7), premier exercice
+  libre ; **clôture de période** (art. 22 3°) qui fige toutes les dates
+  antérieures, pièces comme écritures M14 ; **clôture d'exercice**
+  (Direction) : résultat, à-nouveaux validés dans l'exercice suivant (créé
+  au besoin), résultat porté en 131/139 (OHADA) ou 13 (simplifié) ;
+- journal, grand livre et balance lisent pièces + écritures M14 ; la
+  balance porte sur l'exercice de la date (à-nouveaux compris).
+- Flutter : écrans « Pièces comptables » (filtres, détail, validation,
+  modification, suppression du brouillard, contre-passation), saisie
+  multi-lignes avec totaux et équilibre en direct, « Exercices et
+  clôtures » ; l'ancienne saisie à deux comptes n'est proposée qu'en
+  simplifié.
+- Vérification : pgTAP `64` 49/49 (non-régression 31-33, 61-63 vertes) ;
+  tests Flutter `pieces_comptables_test.dart` — **à lancer sur le poste**.
+
+Reste après C2 : changement de plan de comptes pour une comptabilité qui a
+déjà un historique (table de correspondance, lot dédié) ; signaux IA M14
+(trésorerie, tendances, anomalies) encore limités aux écritures M14 — à
+étendre aux pièces avec le lot C4.
+
+Prochaine étape : lot **C3** (écritures automatiques : encaissements de
+scolarité, Orange Money, CinetPay).
 
 ---
 

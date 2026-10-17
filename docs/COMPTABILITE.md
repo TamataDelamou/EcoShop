@@ -92,3 +92,12 @@ Détails, sources et réserves : `docs/propositions/REG-03_COMPTABILITE.md`,
 `docs/REGISTRE.md` (REG-03) et la migration `20260906001534_referentiel_comptable.sql`.
 Les plans de référence doivent être relus par un expert-comptable inscrit
 en Guinée avant la mise en production.
+
+## 11. Pièces, validation et clôtures (REG-03, lot C2)
+
+Saisie par **pièces à plusieurs lignes** (brouillard → validée), numérotation
+continue à la validation, irréversibilité, correction par contre-passation en
+négatif, exercices et clôtures (période, exercice, à-nouveaux). Obligatoire en
+référentiel OHADA ; disponible aussi en simplifié, où l'écriture rapide à deux
+comptes reste possible hors période clôturée. Détail : `docs/REGISTRE.md`
+(REG-03) et `supabase/migrations/20260906001535_pieces_exercices_clotures.sql`.
