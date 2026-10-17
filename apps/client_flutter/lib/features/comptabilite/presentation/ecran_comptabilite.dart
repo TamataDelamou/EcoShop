@@ -8,6 +8,7 @@ import 'ecran_balance.dart';
 import 'ecran_comptabilisation_automatique.dart';
 import 'ecran_ecritures_recentes.dart';
 import 'ecran_ecritures_recommandees.dart';
+import 'ecran_etats_financiers.dart';
 import 'ecran_exercices_comptables.dart';
 import 'ecran_grand_livre.dart';
 import 'ecran_journal_comptable.dart';
@@ -57,6 +58,8 @@ class EcranComptabilite extends ConsumerWidget {
           _tuile(context, Icons.menu_book_outlined, context.palette.primaire, 'Journaux',
               'Opérations, banque, caisse, achats, ventes', () => EcranJournaux(etablissementId: etablissementId)),
           _section(context, 'Documents'),
+          _tuile(context, Icons.account_balance_outlined, context.palette.accent, 'États financiers',
+              'Bilan, compte de résultat, trésorerie, PDF', () => EcranEtatsFinanciers(etablissementId: etablissementId)),
           _tuile(context, Icons.article_outlined, context.palette.accent, 'Journal comptable',
               'Chronologie d\'un journal', () => EcranJournalComptable(etablissementId: etablissementId)),
           _tuile(context, Icons.book_outlined, context.palette.accent, 'Grand livre',

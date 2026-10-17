@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1, C2 et C3 livrés (2026-10-17) — C4-C5 à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4 livrés (2026-10-17) — C5 à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -360,9 +360,30 @@ civil — en Système normal, la part des frais couvrant l'exercice suivant
 relève des **produits constatés d'avance** (régularisation au lot C4).
 Hors périmètre : ventes marketplace (revenu du vendeur), facturation GSG.
 
-Prochaine étape : lot **C4** (états financiers : bilan et compte de
-résultat SMT / normal / SYCEBNL en PDF, régularisation des produits
-constatés d'avance, signaux IA étendus aux pièces).
+**Lot C4 livré (2026-10-17)** — migration `…1537` :
+- `etat_financier` : bilan actif (brut, amortissements, net), bilan passif,
+  compte de résultat, colonnes N et N-1, contrôle actif = passif, comptes
+  non repris signalés, tableau de trésorerie (état de base du SMT) ;
+  SYSCOHADA aux références officielles (AD…BZ, CA…DZ, TA…XI, relevées sur
+  des liasses publiées) ; SYCEBNL en présentation **provisoire** ;
+  simplifié par nature de compte ; rubriques stockées comme données
+  (`rubriques_etats_financiers`) : un ajustement de l'expert-comptable ne
+  demande pas de code ;
+- **produits constatés d'avance** (477) : prorata de l'année scolaire de
+  l'inscription au-delà du 31/12 (scolarité, cantine, transport ; les frais
+  d'inscription restent acquis), pièce au 31/12 et extourne au 1er janvier,
+  une seule fois par exercice ; aperçu avant passage ;
+- prévision de trésorerie, tendances et anomalies (doublons de pièces)
+  lisent désormais les pièces ;
+- Flutter : écran « États financiers » (choix de l'exercice, résultat,
+  équilibre, onglets Actif / Passif / Résultat / Trésorerie, carte des
+  produits constatés d'avance) et **export PDF** (A4, en-tête et logo de
+  l'établissement, mention « provisoire »).
+- Vérification : pgTAP `66` 29/29 (non-régression 33, 48, 63-65 vertes) ;
+  tests Flutter `etats_financiers_test.dart` — **à lancer sur le poste**.
+
+Prochaine étape : lot **C5** (paie → comptabilité, tableau des flux de
+trésorerie complet, notes annexes, registre des donateurs SYCEBNL).
 
 ---
 
