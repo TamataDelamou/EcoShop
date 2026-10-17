@@ -22,7 +22,7 @@ attendue), `clos`.
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
-| REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17) — à vérifier sur le poste ; courriel de confirmation à venir |
+| REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | ouvert |
@@ -305,9 +305,28 @@ compte, aucune écriture directe ; RPC `soumettre_demande_etablissement`,
 Vérification : pgTAP `61` 20/20 ; tests Flutter
 `test/features/creation_etablissement/` (à lancer sur le poste).
 
-**Reste** : le courriel automatique de confirmation de soumission (§5.3) —
-aucune infrastructure d'envoi de courriel n'existe encore (à décider :
-Resend ou équivalent). Dette tracée le 2026-09-17
+**Courriels (livrés le 2026-10-17)** — fournisseur : **Brevo** (compte GSG
+existant), domaine d'envoi `globalservicegroupe.com`. Le fondateur reçoit un
+accusé de réception, puis la décision (acceptation, ou refus avec motif) ;
+l'équipe GSG est alertée de chaque nouvelle demande. Conception « boîte
+d'envoi transactionnelle » : migration `…1533` (`notifications_sortantes`,
+mise en file dans la même transaction que l'événement, réservation
+`FOR UPDATE SKIP LOCKED` avec bail, nouvel essai à attente croissante,
+6 tentatives, clé d'idempotence, purge à 90 jours, indicateurs de
+supervision) ; Edge Function `envoyer_notifications` ; modèles HTML + texte
+versionnés dans le dépôt, sans image distante ni pistage. Vérification :
+pgTAP `62` 26/26, Deno `courriel_test.ts` 9/9. Mise en service :
+`docs/DEPLOIEMENT_COURRIEL.md` (DNS Brevo, clé API, secrets, planification,
+SMTP de Supabase Auth).
+
+**Reste** : la base Supabase EcoShop n'existe pas encore (limite de deux
+projets gratuits atteinte avec AssoShop et PharmaConnect) — création prévue
+au moment du pilote Bambino Emmaüs, directement en formule Pro. Canal SMS
+pour les fondateurs inscrits par téléphone seulement : à arbitrer entre
+l'API SMS Orange Guinée et Brevo (nom d'expéditeur à pré-enregistrer
+auprès des opérateurs, environ 3 semaines).
+
+Dette d'origine tracée le 2026-09-17
 (`docs/AUDIT_ECOSHOP_FLUTTER.md`, commit `7c96c35`) : aucun parcours ne
 permet aujourd'hui de créer un établissement autrement que par insertion SQL
 directe — aucun client réel ne peut être accueilli sans lui.

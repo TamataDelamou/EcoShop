@@ -75,6 +75,11 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
+# Envoi des courriels (REG-04) : appelée par pg_cron, en-tête x-declencheur-secret.
+[functions.envoyer_notifications]
+enabled = true
+verify_jwt = false
+
 [functions.kernel-export]
 enabled = true
 verify_jwt = false
