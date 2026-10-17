@@ -25,7 +25,7 @@ attendue), `clos`.
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
-| REG-06 | Branches locales non publiées sur le dépôt distant | P2 | ouvert |
+| REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
 ---
 
@@ -359,3 +359,12 @@ Une vingtaine de branches de travail n'existent qu'en local (seules `main`,
 `m14-comptabilite-sans-ohada` et `m15-marketplace-sans-auth` sont sur le
 dépôt distant). À publier ou à supprimer après vérification de leur fusion
 dans `main`.
+
+**Clos le 2026-10-17** : vérification faite branche par branche — les 25
+branches locales étaient **toutes déjà fusionnées** dans `main`, sans aucun
+commit propre. Chacune a été conservée sous forme d'étiquette annotée
+`archive/<nom>` (trace permanente du découpage par module, restaurable par
+`git switch -c <nom> archive/<nom>`), puis supprimée. Il ne reste que
+`main`. Côté GitHub : étiquettes publiées par `git push origin --tags`, et
+les deux branches distantes en double supprimées par
+`git push origin --delete m14-comptabilite-sans-ohada m15-marketplace-sans-auth`.
