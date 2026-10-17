@@ -16,3 +16,13 @@ final etatFinancierProvider = FutureProvider.autoDispose
 final apercuPcaProvider = FutureProvider.autoDispose.family<ApercuPca, String>((ref, exerciceId) {
   return ref.watch(etatsFinanciersRepositoryProvider).apercuPca(exerciceId);
 });
+
+final fluxTresorerieProvider = FutureProvider.autoDispose
+    .family<TableauFlux, ({String etablissementId, String exerciceId})>((ref, args) {
+  return ref.watch(etatsFinanciersRepositoryProvider).fluxTresorerie(args.etablissementId, args.exerciceId);
+});
+
+final notesAnnexesProvider = FutureProvider.autoDispose
+    .family<NotesAnnexes, ({String etablissementId, String exerciceId})>((ref, args) {
+  return ref.watch(etatsFinanciersRepositoryProvider).notesAnnexes(args.etablissementId, args.exerciceId);
+});

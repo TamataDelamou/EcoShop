@@ -1,5 +1,6 @@
-/// États financiers (REG-03, lot C4) — calculés par le serveur
-/// (`etat_financier`, migration `20260906001537`, tests/rls/66).
+/// États financiers (REG-03, lots C4 et C5) — calculés par le serveur
+/// (`etat_financier`, `tableau_flux_tresorerie`, `notes_annexes` ;
+/// migrations `20260906001537` et `20260906001541`, tests/rls/66 et 69).
 library;
 
 enum PartieEtat {
@@ -175,6 +176,129 @@ class ApercuPca {
   final List<LignePca> lignes;
 }
 
+/// Une ligne du tableau des flux de trésorerie.
+class LigneFlux {
+  const LigneFlux({required this.reference, required this.libelle, required this.total, required this.montant, this.montantN1});
+
+  factory LigneFlux.depuisJson(Map<String, dynamic> json) => LigneFlux(
+        reference: json['reference'] as String,
+        libelle: json['libelle'] as String,
+        total: json['total'] as bool? ?? false,
+        montant: _num(json['montant']) ?? 0,
+        montantN1: _num(json['montant_n1']),
+      );
+
+  final String reference;
+  final String libelle;
+  final bool total;
+  final double montant;
+  final double? montantN1;
+}
+
+/// Tableau des flux de trésorerie au modèle du référentiel : SYSCOHADA
+/// (méthode indirecte, ZA → ZH), SYCEBNL (méthode directe, ZA → ZG) ou
+/// simplifié.
+class TableauFlux {
+  const TableauFlux({
+    required this.plan,
+    required this.methode,
+    required this.provisoire,
+    required this.lignes,
+    required this.tresorerieBilan,
+    required this.ecartCloture,
+    this.operationnelDirect,
+  });
+
+  factory TableauFlux.depuisJson(Map<String, dynamic> json) => TableauFlux(
+        plan: json['plan'] as String? ?? 'simplifie',
+        methode: json['methode'] as String? ?? 'directe',
+        provisoire: json['provisoire'] as bool? ?? true,
+        lignes: [for (final l in (json['lignes'] as List<dynamic>? ?? const [])) LigneFlux.depuisJson(l as Map<String, dynamic>)],
+        tresorerieBilan: _num(json['tresorerie_bilan']) ?? 0,
+        ecartCloture: _num(json['ecart_cloture']) ?? 0,
+        operationnelDirect: _num(json['operationnel_direct']),
+      );
+
+  final String plan;
+  final String methode;
+  final bool provisoire;
+  final List<LigneFlux> lignes;
+
+  /// Trésorerie nette du bilan à la clôture (contrôle).
+  final double tresorerieBilan;
+
+  /// Trésorerie du bilan − trésorerie de clôture du tableau.
+  final double ecartCloture;
+
+  /// SYSCOHADA : flux opérationnels constatés pièce par pièce, pour
+  /// rapprocher la méthode indirecte de la réalité.
+  final double? operationnelDirect;
+
+  bool get concordant => ecartCloture.abs() < 0.5;
+
+  /// Lignes de détail nulles masquées (sauf totaux et N-1 non nul).
+  List<LigneFlux> get visibles => [
+        for (final l in lignes)
+          if (l.total || l.montant != 0 || (l.montantN1 ?? 0) != 0) l,
+      ];
+}
+
+/// Une note annexe : tableau calculé ou texte (généré ou rédigé).
+class NoteAnnexe {
+  const NoteAnnexe({
+    required this.code,
+    required this.titre,
+    required this.genre,
+    this.texte,
+    this.colonnes = const [],
+    this.lignes = const [],
+    this.modifiable,
+  });
+
+  factory NoteAnnexe.depuisJson(Map<String, dynamic> json) => NoteAnnexe(
+        code: json['code'] as String,
+        titre: json['titre'] as String,
+        genre: json['genre'] as String? ?? 'texte',
+        texte: json['texte'] as String?,
+        colonnes: [for (final c in (json['colonnes'] as List<dynamic>? ?? const [])) '$c'],
+        lignes: [
+          for (final l in (json['lignes'] as List<dynamic>? ?? const [])) [for (final v in l as List<dynamic>) v],
+        ],
+        modifiable: json['modifiable'] as String?,
+      );
+
+  final String code;
+  final String titre;
+
+  /// « tableau » ou « texte ».
+  final String genre;
+  final String? texte;
+  final List<String> colonnes;
+  final List<List<Object?>> lignes;
+
+  /// Clé de la note rédigée par l'école (null : note calculée).
+  final String? modifiable;
+
+  bool get estTableau => genre == 'tableau';
+  bool get vide => estTableau ? lignes.isEmpty : (texte == null || texte!.trim().isEmpty);
+}
+
+class NotesAnnexes {
+  const NotesAnnexes({required this.plan, required this.cloture, required this.devise, required this.notes});
+
+  factory NotesAnnexes.depuisJson(Map<String, dynamic> json) => NotesAnnexes(
+        plan: json['plan'] as String? ?? 'simplifie',
+        cloture: (json['exercice'] as Map<String, dynamic>?)?['cloture'] as bool? ?? false,
+        devise: json['devise'] as String? ?? 'GNF',
+        notes: [for (final n in (json['notes'] as List<dynamic>? ?? const [])) NoteAnnexe.depuisJson(n as Map<String, dynamic>)],
+      );
+
+  final String plan;
+  final bool cloture;
+  final String devise;
+  final List<NoteAnnexe> notes;
+}
+
 class ErreurEtatsFinanciers implements Exception {
   const ErreurEtatsFinanciers(this.code);
 
@@ -185,6 +309,7 @@ class ErreurEtatsFinanciers implements Exception {
         'EXERCICE_DEJA_CLOTURE' => 'Cet exercice est clôturé.',
         'PERIODE_CLOTUREE' => 'Le 31 décembre est déjà dans une période clôturée.',
         'REFERENTIEL_OHADA_REQUIS' => 'Réservé aux comptabilités SYSCOHADA ou SYCEBNL.',
+        'NOTE_INVALIDE' => 'Note trop longue (8 000 caractères au plus).',
         'COMPTABLE_REQUIS' || 'COMPTABLE_ECRITURE_REQUIS' => 'Vous n\'avez pas les droits de comptabilité.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
@@ -197,4 +322,9 @@ abstract interface class EtatsFinanciersRepository {
   Future<EtatFinancier> etat(String etablissementId, String exerciceId);
   Future<ApercuPca> apercuPca(String exerciceId);
   Future<double> passerPca(String exerciceId);
+  Future<TableauFlux> fluxTresorerie(String etablissementId, String exerciceId);
+  Future<NotesAnnexes> notesAnnexes(String etablissementId, String exerciceId);
+
+  /// Texte vide : la note rédigée est retirée.
+  Future<void> enregistrerNote(String exerciceId, String cle, String texte);
 }

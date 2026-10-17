@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/etats_financiers.dart';
 
-/// Implémentation Supabase (REG-03 C4) — RPC uniquement.
+/// Implémentation Supabase (REG-03 C4, C5) — RPC uniquement.
 class SupabaseEtatsFinanciersRepository implements EtatsFinanciersRepository {
   const SupabaseEtatsFinanciersRepository(this._client);
 
@@ -28,6 +28,25 @@ class SupabaseEtatsFinanciersRepository implements EtatsFinanciersRepository {
             params: {'p_exercice_id': exerciceId});
         return (json['montant'] as num?)?.toDouble() ?? 0;
       });
+
+  @override
+  Future<TableauFlux> fluxTresorerie(String etablissementId, String exerciceId) => _executer(() async {
+        final json = await _client.rpc<Map<String, dynamic>>('tableau_flux_tresorerie',
+            params: {'p_etablissement': etablissementId, 'p_exercice_id': exerciceId});
+        return TableauFlux.depuisJson(json);
+      });
+
+  @override
+  Future<NotesAnnexes> notesAnnexes(String etablissementId, String exerciceId) => _executer(() async {
+        final json = await _client.rpc<Map<String, dynamic>>('notes_annexes',
+            params: {'p_etablissement': etablissementId, 'p_exercice_id': exerciceId});
+        return NotesAnnexes.depuisJson(json);
+      });
+
+  @override
+  Future<void> enregistrerNote(String exerciceId, String cle, String texte) => _executer(() => _client.rpc<dynamic>(
+      'enregistrer_note_annexe',
+      params: {'p_exercice_id': exerciceId, 'p_cle': cle, 'p_texte': texte}));
 
   static Future<T> _executer<T>(Future<T> Function() action) async {
     try {

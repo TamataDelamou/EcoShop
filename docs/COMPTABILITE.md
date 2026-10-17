@@ -119,3 +119,13 @@ relances. Chaque don est comptabilisé automatiquement (SYCEBNL : 704x selon
 la nature, 165 pour un projet, 7925 à l'emploi des fonds). Détail :
 `docs/REGISTRE.md` (REG-03) et
 `supabase/migrations/20260906001540_registre_donateurs.sql`.
+
+## 14. Tableau des flux de trésorerie et notes annexes (REG-03, lot C5)
+
+TFT au modèle du référentiel (SYSCOHADA : méthode indirecte ZA à ZH ;
+SYCEBNL : méthode directe ZA à ZG ; simplifié), chaque mouvement de
+trésorerie étant classé selon la contrepartie de sa pièce, avec contrôle
+« trésorerie de clôture = bilan ». Notes annexes calculées et notes rédigées
+par l'école, jointes au PDF des états financiers. Détail :
+`docs/REGISTRE.md` (REG-03) et
+`supabase/migrations/20260906001541_flux_tresorerie_notes_annexes.sql`.

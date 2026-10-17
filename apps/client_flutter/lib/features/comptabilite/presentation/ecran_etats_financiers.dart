@@ -12,9 +12,10 @@ import '../application/pieces_comptables_providers.dart';
 import '../domain/etats_financiers.dart';
 import '../domain/pieces_comptables.dart';
 
-/// États financiers (REG-03 C4) : bilan, compte de résultat et trésorerie au
-/// format du référentiel de l'établissement, comparés à l'exercice précédent,
-/// avec la régularisation des produits constatés d'avance et l'export PDF.
+/// États financiers (REG-03 C4, C5) : bilan, compte de résultat, tableau des
+/// flux de trésorerie et notes annexes au format du référentiel de
+/// l'établissement, comparés à l'exercice précédent, avec la régularisation
+/// des produits constatés d'avance et l'export PDF.
 class EcranEtatsFinanciers extends ConsumerStatefulWidget {
   const EcranEtatsFinanciers({super.key, required this.etablissementId});
 
@@ -36,8 +37,24 @@ class _EcranEtatsFinanciersState extends ConsumerState<EcranEtatsFinanciers> {
     if (etablissement == null) return;
     setState(() => _enCours = true);
     try {
+      // Tableau des flux et notes annexes joints au document s'ils sont
+      // disponibles ; sinon, les états seuls.
+      final depot = ref.read(etatsFinanciersRepositoryProvider);
+      final exerciceId = _exerciceId;
+      TableauFlux? flux;
+      NotesAnnexes? notes;
+      if (exerciceId != null) {
+        try {
+          flux = await depot.fluxTresorerie(widget.etablissementId, exerciceId);
+          notes = await depot.notesAnnexes(widget.etablissementId, exerciceId);
+        } on ErreurEtatsFinanciers {
+          // Export des états seuls.
+        }
+      }
       final octets = await construireEtatsFinanciersPdf(
         etat: etat,
+        flux: flux,
+        notes: notes,
         etablissement: etablissement,
         variante: ref.read(themeVariantProvider),
         identite: await ref.read(identitePdfProvider.future),
@@ -111,7 +128,7 @@ class _EcranEtatsFinanciersState extends ConsumerState<EcranEtatsFinanciers> {
           final etat = ref.watch(etatFinancierProvider(_cle(courant.id)));
 
           return DefaultTabController(
-            length: 4,
+            length: 5,
             child: Column(children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -139,14 +156,16 @@ class _EcranEtatsFinanciersState extends ConsumerState<EcranEtatsFinanciers> {
                       Tab(text: 'Actif'),
                       Tab(text: 'Passif'),
                       Tab(text: 'Résultat'),
-                      Tab(text: 'Trésorerie'),
+                      Tab(text: 'Flux de trésorerie'),
+                      Tab(text: 'Notes annexes'),
                     ]),
                     Expanded(
                       child: TabBarView(children: [
                         _TableEtat(etat: e, partie: PartieEtat.actif),
                         _TableEtat(etat: e, partie: PartieEtat.passif),
                         _TableEtat(etat: e, partie: PartieEtat.resultat),
-                        _Tresorerie(etat: e),
+                        _OngletFlux(cle: _cle(courant.id)),
+                        _OngletNotes(cle: _cle(courant.id)),
                       ]),
                     ),
                   ]),
@@ -295,30 +314,198 @@ class _TableEtat extends StatelessWidget {
   }
 }
 
-class _Tresorerie extends StatelessWidget {
-  const _Tresorerie({required this.etat});
+String _cellule(Object? v, String colonne) {
+  if (v == null) return '—';
+  if (v is num) {
+    if (colonne.contains('%')) return '${v.toStringAsFixed(1).replaceAll('.', ',')} %';
+    return formaterMontant(v.toDouble());
+  }
+  return '$v';
+}
 
-  final EtatFinancier etat;
+/// Tableau des flux de trésorerie (REG-03 C5) : modèle du référentiel,
+/// colonne N-1, contrôle « trésorerie de clôture = bilan ».
+class _OngletFlux extends ConsumerWidget {
+  const _OngletFlux({required this.cle});
+
+  final ({String etablissementId, String exerciceId}) cle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final flux = ref.watch(fluxTresorerieProvider(cle));
+    final style = Theme.of(context).textTheme;
+    return flux.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text(e is ErreurEtatsFinanciers ? e.messageUtilisateur : 'Indisponible hors connexion.')),
+      data: (t) {
+        final zb = t.lignes.where((l) => l.reference == 'ZB').firstOrNull?.montant;
+        final ecartMethodes = t.operationnelDirect == null || zb == null ? 0.0 : zb - t.operationnelDirect!;
+        final n1 = t.lignes.any((l) => l.montantN1 != null);
+        return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 24), children: [
+          Text(
+            t.methode == 'indirecte'
+                ? 'Méthode indirecte (à partir de la capacité d\'autofinancement), modèle SYSCOHADA révisé.'
+                : t.plan == 'sycebnl'
+                    ? 'Méthode directe, modèle SYCEBNL : chaque encaissement et décaissement est classé selon sa pièce.'
+                    : 'Encaissements et décaissements classés selon leur pièce.',
+            style: style.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          for (final l in t.visibles)
+            Container(
+              key: Key('flux_${l.reference}'),
+              color: l.total ? context.palette.primaire.withValues(alpha: 0.07) : null,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                SizedBox(width: 32, child: Text(l.reference, style: style.labelSmall)),
+                Expanded(child: Text(l.libelle, style: l.total ? style.titleSmall : style.bodyMedium)),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Text(formaterMontant(l.montant), style: l.total ? style.titleSmall : style.bodyMedium),
+                  if (n1) Text('N-1 : ${l.montantN1 == null ? '—' : formaterMontant(l.montantN1!)}', style: style.bodySmall),
+                ]),
+              ]),
+            ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              key: const Key('controle_flux'),
+              leading: Icon(t.concordant ? Icons.verified_outlined : Icons.error_outline,
+                  color: t.concordant ? context.palette.primaire : Theme.of(context).colorScheme.error),
+              title: Text(t.concordant
+                  ? 'Trésorerie de clôture = trésorerie du bilan'
+                  : 'Écart de ${formaterMontant(t.ecartCloture)} avec la trésorerie du bilan'),
+              subtitle: Text([
+                'Trésorerie du bilan : ${formaterMontant(t.tresorerieBilan)}',
+                if (ecartMethodes.abs() >= 0.5)
+                  'Rapprochement : les flux opérationnels constatés pièce par pièce (${formaterMontant(t.operationnelDirect!)}) '
+                      'diffèrent de la méthode indirecte de ${formaterMontant(ecartMethodes)} — à analyser avec l\'expert-comptable.',
+              ].join('\n')),
+            ),
+          ),
+        ]);
+      },
+    );
+  }
+}
+
+/// Notes annexes (REG-03 C5) : notes calculées et notes rédigées par
+/// l'école, modifiables tant que l'exercice est ouvert.
+class _OngletNotes extends ConsumerWidget {
+  const _OngletNotes({required this.cle});
+
+  final ({String etablissementId, String exerciceId}) cle;
+
+  Future<void> _rediger(BuildContext context, WidgetRef ref, NoteAnnexe note) async {
+    final texte = await showDialog<String>(context: context, builder: (_) => _DialogueNote(note: note));
+    if (texte == null) return;
+    try {
+      await ref.read(etatsFinanciersRepositoryProvider).enregistrerNote(cle.exerciceId, note.modifiable!, texte);
+      ref.invalidate(notesAnnexesProvider(cle));
+    } on ErreurEtatsFinanciers catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.messageUtilisateur)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notes = ref.watch(notesAnnexesProvider(cle));
+    final style = Theme.of(context).textTheme;
+    return notes.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text(e is ErreurEtatsFinanciers ? e.messageUtilisateur : 'Indisponible hors connexion.')),
+      data: (n) => ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 24), children: [
+        if (!n.cloture)
+          Text('Les notes rédigées se complètent avant la clôture de l\'exercice ; elles sont ensuite figées.',
+              style: style.bodySmall),
+        for (final note in n.notes)
+          Card(
+            key: Key('note_${note.code}'),
+            child: ExpansionTile(
+              title: Text('Note ${note.code} — ${note.titre}'),
+              subtitle: note.vide ? Text(note.modifiable != null ? 'À rédiger' : 'Sans objet', style: style.bodySmall) : null,
+              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              expandedCrossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (note.estTableau && note.lignes.isNotEmpty)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowHeight: 36,
+                      dataRowMinHeight: 32,
+                      dataRowMaxHeight: 48,
+                      columns: [for (final c in note.colonnes) DataColumn(label: Text(c, style: style.labelSmall))],
+                      rows: [
+                        for (final l in note.lignes)
+                          DataRow(cells: [
+                            for (var i = 0; i < note.colonnes.length; i++)
+                              DataCell(Text(i < l.length ? _cellule(l[i], note.colonnes[i]) : '')),
+                          ]),
+                      ],
+                    ),
+                  ),
+                if (!note.estTableau && !note.vide) Text(note.texte!),
+                if (note.modifiable != null && !n.cloture)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      key: Key('rediger_${note.modifiable}'),
+                      onPressed: () => _rediger(context, ref, note),
+                      icon: const Icon(Icons.edit_note_outlined),
+                      label: Text(note.code == '1' ? 'Ajouter des précisions' : 'Rédiger'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ]),
+    );
+  }
+}
+
+class _DialogueNote extends StatefulWidget {
+  const _DialogueNote({required this.note});
+
+  final NoteAnnexe note;
+
+  @override
+  State<_DialogueNote> createState() => _DialogueNoteState();
+}
+
+class _DialogueNoteState extends State<_DialogueNote> {
+  // La note 1 mêle texte généré et précisions de l'école : on ne reprend
+  // pas le texte généré dans la saisie.
+  late final _texte = TextEditingController(text: widget.note.code == '1' ? '' : widget.note.texte);
+
+  @override
+  void dispose() {
+    _texte.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final t = etat.tresorerie;
-    Widget ligne(String libelle, double v, {bool fort = false}) => ListTile(
-          dense: true,
-          title: Text(libelle, style: fort ? Theme.of(context).textTheme.titleSmall : null),
-          trailing: Text(formaterMontant(v), style: fort ? Theme.of(context).textTheme.titleSmall : null),
-        );
-    return ListView(padding: const EdgeInsets.all(16), children: [
-      ligne('Solde au début de l\'exercice', t.soldeDebut),
-      ligne('Encaissements', t.encaissements),
-      ligne('Décaissements', t.decaissements),
-      const Divider(),
-      ligne('Solde à la fin', t.soldeFin, fort: true),
-      const SizedBox(height: 8),
-      Text(
-        'Banques, Orange Money et caisse. C\'est l\'état de base du Système minimal de trésorerie.',
-        style: Theme.of(context).textTheme.bodySmall,
+    return AlertDialog(
+      title: Text(widget.note.titre),
+      content: SizedBox(
+        width: 520,
+        child: TextField(
+          key: const Key('texte_note'),
+          controller: _texte,
+          autofocus: true,
+          minLines: 4,
+          maxLines: 12,
+          maxLength: 8000,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
       ),
-    ]);
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Retour')),
+        FilledButton(
+          key: const Key('enregistrer_note'),
+          onPressed: () => Navigator.of(context).pop(_texte.text),
+          child: const Text('Enregistrer'),
+        ),
+      ],
+    );
   }
 }

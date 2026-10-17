@@ -62,7 +62,77 @@ class _FauxEtats implements EtatsFinanciersRepository {
     pcaPasses++;
     return 1810000;
   }
+
+  final Map<String, String> notesRedigees = {};
+
+  @override
+  Future<TableauFlux> fluxTresorerie(String etablissementId, String exerciceId) async => TableauFlux.depuisJson(_flux);
+
+  @override
+  Future<NotesAnnexes> notesAnnexes(String etablissementId, String exerciceId) async => NotesAnnexes.depuisJson({
+        ..._notes,
+        'notes': [
+          ...(_notes['notes'] as List<dynamic>),
+          {
+            'code': 'A',
+            'titre': 'Faits marquants de l\'exercice',
+            'genre': 'texte',
+            'texte': notesRedigees['faits_marquants'],
+            'modifiable': 'faits_marquants',
+          },
+        ],
+      });
+
+  @override
+  Future<void> enregistrerNote(String exerciceId, String cle, String texte) async => notesRedigees[cle] = texte;
 }
+
+/// Tableau des flux reproduisant tests/rls/69 (SYSCOHADA, méthode indirecte).
+final _flux = <String, dynamic>{
+  'plan': 'syscohada',
+  'methode': 'indirecte',
+  'provisoire': true,
+  'lignes': [
+    {'reference': 'ZA', 'libelle': 'Trésorerie nette au 1er janvier', 'total': true, 'montant': 0},
+    {'reference': 'FA', 'libelle': 'Capacité d\'autofinancement globale (CAFG)', 'total': false, 'montant': 2805000},
+    {'reference': 'FB', 'libelle': '− Actif circulant HAO', 'total': false, 'montant': 0},
+    {'reference': 'FD', 'libelle': '− Variation des créances', 'total': false, 'montant': -200000},
+    {'reference': 'FE', 'libelle': '+ Variation du passif circulant', 'total': false, 'montant': 50000},
+    {'reference': 'ZB', 'libelle': 'Flux de trésorerie provenant des activités opérationnelles', 'total': true, 'montant': 2655000},
+    {'reference': 'FG', 'libelle': '− Décaissements liés aux acquisitions d\'immobilisations corporelles', 'total': false, 'montant': -600000},
+    {'reference': 'ZG', 'libelle': 'VARIATION DE LA TRÉSORERIE NETTE DE LA PÉRIODE', 'total': true, 'montant': 3455000},
+    {'reference': 'ZH', 'libelle': 'Trésorerie nette au 31 décembre (G + A)', 'total': true, 'montant': 3455000},
+  ],
+  'tresorerie_bilan': 3455000,
+  'ecart_cloture': 0,
+  'operationnel_direct': 2655000,
+};
+
+final _notes = <String, dynamic>{
+  'plan': 'syscohada',
+  'exercice': {'id': 'x2026', 'libelle': 'Exercice 2026', 'cloture': false},
+  'devise': 'GNF',
+  'notes': [
+    {
+      'code': '2',
+      'titre': 'Immobilisations',
+      'genre': 'tableau',
+      'colonnes': ['Rubrique', 'Brut début', 'Augmentations', 'Diminutions', 'Brut fin', 'Amort. et dépréc.', 'Net fin'],
+      'lignes': [
+        ['Matériel, mobilier et véhicules', 0, 600000, 0, 600000, 50000, 550000],
+      ],
+    },
+    {
+      'code': '6',
+      'titre': 'Produits',
+      'genre': 'tableau',
+      'colonnes': ['Compte', 'Exercice N', 'Exercice N-1', 'Variation %'],
+      'lignes': [
+        ['70611 Frais de scolarité', 3230000, null, null],
+      ],
+    },
+  ],
+};
 
 class _FauxPieces implements PiecesComptablesRepository {
   @override
@@ -97,6 +167,63 @@ void main() {
     );
     expect(String.fromCharCodes(octets.take(4)), '%PDF');
     expect(textePdf('Report à nouveau (+ ou −) — test…'), 'Report à nouveau (+ ou -) - test...');
+
+    // Avec tableau des flux et notes annexes : document plus complet.
+    final complet = await construireEtatsFinanciersPdf(
+      etat: EtatFinancier.depuisJson(_json),
+      flux: TableauFlux.depuisJson(_flux),
+      notes: NotesAnnexes.depuisJson(_notes),
+      etablissement: const Etablissement(id: 'e1', nom: 'Lycée Privé C4', slug: 'lycee-c4'),
+      variante: AppThemeVariant.francophoneCfa,
+    );
+    expect(String.fromCharCodes(complet.take(4)), '%PDF');
+    expect(complet.length, greaterThan(octets.length));
+  });
+
+  test('lecture du tableau des flux : contrôle de clôture, lignes nulles masquées', () {
+    final t = TableauFlux.depuisJson(_flux);
+    expect(t.concordant, isTrue);
+    expect(t.visibles.map((l) => l.reference), isNot(contains('FB')));
+    expect(t.visibles.map((l) => l.reference), contains('ZA'));
+    final n = NotesAnnexes.depuisJson(_notes);
+    expect(n.notes.first.lignes.single[6], 550000);
+  });
+
+  testWidgets('onglets : flux de trésorerie contrôlé, notes annexes et rédaction', (tester) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final etats = _FauxEtats();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        etatsFinanciersRepositoryProvider.overrideWithValue(etats),
+        piecesComptablesRepositoryProvider.overrideWithValue(_FauxPieces()),
+      ],
+      child: const MaterialApp(home: EcranEtatsFinanciers(etablissementId: 'e1')),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Flux de trésorerie'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('flux_ZH')), findsOneWidget);
+    expect(find.text('Trésorerie de clôture = trésorerie du bilan'), findsOneWidget);
+
+    await tester.tap(find.text('Notes annexes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Note 2 — Immobilisations'));
+    await tester.pumpAndSettle();
+    expect(find.text('Matériel, mobilier et véhicules'), findsOneWidget);
+
+    await tester.tap(find.text('Note A — Faits marquants de l\'exercice'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('rediger_faits_marquants')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('texte_note')), 'Ouverture d\'une classe de Terminale.');
+    await tester.tap(find.byKey(const Key('enregistrer_note')));
+    await tester.pumpAndSettle();
+
+    expect(etats.notesRedigees['faits_marquants'], 'Ouverture d\'une classe de Terminale.');
   });
 
   testWidgets('écran : résultat, bilan équilibré, passage des produits constatés d\'avance', (tester) async {

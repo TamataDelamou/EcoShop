@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4, C5 paie et donateurs livrés (2026-10-17) — TFT et notes annexes à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C5 livrés (2026-10-17) — relecture expert-comptable avant production |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -440,8 +440,42 @@ gestion des dons :
 - Vérification : pgTAP `68` 46/46, régression 01-67 inchangée ; tests
   Flutter `dons_test.dart` — **à lancer sur le poste**.
 
-Prochaine étape : fin du lot **C5** (tableau des flux de trésorerie
-complet, notes annexes).
+**Lot C5, partie 3 livrée (2026-10-17) — tableau des flux de trésorerie
+complet et notes annexes** — migration `…1541`, modèles relevés sur une
+liasse SYSCOHADA révisé publiée (BRVM) et sur le modèle SYCEBNL :
+- TFT au modèle du référentiel : **SYSCOHADA** ZA → ZH (méthode indirecte :
+  CAFG, variations du besoin de financement, investissement, capitaux
+  propres, capitaux étrangers) ; **SYCEBNL** ZA → ZG (méthode directe :
+  cotisations, subventions, générosité, manifestations, autres revenus,
+  fournisseurs, personnel ; fonds affectés en fonds propres) ; simplifié ;
+  colonne N-1 ;
+- chaque mouvement de trésorerie est rattaché à la contrepartie de **sa
+  pièce** (classement exact, sans estimation) ; les à-nouveaux font la
+  trésorerie d'ouverture, jamais un flux ;
+- contrôles publiés : trésorerie de clôture = trésorerie du bilan ; en
+  SYSCOHADA, rapprochement méthode indirecte / flux constatés pièce par
+  pièce (tout écart est affiché, jamais masqué) ;
+- rubriques stockées comme données (`rubriques_flux_tresorerie`) ;
+- notes annexes calculées : méthodes comptables (texte généré),
+  immobilisations, créances et dettes, trésorerie, variation des fonds
+  propres, produits et charges N / N-1, personnel, produits constatés
+  d'avance ; SYCEBNL : générosité par nature, fonds affectés par projet
+  (report, reçus, employés, solde), engagements reçus ;
+- notes rédigées par l'école (faits marquants, continuité, événements
+  postérieurs, engagements hors bilan, autres informations, précisions
+  sur les méthodes), figées à la clôture de l'exercice ;
+- Flutter : onglets « Flux de trésorerie » et « Notes annexes » dans les
+  états financiers ; le PDF comprend désormais le TFT et les notes.
+- Limites : présentation SYCEBNL toujours provisoire (copie non
+  officielle) ; CAFG par la méthode additive (dotations, reprises, cessions)
+  et dépréciation des stocks hors CAFG — à valider par l'expert-comptable.
+- Vérification : pgTAP `69` 38/38, régression 01-68 inchangée ; tests
+  Flutter `etats_financiers_test.dart` — **à lancer sur le poste**.
+
+**REG-03 : lots C1 à C5 livrés.** Reste avant mise en production : relecture
+par un expert-comptable inscrit en Guinée (plans, rubriques, notes),
+confirmation du référentiel de Bambino Emmaüs (RCCM) et du seuil SMT en GNF,
+puis le changement de plan avec historique (lot dédié).
 
 ---
 
