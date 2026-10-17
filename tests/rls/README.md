@@ -11,7 +11,7 @@ l'outillage Postgres/Supabase sera disponible.
 |---|---|---|
 | `01_anti_elevation.sql` | Escalade de privilège impossible via `UPDATE` direct ; rôle fixé uniquement par `choisir_role_racine()`, restreint aux rôles auto-inscriptibles | C1 |
 | `02_recursion_rls.sql` | Lecture des tables multi-tenant sans récursion RLS (`42P17`) | C2 |
-| `03_hook_jwt.sql` | `custom_access_token_hook()` émet réellement `app_metadata.role_racine` ; n'émet plus `app_metadata.gsg_id` (KER-MUT K1), y compris hérité d'un ancien jeton | C3 / KER-MUT K1 |
+| `03_hook_jwt.sql` | `custom_access_token_hook()` émet réellement `app_metadata.role_racine` ; n'émet plus `app_metadata.gsg_id` (KER-MUT K1), y compris hérité d'un ancien jeton ; colonne `gsg_id` supprimée, trigger de protection de `profiles` toujours opérant | C3 / KER-MUT K1 |
 | `04_anti_brute_force.sql` | `lier_compte_a_fiche()` verrouille après 5 échecs/heure, même avec de bons identifiants | C4 / ch. 5.8 |
 | `05_isolation_multi_tenant.sql` | Un membre ne voit que les données de ses propres établissements | multi-tenant |
 | `06_invitations.sql` | Une invitation nominative n'est acceptée que par son destinataire | ch. 5.2 |

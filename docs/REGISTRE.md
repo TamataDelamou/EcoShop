@@ -42,8 +42,7 @@ pays/devises) pour devenir exclusivement un **Control Plane centralisé
 **amendé** sur deux points :
 
 - §5.1 : `src/` n'est plus le contrat de référence d'un fournisseur
-  d'identité ou de référentiels. Il reste dans le dépôt à titre historique ;
-  son retrait est soumis au porteur de projet (voir « Point ouvert » K1).
+  d'identité ou de référentiels ; il est supprimé du dépôt (K1).
 - §5.3 : la « fédération GSG ID, couche additive » est **abandonnée**.
   L'identité est exclusivement Supabase Auth natif + `public.profiles`.
 
@@ -54,15 +53,16 @@ pays/devises) pour devenir exclusivement un **Control Plane centralisé
 | Dépendance au Kernel | Constat | Action |
 |---|---|---|
 | Fédération GSG ID (`supabase/functions/gsg-id-federate`) | Seul appel sortant au Kernel (`/v1/identity/external-identities/link`). Jamais invoqué par le client Flutter. | **Retirée** (fonction + entrée `config.toml` + secrets `GSG_KERNEL_BASE_URL/API_KEY/TIMEOUT_MS`). |
-| `gsg_id` recopié dans le JWT par `custom_access_token_hook` | Claim de confort issu de la fédération. | **Retiré du jeton** (migration `…1525`). Colonne `profiles.gsg_id` conservée, marquée obsolète : aucune donnée supprimée ; sa suppression physique est différée (voir point ouvert). |
+| `gsg_id` recopié dans le JWT par `custom_access_token_hook` | Claim de confort issu de la fédération. | **Retiré du jeton** (migration `…1525`), puis **colonne supprimée** (migration `…1527`, après redéfinition du trigger `profiles_protege_colonnes()` qui la référençait). |
 | Affichage « Identité GSG ID » (menu Profil Flutter) | Affichait « non fédérée » pour tous. | **Retiré** de l'écran et du modèle `Profil`. |
 | Sessions / gestion des utilisateurs | Déjà 100 % Supabase Auth + `profiles`. | Aucune — conforme. |
 | Référentiels pays / devise / langue / fuseau | Déjà portés localement (`etablissements.pays_code/devise_code/langue_code/fuseau_horaire`, `pays_pedagogiques`). Aucun appel au Referential Engine du Kernel. | Aucune — conforme. |
 
-**Point ouvert (porteur de projet)** : supprimer physiquement
-`profiles.gsg_id` et le dossier `src/` (miroir des contrôleurs du Kernel :
-identity, referential, referential-engine, org, product, product-registry),
-ou les conserver comme archive. Rien n'en dépend désormais.
+**Point tranché le 2026-10-17** (porteur de projet : « il faudra s'en
+débarrasser ») : le dossier `src/` (miroir des contrôleurs du Kernel :
+identity, referential, referential-engine, org, product, product-registry)
+est supprimé, ainsi que la colonne `profiles.gsg_id`. Test `03_hook_jwt`
+étendu (6/6) : colonne absente, trigger de protection toujours opérant.
 
 ### REG-01.2 — K2 : intégration du reporting (webhooks / API)
 

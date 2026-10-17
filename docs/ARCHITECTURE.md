@@ -9,8 +9,8 @@
   d'identité ni de référentiels. Il agrège les métriques et journaux d'audit
   qu'EcoShop lui pousse (`kernel-export`) et interroge EcoShop en lecture
   seule (`kernel-control-plane`), par jetons inter-services ES256. Contrat :
-  `docs/contrats/KERNEL_CONTROL_PLANE.md`. `src/` n'est plus qu'une archive
-  de l'ancien contrat (retrait soumis au porteur de projet).
+  `docs/contrats/KERNEL_CONTROL_PLANE.md`. L'ancien miroir du contrat
+  Kernel (`src/`) et la colonne `profiles.gsg_id` ont été supprimés.
 - **Client Flutter hors-ligne prioritaire** : Riverpod pour l'état, Drift/SQLite
   pour le local, file de synchronisation outbox.
 - **Port Paiement agnostique** : adaptateurs interchangeables (CinetPay,
