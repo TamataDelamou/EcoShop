@@ -20,7 +20,7 @@ attendue), `clos`.
 | REG-01.1 | K1 — Délestage des dépendances au Kernel (identité, référentiels) | **P0** | clos (2026-10-17) |
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
-| REG-02 | Proposition d'implémentation d'un opérateur Mobile Money | P1 | ouvert |
+| REG-02 | Proposition d'implémentation d'un opérateur Mobile Money | P1 | proposition remise, à valider |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
@@ -127,7 +127,12 @@ Contrat proposé au Kernel (à valider et implémenter côté Kernel) :
 
 ## REG-02 — Proposition d'implémentation d'un opérateur Mobile Money
 
-**Priorité** : P1 (après REG-01). **Statut** : ouvert.
+**Priorité** : P1 (après REG-01). **Statut** : proposition remise le
+2026-10-17 — `docs/propositions/REG-02_MOBILE_MONEY.md` — en attente de
+validation. Recommandation : **Orange Money Guinée en direct** pour le
+circuit établissement (scolarité, marketplace), CinetPay conservé pour le
+circuit GSG et en repli (couvre aussi l'ex-MTN, devenu Areeba Guinée,
+nationalisé en décembre 2025).
 
 Contexte déjà acté : `ANALYSE_GLOBALE.md` §1.3 (A3) et §5.5 prévoient un
 **Port Paiement agnostique** avec CinetPay en première implémentation (livrée,
