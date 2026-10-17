@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/paiement_mobile_repository.dart';
+import '../domain/rapprochement_mobile_money.dart';
 import '../domain/transaction_mobile_money.dart';
 
 /// Implémentation Supabase du port [PaiementMobileRepository] (REG-02).
@@ -105,6 +106,19 @@ class SupabasePaiementMobileRepository implements PaiementMobileRepository {
         active: ligne['actif'] as bool? ?? false,
         referencePublique: ligne['reference_compte'] as String?,
       );
+    });
+  }
+
+  @override
+  Future<RapprochementMobileMoney> rapprochement(String etablissementId, DateTime jour) {
+    return _executer(() async {
+      final mois = jour.month.toString().padLeft(2, '0');
+      final j = jour.day.toString().padLeft(2, '0');
+      final json = await _client.rpc<Map<String, dynamic>>(
+        'rapprochement_mobile_money',
+        params: {'p_etablissement_id': etablissementId, 'p_jour': '${jour.year}-$mois-$j'},
+      );
+      return RapprochementMobileMoney.depuisJson(json);
     });
   }
 

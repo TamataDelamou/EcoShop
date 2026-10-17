@@ -7,6 +7,7 @@ import '../../../core/widgets/shimmer.dart';
 
 import '../application/paiement_mobile_providers.dart';
 import '../domain/paiement_mobile_repository.dart';
+import '../domain/rapprochement_mobile_money.dart';
 import '../domain/transaction_mobile_money.dart';
 import 'widgets/identite_orange_money.dart';
 
@@ -26,6 +27,7 @@ class EcranOrangeMoneyEtablissement extends ConsumerWidget {
   Future<void> _actualiser(WidgetRef ref) async {
     ref.invalidate(etatOrangeMoneyProvider(etablissementId));
     ref.invalidate(transactionsMobilesEtablissementProvider(etablissementId));
+    ref.invalidate(rapprochementMobileMoneyProvider);
     await ref.read(transactionsMobilesEtablissementProvider(etablissementId).future);
   }
 
@@ -61,6 +63,8 @@ class EcranOrangeMoneyEtablissement extends ConsumerWidget {
                 devise: liste.isEmpty ? devise : liste.first.devise,
               ),
             ),
+            const SizedBox(height: 24),
+            _CarteRapprochement(etablissementId: etablissementId),
             const SizedBox(height: 24),
             Text('Compte marchand', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
@@ -158,6 +162,192 @@ class _Indicateurs extends StatelessWidget {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+/// Rapprochement d'une journée, à confronter au relevé Orange Money : on
+/// navigue de jour en jour, les écarts éventuels sont listés en clair.
+class _CarteRapprochement extends ConsumerStatefulWidget {
+  const _CarteRapprochement({required this.etablissementId});
+
+  final String etablissementId;
+
+  @override
+  ConsumerState<_CarteRapprochement> createState() => _CarteRapprochementState();
+}
+
+class _CarteRapprochementState extends ConsumerState<_CarteRapprochement> {
+  late DateTime _jour = _aujourdhui();
+
+  static DateTime _aujourdhui() {
+    final m = DateTime.now();
+    return DateTime(m.year, m.month, m.day);
+  }
+
+  bool get _estAujourdhui => _jour == _aujourdhui();
+
+  void _decaler(int jours) => setState(() => _jour = DateTime(_jour.year, _jour.month, _jour.day + jours));
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final rappro = ref.watch(
+      rapprochementMobileMoneyProvider((etablissementId: widget.etablissementId, jour: _jour)),
+    );
+    final libelleJour = _estAujourdhui
+        ? "Aujourd'hui"
+        : '${_jour.day.toString().padLeft(2, '0')}/${_jour.month.toString().padLeft(2, '0')}/${_jour.year}';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.fact_check_outlined, color: palette.primaire),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Rapprochement', style: Theme.of(context).textTheme.titleMedium),
+                ),
+                IconButton(
+                  tooltip: 'Jour précédent',
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  onPressed: () => _decaler(-1),
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    libelleJour,
+                    key: ValueKey(_jour),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Jour suivant',
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  onPressed: _estAujourdhui ? null : () => _decaler(1),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: rappro.when(
+                  loading: () => const Padding(
+                    key: ValueKey('chargement'),
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: LinearProgressIndicator(),
+                  ),
+                  error: (e, _) => Padding(
+                    key: const ValueKey('erreur'),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Rapprochement indisponible hors connexion pour le moment.',
+                      style: TextStyle(color: palette.encreSecondaire),
+                    ),
+                  ),
+                  data: (r) => _ContenuRapprochement(key: ValueKey(r.jour), rapprochement: r),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContenuRapprochement extends StatelessWidget {
+  const _ContenuRapprochement({super.key, required this.rapprochement});
+
+  final RapprochementMobileMoney rapprochement;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final r = rapprochement;
+    Widget ligne(String libelle, String valeur, {bool fort = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Expanded(child: Text(libelle, style: TextStyle(color: palette.encreSecondaire))),
+              Text(valeur, style: TextStyle(fontWeight: fort ? FontWeight.w900 : FontWeight.w600)),
+            ],
+          ),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+        ligne(
+          'Confirmé par Orange (${r.nombreConfirmes})',
+          formaterMontantMobile(r.montantConfirme, r.devise),
+          fort: true,
+        ),
+        ligne('dont scolarité', formaterMontantMobile(r.montantScolarite, r.devise)),
+        ligne('dont marketplace', formaterMontantMobile(r.montantMarketplace, r.devise)),
+        ligne('Non aboutis', '${r.nonAboutis}'),
+        ligne('En cours (tous jours)', '${r.enCours}'),
+        const SizedBox(height: 12),
+        if (r.anomalies.isEmpty)
+          Row(
+            children: [
+              Icon(Icons.verified_rounded, color: palette.succes, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Aucun écart : chaque paiement confirmé a produit son écriture.',
+                  style: TextStyle(color: palette.succes, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          )
+        else ...[
+          Text(
+            '${r.anomalies.length} écart(s) à vérifier avec le relevé Orange Money',
+            style: TextStyle(color: palette.erreur, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          for (final a in r.anomalies)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: palette.erreur.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: palette.erreur.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: palette.erreur, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(a.libelle, style: TextStyle(color: palette.encre, fontSize: 13)),
+                        const SizedBox(height: 2),
+                        Text(
+                          [
+                            formaterMontantMobile(a.montant, r.devise),
+                            if (a.reference != null) a.reference!,
+                          ].join(' · '),
+                          style: TextStyle(color: palette.encreSecondaire, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ],
     );
   }

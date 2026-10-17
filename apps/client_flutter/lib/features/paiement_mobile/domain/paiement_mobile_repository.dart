@@ -1,3 +1,4 @@
+import 'rapprochement_mobile_money.dart';
 import 'transaction_mobile_money.dart';
 
 /// Résultat de l'initiation : la page Orange Money où envoyer le payeur.
@@ -62,6 +63,9 @@ abstract interface class PaiementMobileRepository {
   });
 
   Future<EtatOrangeMoney> etatOrangeMoney(String etablissementId);
+
+  /// Rapprochement d'une journée (personnel de l'établissement).
+  Future<RapprochementMobileMoney> rapprochement(String etablissementId, DateTime jour);
 }
 
 /// Erreur métier stable, traduite en message compréhensible pour l'écran.

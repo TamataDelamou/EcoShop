@@ -73,6 +73,7 @@ supabase functions deploy kernel-export
 supabase functions deploy kernel-control-plane
 supabase functions deploy initier_paiement_orange_money
 supabase functions deploy recevoir_notification_orange_money
+supabase functions deploy relancer_paiements_orange_money
 ```
 
 Après le premier `db push`, activer le **Custom Access Token Hook** :
@@ -95,7 +96,9 @@ Orange Money Guinée (REG-02) : les identifiants marchands ne sont **pas** des
 secrets de projet — chaque établissement enregistre les siens
 (`enregistrer_identifiants_orange_money`). Seule variable optionnelle :
 `ORANGE_MONEY_URL_RETOUR` (lien de retour dans l'application, défaut
-`io.gsg.ecoshop://paiement/retour`).
+`io.gsg.ecoshop://paiement/retour`). La relance planifiée
+(`relancer_paiements_orange_money`, toutes les 5 min) attend le secret
+`PAIEMENTS_DECLENCHEUR_SECRET` dans l'en-tête `x-declencheur-secret`.
 
 En leur absence, l'export est ignoré et la lecture répond 503 : rien d'autre
 dans EcoShop n'en dépend. La fédération GSG ID (`gsg-id-federate`) a été

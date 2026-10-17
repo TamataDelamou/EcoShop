@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../data/supabase_paiement_mobile_repository.dart';
 import '../domain/paiement_mobile_repository.dart';
+import '../domain/rapprochement_mobile_money.dart';
 import '../domain/transaction_mobile_money.dart';
 import 'lanceur_url.dart';
 
@@ -48,6 +49,11 @@ final etatOrangeMoneyProvider = FutureProvider.autoDispose.family<EtatOrangeMone
 final transactionsMobilesEtablissementProvider =
     FutureProvider.autoDispose.family<List<TransactionMobileMoney>, String>((ref, etablissementId) {
   return ref.watch(paiementMobileRepositoryProvider).transactionsEtablissement(etablissementId);
+});
+
+final rapprochementMobileMoneyProvider = FutureProvider.autoDispose
+    .family<RapprochementMobileMoney, ({String etablissementId, DateTime jour})>((ref, args) {
+  return ref.watch(paiementMobileRepositoryProvider).rapprochement(args.etablissementId, args.jour);
 });
 
 /// Indicateurs du jour pour le tableau de bord Direction — affichage

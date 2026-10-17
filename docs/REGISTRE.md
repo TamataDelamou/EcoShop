@@ -20,7 +20,7 @@ attendue), `clos`.
 | REG-01.1 | K1 — Délestage des dépendances au Kernel (identité, référentiels) | **P0** | clos (2026-10-17) |
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
-| REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — serveur (L1-L4) et écrans (L5) livrés ; reste L7 |
+| REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
@@ -183,8 +183,28 @@ obtenu) et exécution des Edge Functions dans le runtime Supabase.
   l'environnement de développement assisté) : `flutter pub get`,
   `flutter analyze`, `flutter test`.
 
-**Reste à faire** : L7 (relance des transactions restées sans
-notification, rapprochement quotidien). Points à confirmer sur
+**L7 — relance et rapprochement, livrés le 2026-10-17** :
+
+- Migration `…1530` + Edge Function planifiée
+  `relancer_paiements_orange_money` (en-tête `x-declencheur-secret`,
+  secret `PAIEMENTS_DECLENCHEUR_SECRET`, toutes les 5 min recommandé) :
+  abandon des initiations jamais présentées au payeur (> 30 min), nouvelle
+  interrogation d'Orange pour chaque transaction en cours (jamais deux
+  fois en moins de 2 min), clôture « EXPIREE_SANS_CONFIRMATION » après
+  24 h — toujours après une dernière vérification.
+- Rapprochement du jour (`rapprochement_mobile_money`, personnel de
+  l'établissement) : totaux confirmés par Orange (scolarité / marketplace),
+  non aboutis, en cours, et écarts — paiement confirmé sans écriture
+  valide, encaissement « OM: » sans paiement en ligne, encaissement
+  automatique annulé après coup. Carte « Rapprochement » navigable jour par
+  jour dans l'espace Orange Money de la Direction.
+- Tests : pgTAP `59` 15/15 (et `58` 32/32, `38` 28/28 inchangés) ;
+  `deno check` de la fonction ; test widget du rapprochement.
+
+**Reste à faire** : le test réel avec l'établissement pilote dès l'accès au
+bac à sable d'Orange Guinée (confirmer `CONFIG_ORANGE`), et la
+planification effective des deux appels périodiques (`kernel-export`,
+`relancer_paiements_orange_money`) au déploiement. Points à confirmer sur
 la documentation Orange Guinée : chemins, code pays, devise de test, format
 de la notification — regroupés dans `CONFIG_ORANGE`
 (`_shared/orange_money_client.ts`). Recommandation : **Orange Money Guinée en direct** pour le

@@ -70,6 +70,11 @@ verify_jwt = true
 enabled = true
 verify_jwt = false
 
+# Relance planifiée (L7) : protégée par l'en-tête x-declencheur-secret.
+[functions.relancer_paiements_orange_money]
+enabled = true
+verify_jwt = false
+
 [functions.kernel-export]
 enabled = true
 verify_jwt = false

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ecoshop_client/features/paiement_mobile/application/lanceur_url.dart';
 import 'package:ecoshop_client/features/paiement_mobile/application/paiement_mobile_providers.dart';
 import 'package:ecoshop_client/features/paiement_mobile/domain/paiement_mobile_repository.dart';
+import 'package:ecoshop_client/features/paiement_mobile/domain/rapprochement_mobile_money.dart';
 import 'package:ecoshop_client/features/paiement_mobile/domain/transaction_mobile_money.dart';
 import 'package:ecoshop_client/features/paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
 import 'package:ecoshop_client/features/paiement_mobile/presentation/ecran_paiement_orange_money.dart';
@@ -87,6 +88,22 @@ class _FauxDepot implements PaiementMobileRepository {
 
   @override
   Future<EtatOrangeMoney> etatOrangeMoney(String etablissementId) async => etat;
+
+  List<AnomalieRapprochement> anomalies = const [];
+
+  @override
+  Future<RapprochementMobileMoney> rapprochement(String etablissementId, DateTime jour) async =>
+      RapprochementMobileMoney(
+        jour: jour,
+        devise: 'GNF',
+        nombreConfirmes: 1,
+        montantConfirme: 500000,
+        montantScolarite: 500000,
+        montantMarketplace: 0,
+        nonAboutis: 0,
+        enCours: 0,
+        anomalies: anomalies,
+      );
 }
 
 class _FauxLanceur implements LanceurUrl {
@@ -352,6 +369,21 @@ void main() {
         'merchantKey': 'MK-0001',
         'production': false,
       });
+    });
+
+    testWidgets('rapprochement : cas nominal puis écart signalé en clair', (tester) async {
+      final depot = _FauxDepot(etat: const EtatOrangeMoney(active: true, referencePublique: 'OM-0001'));
+      await tester.pumpWidget(_app(const EcranOrangeMoneyEtablissement(etablissementId: 'e1'), depot, _FauxLanceur()));
+      await _avancer(tester, 15);
+      expect(find.textContaining('Aucun écart'), findsOneWidget);
+
+      depot.anomalies = const [
+        AnomalieRapprochement(type: 'ENCAISSEMENT_OM_ANNULE', montant: 400000, reference: 'MP-A'),
+      ];
+      await tester.tap(find.byTooltip('Jour précédent'));
+      await _avancer(tester, 6);
+      expect(find.textContaining('1 écart(s) à vérifier'), findsOneWidget);
+      expect(find.textContaining('annulé alors que'), findsOneWidget);
     });
 
     testWidgets('compte déjà actif : formulaire replié, identifiants jamais réaffichés', (tester) async {
