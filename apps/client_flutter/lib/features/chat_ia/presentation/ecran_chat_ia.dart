@@ -219,19 +219,29 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RadioListTile<String>(
-                value: 'etablissement',
+              RadioGroup<String>(
                 groupValue: cibleType,
-                title: const Text("L'établissement entier"),
-                onChanged: (v) => setDialogState(() => cibleType = v!),
-              ),
-              RadioListTile<String>(
-                value: 'classe',
-                groupValue: cibleType,
-                title: const Text('Une classe précise'),
-                onChanged: classes.isEmpty
-                    ? null
-                    : (v) => setDialogState(() => cibleType = v!),
+                onChanged: (v) {
+                  // « Une classe précise » reste sans effet tant qu'aucune
+                  // classe n'est disponible (équivalent de l'ancien bouton
+                  // désactivé).
+                  if (v == null || (v == 'classe' && classes.isEmpty)) return;
+                  setDialogState(() => cibleType = v);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const RadioListTile<String>(
+                      value: 'etablissement',
+                      title: Text("L'établissement entier"),
+                    ),
+                    RadioListTile<String>(
+                      value: 'classe',
+                      title: const Text('Une classe précise'),
+                      subtitle: classes.isEmpty ? const Text('Aucune classe disponible') : null,
+                    ),
+                  ],
+                ),
               ),
               if (cibleType == 'classe')
                 DropdownButton<Classe>(

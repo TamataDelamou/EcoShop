@@ -26,7 +26,7 @@ class SupabasePaiementMobileRepository implements PaiementMobileRepository {
         body: {
           'objet': objet.code,
           'cibleId': cibleId,
-          if (montant != null) 'montant': montant,
+          'montant': ?montant,
         },
       );
       final corps = reponse.data as Map<String, dynamic>;

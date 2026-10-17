@@ -13,36 +13,34 @@ import 'package:ecoshop_client/features/scolarite/domain/classe.dart';
 /// `tests/rls/55`) ; ce test-ci vérifie uniquement le câblage de l'écran.
 class _FauxProclamationRepository implements ProclamationRepository {
   _FauxProclamationRepository({
-    required bool estExamen,
-    required bool estProclamee,
-    List<EleveMention> eleves = const [],
+    required this.estExamen,
+    required this.estProclamee,
+    this.eleves = const [],
     this.erreurProclamation,
-  })  : _estExamen = estExamen,
-        _estProclamee = estProclamee,
-        _eleves = eleves;
+  });
 
-  bool _estExamen;
-  bool _estProclamee;
-  List<EleveMention> _eleves;
+  final bool estExamen;
+  bool estProclamee;
+  List<EleveMention> eleves;
   final String? erreurProclamation;
   bool proclamerAppele = false;
   String? derniereMentionDefinie;
 
   @override
-  Future<bool> classeEstExamen(String classeId) async => _estExamen;
+  Future<bool> classeEstExamen(String classeId) async => estExamen;
 
   @override
   Future<bool> classeEstProclamee({required String classeId, required String anneeScolaireId}) async =>
-      _estProclamee;
+      estProclamee;
 
   @override
-  Future<List<EleveMention>> elevesDeClasse(String classeId) async => _eleves;
+  Future<List<EleveMention>> elevesDeClasse(String classeId) async => eleves;
 
   @override
   Future<void> definirMentionFinale({required String inscriptionId, required String mention}) async {
     derniereMentionDefinie = mention;
-    _eleves = [
-      for (final e in _eleves)
+    eleves = [
+      for (final e in eleves)
         if (e.inscriptionId == inscriptionId)
           EleveMention(
             inscriptionId: e.inscriptionId,
@@ -62,7 +60,7 @@ class _FauxProclamationRepository implements ProclamationRepository {
     if (erreurProclamation != null) {
       throw ErreurProclamation(erreurProclamation!);
     }
-    _estProclamee = true;
+    estProclamee = true;
   }
 }
 

@@ -30,7 +30,7 @@ class EcranPaiementOrangeMoney extends ConsumerStatefulWidget {
   });
 
   /// Paiement des frais de scolarité d'une inscription (montant partiel permis).
-  EcranPaiementOrangeMoney.scolarite({
+  const EcranPaiementOrangeMoney.scolarite({
     super.key,
     required String inscriptionId,
     required String nomEleve,
@@ -45,7 +45,7 @@ class EcranPaiementOrangeMoney extends ConsumerStatefulWidget {
         montantModifiable = true;
 
   /// Paiement d'une commande marketplace (montant imposé).
-  EcranPaiementOrangeMoney.commande({
+  const EcranPaiementOrangeMoney.commande({
     super.key,
     required String commandeId,
     required String referenceCommande,

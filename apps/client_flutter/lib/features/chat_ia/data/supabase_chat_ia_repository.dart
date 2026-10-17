@@ -50,8 +50,8 @@ class SupabaseChatIaRepository implements ChatIaRepository {
       final reponse = await _client.functions.invoke(
         'envoyer_message_ia',
         body: {
-          if (conversationId != null) 'conversationId': conversationId,
-          if (etablissementId != null) 'etablissementId': etablissementId,
+          'conversationId': ?conversationId,
+          'etablissementId': ?etablissementId,
           'message': message,
         },
       );
@@ -78,7 +78,7 @@ class SupabaseChatIaRepository implements ChatIaRepository {
         body: {
           'etablissementId': etablissementId,
           'cibleType': cibleType,
-          if (cibleId != null) 'cibleId': cibleId,
+          'cibleId': ?cibleId,
         },
       );
       final corps = reponse.data as Map<String, dynamic>;

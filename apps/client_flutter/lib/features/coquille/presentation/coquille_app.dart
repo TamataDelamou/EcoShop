@@ -676,8 +676,9 @@ class _VueProfil extends ConsumerWidget {
                   .watch(structureEtablissementProvider(null))
                   .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null)
+              if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
+              }
               return ListTile(
                 leading: const Icon(Icons.calendar_view_week_outlined),
                 title: const Text('Mon emploi du temps'),
@@ -703,8 +704,9 @@ class _VueProfil extends ConsumerWidget {
                   .watch(structureEtablissementProvider(null))
                   .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null)
+              if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
+              }
               return ListTile(
                 leading: const Icon(Icons.class_outlined),
                 title: const Text('Classes — emploi du temps & progression'),
@@ -740,8 +742,9 @@ class _VueProfil extends ConsumerWidget {
                   .watch(structureEtablissementProvider(null))
                   .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null)
+              if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
+              }
               return Column(
                 children: [
                   ListTile(
@@ -783,8 +786,9 @@ class _VueProfil extends ConsumerWidget {
                   .watch(structureEtablissementProvider(null))
                   .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null)
+              if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
+              }
               return ListTile(
                 leading: const Icon(Icons.rule_outlined),
                 title: const Text('Conflits d\'occupation'),
@@ -1053,8 +1057,9 @@ class _VueProfil extends ConsumerWidget {
                   .watch(structureEtablissementProvider(null))
                   .value;
               final anneeId = structure?.anneeCourante?.id;
-              if (etablissement == null || anneeId == null)
+              if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
+              }
               return Column(
                 children: [
                   ListTile(
