@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart' show Brightness, Color;
 import 'package:pdf/pdf.dart';
 
@@ -15,12 +17,21 @@ import '../../../core/theme/app_theme_variant.dart';
 /// thème actif de l'application via `context.palette` comme n'importe quel
 /// autre écran — voir `EcranApercuPdf`.
 class PdfPaletteX {
-  const PdfPaletteX._(this._palette);
+  const PdfPaletteX._(this._palette, this.logo);
 
-  factory PdfPaletteX.pour(AppThemeVariant variante) =>
-      PdfPaletteX._(AppPalettes.pour(variante, Brightness.light));
+  /// [identite] : couleur et logo de l'établissement (REG-07 B). La couleur
+  /// est ajustée comme à l'écran pour rester lisible ; l'ambiance
+  /// personnelle d'un utilisateur ne s'applique JAMAIS aux documents.
+  factory PdfPaletteX.pour(AppThemeVariant variante, {IdentitePdf identite = IdentitePdf.vide}) =>
+      PdfPaletteX._(
+        AppPalettes.resoudre(variante, Brightness.light, couleurEtablissement: identite.couleur),
+        identite.logo,
+      );
 
   final AppPalette _palette;
+
+  /// Logo de l'établissement (PNG/JPEG), affiché dans l'en-tête des documents.
+  final Uint8List? logo;
 
   PdfColor get primaire => _pdf(_palette.primaire);
   PdfColor get accent => _pdf(_palette.accent);
@@ -32,4 +43,14 @@ class PdfPaletteX {
   PdfColor get surface => _pdf(_palette.surface);
 
   static PdfColor _pdf(Color couleur) => PdfColor(couleur.r, couleur.g, couleur.b);
+}
+
+/// Identité d'un établissement pour ses documents imprimés (REG-07 B).
+class IdentitePdf {
+  const IdentitePdf({this.couleur, this.logo});
+
+  static const vide = IdentitePdf();
+
+  final Color? couleur;
+  final Uint8List? logo;
 }

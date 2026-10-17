@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'ambiance_visuelle.dart';
 import 'app_palettes.dart';
 import 'app_theme_variant.dart';
 
@@ -15,13 +16,19 @@ ThemeData construireThemeData(
   AppThemeVariant variante,
   Brightness brightness, {
   bool contrasteEleve = false,
+  AmbianceVisuelle ambiance = AmbianceVisuelle.etablissement,
+  Color? couleurEtablissement,
 }) {
-  // Contraste élevé (D4, §34.9) : remplace la charte d'établissement par une
-  // palette dédiée à lisibilité maximale, indépendante de la variante —
-  // l'objectif est l'accessibilité, pas l'identité visuelle.
-  final palette = contrasteEleve
-      ? AppPalettes.hauteVisibilite(brightness)
-      : AppPalettes.pour(variante, brightness);
+  // Ordre de priorité (voir AppPalettes.resoudre) : contraste élevé (D4,
+  // §34.9) > ambiance personnelle (REG-07 C) > charte de l'établissement,
+  // avec sa couleur d'identité ajustée pour rester lisible (REG-07 B).
+  final palette = AppPalettes.resoudre(
+    variante,
+    brightness,
+    contrasteEleve: contrasteEleve,
+    ambiance: ambiance,
+    couleurEtablissement: couleurEtablissement,
+  );
   final base = ThemeData(useMaterial3: true, brightness: brightness);
   // Sur fond sombre, une couleur d'action assombrie perd son contraste : le
   // bouton reste dans la teinte de la palette (déjà éclaircie pour le mode

@@ -9,6 +9,8 @@ class Etablissement {
     this.deviseCode = 'GNF',
     this.langueCode = 'fr',
     this.fuseauHoraire = 'Africa/Conakry',
+    this.couleurIdentite,
+    this.logoChemin,
   });
 
   factory Etablissement.depuisJson(Map<String, dynamic> json) {
@@ -21,6 +23,8 @@ class Etablissement {
       deviseCode: json['devise_code'] as String? ?? 'GNF',
       langueCode: json['langue_code'] as String? ?? 'fr',
       fuseauHoraire: json['fuseau_horaire'] as String? ?? 'Africa/Conakry',
+      couleurIdentite: json['couleur_identite'] as String?,
+      logoChemin: json['logo_chemin'] as String?,
     );
   }
 
@@ -35,6 +39,12 @@ class Etablissement {
   final String deviseCode;
   final String langueCode;
   final String fuseauHoraire;
+
+  /// Identité visuelle choisie par la Direction (REG-07 B) : couleur
+  /// `#RRGGBB` et chemin du logo dans le bucket public
+  /// `logos-etablissements`. Nulles = charte par défaut du pays.
+  final String? couleurIdentite;
+  final String? logoChemin;
 
   /// Libellé secondaire affiché sous le nom dans les listes.
   String get localisation =>

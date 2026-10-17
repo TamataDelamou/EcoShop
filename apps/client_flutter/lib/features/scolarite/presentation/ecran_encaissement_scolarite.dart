@@ -138,6 +138,7 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
       fiche: fiche,
       etablissement: etablissement,
       variante: variante,
+      identite: await ref.read(identitePdfProvider.future),
     );
     if (!mounted) return;
     await Navigator.of(context).push(

@@ -6,6 +6,7 @@ import 'core/config/env.dart';
 import 'core/theme/app_palette.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_variant.dart';
+import 'core/theme/ambiance_visuelle.dart';
 import 'features/accessibilite/application/accessibilite_providers.dart';
 import 'features/accessibilite/domain/echelle_texte.dart';
 import 'features/coquille/presentation/garde_session.dart';
@@ -50,11 +51,29 @@ class EcoShopApp extends ConsumerWidget {
     final echelleTexte = Env.estConfigure
         ? ref.watch(echelleTexteProvider).valueOrNull ?? EchelleTexte.normal
         : EchelleTexte.normal;
+    // Identité de l'établissement (REG-07 B) et ambiance personnelle
+    // (REG-07 C) — mêmes garde-fous qu'au-dessus en mode diagnostic.
+    final ambiance = Env.estConfigure
+        ? ref.watch(ambianceProvider).valueOrNull ?? AmbianceVisuelle.etablissement
+        : AmbianceVisuelle.etablissement;
+    final couleurEtablissement = Env.estConfigure ? ref.watch(identiteEtablissementProvider).couleur : null;
 
     return MaterialApp(
       title: 'EcoShop',
-      theme: construireThemeData(variante, Brightness.light, contrasteEleve: contrasteEleve),
-      darkTheme: construireThemeData(variante, Brightness.dark, contrasteEleve: contrasteEleve),
+      theme: construireThemeData(
+        variante,
+        Brightness.light,
+        contrasteEleve: contrasteEleve,
+        ambiance: ambiance,
+        couleurEtablissement: couleurEtablissement,
+      ),
+      darkTheme: construireThemeData(
+        variante,
+        Brightness.dark,
+        contrasteEleve: contrasteEleve,
+        ambiance: ambiance,
+        couleurEtablissement: couleurEtablissement,
+      ),
       themeMode: mode,
       debugShowCheckedModeBanner: false,
       // Taille de texte (D4, §34.9) : appliquée globalement via le

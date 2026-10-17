@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ecoshop_client/core/db/app_database.dart';
 import 'package:ecoshop_client/core/db/cache_document_store.dart';
+import 'package:ecoshop_client/core/theme/ambiance_visuelle.dart';
 import 'package:ecoshop_client/features/themes/data/theme_preference_store.dart';
 
 void main() {
@@ -44,5 +45,15 @@ void main() {
 
     final autreDomaine = ThemePreferenceStore(CacheDocumentStore(db, 'autre_domaine'));
     expect(await autreDomaine.lire(), ThemeMode.system);
+  });
+
+  test("ambiance (REG-07 C) : charte de l'établissement par défaut, puis persistée", () async {
+    expect(await store.lireAmbiance(), AmbianceVisuelle.etablissement);
+    await store.ecrireAmbiance(AmbianceVisuelle.ocean);
+    final autreStore = ThemePreferenceStore(CacheDocumentStore(db, 'preferences'));
+    expect(await autreStore.lireAmbiance(), AmbianceVisuelle.ocean);
+    // Le mode clair/sombre est stocké à part : les deux réglages coexistent.
+    await store.ecrire(ThemeMode.dark);
+    expect(await store.lireAmbiance(), AmbianceVisuelle.ocean);
   });
 }

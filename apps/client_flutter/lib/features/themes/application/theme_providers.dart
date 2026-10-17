@@ -1,11 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/providers.dart';
+import '../../../core/auth/supabase_auth_provider.dart';
+import '../../../core/theme/ambiance_visuelle.dart';
 import '../../../core/theme/app_theme_variant.dart';
+import '../../../core/theme/couleur_identite.dart';
+import '../../export_pdf/application/pdf_palette.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../referentiel/application/referentiel_providers.dart';
+import '../data/identite_visuelle_repository.dart';
 import '../data/theme_preference_store.dart';
 
 final _themePreferenceStoreProvider = Provider<ThemePreferenceStore>((ref) {
@@ -49,4 +58,83 @@ final themeVariantProvider = Provider<AppThemeVariant>((ref) {
     }
   }
   return AppThemeVariant.francophoneCfa;
+});
+
+/// Ambiance personnelle choisie par l'utilisateur (REG-07 C), mémorisée sur
+/// l'appareil. [AmbianceVisuelle.etablissement] tant qu'elle n'est pas lue.
+final ambianceProvider =
+    AsyncNotifierProvider<AmbianceNotifier, AmbianceVisuelle>(AmbianceNotifier.new);
+
+class AmbianceNotifier extends AsyncNotifier<AmbianceVisuelle> {
+  @override
+  Future<AmbianceVisuelle> build() {
+    return ref.watch(_themePreferenceStoreProvider).lireAmbiance();
+  }
+
+  Future<void> definir(AmbianceVisuelle ambiance) async {
+    state = AsyncData(ambiance);
+    await ref.read(_themePreferenceStoreProvider).ecrireAmbiance(ambiance);
+  }
+}
+
+/// Identité visuelle de l'établissement actif (REG-07 B) : couleur choisie
+/// par la Direction (ajustée à l'affichage pour rester lisible) et URL
+/// publique du logo. Vide = charte par défaut du pays.
+class IdentiteEtablissement {
+  const IdentiteEtablissement({this.couleur, this.logoUrl});
+
+  static const vide = IdentiteEtablissement();
+
+  final Color? couleur;
+  final String? logoUrl;
+}
+
+final identiteEtablissementProvider = Provider<IdentiteEtablissement>((ref) {
+  final etablissement = ref.watch(etablissementActifProvider);
+  if (etablissement == null) return IdentiteEtablissement.vide;
+  final chemin = etablissement.logoChemin;
+  return IdentiteEtablissement(
+    couleur: CouleurIdentite.depuisHex(etablissement.couleurIdentite),
+    logoUrl: chemin == null
+        ? null
+        : ref.watch(supabaseClientProvider).storage.from(bucketLogosEtablissements).getPublicUrl(chemin),
+  );
+});
+
+/// Identité pour les documents imprimés : couleur + octets du logo,
+/// téléchargés une fois. Un logo injoignable (hors connexion) n'empêche
+/// jamais l'export : le document sort simplement sans logo.
+final identitePdfProvider = FutureProvider<IdentitePdf>((ref) async {
+  final identite = ref.watch(identiteEtablissementProvider);
+  final url = identite.logoUrl;
+  if (url == null) return IdentitePdf(couleur: identite.couleur);
+  try {
+    final reponse = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+    if (reponse.statusCode != 200) return IdentitePdf(couleur: identite.couleur);
+    return IdentitePdf(couleur: identite.couleur, logo: reponse.bodyBytes);
+  } catch (_) {
+    return IdentitePdf(couleur: identite.couleur);
+  }
+});
+
+/// Port d'écriture de l'identité visuelle (Direction).
+final identiteVisuelleRepositoryProvider = Provider<IdentiteVisuelleRepository>((ref) {
+  return SupabaseIdentiteVisuelleRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Sélection d'une image de logo dans la galerie (abstraite pour les tests).
+typedef ImageLogo = ({Uint8List octets, String extension});
+
+final selecteurLogoProvider = Provider<Future<ImageLogo?> Function()>((ref) {
+  return () async {
+    final fichier = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 90,
+    );
+    if (fichier == null) return null;
+    final nom = fichier.name.toLowerCase();
+    return (octets: await fichier.readAsBytes(), extension: nom.endsWith('.png') ? 'png' : 'jpeg');
+  };
 });

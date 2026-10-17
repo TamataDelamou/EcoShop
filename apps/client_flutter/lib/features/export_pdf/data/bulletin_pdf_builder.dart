@@ -26,8 +26,9 @@ Future<Uint8List> construireBulletinPdf({
   required FicheEleve fiche,
   required Etablissement etablissement,
   required AppThemeVariant variante,
+  IdentitePdf identite = IdentitePdf.vide,
 }) async {
-  final palette = PdfPaletteX.pour(variante);
+  final palette = PdfPaletteX.pour(variante, identite: identite);
   final doc = pw.Document();
 
   doc.addPage(
@@ -88,11 +89,12 @@ Future<Uint8List> construireBulletinsClassePdf({
   required List<({Bulletin bulletin, FicheEleve fiche, List<DetailMatiereBulletin> detailMatieres})> paires,
   required Etablissement etablissement,
   required AppThemeVariant variante,
+  IdentitePdf identite = IdentitePdf.vide,
   required String titreClasse,
   PaysPedagogique? pays,
   int? isced,
 }) async {
-  final palette = PdfPaletteX.pour(variante);
+  final palette = PdfPaletteX.pour(variante, identite: identite);
   final doc = pw.Document();
   final signatures = pays?.signaturesPourIsced(isced);
 

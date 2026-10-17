@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'app_palette.dart';
+import 'ambiance_visuelle.dart';
 import 'app_theme_variant.dart';
+import 'couleur_identite.dart';
 
 /// Catalogue des 6 palettes (3 variantes × clair/sombre).
 ///
@@ -92,6 +94,115 @@ abstract final class AppPalettes {
     erreur: Color(0xFFFF8577),
   );
 
+  /// Arabophone mixte (REG-07) — sarcelle profonde et cuivre sur fond sable.
+  static const arabophoneMixteLight = AppPalette(
+    fond: Color(0xFFF9F7F2),
+    surface: Colors.white,
+    bordure: Color(0xFFE7E1D3),
+    encre: Color(0xFF1F1A12),
+    encreSecondaire: Color(0xFF5C5446),
+    primaire: Color(0xFF0E6B5C),
+    accent: Color(0xFF9A4A0B),
+    succes: Color(0xFF0F7A52),
+    premium: Color(0xFF7A5B10),
+    erreur: Color(0xFFB42318),
+  );
+
+  static const arabophoneMixteDark = AppPalette(
+    fond: Color(0xFF12100C),
+    surface: Color(0xFF1D1A14),
+    bordure: Color(0xFF3A3428),
+    encre: Color(0xFFF3EEE4),
+    encreSecondaire: Color(0xFFB8AE9B),
+    primaire: Color(0xFF4CC2A9),
+    accent: Color(0xFFE39A5B),
+    succes: Color(0xFF40C98F),
+    premium: Color(0xFFE2B652),
+    erreur: Color(0xFFFF7B6B),
+  );
+
+  // -------------------------------------------------------------------------
+  // Ambiances personnelles (REG-07 C) — choisies par l'utilisateur.
+  // -------------------------------------------------------------------------
+
+  static const oceanLight = AppPalette(
+    fond: Color(0xFFF5F9FB),
+    surface: Colors.white,
+    bordure: Color(0xFFD6E4EC),
+    encre: Color(0xFF0B2230),
+    encreSecondaire: Color(0xFF46606F),
+    primaire: Color(0xFF0B6E99),
+    accent: Color(0xFFB4432F),
+    succes: Color(0xFF117A52),
+    premium: Color(0xFF7A5C12),
+    erreur: Color(0xFFB3261E),
+  );
+
+  static const oceanDark = AppPalette(
+    fond: Color(0xFF07161E),
+    surface: Color(0xFF0F2430),
+    bordure: Color(0xFF22404F),
+    encre: Color(0xFFE6F2F7),
+    encreSecondaire: Color(0xFF9DB7C4),
+    primaire: Color(0xFF4FC0E8),
+    accent: Color(0xFFF08A73),
+    succes: Color(0xFF3FCB93),
+    premium: Color(0xFFE3BE5A),
+    erreur: Color(0xFFFF7A70),
+  );
+
+  static const savaneLight = AppPalette(
+    fond: Color(0xFFFBF7F0),
+    surface: Colors.white,
+    bordure: Color(0xFFEADFCB),
+    encre: Color(0xFF2A1D0E),
+    encreSecondaire: Color(0xFF66553C),
+    primaire: Color(0xFF9A4D06),
+    accent: Color(0xFF1F6E5A),
+    succes: Color(0xFF2E7D32),
+    premium: Color(0xFF7A5B10),
+    erreur: Color(0xFFB42318),
+  );
+
+  static const savaneDark = AppPalette(
+    fond: Color(0xFF16110A),
+    surface: Color(0xFF231B11),
+    bordure: Color(0xFF41331F),
+    encre: Color(0xFFF5ECDD),
+    encreSecondaire: Color(0xFFC2B193),
+    primaire: Color(0xFFF0A04B),
+    accent: Color(0xFF5FC9A8),
+    succes: Color(0xFF6FCF7A),
+    premium: Color(0xFFE7C15E),
+    erreur: Color(0xFFFF8070),
+  );
+
+  static const graphiteLight = AppPalette(
+    fond: Color(0xFFF6F7F8),
+    surface: Colors.white,
+    bordure: Color(0xFFDDE1E5),
+    encre: Color(0xFF15181C),
+    encreSecondaire: Color(0xFF50565E),
+    primaire: Color(0xFF2F3A48),
+    accent: Color(0xFF0F62C9),
+    succes: Color(0xFF157F4E),
+    premium: Color(0xFF7A5C12),
+    erreur: Color(0xFFB3261E),
+  );
+
+  static const graphiteDark = AppPalette(
+    fond: Color(0xFF0F1114),
+    surface: Color(0xFF1A1D22),
+    bordure: Color(0xFF30353C),
+    encre: Color(0xFFEDEFF2),
+    encreSecondaire: Color(0xFFA3AAB4),
+    primaire: Color(0xFFB9C3D0),
+    accent: Color(0xFF7CB2FF),
+    succes: Color(0xFF4CD08F),
+    premium: Color(0xFFE0BC5C),
+    erreur: Color(0xFFFF7C74),
+  );
+
   static AppPalette pour(AppThemeVariant variante, Brightness brightness) {
     final sombre = brightness == Brightness.dark;
     return switch (variante) {
@@ -100,7 +211,43 @@ abstract final class AppPalettes {
       AppThemeVariant.anglophoneWaec =>
         sombre ? anglophoneWaecDark : anglophoneWaecLight,
       AppThemeVariant.lusophone => sombre ? lusophoneDark : lusophoneLight,
+      AppThemeVariant.arabophoneMixte => sombre ? arabophoneMixteDark : arabophoneMixteLight,
     };
+  }
+
+  /// Palette d'une ambiance personnelle (null pour [AmbianceVisuelle.etablissement]).
+  static AppPalette? pourAmbiance(AmbianceVisuelle ambiance, Brightness brightness) {
+    final sombre = brightness == Brightness.dark;
+    return switch (ambiance) {
+      AmbianceVisuelle.etablissement => null,
+      AmbianceVisuelle.ocean => sombre ? oceanDark : oceanLight,
+      AmbianceVisuelle.savane => sombre ? savaneDark : savaneLight,
+      AmbianceVisuelle.graphite => sombre ? graphiteDark : graphiteLight,
+    };
+  }
+
+  /// Palette effective, par ordre de priorité :
+  ///   1. contraste élevé (accessibilité) ;
+  ///   2. ambiance personnelle choisie par l'utilisateur ;
+  ///   3. charte de l'établissement (variante du pays), avec sa couleur
+  ///      d'identité si la Direction en a défini une — toujours ajustée pour
+  ///      rester lisible (voir [CouleurIdentite]).
+  static AppPalette resoudre(
+    AppThemeVariant variante,
+    Brightness brightness, {
+    bool contrasteEleve = false,
+    AmbianceVisuelle ambiance = AmbianceVisuelle.etablissement,
+    Color? couleurEtablissement,
+  }) {
+    if (contrasteEleve) return hauteVisibilite(brightness);
+    final personnelle = pourAmbiance(ambiance, brightness);
+    if (personnelle != null) return personnelle;
+    final base = pour(variante, brightness);
+    if (couleurEtablissement == null) return base;
+    final primaire = brightness == Brightness.dark
+        ? CouleurIdentite.pourModeSombre(couleurEtablissement, base.fond, base.surface)
+        : CouleurIdentite.pourModeClair(couleurEtablissement, base.fond);
+    return base.copyWith(primaire: primaire);
   }
 
   /// Palette « contraste élevé » (D4, §34.9) — une seule paire clair/sombre,

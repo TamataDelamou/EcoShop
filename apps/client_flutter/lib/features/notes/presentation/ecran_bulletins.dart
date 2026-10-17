@@ -74,6 +74,7 @@ class _CarteBulletinState extends ConsumerState<_CarteBulletin> {
         fiche: widget.fiche,
         etablissement: etablissement,
         variante: variante,
+        identite: await ref.read(identitePdfProvider.future),
       );
       if (!mounted) return;
       await Navigator.of(context).push(

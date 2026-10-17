@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/db/cache_document_store.dart';
+import '../../../core/theme/ambiance_visuelle.dart';
 
 /// Persistance locale de la préférence d'apparence (clair/sombre/système).
 ///
@@ -33,5 +34,17 @@ class ThemePreferenceStore {
       ThemeMode.system => 'systeme',
     };
     return _store.ecrireDocument(_type, _cle, {'mode': valeur});
+  }
+
+  static const _cleAmbiance = 'ambiance';
+
+  /// Ambiance personnelle (REG-07 C) — [AmbianceVisuelle.etablissement] par défaut.
+  Future<AmbianceVisuelle> lireAmbiance() async {
+    final document = await _store.lireDocument(_type, _cleAmbiance);
+    return AmbianceVisuelle.depuisCode(document?['ambiance'] as String?);
+  }
+
+  Future<void> ecrireAmbiance(AmbianceVisuelle ambiance) {
+    return _store.ecrireDocument(_type, _cleAmbiance, {'ambiance': ambiance.code});
   }
 }

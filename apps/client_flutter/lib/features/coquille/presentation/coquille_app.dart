@@ -38,6 +38,8 @@ import '../../rh_personnel/presentation/ecran_tableau_bord_rh.dart';
 import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/presentation/ecran_cahier_encaissements.dart';
 import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
+import '../../themes/presentation/ecran_identite_visuelle.dart';
+import '../../themes/application/theme_providers.dart';
 import '../../scolarite/presentation/ecran_creation_inscription.dart';
 import '../../scolarite/presentation/ecran_parametres_financiers.dart';
 import '../../scolarite/presentation/ecran_reinscription.dart';
@@ -271,13 +273,28 @@ class _IndicateurEtablissement extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final etablissement = ref.watch(etablissementActifProvider);
     if (etablissement == null) return const SizedBox.shrink();
+    // Logo de l'établissement (REG-07 B), à côté de son nom.
+    final logoUrl = ref.watch(identiteEtablissementProvider).logoUrl;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Center(
-        child: Text(
-          etablissement.nom,
-          style: Theme.of(context).textTheme.labelLarge,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (logoUrl != null) ...[
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: Colors.transparent,
+                backgroundImage: NetworkImage(logoUrl),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              etablissement.nom,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
         ),
       ),
     );
@@ -1085,6 +1102,17 @@ class _VueProfil extends ConsumerWidget {
                         builder: (_) => EcranCahierEncaissements(
                           etablissementId: etablissement.id,
                         ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.palette_outlined),
+                    title: const Text('Identité visuelle'),
+                    subtitle: const Text("Couleur et logo de l'établissement"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EcranIdentiteVisuelle(etablissement: etablissement),
                       ),
                     ),
                   ),

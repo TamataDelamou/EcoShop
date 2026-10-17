@@ -2,14 +2,13 @@
 /// référentiel pédagogique CEDEAO (`public.type_systeme_educatif`, M4).
 ///
 /// Une variante = une charte graphique complète (couleurs clair + sombre).
-/// `arabophoneMixte` n'a pas encore de charte dédiée : les établissements de
-/// cette famille utilisent [francophoneCfa] par repli, en attendant un futur
-/// module (cf. rapport d'écart M15bis) — ce n'est pas un oubli silencieux,
-/// c'est une conséquence assumée du périmètre de ce module.
+/// Les 4 familles ont chacune leur charte depuis l'ajout de
+/// [arabophoneMixte] (registre REG-07, 2026-10-17).
 enum AppThemeVariant {
   francophoneCfa('francophone_cfa'),
   anglophoneWaec('anglophone_waec'),
-  lusophone('lusophone');
+  lusophone('lusophone'),
+  arabophoneMixte('arabophone_mixte');
 
   const AppThemeVariant(this.codeSystemeEducatif);
 
@@ -18,9 +17,9 @@ enum AppThemeVariant {
 
   /// Résout la variante à partir du code `type_systeme` d'un pays pédagogique.
   ///
-  /// Repli sur [francophoneCfa] pour `arabophone_mixte` (pas encore de charte
-  /// dédiée) et pour tout code inconnu ou absent (établissement sans pays
-  /// renseigné, mode diagnostic hors-ligne sans référentiel en cache).
+  /// Repli sur [francophoneCfa] pour tout code inconnu ou absent
+  /// (établissement sans pays renseigné, mode diagnostic hors-ligne sans
+  /// référentiel en cache).
   static AppThemeVariant depuisCodeSysteme(String? codeSysteme) {
     for (final variante in AppThemeVariant.values) {
       if (variante.codeSystemeEducatif == codeSysteme) return variante;

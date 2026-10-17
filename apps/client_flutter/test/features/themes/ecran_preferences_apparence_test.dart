@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ecoshop_client/core/db/app_database.dart';
+import 'package:ecoshop_client/core/theme/ambiance_visuelle.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/etablissement/domain/etablissement.dart';
@@ -106,5 +107,24 @@ void main() {
     expect(find.text('Contraste élevé', skipOffstage: false), findsOneWidget);
     expect(find.text('Taille du texte', skipOffstage: false), findsOneWidget);
     expect(find.widgetWithText(ChoiceChip, 'Très grand', skipOffstage: false), findsOneWidget);
+  });
+
+  testWidgets("REG-07 C : choisir l'ambiance Savane la sélectionne et la mémorise", (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await monter(tester, overrides: [
+      etablissementActifProvider.overrideWithValue(null),
+      paysPedagogiquesProvider.overrideWith((ref) async => const []),
+    ]);
+
+    expect(find.text("Charte de l'établissement"), findsOneWidget);
+    await tester.tap(find.byKey(const Key('ambiance_savane')));
+    await tester.pumpAndSettle();
+
+    final container = ProviderContainer(overrides: [databaseProvider.overrideWithValue(db)]);
+    addTearDown(container.dispose);
+    expect(await container.read(ambianceProvider.future), AmbianceVisuelle.savane);
   });
 }

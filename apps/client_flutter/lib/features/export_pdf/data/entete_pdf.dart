@@ -25,15 +25,31 @@ pw.Widget enteteDocument({
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              pw.Text(
-                etablissement.nom,
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: palette.primaire),
+              if (palette.logo != null) ...[
+                pw.Container(
+                  width: 42,
+                  height: 42,
+                  child: pw.Image(pw.MemoryImage(palette.logo!), fit: pw.BoxFit.contain),
+                ),
+                pw.SizedBox(width: 10),
+              ],
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    etablissement.nom,
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: palette.primaire),
+                  ),
+                  if (etablissement.localisation.isNotEmpty)
+                    pw.Text(
+                      etablissement.localisation,
+                      style: pw.TextStyle(fontSize: 9, color: palette.encreSecondaire),
+                    ),
+                ],
               ),
-              if (etablissement.localisation.isNotEmpty)
-                pw.Text(etablissement.localisation, style: pw.TextStyle(fontSize: 9, color: palette.encreSecondaire)),
             ],
           ),
           pw.Text(

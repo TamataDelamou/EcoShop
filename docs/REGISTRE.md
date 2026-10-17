@@ -23,6 +23,7 @@ attendue), `clos`.
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | à arbitrer |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | ouvert (dette du 2026-09-17) |
+| REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | ouvert |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | ouvert |
 
@@ -251,6 +252,31 @@ Recommandation technique (non décisionnelle) : l'option 2 répond aux deux
 groupes sans casser M14. Décision attendue avant tout développement.
 
 ---
+
+## REG-07 — Thèmes : trois niveaux de personnalisation
+
+**Demandé le** : 2026-10-17 (« chacun est à des niveaux d'utilisation
+différents »). **Statut** : livré le 2026-10-17.
+
+État de départ : 3 chartes par pays (francophone, anglophone, lusophone),
+clair/sombre, contraste élevé (M15bis, D4).
+
+| Niveau | Qui décide | Livré |
+|---|---|---|
+| **A — Charte arabophone** | automatique (pays de l'établissement) | 4ᵉ charte `arabophone_mixte` clair/sombre (sarcelle et cuivre sur fond sable) ; les pays arabophones n'utilisent plus la charte francophone par repli. |
+| **B — Identité de l'établissement** | la Direction | Couleur principale (nuancier de 16 teintes ou code `#RRGGBB`) et logo. La couleur est **ajustée automatiquement** (même teinte, luminosité corrigée) pour rester lisible (WCAG AA) en clair et en sombre — jamais refusée ; l'aperçu clair/sombre le montre en direct. Le logo s'affiche à côté du nom de l'école et dans l'en-tête des reçus et bulletins. Migration `…1531` : colonnes `couleur_identite` / `logo_chemin`, bucket public `logos-etablissements` (images, 1 Mo), dépôt réservé à la Direction dans le dossier de SON établissement, RPC `definir_identite_visuelle`. Écran : menu Direction > « Identité visuelle ». |
+| **C — Ambiance personnelle** | chaque utilisateur, sur son appareil | Océan, Savane, Graphite (clair/sombre), ou « Charte de l'établissement » (par défaut). Écran Apparence. Ne s'applique jamais aux documents imprimés. |
+
+Ordre de priorité : contraste élevé > ambiance personnelle > charte de
+l'établissement (avec sa couleur ajustée). Toutes les nouvelles palettes
+passent le seuil WCAG AA (4,5:1) — vérifié par calcul et par
+`test/core/theme/app_palettes_test.dart`.
+
+Vérification : pgTAP `60_identite_visuelle_etablissement` 14/14 (non-régression
+58 : 32/32) ; tests Flutter ajoutés (`couleur_identite_test`,
+`ecran_identite_visuelle_test`, ambiance dans `ecran_preferences_apparence_test`
+et `theme_preference_store_test`) — **`flutter analyze` / `flutter test` à
+lancer sur le poste**.
 
 ## REG-04 — Création et validation d'un nouvel établissement (fondateur)
 

@@ -156,6 +156,7 @@ class _EcranGenerationBulletinsClasseState extends ConsumerState<EcranGeneration
         paires: paires,
         etablissement: etablissement,
         variante: variante,
+        identite: await ref.read(identitePdfProvider.future),
         titreClasse: 'Bulletins - ${widget.classe.nom}',
         pays: paysEtablissement,
         isced: isced,

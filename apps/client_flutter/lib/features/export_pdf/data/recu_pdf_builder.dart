@@ -31,8 +31,9 @@ Future<Uint8List> construireRecuPdf({
   required FicheEleve fiche,
   required Etablissement etablissement,
   required AppThemeVariant variante,
+  IdentitePdf identite = IdentitePdf.vide,
 }) async {
-  final palette = PdfPaletteX.pour(variante);
+  final palette = PdfPaletteX.pour(variante, identite: identite);
   final doc = pw.Document();
 
   doc.addPage(

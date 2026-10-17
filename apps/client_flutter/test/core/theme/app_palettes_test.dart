@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:ecoshop_client/core/theme/ambiance_visuelle.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import 'package:ecoshop_client/core/theme/app_palettes.dart';
 import 'package:ecoshop_client/core/theme/app_theme.dart';
@@ -31,8 +32,10 @@ void main() {
       expect(AppThemeVariant.depuisCodeSysteme('lusophone'), AppThemeVariant.lusophone);
     });
 
-    test('arabophone_mixte (pas encore de charte dédiée) retombe sur francophone_cfa', () {
-      expect(AppThemeVariant.depuisCodeSysteme('arabophone_mixte'), AppThemeVariant.francophoneCfa);
+    test('arabophone_mixte a désormais sa propre charte (REG-07 A)', () {
+      expect(AppThemeVariant.depuisCodeSysteme('arabophone_mixte'), AppThemeVariant.arabophoneMixte);
+      expect(AppPalettes.pour(AppThemeVariant.arabophoneMixte, Brightness.light), AppPalettes.arabophoneMixteLight);
+      expect(AppPalettes.pour(AppThemeVariant.arabophoneMixte, Brightness.dark), AppPalettes.arabophoneMixteDark);
     });
 
     test('code inconnu ou absent retombe sur francophone_cfa', () {
@@ -58,7 +61,7 @@ void main() {
     });
   });
 
-  group('Contraste WCAG AA (4.5:1 texte normal) des 6 palettes', () {
+  group('Contraste WCAG AA (4.5:1 texte normal) des palettes de charte et d\'ambiance', () {
     final toutes = <String, AppPalette>{
       'francophone_cfa clair': AppPalettes.francophoneCfaLight,
       'francophone_cfa sombre': AppPalettes.francophoneCfaDark,
@@ -66,6 +69,14 @@ void main() {
       'anglophone_waec sombre': AppPalettes.anglophoneWaecDark,
       'lusophone clair': AppPalettes.lusophoneLight,
       'lusophone sombre': AppPalettes.lusophoneDark,
+      'arabophone_mixte clair': AppPalettes.arabophoneMixteLight,
+      'arabophone_mixte sombre': AppPalettes.arabophoneMixteDark,
+      'ocean clair': AppPalettes.oceanLight,
+      'ocean sombre': AppPalettes.oceanDark,
+      'savane clair': AppPalettes.savaneLight,
+      'savane sombre': AppPalettes.savaneDark,
+      'graphite clair': AppPalettes.graphiteLight,
+      'graphite sombre': AppPalettes.graphiteDark,
     };
 
     for (final entry in toutes.entries) {
@@ -82,7 +93,7 @@ void main() {
     // Énergie » déjà approuvée (cahier v4.1 ch. 2) — ses teintes d'accent ne
     // sont pas modifiées par ce module et ne sont donc pas re-vérifiées ici,
     // seules les couleurs neuves (anglophone_waec, lusophone) le sont.
-    for (final variante in ['anglophone_waec', 'lusophone']) {
+    for (final variante in ['anglophone_waec', 'lusophone', 'arabophone_mixte', 'ocean', 'savane', 'graphite']) {
       for (final brightness in ['clair', 'sombre']) {
         final p = toutes['$variante $brightness']!;
         test('$variante $brightness — accent/succès/premium/erreur lisibles en usage texte (≥ 4.5:1)', () {
@@ -93,6 +104,15 @@ void main() {
         });
       }
     }
+
+    test('ambiances personnelles : bouton primaire lisible dans les deux luminosités', () {
+      for (final ambiance in AmbianceVisuelle.values.where((a) => a != AmbianceVisuelle.etablissement)) {
+        final clair = AppPalettes.pourAmbiance(ambiance, Brightness.light)!;
+        final sombre = AppPalettes.pourAmbiance(ambiance, Brightness.dark)!;
+        expect(_ratioContraste(Colors.white, clair.primaire), greaterThanOrEqualTo(4.5), reason: '$ambiance clair');
+        expect(_ratioContraste(sombre.fond, sombre.primaire), greaterThanOrEqualTo(4.5), reason: '$ambiance sombre');
+      }
+    });
 
     test('bouton primaire : contraste texte/fond ≥ 4.5:1 dans les deux luminosités', () {
       for (final variante in AppThemeVariant.values) {
