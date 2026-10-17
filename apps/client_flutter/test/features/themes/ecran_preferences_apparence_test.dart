@@ -98,6 +98,12 @@ void main() {
   });
 
   testWidgets('D4 : section Accessibilité ajoutée (contraste + taille du texte)', (tester) async {
+    // Écran haut : la liste construit ses sections paresseusement, et la
+    // section Accessibilité est sous la charte (REG-07 a allongé l'écran).
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await monter(tester, overrides: [
       etablissementActifProvider.overrideWithValue(null),
       paysPedagogiquesProvider.overrideWith((ref) async => const []),
