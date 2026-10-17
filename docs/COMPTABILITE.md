@@ -101,3 +101,12 @@ négatif, exercices et clôtures (période, exercice, à-nouveaux). Obligatoire 
 référentiel OHADA ; disponible aussi en simplifié, où l'écriture rapide à deux
 comptes reste possible hors période clôturée. Détail : `docs/REGISTRE.md`
 (REG-03) et `supabase/migrations/20260906001535_pieces_exercices_clotures.sql`.
+
+## 12. Paie en comptabilité (REG-03, lot C5)
+
+Chaque bulletin de paie validé produit sa pièce de constatation (charges de
+personnel / salaires dus / retenues), chaque bulletin payé sa pièce de
+règlement (salaires dus / trésorerie), dans le journal PAIE. Toute
+modification ultérieure du bulletin est reportée par contre-passation puis
+nouvelle pièce. Détail : `docs/REGISTRE.md` (REG-03) et
+`supabase/migrations/20260906001538_paie_comptabilisation.sql`.

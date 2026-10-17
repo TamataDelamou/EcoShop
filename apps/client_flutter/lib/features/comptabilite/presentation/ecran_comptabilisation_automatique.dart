@@ -8,8 +8,9 @@ import '../application/pieces_comptables_providers.dart';
 import '../domain/comptabilisation_automatique.dart';
 import '../domain/plan_comptable.dart';
 
-/// Écritures automatiques (REG-03 C3) : chaque paiement de frais scolaires
-/// (espèces, Orange Money, banque) passe tout seul en comptabilité. Cet écran
+/// Écritures automatiques (REG-03 C3, C5) : chaque paiement de frais
+/// scolaires (espèces, Orange Money, banque) et chaque bulletin de paie
+/// validé ou payé passent tout seuls en comptabilité. Cet écran
 /// montre ce qui reste à rattraper, les incidents expliqués, et les comptes
 /// utilisés — modifiables par l'école.
 class EcranComptabilisationAutomatique extends ConsumerStatefulWidget {
@@ -32,7 +33,7 @@ class _EcranComptabilisationAutomatiqueState extends ConsumerState<EcranComptabi
       ref.invalidate(etatComptabilisationAutomatiqueProvider(widget.etablissementId));
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(r.enEchec == 0
-            ? '${r.comptabilises} paiement(s) comptabilisé(s).'
+            ? '${r.comptabilises} opération(s) comptabilisée(s).'
             : '${r.comptabilises} comptabilisé(s), ${r.enEchec} encore en attente (voir les incidents).'),
       ));
     } on ErreurComptabilisationAutomatique catch (e) {
@@ -114,33 +115,52 @@ class _EcranComptabilisationAutomatiqueState extends ConsumerState<EcranComptabi
                       leading: Icon(Icons.warning_amber_outlined, color: Theme.of(context).colorScheme.error),
                       title: Text(i.explication),
                       subtitle: Text(
-                        '${i.operation == 'annulation' ? 'Annulation de paiement' : 'Paiement'} · '
+                        '${i.origine} · '
                         '${i.le.day.toString().padLeft(2, '0')}/${i.le.month.toString().padLeft(2, '0')}/${i.le.year}',
                       ),
                     ),
                   ),
               ],
-              const SizedBox(height: 20),
-              Text('Comptes utilisés', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(
-                'Débit : le compte du moyen de paiement. Crédit : le compte du type de frais.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.palette.encreSecondaire),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Column(children: [
-                  for (final r in e.regles)
-                    ListTile(
-                      key: Key('regle_${r.cle}'),
-                      leading: Icon(r.estTresorerie ? Icons.account_balance_wallet_outlined : Icons.school_outlined),
-                      title: Text(r.libelle),
-                      subtitle: Text('${r.compteAffiche}${r.personnalisee ? ' · choisi par l\'école' : ''}'),
-                      trailing: const Icon(Icons.edit_outlined),
-                      onTap: () => _changerCompte(r, imputables),
-                    ),
-                ]),
-              ),
+              for (final (titre, aide, regles) in [
+                (
+                  'Comptes utilisés — frais scolaires',
+                  'Débit : le compte du moyen de paiement. Crédit : le compte du type de frais.',
+                  [for (final r in e.regles) if (!r.estPaie) r],
+                ),
+                (
+                  'Comptes utilisés — paie',
+                  'Bulletin validé : débit salaires (brut), crédit salaires dus (net) et retenues. '
+                      'Bulletin payé : débit salaires dus, crédit paiement des salaires.',
+                  [for (final r in e.regles) if (r.estPaie) r],
+                ),
+              ])
+                if (regles.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Text(titre, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    aide,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.palette.encreSecondaire),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    child: Column(children: [
+                      for (final r in regles)
+                        ListTile(
+                          key: Key('regle_${r.cle}'),
+                          leading: Icon(r.estTresorerie
+                              ? Icons.account_balance_wallet_outlined
+                              : r.estPaie
+                                  ? Icons.badge_outlined
+                                  : Icons.school_outlined),
+                          title: Text(r.libelle),
+                          subtitle: Text('${r.compteAffiche}${r.personnalisee ? ' · choisi par l\'école' : ''}'),
+                          trailing: const Icon(Icons.edit_outlined),
+                          onTap: () => _changerCompte(r, imputables),
+                        ),
+                    ]),
+                  ),
+                ],
             ],
           ),
         ),
@@ -181,7 +201,7 @@ class _Synthese extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                aJour ? 'Tous les paiements sont comptabilisés.' : 'Des paiements attendent leur comptabilisation.',
+                aJour ? 'Paiements et paie sont à jour en comptabilité.' : 'Des opérations attendent leur comptabilisation.',
                 key: const Key('synthese_comptabilisation'),
                 style: Theme.of(context).textTheme.titleSmall,
               ),
@@ -191,6 +211,8 @@ class _Synthese extends StatelessWidget {
             const SizedBox(height: 8),
             if (etat.nonComptabilises > 0) Text('${etat.nonComptabilises} paiement(s) non comptabilisé(s)'),
             if (etat.annulationsEnAttente > 0) Text('${etat.annulationsEnAttente} annulation(s) à reporter'),
+            if (etat.paiesASynchroniser > 0)
+              Text('${etat.paiesASynchroniser} bulletin(s) de paie à reporter', key: const Key('paies_a_synchroniser')),
             const SizedBox(height: 12),
             FilledButton.icon(
               key: const Key('bouton_rattraper'),

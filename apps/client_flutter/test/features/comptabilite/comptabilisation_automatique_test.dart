@@ -10,7 +10,7 @@ import 'package:ecoshop_client/features/comptabilite/domain/plan_comptable.dart'
 import 'package:ecoshop_client/features/comptabilite/presentation/ecran_comptabilisation_automatique.dart';
 
 /// Faux port — création des pièces, idempotence, contre-passation des
-/// annulations et incidents sont vérifiés côté base (tests/rls/65).
+/// annulations et incidents sont vérifiés côté base (tests/rls/65 et 67).
 class _FauxDepot implements ComptabilisationAutomatiqueRepository {
   _FauxDepot(this.etatCourant);
 
@@ -91,7 +91,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(depot.rattrapages, 1);
-    expect(find.text('Tous les paiements sont comptabilisés.'), findsOneWidget);
+    expect(find.text('Paiements et paie sont à jour en comptabilité.'), findsOneWidget);
   });
 
   testWidgets('l\'école choisit un compte de détail pour les espèces', (tester) async {
@@ -107,5 +107,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(depot.regles.single, (cle: 'tresorerie:especes', compteId: 'c5711'));
+  });
+
+  testWidgets('paie : bulletins à reporter, incident expliqué, comptes de paie à part', (tester) async {
+    final depot = _FauxDepot(EtatComptabilisationAutomatique.depuisJson({
+      'active': true,
+      'non_comptabilises': 0,
+      'annulations_en_attente': 0,
+      'paies_a_synchroniser': 3,
+      'incidents': [
+        {
+          'id': 'i2',
+          'source_id': 'b1',
+          'source_type': 'paie_bulletin',
+          'operation': 'comptabilisation',
+          'code': 'AUCUN_EXERCICE_OUVERT',
+          'le': '2026-10-05T10:00:00Z',
+        },
+      ],
+      'regles': [
+        {'cle': 'produit:scolarite', 'compte_id': 'c70521', 'compte_code': '70521', 'compte_intitule': 'Frais de scolarité'},
+        {'cle': 'paie:charge', 'compte_id': 'c661', 'compte_code': '661', 'compte_intitule': 'Rémunérations directes'},
+        {'cle': 'paie:retenues', 'compte_id': 'c447', 'compte_code': '447', 'compte_intitule': 'État, impôts retenus'},
+      ],
+    }));
+    await _monter(tester, depot);
+
+    expect(find.byKey(const Key('paies_a_synchroniser')), findsOneWidget);
+    expect(find.textContaining('date du bulletin de paie'), findsOneWidget);
+    expect(find.textContaining('Bulletin de paie ·'), findsOneWidget);
+    expect(find.text('Comptes utilisés — paie'), findsOneWidget);
+    expect(find.text('Salaires (charge)'), findsOneWidget);
+    expect(find.text('661 — Rémunérations directes'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('bouton_rattraper')));
+    await tester.pumpAndSettle();
+    expect(find.text('2 opération(s) comptabilisée(s).'), findsOneWidget);
   });
 }

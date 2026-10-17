@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4 livrés (2026-10-17) — C5 à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4 et C5 (paie) livrés (2026-10-17) — suite de C5 à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -382,8 +382,33 @@ Hors périmètre : ventes marketplace (revenu du vendeur), facturation GSG.
 - Vérification : pgTAP `66` 29/29 (non-régression 33, 48, 63-65 vertes) ;
   tests Flutter `etats_financiers_test.dart` — **à lancer sur le poste**.
 
-Prochaine étape : lot **C5** (paie → comptabilité, tableau des flux de
-trésorerie complet, notes annexes, registre des donateurs SYCEBNL).
+**Lot C5, partie 1 livrée (2026-10-17) — la paie passe en comptabilité** —
+migration `…1538` :
+- bulletin M8 **validé** → constatation datée de la fin de période, journal
+  PAIE : débit charges de personnel (brut = base + primes), crédit salaires
+  dus (net), crédit retenues ; **payé** → règlement : débit salaires dus,
+  crédit trésorerie ;
+- comptes par défaut : SYSCOHADA 661 / 422 / 447 / 571, SYCEBNL
+  66 / 422 / 44 / 571 ; remplaçables par l'école (règles `paie:*`) ;
+- la comptabilité suit toujours le bulletin : modifié, ramené en
+  brouillon, archivé ou supprimé après coup → les pièces devenues fausses
+  sont contre-passées, puis les bonnes sont créées (jamais de
+  modification d'une pièce validée) ;
+- la paie n'est jamais bloquée : sans exercice ouvert ou en période
+  clôturée, un incident est consigné et le rattrapage le résout ;
+  simplifié sans règles « paie » : rien d'automatique ;
+- Flutter : l'écran « Écritures automatiques » affiche les bulletins à
+  reporter, les incidents de paie expliqués et une section « Comptes
+  utilisés — paie ».
+- Limites : les retenues M8 sont un total unique (un seul compte) ; les
+  charges patronales ne sont pas calculées par M8 — à traiter avec
+  l'expert-comptable.
+- Vérification : pgTAP `67` 31/31, régression 01-66 inchangée ; tests
+  Flutter `comptabilisation_automatique_test.dart` — **à lancer sur le
+  poste**.
+
+Prochaine étape : suite du lot **C5** (registre des donateurs SYCEBNL,
+tableau des flux de trésorerie complet, notes annexes).
 
 ---
 
