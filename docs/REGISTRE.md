@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 et C2 livrés (2026-10-17) — C3-C5 à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1, C2 et C3 livrés (2026-10-17) — C4-C5 à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -334,8 +334,35 @@ déjà un historique (table de correspondance, lot dédié) ; signaux IA M14
 (trésorerie, tendances, anomalies) encore limités aux écritures M14 — à
 étendre aux pièces avec le lot C4.
 
-Prochaine étape : lot **C3** (écritures automatiques : encaissements de
-scolarité, Orange Money, CinetPay).
+**Lot C3 livré (2026-10-17)** — migration `…1536` :
+- chaque encaissement de frais scolaires (espèces, **Orange Money**,
+  virement, chèque) produit sa pièce **validée** sans ressaisie : débit du
+  compte du moyen de paiement (571 / 5521 / 521), crédit du compte du type
+  de frais (SYSCOHADA 70611-70618, SYCEBNL 70521-70528) ; journaux CAI, OM,
+  BQ créés au besoin ; une seule pièce par encaissement (index unique) ;
+- l'annulation d'un encaissement produit sa **contre-passation** ; une pièce
+  automatique ne s'annule pas à la main (`PIECE_AUTOMATIQUE`) ;
+- **la comptabilité ne bloque jamais l'encaissement** : sans exercice, en
+  période clôturée ou sans compte, un incident est consigné ;
+  `comptabiliser_en_attente` rattrape tout de façon idempotente ;
+- comptes remplaçables par l'école (`definir_regle_comptabilisation`,
+  comptes de détail seulement) ; en simplifié, rien d'automatique sans
+  règles ;
+- Flutter : écran « Écritures automatiques » (état, incidents expliqués,
+  « Rattraper maintenant », comptes utilisés modifiables).
+- Vérification : pgTAP `65` 29/29 (non-régression Orange Money 58-59,
+  comptabilité 31-33 et 63-64 vertes) ; tests Flutter
+  `comptabilisation_automatique_test.dart` — **à lancer sur le poste**.
+
+Choix comptables à faire valider par l'expert-comptable : produit reconnu à
+l'encaissement ; or l'année scolaire (sept.-juin) chevauche l'exercice
+civil — en Système normal, la part des frais couvrant l'exercice suivant
+relève des **produits constatés d'avance** (régularisation au lot C4).
+Hors périmètre : ventes marketplace (revenu du vendeur), facturation GSG.
+
+Prochaine étape : lot **C4** (états financiers : bilan et compte de
+résultat SMT / normal / SYCEBNL en PDF, régularisation des produits
+constatés d'avance, signaux IA étendus aux pièces).
 
 ---
 

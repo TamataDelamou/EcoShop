@@ -5,6 +5,7 @@ import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../application/referentiel_comptable_providers.dart';
 import 'ecran_anomalies_comptables.dart';
 import 'ecran_balance.dart';
+import 'ecran_comptabilisation_automatique.dart';
 import 'ecran_ecritures_recentes.dart';
 import 'ecran_ecritures_recommandees.dart';
 import 'ecran_exercices_comptables.dart';
@@ -41,6 +42,8 @@ class EcranComptabilite extends ConsumerWidget {
           _section(context, 'Saisie'),
           _tuile(context, Icons.post_add_outlined, context.palette.primaire, 'Pièces comptables',
               'Brouillards, validation, contre-passation', () => EcranPiecesComptables(etablissementId: etablissementId)),
+          _tuile(context, Icons.bolt_outlined, context.palette.primaire, 'Écritures automatiques',
+              'Paiements de frais scolaires passés en comptabilité', () => EcranComptabilisationAutomatique(etablissementId: etablissementId)),
           if (!ohada)
             _tuile(context, Icons.receipt_long_outlined, context.palette.primaire, 'Écritures rapides',
                 'Un débit, un crédit (comptabilité simplifiée)', () => EcranEcrituresRecentes(etablissementId: etablissementId)),
