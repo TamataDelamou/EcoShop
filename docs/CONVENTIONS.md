@@ -24,13 +24,13 @@
   appliquée (ajouter une nouvelle migration).
 - RLS activée sur **toutes** les tables exposées au client ; `security
   definer` réservé aux fonctions contrôlées (hooks, triggers, Edge Functions).
-- Secrets (Twilio, Resend, CinetPay, service_role, GSG ID) : coffre-fort Edge
+- Secrets (Twilio, Resend, CinetPay, service_role, clé inter-services Kernel) : coffre-fort Edge
   Functions / paramètres Supabase, jamais en dur ni dans le dépôt.
 
 ## Edge Functions (Deno/TypeScript)
 
-- Une fonction = une responsabilité (`gsg-id-federate`, `paiement`, `ia`…).
-- Vérification de signature JWT (JWKS) avant toute fédération d'identité.
+- Une fonction = une responsabilité (`kernel-export`, `paiement`, `ia`…).
+- Vérification de signature JWT (JWKS) avant tout appel inter-services.
 - Journalisation structurée ; erreurs domaine → codes HTTP explicites
   (404/400), jamais de 500 silencieux.
 

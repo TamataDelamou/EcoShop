@@ -48,15 +48,23 @@ account_sid = "env(TWILIO_ACCOUNT_SID)"
 message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
 auth_token = "env(TWILIO_AUTH_TOKEN)"
 
-# Custom Access Token Hook — recopie role_racine / gsg_id / statut_compte dans
+# Custom Access Token Hook — recopie role_racine / statut_compte dans
 # le jeton (cache de confort ; la source de vérité reste public.profiles).
 [auth.hook.custom_access_token]
 enabled = true
 uri = "pg-functions://postgres/public/custom_access_token_hook"
 
-[functions.gsg-id-federate]
+# KER-MUT (docs/REGISTRE.md REG-01) — le Kernel GSG devient un Control Plane.
+# La fédération GSG ID (gsg-id-federate) est retirée. Les deux fonctions
+# ci-dessous vérifient elles-mêmes leur jeton (inter-services ou secret de
+# déclenchement) : la vérification JWT Supabase de la plateforme est désactivée.
+[functions.kernel-export]
 enabled = true
-verify_jwt = false   # la fonction vérifie elle-même la signature via JWKS (ch. 5.5)
+verify_jwt = false
+
+[functions.kernel-control-plane]
+enabled = true
+verify_jwt = false
 
 # M16 — Edge Functions IA (sous-livrable 3/7) : verify_jwt = true (défaut),
 # la plateforme vérifie la signature avant même d'invoquer la fonction —

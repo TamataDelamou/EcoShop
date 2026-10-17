@@ -7,7 +7,9 @@ révision et de réussite aux examens, éditée par **Global Service Groupe (GSG
   stockage hors-ligne SQLite/Drift.
 - **Backend** : Supabase (Postgres + RLS, Auth natif, Storage, Realtime,
   Edge Functions).
-- **Identité fédérée** : GSG ID via le GSG Platform Kernel (couche additive).
+- **Identité** : Supabase Auth natif uniquement.
+- **GSG Platform Kernel** : Control Plane externe (tableaux de bord centraux),
+  alimenté par EcoShop — voir [`docs/REGISTRE.md`](./docs/REGISTRE.md) REG-01.
 
 ## Traçabilité — projet source original
 
@@ -34,7 +36,7 @@ décrite dans [`ANALYSE_GLOBALE.md`](./ANALYSE_GLOBALE.md) et
 │           └── features/        # Verticaux : auth, etablissement, coquille…
 ├── supabase/
 │   ├── migrations/              # Migrations SQL Postgres (schéma, RLS)
-│   ├── functions/               # Edge Functions (fédération GSG ID, paiement, IA…)
+│   ├── functions/               # Edge Functions (reporting Kernel, paiement, IA…)
 │   ├── config.toml              # Configuration projet Supabase
 │   └── seed.sql                 # Données de développement
 ├── docs/                        # Documentation maître (architecture, conventions)
@@ -66,25 +68,30 @@ aucun appel réseau n'est tenté et l'écran de socle s'affiche.
 supabase login
 supabase link --project-ref <ref>
 supabase db push                    # applique supabase/migrations dans l'ordre
-supabase functions deploy gsg-id-federate
 supabase functions deploy creer_profil_marketplace
+supabase functions deploy kernel-export
+supabase functions deploy kernel-control-plane
 ```
 
 Après le premier `db push`, activer le **Custom Access Token Hook** :
 `Authentication > Hooks > Custom Access Token` → `public.custom_access_token_hook`
 (déjà déclaré dans `supabase/config.toml` pour l'environnement local).
 
-Secrets attendus par l'Edge Function `gsg-id-federate` :
+Secrets du raccordement au Control Plane du Kernel GSG (`kernel-export`,
+`kernel-control-plane` — contrat : `docs/contrats/KERNEL_CONTROL_PLANE.md`) :
 
 | Secret | Rôle |
 |---|---|
-| `GSG_KERNEL_BASE_URL` | URL du GSG Platform Kernel |
-| `GSG_KERNEL_API_KEY` | Clé client GSG ID |
-| `GSG_KERNEL_TIMEOUT_MS` | Délai avant abandon (défaut : 5000) |
-| `CORS_ORIGINES` | Origines web autorisées, séparées par des virgules |
+| `KERNEL_INTERSERVICES_CLE_PRIVEE_JWK` | Clé privée EC P-256 d'EcoShop (JWK avec `kid`) — signe les envois, sa partie publique est servie à `/kernel-control-plane/jwks.json` |
+| `GSG_KERNEL_AGGREGATION_URL` | URL de base des endpoints d'agrégation du Kernel |
+| `GSG_KERNEL_JWKS_URL` | JWKS du Kernel (vérifie les jetons entrants) |
+| `GSG_KERNEL_ISSUER` | Émetteur attendu des jetons du Kernel |
+| `KERNEL_EXPORT_DECLENCHEUR_SECRET` | Secret de l'appel planifié à `kernel-export` (en-tête `x-declencheur-secret`) |
+| `GSG_KERNEL_TIMEOUT_MS` | Délai avant abandon d'un envoi (défaut : 10000) |
 
-En leur absence, la fédération est simplement ignorée : elle est **additive et
-non bloquante**, aucune connexion n'en dépend.
+En leur absence, l'export est ignoré et la lecture répond 503 : rien d'autre
+dans EcoShop n'en dépend. La fédération GSG ID (`gsg-id-federate`) a été
+retirée (directive KER-MUT, `docs/REGISTRE.md` REG-01).
 
 ### 3. Tests & analyse statique
 

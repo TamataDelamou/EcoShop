@@ -1,9 +1,11 @@
 -- ============================================================================
 -- EcoShop — Test RLS 03 : Custom Access Token Hook opérant (C3)
 --
--- Vérifie que custom_access_token_hook() émet effectivement les claims
--- app_metadata.role_racine et app_metadata.gsg_id à partir de la table
--- profiles (source de vérité), sous le rôle d'exécution du hook
+-- Vérifie que custom_access_token_hook() émet effectivement le claim
+-- app_metadata.role_racine à partir de la table profiles (source de vérité),
+-- et n'émet PLUS app_metadata.gsg_id depuis KER-MUT K1 (fédération GSG ID
+-- abandonnée, migration 20260906001525) — ni depuis profiles, ni recopié
+-- d'un ancien jeton, sous le rôle d'exécution du hook
 -- (supabase_auth_admin). La fonction étant SECURITY DEFINER, elle est
 -- appelable ici depuis le rôle de test superutilisateur.
 -- ============================================================================
@@ -27,10 +29,11 @@ BEGIN
 END;
 $$;
 
-SELECT plan(2);
+SELECT plan(3);
 
 -- ---------------------------------------------------------------------------
--- Données : un enseignant avec un gsg_id renseigné.
+-- Données : un enseignant dont la colonne obsolète gsg_id est encore
+-- renseignée (donnée héritée, conservée par la migration K1).
 -- ---------------------------------------------------------------------------
 SELECT pg_temp.creer_compte('224600000021', 'enseignant') AS prof_id \gset
 
@@ -54,8 +57,19 @@ SELECT is(
   public.custom_access_token_hook(
     jsonb_build_object('user_id', :'prof_id', 'claims', '{}'::jsonb)
   ) #>> '{claims,app_metadata,gsg_id}',
-  :'gsg_id',
-  'C3 : gsg_id émis dans app_metadata'
+  NULL,
+  'K1 : gsg_id n''est plus émis dans app_metadata (fédération abandonnée)'
+);
+
+SELECT is(
+  public.custom_access_token_hook(
+    jsonb_build_object(
+      'user_id', :'prof_id',
+      'claims', jsonb_build_object('app_metadata', jsonb_build_object('gsg_id', :'gsg_id'))
+    )
+  ) #>> '{claims,app_metadata,gsg_id}',
+  NULL,
+  'K1 : un gsg_id hérité d''un ancien jeton est retiré au rafraîchissement'
 );
 
 SELECT * FROM finish();

@@ -86,3 +86,21 @@ jobs:
 
       - name: Tests unitaires
         run: flutter test
+
+  edge_functions:
+    name: Edge Functions (vérification de types + tests Deno)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Tests du module inter-services (KER-MUT K3)
+        run: deno test --allow-env supabase/functions/_shared/interservices_test.ts
+
+      - name: Vérification de types — fonctions du Control Plane Kernel
+        run: deno check supabase/functions/kernel-export/index.ts supabase/functions/kernel-control-plane/index.ts

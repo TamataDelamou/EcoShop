@@ -4,9 +4,13 @@
 
 - **Supabase = backend applicatif** : Postgres + RLS, Auth natif, Storage,
   Realtime, Edge Functions.
-- **GSG Platform Kernel = externe** : `src/` du dépôt sert de contrat de
-  référence (DTOs/API) pour la fédération d'identité GSG ID. Aucune logique
-  métier EcoShop n'y est portée.
+- **GSG Platform Kernel = Control Plane externe** (directive KER-MUT du
+  2026-10-17, `docs/REGISTRE.md` REG-01) : le Kernel n'est plus fournisseur
+  d'identité ni de référentiels. Il agrège les métriques et journaux d'audit
+  qu'EcoShop lui pousse (`kernel-export`) et interroge EcoShop en lecture
+  seule (`kernel-control-plane`), par jetons inter-services ES256. Contrat :
+  `docs/contrats/KERNEL_CONTROL_PLANE.md`. `src/` n'est plus qu'une archive
+  de l'ancien contrat (retrait soumis au porteur de projet).
 - **Client Flutter hors-ligne prioritaire** : Riverpod pour l'état, Drift/SQLite
   pour le local, file de synchronisation outbox.
 - **Port Paiement agnostique** : adaptateurs interchangeables (CinetPay,
@@ -28,10 +32,10 @@
 │ Supabase                                                            │
 │  auth.users → public.profiles (RLS)                                 │
 │  Custom Access Token Hook : custom_access_token_hook()              │
-│  Edge Functions : gsg-id-federate, (paiement, IA, notifications…)   │
+│  Edge Functions : kernel-export, kernel-control-plane, paiement, IA │
 └──────────────────────────────┬──────────────────────────────────────┘
-                               │ fédération additive (JWT/JWKS)
-                        GSG Platform Kernel (GSG ID)
+                               │ reporting poussé + lecture seule (JWT ES256)
+                  GSG Platform Kernel — Control Plane (tableaux de bord)
 ```
 
 ## 3. Identité & permissions
@@ -71,8 +75,8 @@ Elles sont `SECURITY DEFINER` pour une raison précise : une policy sur
 déclenche une récursion RLS (`42P17`). Une fonction `SECURITY DEFINER`
 n'évalue pas les policies des tables qu'elle lit, ce qui rompt la boucle.
 
-**`custom_access_token_hook()`** recopie `role_racine`, `gsg_id` et
-`statut_compte` dans le JWT à l'émission et au rafraîchissement. Ces claims
+**`custom_access_token_hook()`** recopie `role_racine` et
+`statut_compte` dans le JWT (plus `gsg_id` depuis KER-MUT K1) à l'émission et au rafraîchissement. Ces claims
 sont un **cache de confort pour l'affichage** ; toute décision d'autorisation
 relit `public.profiles` côté serveur.
 

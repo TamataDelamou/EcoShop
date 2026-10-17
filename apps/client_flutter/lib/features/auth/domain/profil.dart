@@ -30,7 +30,6 @@ class Profil {
     required this.identifiantCanonique,
     required this.statutCompte,
     this.roleRacine,
-    this.gsgId,
     this.prenom,
     this.nom,
     this.etablissementActifId,
@@ -42,7 +41,6 @@ class Profil {
       identifiantCanonique: json['identifiant_canonique'] as String? ?? '',
       statutCompte: StatutCompte.depuisCode(json['statut_compte'] as String?),
       roleRacine: RoleRacine.depuisCode(json['role_racine'] as String?),
-      gsgId: json['gsg_id'] as String?,
       prenom: json['prenom'] as String?,
       nom: json['nom'] as String?,
       etablissementActifId: json['etablissement_actif_id'] as String?,
@@ -55,9 +53,6 @@ class Profil {
 
   /// Null tant que le rôle n'a pas été choisi (anti-élévation de privilège).
   final RoleRacine? roleRacine;
-
-  /// Identité fédérée GSG ID — additive, souvent nulle.
-  final String? gsgId;
 
   final String? prenom;
   final String? nom;

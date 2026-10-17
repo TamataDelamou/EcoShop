@@ -11,7 +11,7 @@ l'outillage Postgres/Supabase sera disponible.
 |---|---|---|
 | `01_anti_elevation.sql` | Escalade de privilège impossible via `UPDATE` direct ; rôle fixé uniquement par `choisir_role_racine()`, restreint aux rôles auto-inscriptibles | C1 |
 | `02_recursion_rls.sql` | Lecture des tables multi-tenant sans récursion RLS (`42P17`) | C2 |
-| `03_hook_jwt.sql` | `custom_access_token_hook()` émet réellement `app_metadata.role_racine` et `app_metadata.gsg_id` | C3 |
+| `03_hook_jwt.sql` | `custom_access_token_hook()` émet réellement `app_metadata.role_racine` ; n'émet plus `app_metadata.gsg_id` (KER-MUT K1), y compris hérité d'un ancien jeton | C3 / KER-MUT K1 |
 | `04_anti_brute_force.sql` | `lier_compte_a_fiche()` verrouille après 5 échecs/heure, même avec de bons identifiants | C4 / ch. 5.8 |
 | `05_isolation_multi_tenant.sql` | Un membre ne voit que les données de ses propres établissements | multi-tenant |
 | `06_invitations.sql` | Une invitation nominative n'est acceptée que par son destinataire | ch. 5.2 |
@@ -55,6 +55,7 @@ l'outillage Postgres/Supabase sera disponible.
 | `54_cgu_consentement_generique.sql` | CGU / consentement générique : lecture publique des versions courantes, acceptation réservée au profil lui-même (insert), immutabilité du registre (aucune policy update/delete), publication réservée admin_gsg, `cgu_statut()` sans ligne pour un rôle non choisi ou un rôle plateforme (admin_gsg/admin_contenu, hors périmètre), bascule de version qui invalide l'acceptation précédente (nouvelle version = non accepté tant que non re-signée) | Bloquant lancement, item 1/4 (§34.10) |
 | `55_verrou_definitif_notes_et_mention_examen.sql` | Verrou définitif des notes + mention finale : `definir_mention_finale` réservée à la Direction et bloquée par classe déjà examen/déjà proclamée, `proclamer_classe` exige mention posée sur tous les élèves actifs d'une classe d'examen, verrou total de `peut_saisir_notes`/`generer_bulletins_classe` après proclamation SANS exception admin_gsg, immutabilité totale de `proclamations_classes` (aucune policy update/delete, y compris admin_gsg), isolation inter-établissement, visibilité personnel/admin_gsg uniquement | Bloquant lancement, item 2/4 (§12.3, §12.4, §7.3) |
 | `56_validation_vendeur_etablissement_marketplace.sql` | Validation vendeur (GSG, palier 1) + agrément établissement↔vendeur (Direction, palier 2) : `valider_vendeur` réservée admin_gsg, `decider_agrement_vendeur_etablissement` réservée à la Direction de l'établissement concerné ET bloquée tant que le vendeur n'est pas déjà validé GSG, porte RLS `commandes_insert` qui exige les deux paliers `valide` (`vendeur_actif_pour_etablissement`), isolation inter-établissement, visibilité personnel/admin_gsg/appel service | Bloquant lancement, item 3/4 (§27.1-27.2, §30.1-30.2) |
+| `57_kernel_control_plane.sql` | Reporting vers le Control Plane du Kernel : aucune fonction `kernel_*` appelable par anon/authenticated, curseurs invisibles hors admin GSG, minimisation (jamais `ancienne_valeur`/`nouvelle_valeur`/`fiche_eleve_id`/`groupe_id` exportés), délai de sécurité de 2 min, export incrémental sans doublon ni perte, curseur qui ne recule jamais, départage numérique des id de métriques à horodatage égal, agrégats de `kernel_metriques_cles()` | KER-MUT K2/K3 |
 
 ## Prérequis
 

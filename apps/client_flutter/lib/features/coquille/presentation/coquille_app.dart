@@ -438,11 +438,6 @@ class _VueProfil extends ConsumerWidget {
           subtitle: Text(p.roleRacine?.code ?? 'non défini'),
         ),
         ListTile(
-          leading: const Icon(Icons.hub_outlined),
-          title: const Text('Identité GSG ID'),
-          subtitle: Text(p.gsgId ?? 'non fédérée'),
-        ),
-        ListTile(
           leading: const Icon(Icons.public_outlined),
           title: const Text('Référentiel pédagogique CEDEAO'),
           subtitle: const Text('Consultable hors connexion'),

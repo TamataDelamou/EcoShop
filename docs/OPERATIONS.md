@@ -37,7 +37,8 @@ audit de cohérence, et peut être relancé après une coupure réseau.
 
 ### 2.1 Gestion des utilisateurs et rôles
 
-- Identité : `profiles` (M0) + fédération GSG ID (`gsg-id-federate`, M2).
+- Identité : `profiles` (M0), Supabase Auth natif uniquement. La fédération
+  GSG ID (`gsg-id-federate`, M2) est retirée depuis KER-MUT (2026-10-17).
 - Rôles globaux : `role_racine` (élève, parent, personnel, direction, admin_gsg).
 - Rôles par établissement : `etablissements_membres` + `postes` + `poste_permissions`.
 - **Règle** : ne jamais coder de permission en dur côté client ; passer par le
