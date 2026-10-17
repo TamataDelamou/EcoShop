@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4 et C5 (paie) livrés (2026-10-17) — suite de C5 à construire |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C4, C5 paie et donateurs livrés (2026-10-17) — TFT et notes annexes à construire |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -407,8 +407,41 @@ migration `…1538` :
   Flutter `comptabilisation_automatique_test.dart` — **à lancer sur le
   poste**.
 
-Prochaine étape : suite du lot **C5** (registre des donateurs SYCEBNL,
-tableau des flux de trésorerie complet, notes annexes).
+**Lot C5, partie 2 livrée (2026-10-17) — registre des donateurs et des
+dons** — migrations `…1539` (audit) et `…1540`, recherche préalable sur le
+SYCEBNL (comptes 704x « revenus liés à la générosité », 165 « fonds
+affectés », 7925 « reprises de fonds affectés ») et sur les logiciels de
+gestion des dons :
+- donateurs (personne, organisation, église), accord de contact, archivage
+  (jamais supprimé après un don) ; accès direction et comptables seulement ;
+- dons : don, legs, denier du culte, quête, mécénat, parrainage, autre ;
+  **reçu numéroté sans trou par année** (REC-2026-000001) ; un don ne se
+  modifie jamais : annulation motivée (contre-passation, journal d'audit)
+  puis ressaisie ; option « anonyme » (nom sur le reçu, jamais dans les
+  listes) ;
+- campagnes : libres, **projets à fonds affectés**, parrainage d'élèves ;
+  objectif, collecté, employé, disponible ; type figé dès le premier don ;
+- comptabilité automatique : SYCEBNL D trésorerie / C 7041 à 7048 selon la
+  nature ; projet → C 165 ; emploi des fonds → D 165 / C 7925 (journal
+  OD), refusé au-delà des fonds reçus ; SYSCOHADA → C 758 ; simplifié →
+  selon les règles de l'école ; comptes SYCEBNL ajoutés (7045-7048, 79,
+  792, 7925, 475, 636), y compris pour les écoles déjà en SYCEBNL ;
+- engagements réguliers (parrainage mensuel, promesse) : attendu à ce jour,
+  reçu, retard ;
+- synthèse annuelle : total et évolution, nouveaux donateurs, fidèles,
+  donateurs à remercier et relancer (ont donné l'an dernier, pas encore
+  cette année, et acceptent d'être contactés), principaux donateurs ;
+- Flutter : écran « Dons et donateurs » (Synthèse, Dons, Donateurs,
+  Campagnes), saisie avec montant en lettres, **reçu PDF** (mention
+  « ANNULÉ » le cas échéant) et **relevé annuel PDF** par donateur.
+- Limites : la page de don en ligne (Orange Money) et les dons en nature
+  (7542, stocks) sont à venir ; la valeur fiscale des reçus en Guinée
+  n'est pas affirmée — à confirmer avec l'expert-comptable.
+- Vérification : pgTAP `68` 46/46, régression 01-67 inchangée ; tests
+  Flutter `dons_test.dart` — **à lancer sur le poste**.
+
+Prochaine étape : fin du lot **C5** (tableau des flux de trésorerie
+complet, notes annexes).
 
 ---
 

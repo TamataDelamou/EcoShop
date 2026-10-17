@@ -91,7 +91,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(depot.rattrapages, 1);
-    expect(find.text('Paiements et paie sont à jour en comptabilité.'), findsOneWidget);
+    expect(find.text('Tout est à jour en comptabilité.'), findsOneWidget);
   });
 
   testWidgets('l\'école choisit un compte de détail pour les espèces', (tester) async {

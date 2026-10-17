@@ -110,3 +110,12 @@ règlement (salaires dus / trésorerie), dans le journal PAIE. Toute
 modification ultérieure du bulletin est reportée par contre-passation puis
 nouvelle pièce. Détail : `docs/REGISTRE.md` (REG-03) et
 `supabase/migrations/20260906001538_paie_comptabilisation.sql`.
+
+## 13. Dons et donateurs (REG-03, lot C5)
+
+Registre des donateurs, dons avec reçus numérotés par année, campagnes et
+projets à fonds affectés, engagements de parrainage, synthèse annuelle et
+relances. Chaque don est comptabilisé automatiquement (SYCEBNL : 704x selon
+la nature, 165 pour un projet, 7925 à l'emploi des fonds). Détail :
+`docs/REGISTRE.md` (REG-03) et
+`supabase/migrations/20260906001540_registre_donateurs.sql`.

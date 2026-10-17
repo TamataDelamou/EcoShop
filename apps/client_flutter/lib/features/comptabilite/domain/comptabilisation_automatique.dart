@@ -21,6 +21,15 @@ const libellesCles = <String, String>{
   'paie:dette': 'Salaires dus au personnel',
   'paie:retenues': 'Retenues sur salaire',
   'paie:tresorerie': 'Paiement des salaires',
+  'don:don': 'Dons',
+  'don:legs': 'Legs',
+  'don:denier_culte': 'Deniers du culte',
+  'don:quete': 'Quêtes',
+  'don:mecenat': 'Mécénat',
+  'don:parrainage': 'Parrainage',
+  'don:autre': 'Autres dons',
+  'don:fonds_affectes': 'Dons affectés à un projet',
+  'don:reprise_fonds_affectes': 'Emploi des fonds affectés (reprise)',
 };
 
 class RegleComptabilisation {
@@ -49,6 +58,7 @@ class RegleComptabilisation {
   String get libelle => libellesCles[cle] ?? cle;
   bool get estTresorerie => cle.startsWith('tresorerie:') || cle == 'paie:tresorerie';
   bool get estPaie => cle.startsWith('paie:');
+  bool get estDon => cle.startsWith('don:');
   String get compteAffiche => compteCode == null ? 'Aucun compte' : '$compteCode — ${compteIntitule ?? ''}';
 }
 
@@ -76,16 +86,23 @@ class IncidentComptabilisation {
   final String sourceType;
 
   bool get estPaie => sourceType == 'paie_bulletin';
+  bool get estDon => sourceType == 'don' || sourceType == 'emploi_fonds_affectes';
 
-  /// « Paiement », « Annulation de paiement » ou « Bulletin de paie ».
-  String get origine => estPaie
-      ? 'Bulletin de paie'
-      : operation == 'annulation'
-          ? 'Annulation de paiement'
-          : 'Paiement';
+  /// Ce qui a déclenché l'incident, en clair.
+  String get origine => switch (sourceType) {
+        'paie_bulletin' => 'Bulletin de paie',
+        'don' => operation == 'annulation' ? 'Annulation de don' : 'Don',
+        'emploi_fonds_affectes' => 'Emploi de fonds affectés',
+        _ => operation == 'annulation' ? 'Annulation de paiement' : 'Paiement',
+      };
 
   String get explication {
-    final objet = estPaie ? 'du bulletin de paie' : 'du paiement';
+    final objet = switch (sourceType) {
+      'paie_bulletin' => 'du bulletin de paie',
+      'don' => 'du don',
+      'emploi_fonds_affectes' => 'de l\'emploi des fonds',
+      _ => 'du paiement',
+    };
     return switch (code) {
       'AUCUN_EXERCICE_OUVERT' => 'Aucun exercice ouvert à la date $objet : ouvrez l\'exercice puis rattrapez.',
       'PERIODE_CLOTUREE' => 'Date $objet dans une période déjà clôturée : à régulariser par la comptable.',
@@ -102,6 +119,7 @@ class EtatComptabilisationAutomatique {
     required this.nonComptabilises,
     required this.annulationsEnAttente,
     this.paiesASynchroniser = 0,
+    this.donsAComptabiliser = 0,
     this.incidents = const [],
     this.regles = const [],
   });
@@ -111,6 +129,7 @@ class EtatComptabilisationAutomatique {
         nonComptabilises: (json['non_comptabilises'] as num?)?.toInt() ?? 0,
         annulationsEnAttente: (json['annulations_en_attente'] as num?)?.toInt() ?? 0,
         paiesASynchroniser: (json['paies_a_synchroniser'] as num?)?.toInt() ?? 0,
+        donsAComptabiliser: (json['dons_a_comptabiliser'] as num?)?.toInt() ?? 0,
         incidents: [
           for (final i in (json['incidents'] as List<dynamic>? ?? const []))
             IncidentComptabilisation.depuisJson(i as Map<String, dynamic>),
@@ -127,10 +146,13 @@ class EtatComptabilisationAutomatique {
 
   /// Bulletins validés/payés sans pièce, ou modifiés après coup (lot C5).
   final int paiesASynchroniser;
+
+  /// Dons et emplois de fonds affectés à reporter (lot C5).
+  final int donsAComptabiliser;
   final List<IncidentComptabilisation> incidents;
   final List<RegleComptabilisation> regles;
 
-  bool get aJour => nonComptabilises == 0 && annulationsEnAttente == 0 && paiesASynchroniser == 0;
+  bool get aJour => nonComptabilises == 0 && annulationsEnAttente == 0 && paiesASynchroniser == 0 && donsAComptabiliser == 0;
 }
 
 class ErreurComptabilisationAutomatique implements Exception {

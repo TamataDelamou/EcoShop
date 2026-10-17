@@ -6,6 +6,7 @@ import '../application/referentiel_comptable_providers.dart';
 import 'ecran_anomalies_comptables.dart';
 import 'ecran_balance.dart';
 import 'ecran_comptabilisation_automatique.dart';
+import 'ecran_dons.dart';
 import 'ecran_ecritures_recentes.dart';
 import 'ecran_ecritures_recommandees.dart';
 import 'ecran_etats_financiers.dart';
@@ -44,7 +45,9 @@ class EcranComptabilite extends ConsumerWidget {
           _tuile(context, Icons.post_add_outlined, context.palette.primaire, 'Pièces comptables',
               'Brouillards, validation, contre-passation', () => EcranPiecesComptables(etablissementId: etablissementId)),
           _tuile(context, Icons.bolt_outlined, context.palette.primaire, 'Écritures automatiques',
-              'Paiements de frais scolaires passés en comptabilité', () => EcranComptabilisationAutomatique(etablissementId: etablissementId)),
+              'Frais scolaires, paie et dons passés en comptabilité', () => EcranComptabilisationAutomatique(etablissementId: etablissementId)),
+          _tuile(context, Icons.volunteer_activism_outlined, context.palette.primaire, 'Dons et donateurs',
+              'Reçus numérotés, campagnes, projets, parrainages', () => EcranDons(etablissementId: etablissementId)),
           if (!ohada)
             _tuile(context, Icons.receipt_long_outlined, context.palette.primaire, 'Écritures rapides',
                 'Un débit, un crédit (comptabilité simplifiée)', () => EcranEcrituresRecentes(etablissementId: etablissementId)),

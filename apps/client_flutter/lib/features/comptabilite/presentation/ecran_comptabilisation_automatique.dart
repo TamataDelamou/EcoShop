@@ -125,13 +125,19 @@ class _EcranComptabilisationAutomatiqueState extends ConsumerState<EcranComptabi
                 (
                   'Comptes utilisés — frais scolaires',
                   'Débit : le compte du moyen de paiement. Crédit : le compte du type de frais.',
-                  [for (final r in e.regles) if (!r.estPaie) r],
+                  [for (final r in e.regles) if (!r.estPaie && !r.estDon) r],
                 ),
                 (
                   'Comptes utilisés — paie',
                   'Bulletin validé : débit salaires (brut), crédit salaires dus (net) et retenues. '
                       'Bulletin payé : débit salaires dus, crédit paiement des salaires.',
                   [for (final r in e.regles) if (r.estPaie) r],
+                ),
+                (
+                  'Comptes utilisés — dons',
+                  'Don : débit le compte du moyen de paiement, crédit le compte de sa nature (ou des fonds affectés '
+                      'pour un projet). Emploi des fonds affectés : débit fonds affectés, crédit reprise.',
+                  [for (final r in e.regles) if (r.estDon) r],
                 ),
               ])
                 if (regles.isNotEmpty) ...[
@@ -152,7 +158,9 @@ class _EcranComptabilisationAutomatiqueState extends ConsumerState<EcranComptabi
                               ? Icons.account_balance_wallet_outlined
                               : r.estPaie
                                   ? Icons.badge_outlined
-                                  : Icons.school_outlined),
+                                  : r.estDon
+                                      ? Icons.volunteer_activism_outlined
+                                      : Icons.school_outlined),
                           title: Text(r.libelle),
                           subtitle: Text('${r.compteAffiche}${r.personnalisee ? ' · choisi par l\'école' : ''}'),
                           trailing: const Icon(Icons.edit_outlined),
@@ -184,8 +192,8 @@ class _Synthese extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: Text(
-            'Comptabilité simplifiée : les paiements ne passent en comptabilité automatiquement '
-            'qu\'une fois les comptes choisis ci-dessous (au moins un moyen de paiement et un type de frais).',
+            'Comptabilité simplifiée : paiements, paie et dons ne passent en comptabilité automatiquement '
+            'qu\'une fois les comptes choisis ci-dessous.',
           ),
         ),
       );
@@ -201,7 +209,7 @@ class _Synthese extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                aJour ? 'Paiements et paie sont à jour en comptabilité.' : 'Des opérations attendent leur comptabilisation.',
+                aJour ? 'Tout est à jour en comptabilité.' : 'Des opérations attendent leur comptabilisation.',
                 key: const Key('synthese_comptabilisation'),
                 style: Theme.of(context).textTheme.titleSmall,
               ),
@@ -213,6 +221,8 @@ class _Synthese extends StatelessWidget {
             if (etat.annulationsEnAttente > 0) Text('${etat.annulationsEnAttente} annulation(s) à reporter'),
             if (etat.paiesASynchroniser > 0)
               Text('${etat.paiesASynchroniser} bulletin(s) de paie à reporter', key: const Key('paies_a_synchroniser')),
+            if (etat.donsAComptabiliser > 0)
+              Text('${etat.donsAComptabiliser} don(s) ou emploi(s) de fonds à reporter', key: const Key('dons_a_comptabiliser')),
             const SizedBox(height: 12),
             FilledButton.icon(
               key: const Key('bouton_rattraper'),
