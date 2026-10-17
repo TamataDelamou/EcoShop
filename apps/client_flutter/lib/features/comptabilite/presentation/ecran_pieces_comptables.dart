@@ -246,53 +246,13 @@ class _EcranDetailPieceState extends ConsumerState<EcranDetailPiece> {
   }
 
   Future<void> _contrepasser(PieceComptable piece) async {
-    final motif = TextEditingController();
-    var date = DateTime.now().isBefore(piece.datePiece) ? piece.datePiece : DateTime.now();
-    final ok = await showDialog<bool>(
+    final choix = await showDialog<({String motif, DateTime date})>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialog) => AlertDialog(
-          title: Text('Annuler ${piece.reference} ?'),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('Une pièce de contre-passation, en montants négatifs, sera créée et validée. '
-                'La pièce d\'origine reste visible, marquée « annulée ».'),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('motif_contrepassation'),
-              controller: motif,
-              decoration: const InputDecoration(labelText: 'Motif (obligatoire)'),
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () async {
-                final d = await showDatePicker(
-                  context: context,
-                  initialDate: date,
-                  firstDate: piece.datePiece,
-                  lastDate: DateTime(2100),
-                );
-                if (d != null) setDialog(() => date = d);
-              },
-              icon: const Icon(Icons.calendar_today_outlined),
-              label: Text('Date : ${dateCourte(date)}'),
-            ),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Retour')),
-            FilledButton(
-              key: const Key('confirmer_contrepassation'),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Contre-passer'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _DialogueContrepassation(piece: piece),
     );
-    final texte = motif.text.trim();
-    motif.dispose();
-    if (ok != true || !mounted) return;
+    if (choix == null || !mounted) return;
     await _action(() async {
-      await ref.read(piecesComptablesRepositoryProvider).contrepasser(piece.id, texte, date);
+      await ref.read(piecesComptablesRepositoryProvider).contrepasser(piece.id, choix.motif, choix.date);
       ref.invalidate(pieceComptableDetailProvider(widget.pieceId));
       return 'Pièce annulée par contre-passation.';
     });
@@ -412,6 +372,79 @@ class _EcranDetailPieceState extends ConsumerState<EcranDetailPiece> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Dialogue de contre-passation : il possède son champ de saisie (libéré
+/// avec lui, après l'animation de fermeture) et renvoie motif et date.
+class _DialogueContrepassation extends StatefulWidget {
+  const _DialogueContrepassation({required this.piece});
+
+  final PieceComptable piece;
+
+  @override
+  State<_DialogueContrepassation> createState() => _DialogueContrepassationState();
+}
+
+class _DialogueContrepassationState extends State<_DialogueContrepassation> {
+  final _motif = TextEditingController();
+  late DateTime _date =
+      DateTime.now().isBefore(widget.piece.datePiece) ? widget.piece.datePiece : DateTime.now();
+  bool _motifManquant = false;
+
+  @override
+  void dispose() {
+    _motif.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Annuler ${widget.piece.reference} ?'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('Une pièce de contre-passation, en montants négatifs, sera créée et validée. '
+            'La pièce d\'origine reste visible, marquée « annulée ».'),
+        const SizedBox(height: 12),
+        TextField(
+          key: const Key('motif_contrepassation'),
+          controller: _motif,
+          decoration: InputDecoration(
+            labelText: 'Motif (obligatoire)',
+            errorText: _motifManquant ? 'Indiquez le motif.' : null,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () async {
+            final d = await showDatePicker(
+              context: context,
+              initialDate: _date,
+              firstDate: widget.piece.datePiece,
+              lastDate: DateTime(2100),
+            );
+            if (d != null) setState(() => _date = d);
+          },
+          icon: const Icon(Icons.calendar_today_outlined),
+          label: Text('Date : ${dateCourte(_date)}'),
+        ),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Retour')),
+        FilledButton(
+          key: const Key('confirmer_contrepassation'),
+          onPressed: () {
+            final motif = _motif.text.trim();
+            if (motif.isEmpty) {
+              setState(() => _motifManquant = true);
+              return;
+            }
+            Navigator.of(context).pop((motif: motif, date: _date));
+          },
+          child: const Text('Contre-passer'),
+        ),
+      ],
     );
   }
 }
