@@ -47,7 +47,22 @@ Future<Uint8List> construireRecuDonPdf({
     margin: const pw.EdgeInsets.all(24),
     build: (context) => pw.Stack(children: [
       pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-        enteteDocument(etablissement: etablissement, titre: textePdf('Reçu de don N° ${recu.numeroRecu}'), palette: palette),
+        enteteDocument(
+          etablissement: etablissement,
+          titre: textePdf(recu.provisoire
+              ? 'Reçu de don PROVISOIRE N° ${recu.numeroRecu}'
+              : 'Reçu de don N° ${recu.numeroRecu}'),
+          palette: palette,
+        ),
+        if (recu.provisoire)
+          pw.Text(
+            textePdf('Saisi sans réseau. Le numéro définitif est attribué à l\'envoi au serveur ; '
+                'le reçu définitif pourra alors être remis.'),
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.orange800),
+          )
+        else if (recu.numeroProvisoire != null)
+          pw.Text(textePdf('Remplace le reçu provisoire ${recu.numeroProvisoire}.'),
+              style: pw.TextStyle(fontSize: 8, color: palette.encreSecondaire)),
         pw.SizedBox(height: 8),
         ligne('Date du don', _date(recu.dateDon)),
         ligne('Reçu de', recu.donateurNom ?? (recu.nature == NatureDon.quete ? 'Quête' : 'Donateur anonyme')),

@@ -1,13 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../../core/sync/sync_providers.dart';
+import '../data/pieces_hors_ligne_repository.dart';
 import '../data/supabase_comptabilisation_automatique_repository.dart';
 import '../data/supabase_pieces_comptables_repository.dart';
 import '../domain/comptabilisation_automatique.dart';
 import '../domain/pieces_comptables.dart';
 
+/// Pièces comptables — hors connexion d'abord (REG-03 C7) : consultation
+/// gardée sur l'appareil, brouillards préparés sans réseau puis envoyés.
 final piecesComptablesRepositoryProvider = Provider<PiecesComptablesRepository>((ref) {
-  return SupabasePiecesComptablesRepository(ref.watch(supabaseClientProvider));
+  return PiecesHorsLigneRepository(
+    SupabasePiecesComptablesRepository(ref.watch(supabaseClientProvider), ref.watch(lectureComptabiliteProvider)),
+    ref.watch(syncRepositoryProvider),
+  );
 });
 
 final exercicesComptablesProvider =
@@ -25,7 +32,10 @@ final pieceComptableDetailProvider = FutureProvider.autoDispose.family<PieceComp
 });
 
 final comptabilisationAutomatiqueRepositoryProvider = Provider<ComptabilisationAutomatiqueRepository>((ref) {
-  return SupabaseComptabilisationAutomatiqueRepository(ref.watch(supabaseClientProvider));
+  return SupabaseComptabilisationAutomatiqueRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(lectureComptabiliteProvider),
+  );
 });
 
 final etatComptabilisationAutomatiqueProvider =

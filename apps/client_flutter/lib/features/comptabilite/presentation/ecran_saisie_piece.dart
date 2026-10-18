@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../../../core/theme/app_palette.dart';
 import '../application/comptabilite_providers.dart';
 import '../application/pieces_comptables_providers.dart';
@@ -177,7 +178,10 @@ class _EcranSaisiePieceState extends ConsumerState<EcranSaisiePiece> {
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.brouillard == null ? 'Nouvelle pièce' : 'Modifier le brouillard')),
-      body: plan.when(
+      body: Column(children: [
+        const BandeauSynchronisation(),
+        Expanded(
+          child: plan.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => const Center(child: Text('Plan comptable indisponible hors connexion.')),
         data: (comptes) {
@@ -287,6 +291,8 @@ class _EcranSaisiePieceState extends ConsumerState<EcranSaisiePiece> {
           );
         },
       ),
+        ),
+      ]),
     );
   }
 

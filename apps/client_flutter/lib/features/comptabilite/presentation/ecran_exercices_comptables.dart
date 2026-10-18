@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../../../core/theme/app_palette.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../application/comptabilite_providers.dart';
@@ -154,9 +155,17 @@ class _EcranExercicesComptablesState extends ConsumerState<EcranExercicesComptab
           label: const Text('Ouvrir un exercice'),
         ),
       ),
-      body: exercices.when(
+      body: Column(children: [
+        const BandeauSynchronisation(),
+        Expanded(
+          child: exercices.when(
         loading: () => ListView(padding: const EdgeInsets.all(16), children: List.generate(3, (_) => const ShimmerCarteListe())),
-        error: (e, _) => const Center(child: Text('Indisponible hors connexion pour le moment.')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(e is ErreurPiecesComptables ? e.messageUtilisateur : 'Indisponible pour le moment.', textAlign: TextAlign.center),
+          ),
+        ),
         data: (liste) {
           if (liste.isEmpty) {
             return const Center(
@@ -172,6 +181,8 @@ class _EcranExercicesComptablesState extends ConsumerState<EcranExercicesComptab
           );
         },
       ),
+        ),
+      ]),
     );
   }
 

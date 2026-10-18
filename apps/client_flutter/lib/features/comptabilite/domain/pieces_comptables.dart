@@ -222,6 +222,12 @@ class ErreurPiecesComptables implements Exception {
         'COMPTE_RESULTAT_INTROUVABLE' => 'Le compte de résultat (131/139) est introuvable dans le plan.',
         'ACCES_REFUSE' => 'Seule la Direction peut clôturer un exercice.',
         'COMPTABLE_ECRITURE_REQUIS' => 'Vous n\'avez pas le droit d\'écrire en comptabilité.',
+        'HORS_CONNEXION' =>
+          'Pas de réseau. Les écrans déjà consultés restent lisibles sur cet appareil ; cette action (ou une page '
+              'jamais ouverte ici) attend le retour du réseau.',
+        'VALIDATION_EN_LIGNE' =>
+          'Brouillard enregistré sur l\'appareil. La validation attribue le numéro définitif de la pièce : '
+              'elle se fera avec le réseau.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
 

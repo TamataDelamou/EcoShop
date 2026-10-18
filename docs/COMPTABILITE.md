@@ -138,3 +138,13 @@ Direction. Les pièces ne sont jamais modifiées : l'historique est lu dans
 le nouveau plan (N-1 comparable) et les états publiés à l'origine sont
 archivés. Détail : `docs/REGISTRE.md` (REG-03) et
 `supabase/migrations/20260906001542_changement_plan_historique.sql`.
+
+## 16. La comptabilité d'abord hors connexion (REG-03, lot C7)
+
+Toute consultation est gardée sur l'appareil et resservie sans réseau ;
+dons (reçu provisoire), donateurs, campagnes, notes annexes et brouillards
+se saisissent sans réseau et partent en file, dédoublonnés au serveur par
+la clé de l'appareil. Ce qui attribue un numéro légal ou vérifie un solde
+(validation de pièce, clôtures, emploi des fonds) attend le réseau, et
+l'écran le dit. Détail : `docs/REGISTRE.md` (REG-03) et
+`supabase/migrations/20260906001543_comptabilite_hors_ligne.sql`.

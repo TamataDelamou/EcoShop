@@ -31,13 +31,40 @@ class DriftSyncRepository implements SyncRepository {
         );
   }
 
+  /// Entrées à rejouer : ni terminées, ni refusées définitivement par le
+  /// serveur (celles-là attendent une décision de l'utilisateur).
   @override
   Future<List<SyncEntree>> entreesEnAttente() async {
     final lignes = await (_db.select(_db.syncQueueEntries)
-          ..where((t) => t.statut.equals(SyncStatut.termine.code).not())
+          ..where((t) => t.statut.isIn([SyncStatut.termine.code, SyncStatut.rejete.code]).not())
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
     return lignes.map(_versEntree).toList(growable: false);
+  }
+
+  /// Entrées refusées par le serveur, les plus récentes d'abord.
+  Future<List<SyncEntree>> entreesRejetees() async {
+    final lignes = await (_db.select(_db.syncQueueEntries)
+          ..where((t) => t.statut.equals(SyncStatut.rejete.code))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+    return lignes.map(_versEntree).toList(growable: false);
+  }
+
+  /// Suivi en direct pour l'interface : opérations en attente d'envoi et
+  /// opérations refusées.
+  Stream<({int enAttente, int rejetees})> suivre() {
+    return _db.select(_db.syncQueueEntries).watch().map((lignes) => (
+          enAttente: lignes
+              .where((l) => l.statut != SyncStatut.termine.code && l.statut != SyncStatut.rejete.code)
+              .length,
+          rejetees: lignes.where((l) => l.statut == SyncStatut.rejete.code).length,
+        ));
+  }
+
+  /// Retire une entrée (refus pris en compte par l'utilisateur).
+  Future<void> retirer(String id) {
+    return (_db.delete(_db.syncQueueEntries)..where((t) => t.id.equals(id))).go();
   }
 
   @override

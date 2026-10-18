@@ -1,11 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../../core/db/cache_document_store.dart';
+import '../../../core/providers.dart';
+import '../../../core/sync/device_id_provider.dart';
+import '../../../core/sync/sync_providers.dart';
+import '../data/dons_hors_ligne_repository.dart';
 import '../data/supabase_dons_repository.dart';
 import '../domain/dons.dart';
 
+/// Dons et donateurs — hors connexion d'abord (REG-03 C7) : reçus
+/// provisoires sans réseau, numéro définitif attribué à l'envoi.
 final donsRepositoryProvider = Provider<DonsRepository>((ref) {
-  return SupabaseDonsRepository(ref.watch(supabaseClientProvider));
+  return DonsHorsLigneRepository(
+    SupabaseDonsRepository(ref.watch(supabaseClientProvider), ref.watch(lectureComptabiliteProvider)),
+    ref.watch(syncRepositoryProvider),
+    CacheDocumentStore(ref.watch(databaseProvider), 'comptabilite_hl'),
+    () => ref.read(deviceIdProvider.future),
+  );
 });
 
 typedef CleAnnee = ({String etablissementId, int annee});

@@ -188,6 +188,7 @@ class Don {
     this.anonyme = false,
     this.annule = false,
     this.motifAnnulation,
+    this.provisoire = false,
   });
 
   factory Don.depuisJson(Map<String, dynamic> json) {
@@ -222,12 +223,18 @@ class Don {
   final bool annule;
   final String? motifAnnulation;
 
+  /// Saisi hors connexion, pas encore reçu par le serveur.
+  final bool provisoire;
+
   String get donateurAffiche =>
       donateurNom ?? (nature == NatureDon.quete ? 'Quête' : 'Donateur anonyme');
 }
 
 class SaisieDon {
   const SaisieDon({
+    this.id,
+    this.numeroProvisoire,
+    this.saisiLe,
     required this.etablissementId,
     required this.montant,
     this.nature = NatureDon.don,
@@ -241,6 +248,14 @@ class SaisieDon {
     this.anonyme = false,
   });
 
+  /// Clé générée par l'appareil : un envoi rejoué ne crée jamais deux dons.
+  final String? id;
+
+  /// Numéro du reçu provisoire imprimé hors connexion (PROV-…).
+  final String? numeroProvisoire;
+
+  /// Moment de la saisie sur l'appareil.
+  final DateTime? saisiLe;
   final String etablissementId;
   final double montant;
   final NatureDon nature;
@@ -265,11 +280,54 @@ class SaisieDon {
         'p_reference': reference,
         'p_commentaire': commentaire,
         'p_anonyme': anonyme,
+        'p_id': id,
+        'p_numero_provisoire': numeroProvisoire,
+        'p_saisi_le': saisiLe?.toUtc().toIso8601String(),
       };
+
+  SaisieDon avecId(String nouvelId, {String? numeroProvisoire, DateTime? saisiLe}) => SaisieDon(
+        id: nouvelId,
+        numeroProvisoire: numeroProvisoire ?? this.numeroProvisoire,
+        saisiLe: saisiLe ?? this.saisiLe,
+        etablissementId: etablissementId,
+        montant: montant,
+        nature: nature,
+        moyen: moyen,
+        date: date,
+        donateurId: donateurId,
+        affectationId: affectationId,
+        ficheEleveId: ficheEleveId,
+        reference: reference,
+        commentaire: commentaire,
+        anonyme: anonyme,
+      );
+
+  static SaisieDon depuisParams(Map<String, dynamic> p) => SaisieDon(
+        id: p['p_id'] as String?,
+        numeroProvisoire: p['p_numero_provisoire'] as String?,
+        saisiLe: p['p_saisi_le'] == null ? null : DateTime.parse(p['p_saisi_le'] as String),
+        etablissementId: p['p_etablissement'] as String,
+        montant: (p['p_montant'] as num).toDouble(),
+        nature: NatureDon.depuisCode(p['p_nature'] as String?),
+        moyen: MoyenDon.depuisCode(p['p_moyen'] as String?),
+        date: DateTime.parse(p['p_date'] as String),
+        donateurId: p['p_donateur_id'] as String?,
+        affectationId: p['p_affectation_id'] as String?,
+        ficheEleveId: p['p_fiche_eleve_id'] as String?,
+        reference: p['p_reference'] as String?,
+        commentaire: p['p_commentaire'] as String?,
+        anonyme: p['p_anonyme'] as bool? ?? false,
+      );
 }
 
 class ResultatDon {
-  const ResultatDon({required this.id, required this.numeroRecu, required this.comptabilise, this.incident});
+  const ResultatDon({
+    required this.id,
+    required this.numeroRecu,
+    required this.comptabilise,
+    this.incident,
+    this.provisoire = false,
+  });
 
   factory ResultatDon.depuisJson(Map<String, dynamic> json) => ResultatDon(
         id: json['id'] as String,
@@ -284,6 +342,9 @@ class ResultatDon {
 
   /// Code d'incident comptable (le don reste enregistré).
   final String? incident;
+
+  /// Saisi hors connexion : reçu provisoire, numéro définitif à l'envoi.
+  final bool provisoire;
 }
 
 /// Contenu d'un reçu de don (PDF).
@@ -303,6 +364,8 @@ class RecuDon {
     this.annule = false,
     this.motifAnnulation,
     this.saisiPar,
+    this.numeroProvisoire,
+    this.provisoire = false,
   });
 
   factory RecuDon.depuisJson(Map<String, dynamic> json) {
@@ -322,6 +385,8 @@ class RecuDon {
       annule: json['statut'] == 'annule',
       motifAnnulation: json['motif_annulation'] as String?,
       saisiPar: json['saisi_par'] as String?,
+      numeroProvisoire: json['numero_provisoire'] as String?,
+      provisoire: json['provisoire'] as bool? ?? false,
     );
   }
 
@@ -339,6 +404,11 @@ class RecuDon {
   final bool annule;
   final String? motifAnnulation;
   final String? saisiPar;
+
+  /// Numéro du reçu provisoire remis hors connexion (rappelé sur le
+  /// définitif, ou numéro du reçu lui-même tant qu'il est provisoire).
+  final String? numeroProvisoire;
+  final bool provisoire;
 }
 
 class ReleveDonateur {
@@ -544,6 +614,11 @@ class ErreurDons implements Exception {
         'DON_DEJA_ANNULE' => 'Ce don est déjà annulé.',
         'DONATEUR_A_DES_DONS' => 'Ce donateur a déjà donné : il peut être archivé, pas supprimé.',
         'AFFECTATION_UTILISEE' => 'Cette campagne a reçu des dons : son type ne peut plus changer.',
+        'HORS_CONNEXION' =>
+          'Pas de réseau. Les écrans déjà consultés restent lisibles sur cet appareil ; cette action (ou une page '
+              'jamais ouverte ici) attend le retour du réseau.',
+        'RESEAU_REQUIS_EMPLOI' =>
+          'L\'emploi des fonds vérifie le solde du projet au serveur : il se fait avec le réseau.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
 

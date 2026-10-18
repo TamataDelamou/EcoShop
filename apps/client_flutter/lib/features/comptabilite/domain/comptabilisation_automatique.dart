@@ -163,6 +163,9 @@ class ErreurComptabilisationAutomatique implements Exception {
   String get messageUtilisateur => switch (code) {
         'COMPTE_NON_IMPUTABLE' => 'Ce compte regroupe d\'autres comptes : choisissez un compte de détail.',
         'COMPTABLE_ECRITURE_REQUIS' || 'COMPTABLE_REQUIS' => 'Vous n\'avez pas les droits de comptabilité.',
+        'HORS_CONNEXION' =>
+          'Pas de réseau. Les écrans déjà consultés restent lisibles sur cet appareil ; cette action (ou une page '
+              'jamais ouverte ici) attend le retour du réseau.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
 

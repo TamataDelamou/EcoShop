@@ -45,12 +45,37 @@ class CacheDocumentStore {
   }
 
   Future<Map<String, dynamic>?> lireDocument(String type, String cle) async {
+    final lu = await lireDocumentDate(type, cle);
+    return lu?.document;
+  }
+
+  /// Document et date de sa dernière écriture — pour dire à l'utilisateur
+  /// de quand datent les données affichées hors connexion.
+  Future<({Map<String, dynamic> document, DateTime misAJourLe})?> lireDocumentDate(String type, String cle) async {
     final ligne = await (_db.select(_db.cacheEntries)
           ..where((t) =>
               t.domaine.equals(domaine) & t.type.equals(type) & t.cle.equals(cle)))
         .getSingleOrNull();
     if (ligne == null) return null;
-    return jsonDecode(ligne.payload) as Map<String, dynamic>;
+    return (document: jsonDecode(ligne.payload) as Map<String, dynamic>, misAJourLe: ligne.misAJourLe);
+  }
+
+  Future<void> supprimerDocument(String type, String cle) {
+    return (_db.delete(_db.cacheEntries)
+          ..where((t) => t.domaine.equals(domaine) & t.type.equals(type) & t.cle.equals(cle)))
+        .go();
+  }
+
+  /// Tous les documents d'un type (ex. les refus de synchronisation).
+  Future<List<({String cle, Map<String, dynamic> document, DateTime misAJourLe})>> lireType(String type) async {
+    final lignes = await (_db.select(_db.cacheEntries)
+          ..where((t) => t.domaine.equals(domaine) & t.type.equals(type))
+          ..orderBy([(t) => OrderingTerm.desc(t.misAJourLe)]))
+        .get();
+    return [
+      for (final l in lignes)
+        (cle: l.cle, document: jsonDecode(l.payload) as Map<String, dynamic>, misAJourLe: l.misAJourLe),
+    ];
   }
 
   /// Supprime toutes les lignes de ce domaine — patch de sécurité M9 : un

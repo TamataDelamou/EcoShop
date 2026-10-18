@@ -1,18 +1,27 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/lecture_hors_ligne.dart';
 import '../domain/comptabilisation_automatique.dart';
 
-/// Implémentation Supabase (REG-03 C3) — RPC uniquement.
+/// Implémentation Supabase (REG-03 C3) — RPC uniquement. L'état est gardé
+/// sur l'appareil pour la consultation hors connexion (C7) ; le rattrapage
+/// et les règles se font avec le réseau.
 class SupabaseComptabilisationAutomatiqueRepository implements ComptabilisationAutomatiqueRepository {
-  const SupabaseComptabilisationAutomatiqueRepository(this._client);
+  const SupabaseComptabilisationAutomatiqueRepository(this._client, [this._lecture]);
 
   final SupabaseClient _client;
+  final LectureHorsLigne? _lecture;
 
   @override
-  Future<EtatComptabilisationAutomatique> etat(String etablissementId) => _executer(() async {
-        final json = await _client.rpc<Map<String, dynamic>>('etat_comptabilisation_automatique',
+  Future<EtatComptabilisationAutomatique> etat(String etablissementId) => _executer(() {
+        Future<Object?> source() => _client.rpc<Map<String, dynamic>>('etat_comptabilisation_automatique',
             params: {'p_etablissement': etablissementId});
-        return EtatComptabilisationAutomatique.depuisJson(json);
+        EtatComptabilisationAutomatique decoder(Object? json) =>
+            EtatComptabilisationAutomatique.depuisJson(json! as Map<String, dynamic>);
+        final lecture = _lecture;
+        return lecture == null
+            ? source().then(decoder)
+            : lecture.lire(type: 'etat_comptabilisation', cle: etablissementId, source: source, decoder: decoder);
       });
 
   @override
@@ -40,6 +49,9 @@ class SupabaseComptabilisationAutomatiqueRepository implements ComptabilisationA
       final premier = e.message.trim().split(RegExp(r'\s+')).first;
       throw ErreurComptabilisationAutomatique(
           RegExp(r'^[A-Z][A-Z0-9_]{3,}$').hasMatch(premier) ? premier : 'ERREUR_RESEAU');
+    } catch (e) {
+      if (estErreurReseau(e)) throw const ErreurComptabilisationAutomatique('HORS_CONNEXION');
+      rethrow;
     }
   }
 }

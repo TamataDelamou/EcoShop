@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../communication/prototype/application/communication_locale_providers.dart';
 
@@ -28,6 +29,13 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
 }) async {
   await lire(authRepositoryProvider).deconnecter();
   await lire(communicationLocaleRepositoryProvider).purgerTout();
+  // Comptabilité gardée pour le hors connexion (REG-03 C7) : données des
+  // donateurs, états, pièces — jamais visibles du compte suivant.
+  try {
+    await lire(lectureComptabiliteProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
   invalider(entreesLocalesProvider);
   invalider(profilProvider);
   invalider(ficheLieeProvider);

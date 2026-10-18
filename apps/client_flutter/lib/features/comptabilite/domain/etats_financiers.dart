@@ -311,6 +311,9 @@ class ErreurEtatsFinanciers implements Exception {
         'REFERENTIEL_OHADA_REQUIS' => 'Réservé aux comptabilités SYSCOHADA ou SYCEBNL.',
         'NOTE_INVALIDE' => 'Note trop longue (8 000 caractères au plus).',
         'COMPTABLE_REQUIS' || 'COMPTABLE_ECRITURE_REQUIS' => 'Vous n\'avez pas les droits de comptabilité.',
+        'HORS_CONNEXION' =>
+          'Pas de réseau. Les écrans déjà consultés restent lisibles sur cet appareil ; cette action (ou une page '
+              'jamais ouverte ici) attend le retour du réseau.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
 

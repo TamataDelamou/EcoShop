@@ -3,10 +3,17 @@
 /// Toute écriture locale est journalisée dans une file de synchronisation puis
 /// rejouée vers Supabase au retour du réseau, avec backoff exponentiel et
 /// plafonnement des tentatives.
+///
+/// Une erreur de réseau laisse l'entrée en file (nouvel essai plus tard). Un
+/// REFUS MÉTIER du serveur ([RejetDefinitif] : période clôturée entre-temps,
+/// droits retirés…) ne se corrigera pas en réessayant : l'entrée passe en
+/// « rejetée », n'est plus rejouée, et l'utilisateur la voit avec la raison
+/// (bonne pratique des caisses hors ligne : file de régularisation plutôt que
+/// réessais sans fin).
 library;
 
 /// Statut de vie d'une entrée de la file de synchronisation.
-enum SyncStatut { enAttente, enCours, termine, echec }
+enum SyncStatut { enAttente, enCours, termine, echec, rejete }
 
 extension SyncStatutCode on SyncStatut {
   String get code => switch (this) {
@@ -14,6 +21,7 @@ extension SyncStatutCode on SyncStatut {
         SyncStatut.enCours => 'en_cours',
         SyncStatut.termine => 'termine',
         SyncStatut.echec => 'echec',
+        SyncStatut.rejete => 'rejete',
       };
 
   static SyncStatut? depuisCode(String? code) {
@@ -22,6 +30,20 @@ extension SyncStatutCode on SyncStatut {
     }
     return null;
   }
+}
+
+/// Refus métier définitif d'une écriture rejouée : inutile de réessayer.
+class RejetDefinitif implements Exception {
+  const RejetDefinitif(this.code, this.message);
+
+  /// Code serveur (ex. `PERIODE_CLOTUREE`).
+  final String code;
+
+  /// Explication lisible par l'utilisateur.
+  final String message;
+
+  @override
+  String toString() => 'RejetDefinitif($code)';
 }
 
 /// Entrée de la file outbox (une écriture locale à rejouer).
@@ -76,6 +98,7 @@ class SyncEngine {
     required this.repository,
     required this.estConnecte,
     required this.rejouer,
+    this.surRejet,
     this.maxTentatives = 5,
     this.delaiBase = const Duration(seconds: 2),
     this.delaiMax = const Duration(minutes: 5),
@@ -84,6 +107,10 @@ class SyncEngine {
   final SyncRepository repository;
   final Future<bool> Function() estConnecte;
   final Future<void> Function(SyncEntree entree) rejouer;
+
+  /// Appelé quand le serveur refuse définitivement une entrée (journal des
+  /// refus présenté à l'utilisateur).
+  final Future<void> Function(SyncEntree entree, RejetDefinitif rejet)? surRejet;
   final int maxTentatives;
   final Duration delaiBase;
   final Duration delaiMax;
@@ -127,6 +154,14 @@ class SyncEngine {
           ),
         );
         traitees++;
+      } on RejetDefinitif catch (rejet) {
+        await repository.marquer(
+          entree.copierAvec(
+            tentatives: prochainesTentatives,
+            statut: SyncStatut.rejete,
+          ),
+        );
+        await surRejet?.call(entree, rejet);
       } catch (_) {
         await repository.marquer(
           entree.copierAvec(

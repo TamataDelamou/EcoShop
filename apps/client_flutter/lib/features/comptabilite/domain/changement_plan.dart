@@ -151,6 +151,9 @@ class ErreurChangementPlan implements Exception {
           'Des écritures ont été saisies depuis la préparation, à partir de la date d\'effet : préparez à nouveau.',
         'CHANGEMENT_DEJA_APPLIQUE' => 'Ce changement est déjà appliqué.',
         'REFERENTIEL_MODIFIE_ENTRE_TEMPS' => 'Le référentiel a changé entre-temps : préparez à nouveau.',
+        'HORS_CONNEXION' =>
+          'Pas de réseau. Les écrans déjà consultés restent lisibles sur cet appareil ; cette action (ou une page '
+              'jamais ouverte ici) attend le retour du réseau.',
         _ => 'Opération impossible pour le moment. Réessayez dans un instant.',
       };
 

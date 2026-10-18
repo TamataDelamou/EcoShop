@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_palette.dart';
+import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../export_pdf/data/recu_don_pdf_builder.dart';
@@ -57,7 +58,10 @@ class _EcranDonsState extends ConsumerState<EcranDons> {
         : ' Comptabilité : ${IncidentComptabilisation(id: '', code: resultat.incident!, operation: 'comptabilisation', le: DateTime.now(), sourceType: 'don').explication}';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 6),
-      content: Text('Don enregistré — reçu ${resultat.numeroRecu}.$incident'),
+      content: Text(resultat.provisoire
+          ? 'Pas de réseau : don gardé sur l\'appareil — reçu provisoire ${resultat.numeroRecu}. '
+              'Le numéro définitif sera attribué à l\'envoi.'
+          : 'Don enregistré — reçu ${resultat.numeroRecu}.$incident'),
       action: SnackBarAction(label: 'Reçu', onPressed: () => _imprimerRecu(resultat.id)),
     ));
   }
@@ -240,7 +244,10 @@ class _EcranDonsState extends ConsumerState<EcranDons> {
           icon: const Icon(Icons.volunteer_activism_outlined),
           label: const Text('Nouveau don'),
         ),
-        body: TabBarView(children: [
+        body: Column(children: [
+          const BandeauSynchronisation(),
+          Expanded(
+            child: TabBarView(children: [
           _OngletSynthese(cle: _cle, onEmployer: _employer),
           _OngletDons(cle: _cle, onRecu: _imprimerRecu, onAnnuler: _annulerDon),
           _OngletDonateurs(
@@ -252,6 +259,8 @@ class _EcranDonsState extends ConsumerState<EcranDons> {
             onArchiver: _archiver,
           ),
           _OngletCampagnes(etablissementId: widget.etablissementId, onEditer: _editerCampagne),
+            ]),
+          ),
         ]),
       ),
     );
@@ -476,6 +485,7 @@ class _OngletDons extends ConsumerWidget {
                     d.nature.libelle,
                     if (d.affectation != null) d.affectation!,
                     if (d.annule) 'ANNULÉ',
+                    if (d.provisoire) 'en attente d\'envoi',
                   ].join(' · ')),
                   trailing: Text(formaterMontant(d.montant), style: barre),
                   onTap: () => showModalBottomSheet<void>(
@@ -1141,7 +1151,7 @@ class _DialogueEmploiState extends State<DialogueEmploi> {
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Retour')),
         FilledButton(
           key: const Key('valider_emploi'),
-          onPressed: valide ? () => Navigator.of(context).pop((montant: montant, libelle: _libelle.text.trim())) : null,
+          onPressed: valide ? () => Navigator.of(context).pop((montant: montant!, libelle: _libelle.text.trim())) : null,
           child: const Text('Constater'),
         ),
       ],

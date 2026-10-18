@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C6 livrés (2026-10-18) — relecture expert-comptable avant production |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C7 livrés (2026-10-18) — relecture expert-comptable avant production |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -502,6 +502,38 @@ historique** — migration `…1542` :
   application confirmée.
 - Vérification : pgTAP `70` 36/36, régression 01-69 inchangée ; tests
   Flutter `changement_plan_test.dart` — **à lancer sur le poste**.
+
+**Lot C7 livré (2026-10-18) — la comptabilité d'abord hors connexion**
+(règle permanente du porteur de projet : « hors connexion d'abord dans tout
+ce qu'on donnera ») — migration `…1543`, pratiques des caisses hors ligne
+(clé unique générée par l'appareil, dédoublonnage au serveur, file de
+régularisation des refus) :
+- **consultation sans réseau** : états financiers, tableau des flux, notes
+  annexes, écritures automatiques, synthèse et registre des dons, reçus,
+  relevés, exercices et pièces sont gardés sur l'appareil à chaque
+  consultation et resservis sans réseau ; les PDF restent imprimables ;
+  un bandeau dit de quand datent les données ;
+- **saisie sans réseau** : dons (reçu **provisoire** PROV-<appareil>-0001,
+  numéro définitif sans trou attribué à l'envoi, le reçu définitif rappelle
+  le provisoire), donateurs, campagnes, engagements, annulations de dons,
+  notes annexes rédigées, **brouillards** de pièces ; tout part en file et
+  s'affiche aussitôt dans les listes ;
+- **en ligne seulement, expliqué à l'écran** : validation d'une pièce (elle
+  attribue le numéro continu, art. 66), clôtures, contre-passations, emploi
+  des fonds affectés (solde vérifié au serveur), produits constatés
+  d'avance, rattrapage des écritures automatiques, changement de plan ;
+- serveur : `enregistrer_don` accepte la clé de l'appareil (un second envoi
+  renvoie le reçu déjà attribué), `enregistrer_piece_hors_ligne` (brouillard
+  sous la clé de l'appareil, pièce validée jamais touchée) ;
+- **refus au retour du réseau** (période clôturée entre-temps, droits) :
+  l'opération n'est plus réessayée, elle s'affiche dans le bandeau avec la
+  raison (« Voir » → « Compris ») ; les pannes de réseau, elles, sont
+  réessayées ;
+- sécurité : le cache comptable (dont les données des donateurs) est purgé
+  à la déconnexion.
+- Vérification : pgTAP `71` 16/16, régression 01-70 inchangée ; tests
+  Flutter `lecture_hors_ligne_test.dart`, `sync_engine_rejet_test.dart`,
+  `comptabilite_hors_ligne_test.dart` — **à lancer sur le poste**.
 
 **Dossier de relecture pour l'expert-comptable** : document partagé
 « EcoShop — Dossier de relecture comptable » (décisions attendues, plans,

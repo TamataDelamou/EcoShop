@@ -4,7 +4,9 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
+import '../../../core/auth/supabase_auth_provider.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
+import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../planification/application/planification_providers.dart';
@@ -37,6 +39,12 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     'lignes_paniers': ref.watch(lignesPaniersRejeuProvider),
     'ecritures_comptables': ref.watch(ecrituresRejeuProvider),
   };
+  // Comptabilité REG-03 (C7) : dons, donateurs, brouillards, notes annexes…
+  final rejeuComptable = RejeuComptabilite(ref.watch(supabaseClientProvider));
+  for (final entite in entitesComptabiliteHorsLigne) {
+    gestionnaires[entite] = rejeuComptable.rejouer;
+  }
+  final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
     repository: ref.watch(syncRepositoryProvider),
@@ -45,5 +53,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       final gestionnaire = gestionnaires[entree.entite];
       return gestionnaire == null ? Future.value() : gestionnaire(entree);
     },
+    // Refus du serveur au retour du réseau : gardés pour l'utilisateur.
+    surRejet: (entree, rejet) => journalRejets.enregistrer(entree, rejet, RejeuComptabilite.libelle(entree)),
   );
 });
