@@ -181,6 +181,8 @@ void main() {
     await tester.tap(find.byKey(const Key('confirmer_referentiel')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('ouverture du prochain exercice'), findsOneWidget);
+    expect(find.textContaining('premier jour d\'un exercice'), findsOneWidget);
+    // Le changement avec historique est proposé à la place du refus sec.
+    expect(find.byKey(const Key('preparer_changement_plan')), findsOneWidget);
   });
 }

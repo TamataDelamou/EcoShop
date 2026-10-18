@@ -7,6 +7,7 @@ import '../../../core/widgets/shimmer.dart';
 import '../application/comptabilite_providers.dart';
 import '../application/referentiel_comptable_providers.dart';
 import '../domain/referentiel_comptable.dart';
+import 'ecran_changement_plan.dart';
 
 /// Référentiel comptable (REG-03, lot C1) : l'établissement voit son
 /// référentiel actuel, répond à trois questions, reçoit une recommandation
@@ -116,9 +117,31 @@ class _EcranReferentielComptableState extends ConsumerState<EcranReferentielComp
             : '${resultat.referentiel.libelleCourt} adopté.'),
       ));
     } on ErreurReferentielComptable catch (e) {
-      if (mounted) setState(() => _erreur = e.messageUtilisateur);
+      if (mounted) {
+        setState(() {
+          _erreur = e.messageUtilisateur;
+          _changementPossible = e.code == 'ECRITURES_EXISTANTES' ? choix : null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _enCours = false);
+    }
+  }
+
+  /// Référentiel refusé faute de pouvoir changer de plan directement :
+  /// changement préparé avec table de correspondance (REG-03 C6).
+  ReferentielComptable? _changementPossible;
+
+  Future<void> _preparerChangement(ReferentielComptable cible) async {
+    final applique = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => EcranChangementPlan(etablissementId: widget.etablissementId, cible: cible, forme: _forme),
+    ));
+    if (applique == true && mounted) {
+      setState(() {
+        _changementPossible = null;
+        _erreur = null;
+        _recommandation = null;
+      });
     }
   }
 
@@ -203,6 +226,15 @@ class _EcranReferentielComptableState extends ConsumerState<EcranReferentielComp
             if (_erreur != null) ...[
               const SizedBox(height: 12),
               Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+            if (_changementPossible != null) ...[
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                key: const Key('preparer_changement_plan'),
+                onPressed: () => _preparerChangement(_changementPossible!),
+                icon: const Icon(Icons.swap_horiz),
+                label: Text('Préparer le passage en ${_changementPossible!.libelleCourt}'),
+              ),
             ],
             if (_recommandation != null) ...[
               const SizedBox(height: 20),

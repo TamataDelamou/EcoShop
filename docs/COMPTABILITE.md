@@ -129,3 +129,12 @@ trésorerie étant classé selon la contrepartie de sa pièce, avec contrôle
 par l'école, jointes au PDF des états financiers. Détail :
 `docs/REGISTRE.md` (REG-03) et
 `supabase/migrations/20260906001541_flux_tresorerie_notes_annexes.sql`.
+
+## 15. Changement de plan avec historique (REG-03, lot C6)
+
+Un établissement qui a déjà des écritures change de référentiel au premier
+jour d'un exercice, au moyen d'une table de correspondance relue par la
+Direction. Les pièces ne sont jamais modifiées : l'historique est lu dans
+le nouveau plan (N-1 comparable) et les états publiés à l'origine sont
+archivés. Détail : `docs/REGISTRE.md` (REG-03) et
+`supabase/migrations/20260906001542_changement_plan_historique.sql`.

@@ -21,7 +21,7 @@ attendue), `clos`.
 | REG-01.2 | K2 — Export du reporting (métriques + journaux d'audit) vers le Kernel | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-01.3 | K3 — Jetons d'accès inter-services (Kernel → EcoShop) | **P0** | livré côté EcoShop, contrat Kernel à confirmer |
 | REG-02 | Orange Money Guinée en direct (circuit établissement) | P1 | **validé** — L1 à L7 livrés ; reste le test réel (pilote Bambino Emmaüs) |
-| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C5 livrés (2026-10-17) — relecture expert-comptable avant production |
+| REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C6 livrés (2026-10-18) — relecture expert-comptable avant production |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
@@ -476,6 +476,37 @@ liasse SYSCOHADA révisé publiée (BRVM) et sur le modèle SYCEBNL :
 par un expert-comptable inscrit en Guinée (plans, rubriques, notes),
 confirmation du référentiel de Bambino Emmaüs (RCCM) et du seuil SMT en GNF,
 puis le changement de plan avec historique (lot dédié).
+
+**Lot C6 livré (2026-10-18) — changement de plan de comptes avec
+historique** — migration `…1542` :
+- le changement (simplifié ↔ SYSCOHADA ↔ SYCEBNL) prend effet au **premier
+  jour d'un exercice** sans écriture (hors à-nouveaux), jamais en cours
+  d'exercice ; le choix direct reste refusé dès qu'il y a des écritures ;
+- **table de correspondance proposée** pour chaque compte utilisé : même
+  compte, correspondance connue (70611 → 70521, 661 → 66, 447 → 44…), même
+  numéro à vérifier, compte de rattachement, nature (caisse, banque) ;
+  corrigeable ligne par ligne, y compris pour garder un sous-compte de
+  l'école (5711 sous 571) ;
+- à l'application : les états, tableaux des flux et notes des exercices
+  antérieurs sont **archivés tels que publiés** ; les anciens comptes sont
+  retirés et renumérotés (« 70611* », « ancien plan ») ; aucune pièce
+  n'est modifiée ; les règles d'écritures automatiques suivent ; la note 1
+  de l'exercice explique le changement de méthode ;
+- l'historique est **lu à travers la correspondance** (balance, grand
+  livre, états, tableau des flux, notes) : l'exercice précédent se présente
+  dans le nouveau plan et la colonne N-1 reste comparable (bonne pratique
+  de retraitement), la version d'origine restant consultable ;
+- Flutter : quand le choix direct est refusé, l'écran « Référentiel
+  comptable » propose « Préparer le passage en … » → table de correspondance
+  (lignes à vérifier, recherche du compte cible, sous-compte), puis
+  application confirmée.
+- Vérification : pgTAP `70` 36/36, régression 01-69 inchangée ; tests
+  Flutter `changement_plan_test.dart` — **à lancer sur le poste**.
+
+**Dossier de relecture pour l'expert-comptable** : document partagé
+« EcoShop — Dossier de relecture comptable » (décisions attendues, plans,
+écritures automatiques, pièces et clôtures, états, tableau des flux, notes
+annexes, questions à trancher).
 
 ---
 

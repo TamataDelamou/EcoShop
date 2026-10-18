@@ -139,7 +139,8 @@ class ErreurReferentielComptable implements Exception {
   String get messageUtilisateur => switch (code) {
         'ACCES_REFUSE' => 'Seule la Direction de l\'établissement peut choisir le référentiel comptable.',
         'ECRITURES_EXISTANTES' =>
-          'Des écritures existent déjà : le changement de plan de comptes se fera à l\'ouverture du prochain exercice.',
+          'Des écritures existent déjà : le plan de comptes se change au premier jour d\'un exercice, '
+              'avec une table de correspondance qui conserve tout l\'historique.',
         'REFERENTIEL_INCONNU' || 'FORME_JURIDIQUE_INCONNUE' => 'Choix invalide, veuillez réessayer.',
         _ => 'Connexion impossible pour le moment. Réessayez dans un instant.',
       };
