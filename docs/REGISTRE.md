@@ -24,6 +24,8 @@ attendue), `clos`.
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C7 livrés (2026-10-18) — relecture expert-comptable avant production |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
+| REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **validé** (2026-10-18) — construction à lancer |
+| REG-09 | Pointage des élèves au portail (QR code) et notifications push ; GPS abandonné | P1 | **validé** (2026-10-18) — après REG-08 |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -619,6 +621,31 @@ Dette d'origine tracée le 2026-09-17
 (`docs/AUDIT_ECOSHOP_FLUTTER.md`, commit `7c96c35`) : aucun parcours ne
 permet aujourd'hui de créer un établissement autrement que par insertion SQL
 directe — aucun client réel ne peut être accueilli sans lui.
+
+## REG-08 — Inscriptions et réinscriptions en ligne
+
+**Priorité** : P1. **Statut** : validé le 2026-10-18 — proposition
+`docs/propositions/REG-08_INSCRIPTION_EN_LIGNE.md`.
+
+Décisions : campagne datée par la Direction (réinscriptions puis nouvelles
+demandes, places par classe, liste d'attente) ; en primaire le parent seul,
+**dès le collège l'élève comme le parent** peuvent inscrire, réinscrire et
+payer (élèves à leur propre charge — on enregistre qui paie) ; **aucun
+blocage automatique** pour impayé ou sanction, décision de la Direction au
+cas par cas ; hors connexion d'abord (dossier et pièces sans réseau,
+guichet assisté, espèces conservées).
+
+## REG-09 — Pointage au portail et notifications
+
+**Priorité** : P1. **Statut** : validé le 2026-10-18 — proposition
+`docs/propositions/REG-09_POINTAGE_PORTAIL.md`.
+
+Décisions : **GPS abandonné** ; pointage par carte QR scannée au portail
+(hors connexion), appel en classe = preuve officielle ; notifications
+automatiques **push** (arrivée/sortie, absence à l'heure limite, sortie
+anticipée), sans alerte d'absence tant que le portail n'a pas synchronisé ;
+**GSG ne prend pas en charge les SMS** : l'établissement achète des crédits
+SMS à GSG (revente), décomptés à l'envoi ; sans crédit, push seul.
 
 ## REG-05 — README à resynchroniser
 
