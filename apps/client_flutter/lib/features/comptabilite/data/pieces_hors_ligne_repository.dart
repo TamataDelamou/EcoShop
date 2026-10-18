@@ -15,11 +15,11 @@ import 'supabase_pieces_comptables_repository.dart';
 /// uniforme (art. 66), se fait avec le réseau ; tout comme les clôtures et
 /// les contre-passations.
 class PiecesHorsLigneRepository implements PiecesComptablesRepository {
-  PiecesHorsLigneRepository(this._distant, this._file, {Uuid uuid = const Uuid()}) : _uuid = uuid;
+  PiecesHorsLigneRepository(this._distant, this._file);
 
   final PiecesComptablesRepository _distant;
   final DriftSyncRepository _file;
-  final Uuid _uuid;
+  final Uuid _uuid = const Uuid();
 
   static const entite = 'pieces_brouillard';
   static const referenceEnAttente = 'En attente d\'envoi';

@@ -136,7 +136,7 @@ class SupabaseDonsRepository implements DonsRepository {
     required DateTime dateDebut,
   }) =>
       {
-        if (id != null) 'id': id,
+        'id': ?id,
         'etablissement_id': etablissementId,
         'donateur_id': donateurId,
         'affectation_id': affectationId,

@@ -80,7 +80,7 @@ class _Ligne extends StatelessWidget {
       Icon(icone, size: 18, color: teinte),
       const SizedBox(width: 8),
       Expanded(child: Text(texte, style: TextStyle(color: teinte))),
-      if (action != null) action!,
+      ?action,
     ]);
   }
 }

@@ -1151,7 +1151,7 @@ class _DialogueEmploiState extends State<DialogueEmploi> {
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Retour')),
         FilledButton(
           key: const Key('valider_emploi'),
-          onPressed: valide ? () => Navigator.of(context).pop((montant: montant!, libelle: _libelle.text.trim())) : null,
+          onPressed: valide ? () => Navigator.of(context).pop((montant: montant, libelle: _libelle.text.trim())) : null,
           child: const Text('Constater'),
         ),
       ],

@@ -12,21 +12,20 @@ import 'supabase_dons_repository.dart';
 ///
 /// Avec réseau : tout passe au serveur, comme avant. Sans réseau :
 /// • un don est gardé sur l'appareil, mis en file d'envoi sous une clé
-///   générée ici, et reçoit un reçu PROVISOIRE (PROV-<appareil>-0001) ; le
+///   générée ici, et reçoit un reçu PROVISOIRE (`PROV-<appareil>-0001`) ; le
 ///   numéro définitif, continu et sans trou, est attribué par le serveur à
 ///   l'envoi, qui reconnaît la clé et ne crée jamais de doublon ;
 /// • donateurs, campagnes, engagements et annulations partent en file ;
 /// • les listes affichent ce qui attend l'envoi à côté de ce qui est connu ;
 /// • l'emploi des fonds affectés attend le réseau (solde vérifié au serveur).
 class DonsHorsLigneRepository implements DonsRepository {
-  DonsHorsLigneRepository(this._distant, this._file, this._store, this._identifiantAppareil, {Uuid uuid = const Uuid()})
-      : _uuid = uuid;
+  DonsHorsLigneRepository(this._distant, this._file, this._store, this._identifiantAppareil);
 
   final DonsRepository _distant;
   final DriftSyncRepository _file;
   final CacheDocumentStore _store;
   final Future<String> Function() _identifiantAppareil;
-  final Uuid _uuid;
+  final Uuid _uuid = const Uuid();
 
   static const entiteDon = 'dons';
   static const entiteDonateur = 'donateurs';
