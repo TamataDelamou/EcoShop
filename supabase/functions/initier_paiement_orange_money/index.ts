@@ -9,7 +9,8 @@
 //   3. Création du paiement chez Orange ; empreinte du notif_token stockée.
 //   4. Renvoie l'URL Orange où rediriger le payeur.
 //
-// Corps : { objet: "scolarite" | "commande_marketplace", cibleId, montant? }
+// Corps : { objet: "scolarite" | "commande_marketplace" | "frais_inscription", cibleId, montant? }
+// (« frais_inscription » : REG-08, cibleId = la demande d'inscription acceptée.)
 // ============================================================================
 
 import { clientService, clientUtilisateur, entetesCors, reponseJson } from "../_shared/supabase_client.ts";
@@ -25,7 +26,7 @@ const CODES_METIER = new Set([
   "ACCES_REFUSE", "AUTH_REQUISE", "INSCRIPTION_INTROUVABLE", "COMMANDE_INTROUVABLE",
   "COMMANDE_NON_PAYABLE", "RIEN_A_PAYER", "MONTANT_SUPERIEUR_AU_SOLDE",
   "MONTANT_GNF_ENTIER_REQUIS", "PAIEMENT_DEJA_EN_COURS", "ORANGE_MONEY_NON_ACTIVE",
-  "OBJET_INCONNU",
+  "OBJET_INCONNU", "DEMANDE_INTROUVABLE", "DEMANDE_NON_PAYABLE",
 ]);
 
 Deno.serve(async (req: Request) => {
