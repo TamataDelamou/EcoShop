@@ -52,6 +52,9 @@ transmise en retard l'indique (« transmis à 9 h 10 »).
   crédit de l'établissement est décompté à chaque SMS ; sans crédit, seul
   le push part. La Direction choisit les alertes envoyées aussi par SMS
   (par défaut : absence et sortie anticipée).
+- **Relances d'impayés (décision du 2026-10-18)** : les mêmes crédits SMS
+  servent aux messages de relance des familles en retard de paiement des
+  frais de scolarité (échéances des paliers), en plus du push.
 - À construire : envoi push (Firebase Cloud Messaging), portefeuille de
   crédits SMS par établissement, vente des packs (backoffice GSG, paiement
   CinetPay — circuit GSG), adaptateur fournisseur SMS (à choisir).

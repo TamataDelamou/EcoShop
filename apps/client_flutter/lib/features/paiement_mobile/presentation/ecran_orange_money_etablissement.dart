@@ -433,9 +433,11 @@ class _LignePaiement extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: CouleursOrangeMoney.orange.withValues(alpha: 0.15),
           child: Icon(
-            transaction.objet == ObjetPaiementMobile.scolarite
-                ? Icons.school_outlined
-                : Icons.shopping_bag_outlined,
+            switch (transaction.objet) {
+              ObjetPaiementMobile.scolarite => Icons.school_outlined,
+              ObjetPaiementMobile.fraisInscription => Icons.how_to_reg_outlined,
+              ObjetPaiementMobile.commandeMarketplace => Icons.shopping_bag_outlined,
+            },
             color: CouleursOrangeMoney.encre,
           ),
         ),
@@ -445,7 +447,11 @@ class _LignePaiement extends StatelessWidget {
         ),
         subtitle: Text(
           [
-            transaction.objet == ObjetPaiementMobile.scolarite ? 'Scolarité' : 'Marketplace',
+            switch (transaction.objet) {
+              ObjetPaiementMobile.scolarite => 'Scolarité',
+              ObjetPaiementMobile.fraisInscription => "Frais d'inscription",
+              ObjetPaiementMobile.commandeMarketplace => 'Marketplace',
+            },
             date,
             if (transaction.referenceOperateur != null) transaction.referenceOperateur!,
           ].join(' · '),

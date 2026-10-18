@@ -59,6 +59,23 @@ class EcranPaiementOrangeMoney extends ConsumerStatefulWidget {
         montantMaximal = montant,
         montantModifiable = false;
 
+  /// Frais d'inscription d'un dossier accepté (REG-08) : montant fixé par
+  /// l'école, réglé en une fois ; le paiement confirme l'inscription.
+  const EcranPaiementOrangeMoney.fraisInscription({
+    super.key,
+    required String demandeId,
+    required String nomEleve,
+    required String numeroDossier,
+    required double montant,
+    this.devise = 'GNF',
+    this.auSucces,
+  })  : objet = ObjetPaiementMobile.fraisInscription,
+        cibleId = demandeId,
+        titre = "Frais d'inscription",
+        sousTitre = '$nomEleve · dossier $numeroDossier',
+        montantMaximal = montant,
+        montantModifiable = false;
+
   final ObjetPaiementMobile objet;
   final String cibleId;
   final String titre;

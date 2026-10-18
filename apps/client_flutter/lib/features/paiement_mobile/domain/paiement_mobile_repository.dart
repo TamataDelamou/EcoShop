@@ -84,7 +84,10 @@ class ErreurPaiementMobile implements Exception {
         'RIEN_A_PAYER' => "Il n'y a rien à payer pour le moment.",
         'ACCES_REFUSE' => "Vous n'êtes pas autorisé à effectuer ce paiement.",
         'COMMANDE_NON_PAYABLE' => 'Cette commande ne peut plus être payée.',
-        'COMMANDE_INTROUVABLE' || 'INSCRIPTION_INTROUVABLE' => 'Dossier introuvable. Actualisez puis réessayez.',
+        'COMMANDE_INTROUVABLE' || 'INSCRIPTION_INTROUVABLE' || 'DEMANDE_INTROUVABLE' =>
+          'Dossier introuvable. Actualisez puis réessayez.',
+        'DEMANDE_NON_PAYABLE' =>
+          "Ce dossier n'est plus à régler (déjà inscrit, ou délai de réservation dépassé). Actualisez la page.",
         'ORANGE_INDISPONIBLE' => 'Orange Money ne répond pas pour le moment. Réessayez dans quelques instants.',
         'IDENTIFIANTS_INCOMPLETS' => 'Renseignez les trois identifiants fournis par Orange Money.',
         'URL_PAIEMENT_INDISPONIBLE' => "La page Orange Money n'a pas pu s'ouvrir sur cet appareil.",

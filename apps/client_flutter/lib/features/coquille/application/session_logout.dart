@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../communication/prototype/application/communication_locale_providers.dart';
+import '../../inscription_en_ligne/application/inscription_en_ligne_providers.dart';
 
 /// Déconnexion complète : ferme la session serveur **et** purge tout ce que
 /// le prototype local de messagerie/annonces/cahier de liaison (M9) a écrit
@@ -33,6 +34,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // donateurs, états, pièces — jamais visibles du compte suivant.
   try {
     await lire(lectureComptabiliteProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Inscriptions en ligne (REG-08) : dossiers d'élèves et de familles.
+  try {
+    await lire(lectureInscriptionsProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

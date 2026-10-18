@@ -341,9 +341,12 @@ class _VueSucces extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          objet == ObjetPaiementMobile.scolarite
-              ? "Le reçu est disponible dans les encaissements de l'élève."
-              : 'Votre commande est payée. Le vendeur est prévenu.',
+          switch (objet) {
+            ObjetPaiementMobile.scolarite => "Le reçu est disponible dans les encaissements de l'élève.",
+            ObjetPaiementMobile.fraisInscription =>
+              "L'inscription est confirmée. Le reçu est disponible dans les encaissements de l'élève.",
+            ObjetPaiementMobile.commandeMarketplace => 'Votre commande est payée. Le vendeur est prévenu.',
+          },
           textAlign: TextAlign.center,
           style: TextStyle(color: palette.encreSecondaire),
         ),

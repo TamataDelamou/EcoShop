@@ -18,6 +18,8 @@ import '../../communication/prototype/presentation/ecran_cahier_liaison_prototyp
 import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
+import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
+import '../../inscription_en_ligne/presentation/ecran_inscriptions_famille.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
@@ -593,6 +595,19 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
+        // Inscriptions et réinscriptions en ligne (REG-08) : parents, et
+        // élèves (qui se réinscrivent eux-mêmes dès le collège).
+        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.eleve)
+          ListTile(
+            key: const Key('menu_inscriptions_famille'),
+            leading: const Icon(Icons.how_to_reg_outlined),
+            title: const Text('Inscriptions et réinscriptions'),
+            subtitle: const Text('Réinscrire, inscrire un nouvel élève, suivre ses dossiers'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranInscriptionsFamille()),
+            ),
+          ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.notifications_outlined),
@@ -1043,6 +1058,28 @@ class _VueProfil extends ConsumerWidget {
                   MaterialPageRoute(
                     builder: (_) =>
                         EcranComptabilite(etablissementId: etablissement.id, devise: etablissement.deviseCode),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_campagne_inscription'),
+                leading: const Icon(Icons.how_to_reg_outlined),
+                title: const Text('Inscriptions en ligne'),
+                subtitle: const Text('Campagne, dossiers des familles, places, liste d\'attente'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranCampagneInscription(
+                      etablissementId: etablissement.id,
+                      devise: etablissement.deviseCode,
+                    ),
                   ),
                 ),
               );

@@ -663,6 +663,7 @@ as $$
       'classe_actuelle', c.nom,
       'niveau_propose_id', np.id,
       'niveau_propose_nom', np.nom,
+      'niveau_propose_isced', np.isced,
       'niveau_offert', np.id is not null and public.niveau_offert(k.id, np.id),
       'frais_inscription', case when np.id is null then 0 else public.frais_inscription_niveau(k.id, np.id) end,
       'solde_precedent', coalesce((select s.solde from public.solde_scolarite(i.id) s), 0),

@@ -7,6 +7,8 @@ import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
+import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
+import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../planification/application/planification_providers.dart';
@@ -44,6 +46,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in entitesComptabiliteHorsLigne) {
     gestionnaires[entite] = rejeuComptable.rejouer;
   }
+  // Inscriptions en ligne REG-08 : dossiers, pièces, décisions, guichet…
+  final rejeuInscriptions = RejeuInscriptions(ref.watch(supabaseClientProvider), ref.watch(syncRepositoryProvider));
+  for (final entite in InscriptionHorsLigneRepository.entites) {
+    gestionnaires[entite] = rejeuInscriptions.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -54,6 +61,12 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       return gestionnaire == null ? Future.value() : gestionnaire(entree);
     },
     // Refus du serveur au retour du réseau : gardés pour l'utilisateur.
-    surRejet: (entree, rejet) => journalRejets.enregistrer(entree, rejet, RejeuComptabilite.libelle(entree)),
+    surRejet: (entree, rejet) => journalRejets.enregistrer(
+      entree,
+      rejet,
+      InscriptionHorsLigneRepository.entites.contains(entree.entite)
+          ? RejeuInscriptions.libelle(entree)
+          : RejeuComptabilite.libelle(entree),
+    ),
   );
 });

@@ -24,8 +24,8 @@ attendue), `clos`.
 | REG-03 | Référentiel comptable : SYSCOHADA ou comptabilité simplifiée | P1 | C1 à C7 livrés (2026-10-18) — relecture expert-comptable avant production |
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
-| REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **validé** (2026-10-18) — construction à lancer |
-| REG-09 | Pointage des élèves au portail (QR code) et notifications push ; GPS abandonné | P1 | **validé** (2026-10-18) — après REG-08 |
+| REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **livré** (2026-10-18) — serveur, écrans familles et Direction, hors connexion ; à vérifier sur le poste |
+| REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **validé** (2026-10-18) — prochain chantier |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -635,6 +635,46 @@ blocage automatique** pour impayé ou sanction, décision de la Direction au
 cas par cas ; hors connexion d'abord (dossier et pièces sans réseau,
 guichet assisté, espèces conservées).
 
+**Livré le 2026-10-18** — migration `…1544`, module Flutter
+`features/inscription_en_ligne` :
+- **Direction** (« Inscriptions en ligne ») : campagne par année
+  (ouvertures des réinscriptions et des nouvelles demandes, date limite,
+  délai de réservation, pièces exigées par cycle, places par niveau,
+  consignes, publication) ; tableau de bord (taux de réinscription, à
+  traiter, acceptés à régler, liste d'attente, désistements, frais
+  encaissés, places par niveau) ; examen d'un dossier (pièces, alertes
+  impayé / sanction / doublon possible) et décision : accepter (ou en
+  surnombre), réclamer des pièces, convoquer, liste d'attente, refuser
+  (motif obligatoire, transmis à la famille), « payé au guichet →
+  inscrire » (classe automatique ou choisie) ;
+- **familles** (« Inscriptions et réinscriptions », parents et élèves) :
+  enfants à réinscrire avec le niveau suivant proposé d'après les
+  résultats (même niveau si recalé à l'examen), « revient / ne revient
+  pas », choix du payeur dès le collège ; demande d'un nouvel élève en
+  5 étapes (école, niveau avec places et frais, élève, demandeur et
+  payeur, pièces photographiées) ; suivi du dossier, paiement des frais
+  par **Orange Money** (nouvel objet `frais_inscription`) ou au guichet
+  avec le numéro de dossier, retrait ;
+- **mécanique** : réinscription sans alerte → place offerte aussitôt ;
+  frais nuls → inscription immédiate ; offre non réglée à l'échéance →
+  expirée, place au premier de la liste d'attente (aussi au retrait ou
+  au refus) ; à l'inscription : fiche et matricule créés, parent lié (ou
+  compte de l'élève lié), payeur enregistré, encaissement des frais ;
+  notifications à chaque étape dans l'application (push par REG-09) ;
+- **hors connexion** : dossier et photos gardés sur le téléphone avec un
+  numéro provisoire, envoyés au retour du réseau (pièces après leur
+  dossier), saisie faite avant la date limite recevable 7 jours après ;
+  décisions et espèces encaissées par la Direction aussi mises en file ;
+  refus du serveur expliqués dans le bandeau ; cache purgé à la
+  déconnexion. En ligne seulement : paiement Orange Money, ouverture
+  d'une pièce.
+- À la mise en production : planifier `expirer_offres_inscription()`
+  (toutes les heures) — elle est aussi appelée à chaque paiement et à
+  chaque ouverture du tableau de bord.
+- Vérification : pgTAP `72` 43/43, régression 01-71 inchangée (`58`, `59`
+  Orange Money au vert) ; test Flutter `inscription_hors_ligne_test.dart`
+  — **à lancer sur le poste**.
+
 ## REG-09 — Pointage au portail et notifications
 
 **Priorité** : P1. **Statut** : validé le 2026-10-18 — proposition
@@ -646,6 +686,8 @@ automatiques **push** (arrivée/sortie, absence à l'heure limite, sortie
 anticipée), sans alerte d'absence tant que le portail n'a pas synchronisé ;
 **GSG ne prend pas en charge les SMS** : l'établissement achète des crédits
 SMS à GSG (revente), décomptés à l'envoi ; sans crédit, push seul.
+**Ajout du 2026-10-18** : les crédits SMS servent aussi aux **relances des
+parents en retard de paiement** des frais de scolarité.
 
 ## REG-05 — README à resynchroniser
 

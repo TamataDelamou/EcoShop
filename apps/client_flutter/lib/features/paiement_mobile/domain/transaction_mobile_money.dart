@@ -2,7 +2,10 @@
 /// Codes identiques à la colonne `transactions_mobile_money.objet`.
 enum ObjetPaiementMobile {
   scolarite('scolarite'),
-  commandeMarketplace('commande_marketplace');
+  commandeMarketplace('commande_marketplace'),
+
+  /// Frais d'inscription d'une demande acceptée (REG-08).
+  fraisInscription('frais_inscription');
 
   const ObjetPaiementMobile(this.code);
 
