@@ -75,6 +75,16 @@ async function jetonAcces(compte: CompteServiceFcm): Promise<string> {
   return corps.access_token;
 }
 
+/**
+ * Destinataire du message. Depuis 2026, l'application désigne le téléphone
+ * par son identifiant d'installation Firebase (FID : 22 caractères, sans
+ * « : »), à envoyer dans `fid` ; les anciens jetons d'appareil, longs et
+ * contenant « : », restent acceptés dans `token`.
+ */
+export function cible(identifiant: string): { fid: string } | { token: string } {
+  return /^[A-Za-z0-9_-]{22}$/.test(identifiant) ? { fid: identifiant } : { token: identifiant };
+}
+
 export async function envoyerPush(
   compte: CompteServiceFcm,
   jeton: string,
@@ -89,7 +99,7 @@ export async function envoyerPush(
       headers: { Authorization: `Bearer ${await jetonAcces(compte)}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         message: {
-          token: jeton,
+          ...cible(jeton),
           notification: { title: titre, body: corps },
           data: donnees,
           android: { priority: "high", notification: { channel_id: "ecoshop_alertes" } },
@@ -101,8 +111,13 @@ export async function envoyerPush(
   }
   if (reponse.ok) return { issue: "envoye" };
   const detail = await reponse.text().catch(() => "");
-  // Application désinstallée ou jeton périmé : on l'oublie.
-  if (reponse.status === 404 || detail.includes("UNREGISTERED") || detail.includes("INVALID_ARGUMENT")) {
+  // Application désinstallée, téléphone désinscrit ou identifiant périmé :
+  // on l'oublie. Un INVALID_ARGUMENT ne vise l'identifiant que s'il le
+  // nomme (sinon c'est le message lui-même qui est en cause).
+  if (
+    reponse.status === 404 || detail.includes("UNREGISTERED") ||
+    (detail.includes("INVALID_ARGUMENT") && /message\.(fid|token)|registration/i.test(detail))
+  ) {
     return { issue: "jeton_invalide" };
   }
   if (reponse.status === 401) acces = null;

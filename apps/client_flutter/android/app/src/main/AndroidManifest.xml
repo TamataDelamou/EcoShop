@@ -4,6 +4,9 @@
          l'appareil, seul le texte reconnu par OCR embarqué est transmis. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <!-- Notifications push (Android 13 et plus : autorisation demandée à
+         l'ouverture du compte). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="ecoshop_client"
         android:name="${applicationName}"
@@ -45,6 +48,14 @@
                 <data android:scheme="io.gsg.ecoshop" android:host="paiement"/>
             </intent-filter>
         </activity>
+        <!-- Notifications push : canal « Alertes de l'école » (créé par
+             MainActivity, importance haute) et petite icône monochrome. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="ecoshop_alertes" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

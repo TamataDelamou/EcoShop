@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Configuration Firebase propre à chaque projet (notifications push) :
+# déposée sur le poste de construction, jamais dans le dépôt.
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

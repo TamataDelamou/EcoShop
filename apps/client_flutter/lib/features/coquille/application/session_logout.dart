@@ -5,6 +5,7 @@ import '../../auth/application/auth_providers.dart';
 import '../../communication/prototype/application/communication_locale_providers.dart';
 import '../../inscription_en_ligne/application/inscription_en_ligne_providers.dart';
 import '../../pointage/application/pointage_providers.dart';
+import '../../push/application/push_providers.dart';
 
 /// Déconnexion complète : ferme la session serveur **et** purge tout ce que
 /// le prototype local de messagerie/annonces/cahier de liaison (M9) a écrit
@@ -29,6 +30,14 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   required T Function<T>(ProviderListenable<T> provider) lire,
   required void Function(ProviderOrFamily provider) invalider,
 }) async {
+  // Notifications push : ce téléphone ne reçoit plus celles du compte
+  // (tablette partagée, téléphone prêté). Avant la déconnexion, tant que le
+  // serveur reconnaît encore le compte.
+  try {
+    await lire(servicePushProvider)?.detacher();
+  } catch (_) {
+    // Push indisponible : rien à détacher.
+  }
   await lire(authRepositoryProvider).deconnecter();
   await lire(communicationLocaleRepositoryProvider).purgerTout();
   // Comptabilité gardée pour le hors connexion (REG-03 C7) : données des

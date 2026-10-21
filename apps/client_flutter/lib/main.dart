@@ -10,6 +10,7 @@ import 'core/theme/ambiance_visuelle.dart';
 import 'features/accessibilite/application/accessibilite_providers.dart';
 import 'features/accessibilite/domain/echelle_texte.dart';
 import 'features/coquille/presentation/garde_session.dart';
+import 'features/push/data/firebase_messagerie_push.dart';
 import 'features/themes/application/theme_providers.dart';
 
 Future<void> main() async {
@@ -22,6 +23,8 @@ Future<void> main() async {
       url: Env.supabaseUrl,
       publishableKey: Env.supabasePublishableKey,
     );
+    // Notifications push (téléphones) : éteintes sans configuration Firebase.
+    await InitialisationPush.initialiser();
   }
 
   runApp(const ProviderScope(child: EcoShopApp()));

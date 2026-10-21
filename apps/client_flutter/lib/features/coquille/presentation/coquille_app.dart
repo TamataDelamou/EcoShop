@@ -9,6 +9,7 @@ import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_notifications.dart';
+import '../../push/presentation/ecouteur_push.dart';
 import '../../validation_marketplace/presentation/ecran_agrement_vendeurs_etablissement.dart';
 import '../../validation_marketplace/presentation/ecran_validation_vendeurs_gsg.dart';
 import '../../communication/presentation/ecran_preferences_canaux.dart';
@@ -195,6 +196,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       body: Column(
         children: [
           const _BandeauHorsLigne(),
+          // Notifications push : rattachement du téléphone, bandeau, ouverture.
+          if (Env.estConfigure && profil != null) EcouteurPush(key: ValueKey(profil.id), profilId: profil.id),
           const SelecteurEnfant(),
           Expanded(
             child: large

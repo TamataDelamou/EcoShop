@@ -4,6 +4,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Notifications push (Firebase Cloud Messaging) : actives dès que le fichier
+// google-services.json, téléchargé depuis la console Firebase, est déposé
+// dans android/app/. Sans lui, l'application se construit et fonctionne
+// normalement, sans notifications push.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.gsg.ecoshop_client"
     compileSdk = flutter.compileSdkVersion

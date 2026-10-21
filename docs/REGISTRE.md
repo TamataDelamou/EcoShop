@@ -25,8 +25,9 @@ attendue), `clos`.
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **livré** (2026-10-18) — serveur, écrans familles et Direction, hors connexion ; à vérifier sur le poste |
-| REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **livré** (2026-10-21) — reste : Firebase dans l'application (réception du push), comptes Firebase et Orange SMS au déploiement |
+| REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **livré** (2026-10-21) — réception du push : REG-11 ; reste les comptes Firebase et Orange SMS au déploiement |
 | REG-10 | Encaissement de scolarité au guichet hors connexion, numéro de reçu continu | P1 | **livré** (2026-10-21) — à vérifier sur le poste |
+| REG-11 | Notifications push dans l'application (Firebase, Android) : réception, bandeau, ouverture, déconnexion | P1 | **livré** (2026-10-21) — projet Firebase à créer, voir `docs/DEPLOIEMENT_PUSH.md` ; iOS au compte Apple |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -765,6 +766,40 @@ réseau). **Statut** : livré le 2026-10-21 — migration `…1547`.
   Flutter `encaissement_hors_ligne_test.dart`, `encaissement_pdf_e2e_test.dart`
   (mis à jour : la clé de l'appareil est désormais transmise) — **à lancer
   sur le poste**.
+
+## REG-11 — Notifications push dans l'application
+
+**Priorité** : P1 (suite de REG-09 : le serveur envoyait déjà, le
+téléphone ne savait pas encore recevoir). **Statut** : livré le
+2026-10-21 — `firebase_core` 5.0.0, `firebase_messaging` 17.0.0.
+
+- **Identifiant d'installation Firebase (FID)** : depuis 2026, Google
+  remplace les « jetons » d'appareil (`getToken`, désormais obsolète) par
+  le FID (`register()` / `onRegistered`). L'application est construite
+  directement sur le FID ; la fonction serveur `envoyer_push` l'envoie
+  dans `message.fid` et accepte toujours les anciens jetons
+  (`message.token`). Un `INVALID_ARGUMENT` ne fait plus oublier un
+  téléphone que s'il le vise (avant : tout message mal formé effaçait les
+  téléphones).
+- **Rattachement du téléphone au compte** à l'ouverture du compte,
+  retenté au retour du réseau ; gardé sur l'appareil et renouvelé chaque
+  semaine (date de dernier contact côté serveur) ; le téléphone suit le
+  dernier compte connecté.
+- **Déconnexion** : serveur prévenu s'il est joignable, téléphone
+  désinscrit du service push dans tous les cas (tablette partagée,
+  téléphone prêté).
+- **Réception** : application ouverte → bandeau en bas de l'écran avec
+  « Voir » et boîte de notifications rafraîchie ; notification touchée
+  dans la barre du téléphone (application en arrière-plan ou fermée) →
+  boîte de notifications. Canal Android « Alertes de l'école »
+  (importance haute) et petite icône monochrome ; autorisation Android 13
+  demandée à l'ouverture du compte.
+- **Sans configuration** : tant que `google-services.json` n'est pas
+  déposé, l'application se construit et fonctionne sans push ; ce fichier
+  n'entre jamais dans le dépôt (`.gitignore`). Sur PC, push sans objet.
+- Vérification : tests Flutter `test/features/push/push_test.dart` ;
+  Deno `fcm_client_test.ts` 4/4 (ajouté à la CI) — **à lancer sur le
+  poste**. iOS : code prêt, demande un compte développeur Apple (clé APNs).
 
 ## REG-05 — README à resynchroniser
 
