@@ -1,10 +1,10 @@
-/// Pointage des élèves au portail, alertes aux familles, crédits SMS et
-/// relances d'impayés (REG-09).
-///
-/// Décisions du porteur de projet : pas de GPS ; carte à QR code scannée au
-/// portail, hors connexion d'abord ; avis en push (gratuits) ; SMS payés
-/// sur les crédits que l'établissement achète à GSG ; l'appel en classe
-/// reste la preuve officielle.
+// Pointage des élèves au portail, alertes aux familles, crédits SMS et
+// relances d'impayés (REG-09).
+//
+// Décisions du porteur de projet : pas de GPS ; carte à QR code scannée au
+// portail, hors connexion d'abord ; avis en push (gratuits) ; SMS payés
+// sur les crédits que l'établissement achète à GSG ; l'appel en classe
+// reste la preuve officielle.
 
 DateTime? _date(Object? v) => v is String ? DateTime.tryParse(v)?.toLocal() : null;
 double _nombre(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
