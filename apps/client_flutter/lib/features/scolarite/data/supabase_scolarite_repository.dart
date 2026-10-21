@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../domain/affectation_enseignant.dart';
 import '../domain/annee_scolaire.dart';
 import '../domain/classe.dart';
@@ -450,15 +451,17 @@ class SupabaseScolariteRepository implements ScolariteRepository {
     });
   }
 
+  /// Enregistrement idempotent (fonction `enregistrer_encaissement_scolarite`) :
+  /// la clé de l'appareil fait qu'un renvoi ne crée jamais de doublon ; le
+  /// numéro de reçu continu est attribué par le serveur.
   @override
   Future<EncaissementScolarite> enregistrerEncaissement(EncaissementScolarite encaissement) {
     return _executer(() async {
-      final ligne = await _client
-          .from('encaissements_scolarite')
-          .insert(encaissement.versJsonCreation())
-          .select()
-          .single();
-      return EncaissementScolarite.depuisJson(ligne);
+      final ligne = await _client.rpc<dynamic>(
+        'enregistrer_encaissement_scolarite',
+        params: encaissement.versParamsEnregistrement(),
+      );
+      return EncaissementScolarite.depuisJson(ligne as Map<String, dynamic>);
     });
   }
 
@@ -485,6 +488,11 @@ class SupabaseScolariteRepository implements ScolariteRepository {
       return await action();
     } on PostgrestException catch (e) {
       throw ErreurScolarite(_codeDepuisMessage(e.message), e.message);
+    } catch (e) {
+      // Panne de réseau : code dédié, que le cache sait reconnaître pour
+      // resservir les données gardées sur l'appareil.
+      if (estErreurReseau(e)) throw ErreurScolarite('HORS_CONNEXION', e.toString());
+      rethrow;
     }
   }
 

@@ -43,7 +43,29 @@ Future<Uint8List> construireRecuPdf({
       build: (context) => pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          enteteDocument(etablissement: etablissement, titre: 'Reçu de scolarité', palette: palette),
+          enteteDocument(
+            etablissement: etablissement,
+            titre: encaissement.enAttenteEnvoi
+                ? 'Reçu de scolarité PROVISOIRE N° ${encaissement.numeroProvisoire ?? ''}'
+                : encaissement.numeroRecu != null
+                    ? 'Reçu de scolarité N° ${encaissement.numeroRecu}'
+                    : 'Reçu de scolarité',
+            palette: palette,
+          ),
+          if (encaissement.enAttenteEnvoi)
+            pw.Text(
+              'Encaissé sans réseau. Le numéro définitif est attribué à l\'envoi au serveur ; '
+              'le reçu définitif pourra alors être remis.',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.orange800),
+            )
+          else if (encaissement.numeroProvisoire != null)
+            pw.Text(
+              'Remplace le reçu provisoire ${encaissement.numeroProvisoire}.',
+              style: pw.TextStyle(fontSize: 8, color: palette.encreSecondaire),
+            ),
+          if (!encaissement.estValide)
+            pw.Text('ANNULÉ${encaissement.motifAnnulation == null ? '' : ' : ${encaissement.motifAnnulation}'}',
+                style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.red700)),
           pw.SizedBox(height: 12),
           _ligneInfo('Élève', fiche.nomComplet, palette),
           _ligneInfo('Matricule', fiche.matricule, palette),

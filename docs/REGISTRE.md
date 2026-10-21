@@ -26,6 +26,7 @@ attendue), `clos`.
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **livré** (2026-10-18) — serveur, écrans familles et Direction, hors connexion ; à vérifier sur le poste |
 | REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **livré** (2026-10-21) — reste : Firebase dans l'application (réception du push), comptes Firebase et Orange SMS au déploiement |
+| REG-10 | Encaissement de scolarité au guichet hors connexion, numéro de reçu continu | P1 | **livré** (2026-10-21) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -735,6 +736,35 @@ parents en retard de paiement** des frais de scolarité.
 - Vérification : pgTAP `73` 40/40, régression 01-72 inchangée ; `deno
   check` des Edge Functions ; test Flutter `pointage_test.dart` — **à
   lancer sur le poste**.
+
+## REG-10 — Encaissement au guichet hors connexion
+
+**Priorité** : P1 (recommandation n° 1 du point d'avancement du
+2026-10-18 : geste quotidien du guichet, souvent en espèces et sans
+réseau). **Statut** : livré le 2026-10-21 — migration `…1547`.
+
+- **Numéro de reçu continu** par établissement et par année
+  (`SCO-2026-000001`), attribué par le serveur dans la transaction
+  d'enregistrement : aucun trou, ni sur un refus ni sur un renvoi ;
+  immuable ; les encaissements existants sont numérotés dans l'ordre de
+  saisie ; s'applique aussi aux paiements Orange Money et aux frais
+  d'inscription.
+- **Sans réseau** : l'encaissement est gardé sur l'appareil (clé de
+  l'appareil, heure de saisie), reçu **provisoire** imprimable
+  (`PROV-<appareil>-0001`) ; il apparaît aussitôt dans l'historique et
+  le solde de l'élève ; envoyé au retour du réseau par
+  `enregistrer_encaissement_scolarite` (idempotent : un renvoi ne crée
+  rien) ; le reçu définitif rappelle le provisoire ; une annulation sans
+  réseau part aussi en file ; refus du serveur expliqués dans le bandeau
+  (« l'argent reçu doit être régularisé par la direction »).
+- **Correction transversale** : une panne de réseau est maintenant
+  reconnue par l'accès aux données de la scolarité (`HORS_CONNEXION`),
+  si bien que tous les écrans de scolarité resservent réellement leurs
+  données gardées sur l'appareil — ce n'était pas le cas jusque-là.
+- Vérification : pgTAP `74` 11/11, régression 01-73 inchangée ; tests
+  Flutter `encaissement_hors_ligne_test.dart`, `encaissement_pdf_e2e_test.dart`
+  (mis à jour : la clé de l'appareil est désormais transmise) — **à lancer
+  sur le poste**.
 
 ## REG-05 — README à resynchroniser
 

@@ -1,6 +1,13 @@
+import 'dart:convert';
+
+import 'package:uuid/uuid.dart';
+
 import '../../../core/db/cache_document_store.dart';
+import '../../../core/sync/drift_sync_repository.dart';
+import '../../../core/sync/sync_engine.dart';
 import '../domain/affectation_enseignant.dart';
 import '../domain/encaissement_scolarite.dart';
+import '../domain/enums_financier_scolaire.dart';
 import '../domain/enums_scolarite.dart';
 import '../domain/fiche_eleve.dart';
 import '../domain/frais_scolarite_config.dart';
@@ -18,11 +25,23 @@ import '../domain/verifications_reinscription.dart';
 /// écriture systématique du cache en cas de succès, lecture du cache en cas
 /// d'échec réseau. Seule [lierEnfant] (écriture) ne connaît pas de repli —
 /// elle exige le réseau par nature.
+///
+/// Encaissements au guichet d'abord hors connexion : sans réseau,
+/// l'encaissement est gardé sur l'appareil sous une clé générée ici, avec un
+/// reçu PROVISOIRE (`PROV-<appareil>-0001`), et envoyé au retour du réseau
+/// (le serveur reconnaît la clé, attribue le numéro définitif continu et
+/// garde le provisoire) ; il apparaît aussitôt dans l'historique et dans le
+/// solde. Une annulation sans réseau part elle aussi en file.
 class CachedScolariteRepository implements ScolariteRepository {
-  const CachedScolariteRepository(this._distant, this._cache);
+  const CachedScolariteRepository(this._distant, this._cache, [this._file, this._identifiantAppareil]);
 
   final ScolariteRepository _distant;
   final CacheDocumentStore _cache;
+  final DriftSyncRepository? _file;
+  final Future<String> Function()? _identifiantAppareil;
+
+  static const entiteEncaissement = 'encaissements_scolarite';
+  static const entiteAnnulationEncaissement = 'encaissements_scolarite_annulation';
 
   static const _typeStructure = 'structure';
   static const _typeInscriptionsClasse = 'inscriptions_classe';
@@ -234,12 +253,96 @@ class CachedScolariteRepository implements ScolariteRepository {
       _distant.enregistrerPalierPaiement(palier);
 
   @override
-  Future<EncaissementScolarite> enregistrerEncaissement(EncaissementScolarite encaissement) =>
-      _distant.enregistrerEncaissement(encaissement);
+  Future<EncaissementScolarite> enregistrerEncaissement(EncaissementScolarite encaissement) async {
+    final cle = encaissement.id.isEmpty ? const Uuid().v4() : encaissement.id;
+    final avecCle = encaissement.avecCle(cle, saisiLe: encaissement.saisiLeClient ?? DateTime.now());
+    final file = _file;
+    try {
+      return await _distant.enregistrerEncaissement(avecCle);
+    } on ErreurScolarite catch (e) {
+      if (e.code != 'HORS_CONNEXION' || file == null) rethrow;
+    }
+    final local = avecCle.avecCle(cle, numeroProvisoire: await _prochainNumeroProvisoire(), enAttenteEnvoi: true);
+    await file.enfiler(SyncEntree(
+      id: cle,
+      entite: entiteEncaissement,
+      operation: 'insert',
+      payload: jsonEncode({...local.versParamsEnregistrement(), '_cache': local.versJsonCache()}),
+    ));
+    return local;
+  }
 
   @override
-  Future<void> annulerEncaissement({required String encaissementId, required String motif}) =>
-      _distant.annulerEncaissement(encaissementId: encaissementId, motif: motif);
+  Future<void> annulerEncaissement({required String encaissementId, required String motif}) async {
+    final file = _file;
+    try {
+      return await _distant.annulerEncaissement(encaissementId: encaissementId, motif: motif);
+    } on ErreurScolarite catch (e) {
+      if (e.code != 'HORS_CONNEXION' || file == null) rethrow;
+    }
+    await file.enfiler(SyncEntree(
+      id: 'annulation/$encaissementId',
+      entite: entiteAnnulationEncaissement,
+      operation: 'update',
+      payload: jsonEncode({'id': encaissementId, 'motif': motif}),
+    ));
+  }
+
+  Future<String> _prochainNumeroProvisoire() async {
+    final document = await _cache.lireDocument('compteur_recus_provisoires', CacheDocumentStore.cleUnique);
+    final n = ((document?['n'] as num?)?.toInt() ?? 0) + 1;
+    await _cache.ecrireDocument('compteur_recus_provisoires', CacheDocumentStore.cleUnique, {'n': n});
+    final appareil = ((await _identifiantAppareil?.call()) ?? '0000').replaceAll('-', '').toUpperCase();
+    final court = appareil.length >= 4 ? appareil.substring(0, 4) : appareil.padRight(4, '0');
+    return 'PROV-$court-${n.toString().padLeft(4, '0')}';
+  }
+
+  /// Encaissements saisis sur cet appareil et pas encore reçus, avec les
+  /// annulations en attente appliquées.
+  Future<List<EncaissementScolarite>> _encaissementsEnAttente() async {
+    final file = _file;
+    if (file == null) return const [];
+    final entrees = await file.entreesEnAttente();
+    final annulations = <String, String>{
+      for (final e in entrees)
+        if (e.entite == entiteAnnulationEncaissement)
+          (jsonDecode(e.payload) as Map<String, dynamic>)['id'] as String:
+              (jsonDecode(e.payload) as Map<String, dynamic>)['motif'] as String,
+    };
+    return [
+      for (final e in entrees)
+        if (e.entite == entiteEncaissement)
+          _avecAnnulation(
+            EncaissementScolarite.depuisJson((jsonDecode(e.payload) as Map<String, dynamic>)['_cache'] as Map<String, dynamic>),
+            annulations,
+          ),
+    ];
+  }
+
+  static EncaissementScolarite _avecAnnulation(EncaissementScolarite e, Map<String, String> annulations) {
+    final motif = annulations[e.id];
+    if (motif == null) return e;
+    return EncaissementScolarite.depuisJson({...e.versJsonCache(), 'statut': 'annule', 'motif_annulation': motif});
+  }
+
+  Future<List<EncaissementScolarite>> _avecEnAttente(
+    List<EncaissementScolarite> connus,
+    bool Function(EncaissementScolarite) garde,
+  ) async {
+    final enAttente = [for (final e in await _encaissementsEnAttente()) if (garde(e)) e];
+    final annulations = <String, String>{
+      for (final e in await (_file?.entreesEnAttente() ?? Future.value(const <SyncEntree>[])))
+        if (e.entite == entiteAnnulationEncaissement)
+          (jsonDecode(e.payload) as Map<String, dynamic>)['id'] as String:
+              (jsonDecode(e.payload) as Map<String, dynamic>)['motif'] as String,
+    };
+    final ids = {for (final e in connus) e.id};
+    return [
+      for (final e in enAttente)
+        if (!ids.contains(e.id)) e,
+      for (final e in connus) _avecAnnulation(e, annulations),
+    ];
+  }
 
   // --- M15quater : lectures avec repli cache -------------------------------
 
@@ -323,41 +426,56 @@ class CachedScolariteRepository implements ScolariteRepository {
 
   @override
   Future<SoldeScolarite> soldeScolarite(String inscriptionId) async {
+    SoldeScolarite solde;
     try {
-      final solde = await _distant.soldeScolarite(inscriptionId);
+      solde = await _distant.soldeScolarite(inscriptionId);
       await _cache.ecrireDocument(_typeSolde, inscriptionId, {
         'montant_du': solde.montantDu,
         'montant_paye': solde.montantPaye,
         'solde': solde.solde,
       });
-      return solde;
     } on ErreurScolarite {
       final document = await _cache.lireDocument(_typeSolde, inscriptionId);
       if (document == null) rethrow;
-      return SoldeScolarite.depuisJson(document);
+      solde = SoldeScolarite.depuisJson(document);
     }
+    // Les encaissements de scolarité pas encore envoyés comptent déjà.
+    var enAttente = 0.0;
+    for (final e in await _encaissementsEnAttente()) {
+      if (e.inscriptionId == inscriptionId && e.estValide && e.typeFrais == TypeFraisScolaire.scolarite) {
+        enAttente += e.montant;
+      }
+    }
+    if (enAttente == 0) return solde;
+    return SoldeScolarite(
+      montantDu: solde.montantDu,
+      montantPaye: solde.montantPaye + enAttente,
+      solde: solde.solde - enAttente,
+    );
   }
 
   @override
-  Future<List<EncaissementScolarite>> encaissementsDeInscription(String inscriptionId) {
-    return _listeAvecCache(
+  Future<List<EncaissementScolarite>> encaissementsDeInscription(String inscriptionId) async {
+    final connus = await _listeAvecCache(
       type: _typeEncaissements,
       cle: inscriptionId,
       lire: () => _distant.encaissementsDeInscription(inscriptionId),
       versJson: (e) => e.versJsonCache(),
       depuisJson: EncaissementScolarite.depuisJson,
     );
+    return _avecEnAttente(connus, (e) => e.inscriptionId == inscriptionId);
   }
 
   @override
-  Future<List<EncaissementScolarite>> encaissementsRecents(String etablissementId, {int limite = 100}) {
-    return _listeAvecCache(
+  Future<List<EncaissementScolarite>> encaissementsRecents(String etablissementId, {int limite = 100}) async {
+    final connus = await _listeAvecCache(
       type: _typeEncaissementsRecents,
       cle: etablissementId,
       lire: () => _distant.encaissementsRecents(etablissementId, limite: limite),
       versJson: (e) => e.versJsonCache(),
       depuisJson: EncaissementScolarite.depuisJson,
     );
+    return _avecEnAttente(connus, (e) => e.etablissementId == etablissementId);
   }
 
   Future<List<T>> _listeAvecCache<T>({

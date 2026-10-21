@@ -4,6 +4,8 @@ import '../../../core/auth/role_racine.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/providers.dart';
+import '../../../core/sync/device_id_provider.dart';
+import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../data/cached_scolarite_repository.dart';
 import '../data/supabase_scolarite_repository.dart';
@@ -24,7 +26,14 @@ import '../domain/structure_etablissement.dart';
 final scolariteRepositoryProvider = Provider<ScolariteRepository>((ref) {
   final distant = SupabaseScolariteRepository(ref.watch(supabaseClientProvider));
   final cache = CacheDocumentStore(ref.watch(databaseProvider), 'scolarite');
-  return CachedScolariteRepository(distant, cache);
+  // Encaissements au guichet d'abord hors connexion (file d'envoi, reçu
+  // provisoire numéroté par appareil).
+  return CachedScolariteRepository(
+    distant,
+    cache,
+    ref.watch(syncRepositoryProvider),
+    () => ref.read(deviceIdProvider.future),
+  );
 });
 
 /// Annuaire de l'établissement actif (unités, années, classes, périodes) pour

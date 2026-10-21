@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
+import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../../../core/widgets/shimmer.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../export_pdf/data/recu_pdf_builder.dart';
@@ -71,19 +72,27 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
         moyenPaiement: _moyenPaiement,
         referencePaiement: _referenceCtrl.text.trim().isEmpty ? null : _referenceCtrl.text.trim(),
       );
-      await ref.read(scolariteRepositoryProvider).enregistrerEncaissement(encaissement);
+      final enregistre = await ref.read(scolariteRepositoryProvider).enregistrerEncaissement(encaissement);
       if (!mounted) return;
       ref.invalidate(soldeScolariteProvider(widget.inscription.id));
       ref.invalidate(encaissementsDeInscriptionProvider(widget.inscription.id));
       _montantCtrl.clear();
       _referenceCtrl.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Encaissement enregistré.')),
+        SnackBar(
+          content: Text(enregistre.enAttenteEnvoi
+              ? 'Pas de réseau : encaissement gardé sur l\'appareil — reçu provisoire ${enregistre.numeroProvisoire}. '
+                  'Le numéro définitif sera attribué à l\'envoi.'
+              : 'Encaissement enregistré — reçu ${enregistre.numeroRecu ?? ''}.'),
+          action: SnackBarAction(label: 'Reçu', onPressed: () => _exporterRecu(enregistre)),
+        ),
       );
     } on ErreurScolarite catch (e) {
-      setState(() => _erreur = e.code == 'PERMISSION_REFUSEE'
-          ? "Vous n'avez pas le droit d'enregistrer un encaissement."
-          : 'Enregistrement impossible pour le moment.');
+      setState(() => _erreur = switch (e.code) {
+            'PERMISSION_REFUSEE' || 'ACCES_REFUSE' => "Vous n'avez pas le droit d'enregistrer un encaissement.",
+            'HORS_CONNEXION' => 'Pas de réseau, et cet appareil ne peut pas garder l\'encaissement. Réessayez.',
+            _ => 'Enregistrement impossible pour le moment.',
+          });
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
@@ -119,6 +128,10 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
       if (!mounted) return;
       ref.invalidate(soldeScolariteProvider(widget.inscription.id));
       ref.invalidate(encaissementsDeInscriptionProvider(widget.inscription.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Annulation enregistrée (envoyée au serveur dès que le réseau le permet).'),
+      ));
     } on ErreurScolarite {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,9 +157,9 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => EcranApercuPdf(
-          titre: 'Reçu',
+          titre: encaissement.numeroAffiche == null ? 'Reçu' : 'Reçu ${encaissement.numeroAffiche}',
           octets: octets,
-          nomFichier: 'recu_${encaissement.id}.pdf',
+          nomFichier: 'recu_${encaissement.numeroAffiche ?? encaissement.id}.pdf',
         ),
       ),
     );
@@ -160,7 +173,11 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
 
     return Scaffold(
       appBar: AppBar(title: const Text('Encaissement de scolarité')),
-      body: ListView(
+      body: Column(
+        children: [
+          const BandeauSynchronisation(),
+          Expanded(
+            child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           solde.when(
@@ -262,8 +279,10 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
                           child: ListTile(
                             title: Text('${_formaterMontant(e.montant)} — ${e.typeFrais.libelle}'),
                             subtitle: Text(
+                              '${e.numeroAffiche == null ? '' : 'Reçu ${e.numeroAffiche} · '}'
                               '${e.moyenPaiement.libelle} · ${e.datePaiement.day.toString().padLeft(2, '0')}/'
                               '${e.datePaiement.month.toString().padLeft(2, '0')}/${e.datePaiement.year}'
+                              '${e.enAttenteEnvoi ? ' · en attente d\'envoi' : ''}'
                               '${e.estValide ? '' : ' · ANNULÉ (${e.motifAnnulation ?? ''})'}',
                             ),
                             trailing: Row(
@@ -286,6 +305,9 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
                         ),
                     ],
                   ),
+          ),
+        ],
+            ),
           ),
         ],
       ),

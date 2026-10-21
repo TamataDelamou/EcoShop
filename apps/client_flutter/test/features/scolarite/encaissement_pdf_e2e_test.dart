@@ -25,8 +25,9 @@ import 'package:ecoshop_client/features/scolarite/domain/fiche_eleve.dart';
 /// bloqués, voir `docs/AUDIT_ECOSHOP_FLUTTER.md`/mémoire de session). Le
 /// transport HTTP du `SupabaseClient` est intercepté pour simuler la réponse
 /// PostgREST ; en revanche le code métier réellement exécuté (sérialisation
-/// `versJsonCreation`, appel PostgREST via `.insert().select().single()`,
-/// désérialisation `depuisJson`) est le vrai code de production, pas une
+/// `versParamsEnregistrement`, appel de la fonction serveur
+/// `enregistrer_encaissement_scolarite`, désérialisation `depuisJson`) est
+/// le vrai code de production, pas une
 /// doublure. La preuve que le serveur (trigger `encaissements_verifie_tenant`)
 /// impose réellement `saisi_par` est apportée séparément, contre une vraie
 /// instance Postgres, par `tests/rls/38_m15quater_inscription_encaissement.sql`
@@ -35,12 +36,12 @@ void main() {
   test(
     'chaîne réelle : enregistrerEncaissement() (code repository de prod) '
     '-> construireRecuPdf() à partir de l\'objet exact renvoyé, '
-    'saisi_par transmis par le client jamais utilisé',
+    'saisi_par transmis par le client jamais utilisé, clé de l\'appareil transmise (idempotence)',
     () async {
       const etablissementId = 'e1';
       const ficheId = 'f1';
       const inscriptionId = 'i1';
-      const idClientBidon = 'ID-CLIENT-NE-DOIT-JAMAIS-SERVIR';
+      const cleAppareil = '9f0c1d2e-0000-4000-8000-000000000001';
       const saisiParClientBidon = 'p-usurpateur';
 
       http.Request? requeteInterceptee;
@@ -53,32 +54,34 @@ void main() {
           requeteInterceptee = request;
 
           final corps = jsonDecode(request.body) as Map<String, dynamic>;
-          // Le serveur répond avec la ligne telle que les triggers de
-          // 20260906001501_m15quater_inscription_encaissement.sql la
-          // produiraient réellement : `id`/`saisi_par` générés côté serveur
-          // (jamais les valeurs bidon envoyées ci-dessus), `statut` par
-          // défaut, `created_at` horodaté.
+          // Le serveur répond avec la ligne telle que la fonction
+          // `enregistrer_encaissement_scolarite` (migration …1547) et les
+          // déclencheurs la produisent : la clé de l'appareil, `saisi_par`
+          // imposé, numéro de reçu continu attribué par le serveur.
           final ligneServeur = {
-            'id': 'enc-server-generated-id',
-            'etablissement_id': corps['etablissement_id'],
-            'fiche_eleve_id': corps['fiche_eleve_id'],
-            'inscription_id': corps['inscription_id'],
-            'type_frais': corps['type_frais'],
-            'montant': corps['montant'],
-            'moyen_paiement': corps['moyen_paiement'],
-            'reference_paiement': corps['reference_paiement'],
-            'date_paiement': corps['date_paiement'],
+            'id': corps['p_id'],
+            'etablissement_id': corps['p_etablissement'],
+            'fiche_eleve_id': corps['p_fiche_eleve'],
+            'inscription_id': corps['p_inscription'],
+            'type_frais': corps['p_type_frais'],
+            'montant': corps['p_montant'],
+            'moyen_paiement': corps['p_moyen'],
+            'reference_paiement': corps['p_reference'],
+            'date_paiement': corps['p_date'],
             'saisi_par': 'p-direction-reelle',
             'statut': 'valide',
             'motif_annulation': null,
             'annule_par': null,
             'annule_le': null,
             'created_at': '2026-10-06T09:00:00.000Z',
+            'numero_recu': 'SCO-2026-000001',
+            'numero_provisoire': null,
+            'deja_recu': false,
           };
 
           return http.Response(
             jsonEncode(ligneServeur),
-            201,
+            200,
             headers: {'content-type': 'application/json'},
             request: request,
           );
@@ -88,7 +91,7 @@ void main() {
       final repository = SupabaseScolariteRepository(client);
 
       final encaissementSaisi = EncaissementScolarite(
-        id: idClientBidon,
+        id: cleAppareil,
         etablissementId: etablissementId,
         ficheEleveId: ficheId,
         inscriptionId: inscriptionId,
@@ -102,16 +105,18 @@ void main() {
       final encaissementEnregistre =
           await repository.enregistrerEncaissement(encaissementSaisi);
 
-      // Preuve que le corps réellement envoyé au transport HTTP ne contient
-      // ni `id` ni `saisi_par` transmis par le client (versJsonCreation).
+      // Preuve que le corps réellement envoyé contient la clé de l'appareil
+      // (un renvoi ne crée jamais de doublon) mais jamais `saisi_par`.
+      expect(requeteInterceptee!.url.path, endsWith('/rpc/enregistrer_encaissement_scolarite'));
       final corpsEnvoye = jsonDecode(requeteInterceptee!.body) as Map<String, dynamic>;
-      expect(corpsEnvoye.containsKey('id'), isFalse);
-      expect(corpsEnvoye.containsKey('saisi_par'), isFalse);
+      expect(corpsEnvoye['p_id'], cleAppareil);
+      expect(corpsEnvoye.keys.any((k) => k.contains('saisi_par')), isFalse);
 
       // Preuve que l'objet réellement utilisé pour le PDF est celui renvoyé
       // par le serveur (via le vrai `depuisJson` du repository), pas celui
       // saisi côté client.
-      expect(encaissementEnregistre.id, isNot(idClientBidon));
+      expect(encaissementEnregistre.id, cleAppareil);
+      expect(encaissementEnregistre.numeroRecu, 'SCO-2026-000001');
       expect(encaissementEnregistre.saisiPar, isNot(saisiParClientBidon));
       expect(encaissementEnregistre.saisiPar, 'p-direction-reelle');
       expect(encaissementEnregistre.montant, 400000);

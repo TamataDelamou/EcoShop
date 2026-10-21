@@ -10,6 +10,7 @@ import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
 import '../../pointage/data/supabase_pointage_repository.dart';
+import '../../scolarite/data/rejeu_encaissements.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../planification/application/planification_providers.dart';
@@ -55,6 +56,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   // Pointage au portail REG-09 : scans faits sans réseau.
   final client = ref.watch(supabaseClientProvider);
   gestionnaires[SupabasePointageRepository.entiteScan] = (entree) => SupabasePointageRepository.rejouer(client, entree);
+  // Encaissements au guichet faits sans réseau (reçu provisoire).
+  final rejeuEncaissements = RejeuEncaissements(client);
+  for (final entite in RejeuEncaissements.entites) {
+    gestionnaires[entite] = rejeuEncaissements.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -70,7 +76,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       rejet,
       InscriptionHorsLigneRepository.entites.contains(entree.entite)
           ? RejeuInscriptions.libelle(entree)
-          : RejeuComptabilite.libelle(entree),
+          : RejeuEncaissements.entites.contains(entree.entite)
+              ? RejeuEncaissements.libelle(entree)
+              : RejeuComptabilite.libelle(entree),
     ),
   );
 });
