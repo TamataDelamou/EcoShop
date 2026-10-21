@@ -25,7 +25,7 @@ attendue), `clos`.
 | REG-04 | Création et validation d'un nouvel établissement (fondateur) | P1 | livré (2026-10-17), courriels compris — mise en service à la création de la base Supabase |
 | REG-07 | Thèmes : charte arabophone, identité visuelle par établissement, ambiances personnelles | P1 | livré (2026-10-17) — à vérifier sur le poste |
 | REG-08 | Inscriptions et réinscriptions en ligne (parent, élève dès le collège) | P1 | **livré** (2026-10-18) — serveur, écrans familles et Direction, hors connexion ; à vérifier sur le poste |
-| REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **validé** (2026-10-18) — prochain chantier |
+| REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **livré** (2026-10-21) — reste : Firebase dans l'application (réception du push), comptes Firebase et Orange SMS au déploiement |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -688,6 +688,53 @@ anticipée), sans alerte d'absence tant que le portail n'a pas synchronisé ;
 SMS à GSG (revente), décomptés à l'envoi ; sans crédit, push seul.
 **Ajout du 2026-10-18** : les crédits SMS servent aussi aux **relances des
 parents en retard de paiement** des frais de scolarité.
+
+**Livré le 2026-10-21** — migrations `…1545` (type « pack SMS ») et
+`…1546`, Edge Functions `envoyer_push` (nouvelle), `envoyer_notifications`
+(SMS), `initier_paiement_cinetpay` (packs), module Flutter
+`features/pointage` :
+- **cartes d'élève** à QR code, PDF 10 cartes par page (format carte
+  bancaire), jeton secret par carte, remplacement d'une carte perdue
+  (l'ancienne ne passe plus) ;
+- **portail** (« Portail : scanner les cartes ») : caméra du téléphone
+  (Android, iOS) ou douchette USB / Bluetooth (tout appareil, PC compris) ;
+  sens proposé selon l'heure ; nom de l'élève affiché même sans réseau
+  (liste des cartes gardée sur le téléphone) ; carte inconnue signalée ;
+  double passage ignoré ; scans gardés hors connexion avec leur heure
+  exacte puis envoyés (jamais en double) ; signal régulier « plus rien en
+  attente » ;
+- **avis aux familles** (push) : arrivée et sortie (désactivables par
+  l'école et par chaque parent), retard indiqué, transmission tardive
+  indiquée ; **sortie avant la fin des cours sans autorisation** : alerte
+  push + SMS ; **absence** : après l'heure limite, alerte push + SMS
+  aux parents (à défaut, à l'élève autonome) des élèves ni pointés ni
+  absents justifiés à l'appel — seulement si le portail a transmis ses
+  scans, jamais un jour sans aucun scan (fête, grève), une fois par jour ;
+- **Direction** (« Présence au portail ») : arrivés, absents, retards,
+  sortis, écarts avec l'appel en classe, état du portail, alertes
+  envoyées, autorisation de sortie, remplacement de carte, impression des
+  cartes, réglages (heure limite, fin des cours, jours, avis, SMS) ;
+- **crédits SMS** : solde, historique, achat de packs (CinetPay, circuit
+  GSG) ; GSG fixe le prix des packs et peut créditer une école après un
+  paiement reçu (« Crédits SMS des écoles ») ; texte en alphabet GSM
+  (160 caractères par SMS) ; SMS non distribué recrédité ;
+- **relances d'impayés** : retard calculé sur les tranches échues
+  (boursiers exclus), push au payeur (élève à sa charge ou parents), SMS au
+  choix, pas deux fois la même semaine.
+- **Mise en production** : tâches planifiées `detecter_absences_portail()`
+  (toutes les 10 min, jours de classe) et appels de `envoyer_push` et
+  `envoyer_notifications` (chaque minute) ; secrets `FCM_COMPTE_SERVICE`
+  (projet Firebase à créer), `ORANGE_SMS_CLIENT_ID`,
+  `ORANGE_SMS_CLIENT_SECRET`, `ORANGE_SMS_EXPEDITEUR` (Guinée : 2240000),
+  `ORANGE_SMS_NOM_EXPEDITEUR` (facultatif, validé par Orange) ; prix des
+  packs à fixer par GSG.
+- **Reste à faire** : brancher Firebase dans l'application (réception des
+  push et enregistrement du téléphone via `enregistrer_jeton_push`) une
+  fois le projet Firebase créé ; d'ici là, les avis sont visibles dans
+  « Notifications ».
+- Vérification : pgTAP `73` 40/40, régression 01-72 inchangée ; `deno
+  check` des Edge Functions ; test Flutter `pointage_test.dart` — **à
+  lancer sur le poste**.
 
 ## REG-05 — README à resynchroniser
 

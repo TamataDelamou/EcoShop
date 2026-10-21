@@ -43,6 +43,10 @@ dependencies:
   # photo elle-même ne quitte jamais l'appareil, voir la migration
   # `20260906001509`.
   image_picker: ^1.1.2
+
+  # Portail (REG-09) : lecture des cartes d'élève à QR code par la caméra
+  # (Android, iOS) ; sur PC, une douchette USB fait office de clavier.
+  mobile_scanner: ^7.1.4
   google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:

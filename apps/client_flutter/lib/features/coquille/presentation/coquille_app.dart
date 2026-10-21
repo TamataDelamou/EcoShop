@@ -20,6 +20,11 @@ import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
 import '../../inscription_en_ligne/presentation/ecran_inscriptions_famille.dart';
+import '../../pointage/presentation/ecran_credits_sms_gsg.dart';
+import '../../pointage/presentation/ecran_portail.dart';
+import '../../pointage/presentation/ecran_presence_jour.dart';
+import '../../pointage/presentation/ecran_relances_impayes.dart';
+import '../../pointage/presentation/interrupteur_avis_portail.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
@@ -607,6 +612,59 @@ class _VueProfil extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranInscriptionsFamille()),
             ),
+          ),
+        // Avis du portail (REG-09) : le parent ou l'élève choisit.
+        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.eleve)
+          const InterrupteurAvisPortail(),
+        // Présence au portail (REG-09) : Direction (tableau, réglages,
+        // cartes, crédits SMS) ; le portail lui-même aussi pour le
+        // personnel habilité (le serveur vérifie le droit).
+        if (p.roleRacine == RoleRacine.direction || p.roleRacine == RoleRacine.enseignant)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  if (p.roleRacine == RoleRacine.direction)
+                    ListTile(
+                      key: const Key('menu_presence_jour'),
+                      leading: const Icon(Icons.fact_check_outlined),
+                      title: const Text('Présence au portail'),
+                      subtitle: const Text('Arrivées, absents, retards, alertes aux familles, cartes'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => EcranPresenceJour(etablissement: etablissement)),
+                      ),
+                    ),
+                  ListTile(
+                    key: const Key('menu_portail'),
+                    leading: const Icon(Icons.qr_code_scanner),
+                    title: const Text('Portail : scanner les cartes'),
+                    subtitle: const Text('Téléphone ou douchette à l\'entrée — fonctionne sans réseau'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => EcranPortail(etablissementId: etablissement.id)),
+                    ),
+                  ),
+                  if (p.roleRacine == RoleRacine.direction)
+                    ListTile(
+                      leading: const Icon(Icons.campaign_outlined),
+                      title: const Text('Relancer les impayés'),
+                      subtitle: const Text('Familles en retard sur les tranches échues (push, SMS)'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EcranRelancesImpayes(
+                            etablissementId: etablissement.id,
+                            devise: etablissement.deviseCode,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         const Divider(),
         ListTile(
@@ -1215,6 +1273,16 @@ class _VueProfil extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranValidationEtablissementsGsg()),
+            ),
+          ),
+        if (p.roleRacine == RoleRacine.adminGsg)
+          ListTile(
+            leading: const Icon(Icons.sms_outlined),
+            title: const Text('Crédits SMS des écoles'),
+            subtitle: const Text('Prix des packs, crédit après paiement'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranCreditsSmsGsg()),
             ),
           ),
         if (p.roleRacine == RoleRacine.adminGsg)

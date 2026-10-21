@@ -9,6 +9,7 @@ import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
+import '../../pointage/data/supabase_pointage_repository.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../planification/application/planification_providers.dart';
@@ -51,6 +52,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in InscriptionHorsLigneRepository.entites) {
     gestionnaires[entite] = rejeuInscriptions.rejouer;
   }
+  // Pointage au portail REG-09 : scans faits sans réseau.
+  final client = ref.watch(supabaseClientProvider);
+  gestionnaires[SupabasePointageRepository.entiteScan] = (entree) => SupabasePointageRepository.rejouer(client, entree);
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
