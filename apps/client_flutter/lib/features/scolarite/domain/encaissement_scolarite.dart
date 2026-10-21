@@ -154,7 +154,7 @@ class EncaissementScolarite {
   /// Numéro de reçu continu attribué par le serveur (SCO-2026-000123).
   final String? numeroRecu;
 
-  /// Reçu remis sans réseau (PROV-<appareil>-0001), rappelé sur le définitif.
+  /// Reçu remis sans réseau (`PROV-<appareil>-0001`), rappelé sur le définitif.
   final String? numeroProvisoire;
   final DateTime? saisiLeClient;
 
