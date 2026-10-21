@@ -40,6 +40,14 @@ interface CorpsRequete {
   // etablissementId pour ce type, voir migration 20260906001519.
   beneficiaireFicheEleveId?: string;
   formule?: string;
+  // REG-09 : pack de crédits SMS acheté par un établissement.
+  pack?: string;
+}
+
+interface TransactionCinetpay {
+  id: string;
+  montant_attendu: number;
+  devise: string;
 }
 
 const STATUT_PAR_ERRCODE: Record<string, number> = {
@@ -70,7 +78,11 @@ Deno.serve(async (req) => {
     // requis à la place. Le contrôle définitif reste côté SQL
     // (initier_transaction_cinetpay) ; cette vérification n'est qu'un
     // retour d'erreur plus lisible avant l'appel réseau.
-    if (corps.typeObjetPaye === "abonnement_premium_eleve") {
+    if (corps.typeObjetPaye === "pack_sms_etablissement") {
+      if (!corps.etablissementId || !corps.pack) {
+        return reponseJson(400, { error: "etablissementId_et_pack_requis" }, origine);
+      }
+    } else if (corps.typeObjetPaye === "abonnement_premium_eleve") {
       if (!corps.beneficiaireFicheEleveId || !corps.formule) {
         return reponseJson(400, { error: "beneficiaireFicheEleveId_et_formule_requis" }, origine);
       }
@@ -80,15 +92,20 @@ Deno.serve(async (req) => {
 
     const { client: supabase } = clientUtilisateur(req);
 
-    const { data: transaction, error: erreurInitiation } = await supabase
-      .rpc("initier_transaction_cinetpay", {
+    // Packs SMS (REG-09) : prix et quantité lus côté SQL dans `packs_sms`.
+    const { data: transaction, error: erreurInitiation } = corps.typeObjetPaye === "pack_sms_etablissement"
+      ? await supabase
+        .rpc("initier_achat_credits_sms", { p_etablissement: corps.etablissementId, p_pack: corps.pack })
+        .single<TransactionCinetpay>()
+      : await supabase
+        .rpc("initier_transaction_cinetpay", {
         p_type_objet_paye: corps.typeObjetPaye,
         p_etablissement: corps.etablissementId ?? null,
         p_annee_scolaire: corps.anneeScolaireId ?? null,
         p_beneficiaire_fiche_eleve: corps.beneficiaireFicheEleveId ?? null,
         p_formule: corps.formule ?? null,
       })
-      .single();
+        .single<TransactionCinetpay>();
 
     if (erreurInitiation || !transaction) {
       const statut = STATUT_PAR_ERRCODE[erreurInitiation?.code ?? ""] ?? 500;

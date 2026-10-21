@@ -17,6 +17,12 @@
 //   URL_APPLICATION                 lien des boutons (défaut https://globalservicegroupe.com)
 //   BREVO_BAC_A_SABLE=1             valide chez Brevo sans rien envoyer
 //
+// SMS (REG-09) : les SMS payés sur le crédit des établissements partent par
+// l'API SMS d'Orange (voir _shared/orange_sms_client.ts) :
+//   ORANGE_SMS_CLIENT_ID, ORANGE_SMS_CLIENT_SECRET, ORANGE_SMS_EXPEDITEUR,
+//   ORANGE_SMS_NOM_EXPEDITEUR (facultatif). Sans eux, les SMS restent en file
+//   (nouvel essai) ; un SMS en échec définitif est recrédité à l'école.
+//
 // Un échec sur un message n'arrête jamais les suivants.
 // ============================================================================
 
@@ -24,6 +30,7 @@ import { clientService } from "../_shared/supabase_client.ts";
 import { egaliteTempsConstant } from "../_shared/interservices.ts";
 import { type ConfigBrevo, envoyerCourrielBrevo } from "../_shared/brevo_client.ts";
 import { ModeleInconnu, rendreCourriel } from "../_shared/modeles_courriel.ts";
+import { configSmsOrangeDepuisEnv, envoyerSmsOrange } from "../_shared/orange_sms_client.ts";
 
 interface Notification {
   id: string;
@@ -82,6 +89,7 @@ Deno.serve(async (req: Request) => {
   const adminsGsg = (Deno.env.get("COURRIEL_ADMIN_GSG") ?? "")
     .split(",").map((a) => a.trim()).filter((a) => a.includes("@"));
 
+  const configSms = configSmsOrangeDepuisEnv();
   const service = clientService();
   const bilan = { reservees: 0, envoyees: 0, reprogrammees: 0, echecs_definitifs: 0, erreurs: 0 };
 
@@ -97,6 +105,28 @@ Deno.serve(async (req: Request) => {
 
   for (const n of lot) {
     try {
+      if (n.canal === "sms") {
+        const message = typeof n.donnees?.message === "string" ? n.donnees.message as string : "";
+        const verdict = !configSms
+          ? { issue: "temporaire" as const, erreur: "SMS_NON_CONFIGURE" }
+          : !n.destinataire || !message
+          ? { issue: "definitif" as const, erreur: "SMS_INCOMPLET" }
+          : await envoyerSmsOrange(configSms, n.destinataire, message);
+        if (verdict.issue === "envoye") {
+          await service.rpc("marquer_notification_envoyee", { p_id: n.id, p_identifiant_fournisseur: verdict.identifiant });
+          bilan.envoyees++;
+        } else {
+          const { data: issue } = await service.rpc("marquer_notification_echec", {
+            p_id: n.id, p_erreur: verdict.erreur, p_definitif: verdict.issue === "definitif",
+          });
+          if (issue === "echec_definitif") bilan.echecs_definitifs++;
+          else bilan.reprogrammees++;
+          if (verdict.issue === "temporaire" && "alerteConfiguration" in verdict && verdict.alerteConfiguration) {
+            journal("error", "Orange SMS refuse les identifiants ou le contrat est épuisé : vérifier ORANGE_SMS_*");
+          }
+        }
+        continue;
+      }
       if (n.canal !== "email") {
         await service.rpc("marquer_notification_echec", { p_id: n.id, p_erreur: "CANAL_NON_PRIS_EN_CHARGE", p_definitif: true });
         bilan.echecs_definitifs++;

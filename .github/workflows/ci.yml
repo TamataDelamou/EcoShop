@@ -109,4 +109,4 @@ jobs:
         run: deno test --allow-env supabase/functions/_shared/courriel_test.ts
 
       - name: Vérification de types — Control Plane Kernel, Orange Money, courriels
-        run: deno check supabase/functions/kernel-export/index.ts supabase/functions/kernel-control-plane/index.ts supabase/functions/initier_paiement_orange_money/index.ts supabase/functions/recevoir_notification_orange_money/index.ts supabase/functions/relancer_paiements_orange_money/index.ts supabase/functions/envoyer_notifications/index.ts
+        run: deno check supabase/functions/kernel-export/index.ts supabase/functions/kernel-control-plane/index.ts supabase/functions/initier_paiement_orange_money/index.ts supabase/functions/recevoir_notification_orange_money/index.ts supabase/functions/relancer_paiements_orange_money/index.ts supabase/functions/envoyer_notifications/index.ts supabase/functions/envoyer_push/index.ts supabase/functions/initier_paiement_cinetpay/index.ts

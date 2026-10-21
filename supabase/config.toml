@@ -80,6 +80,11 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
+# Notifications push (REG-09) : appelée par pg_cron, en-tête x-declencheur-secret.
+[functions.envoyer_push]
+enabled = true
+verify_jwt = false
+
 [functions.kernel-export]
 enabled = true
 verify_jwt = false
