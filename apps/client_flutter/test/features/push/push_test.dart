@@ -181,8 +181,8 @@ void main() {
         corps: 'Awa est arrivée à 7h42',
         donnees: {'type': 'pointage_arrivee', 'notification_id': 'n1'},
       ));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      // Le bandeau ne réagit au toucher qu'une fois entièrement apparu.
+      await tester.pumpAndSettle();
       expect(find.text('Arrivée à l\'école'), findsOneWidget);
       expect(find.text('Awa est arrivée à 7h42'), findsOneWidget);
 
