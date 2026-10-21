@@ -18,10 +18,12 @@ class EcranNouvelleInscription extends ConsumerStatefulWidget {
   const EcranNouvelleInscription({super.key});
 
   @override
-  ConsumerState<EcranNouvelleInscription> createState() => _EcranNouvelleInscriptionState();
+  ConsumerState<EcranNouvelleInscription> createState() =>
+      _EcranNouvelleInscriptionState();
 }
 
-class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscription> {
+class _EcranNouvelleInscriptionState
+    extends ConsumerState<EcranNouvelleInscription> {
   int _etape = 0;
   String _recherche = '';
   Timer? _attenteRecherche;
@@ -47,7 +49,14 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
   @override
   void dispose() {
     _attenteRecherche?.cancel();
-    for (final c in [_nom, _prenom, _lieu, _ecolePrecedente, _telephone, _commentaire]) {
+    for (final c in [
+      _nom,
+      _prenom,
+      _lieu,
+      _ecolePrecedente,
+      _telephone,
+      _commentaire,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -56,23 +65,27 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
   bool get _collegeOuPlus => (_niveau?.isced ?? 0) >= 2;
 
   List<PieceRequise> get _piecesAttendues => [
-        for (final p in _campagne?.piecesRequises ?? const <PieceRequise>[])
-          if (p.concerne(_niveau?.isced ?? 0)) p,
-      ];
+    for (final p in _campagne?.piecesRequises ?? const <PieceRequise>[])
+      if (p.concerne(_niveau?.isced ?? 0)) p,
+  ];
 
   String? _blocageEtape(int etape) => switch (etape) {
-        0 => _campagne == null ? "Choisissez l'école." : null,
-        1 => _niveau == null
-            ? 'Choisissez le niveau demandé.'
-            : !(_campagne?.nouvellesOuvertes ?? false)
-                ? "L'école n'ouvre les demandes des nouveaux élèves qu'à partir du "
-                    "${_campagne?.ouvertureNouvelles == null ? '—' : dateCourte(_campagne!.ouvertureNouvelles!)}."
-                : null,
-        2 => _nom.text.trim().isEmpty || _prenom.text.trim().isEmpty || _naissance == null
-            ? "Renseignez le nom, le prénom et la date de naissance de l'élève."
-            : null,
-        _ => null,
-      };
+    0 => _campagne == null ? "Choisissez l'école." : null,
+    1 =>
+      _niveau == null
+          ? 'Choisissez le niveau demandé.'
+          : !(_campagne?.nouvellesOuvertes ?? false)
+          ? "L'école n'ouvre les demandes des nouveaux élèves qu'à partir du "
+                "${_campagne?.ouvertureNouvelles == null ? '—' : dateCourte(_campagne!.ouvertureNouvelles!)}."
+          : null,
+    2 =>
+      _nom.text.trim().isEmpty ||
+              _prenom.text.trim().isEmpty ||
+              _naissance == null
+          ? "Renseignez le nom, le prénom et la date de naissance de l'élève."
+          : null,
+    _ => null,
+  };
 
   void _continuer() {
     final blocage = _blocageEtape(_etape);
@@ -99,25 +112,33 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
     });
     final depot = ref.read(inscriptionEnLigneRepositoryProvider);
     try {
-      final resultat = await depot.soumettre(SaisieDemandeInscription(
-        campagneId: campagne.campagneId,
-        type: 'nouvelle',
-        nom: _nom.text.trim().toUpperCase(),
-        prenom: _prenom.text.trim(),
-        dateNaissance: _naissance,
-        sexe: _sexe,
-        lieuNaissance: _lieu.text.trim().isEmpty ? null : _lieu.text.trim(),
-        ecolePrecedente: _ecolePrecedente.text.trim().isEmpty ? null : _ecolePrecedente.text.trim(),
-        niveauId: niveau.niveauId,
-        demandeurQualite: _collegeOuPlus ? _qualite : 'parent',
-        responsableFinancier: _collegeOuPlus ? _payeur : 'parent',
-        telephone: _telephone.text.trim().isEmpty ? null : _telephone.text.trim(),
-        commentaire: _commentaire.text.trim().isEmpty ? null : _commentaire.text.trim(),
-        libelleEcole: campagne.etablissementNom,
-        libelleNiveau: niveau.nom,
-        niveauIsced: niveau.isced,
-        piecesRequises: campagne.piecesRequises,
-      ));
+      final resultat = await depot.soumettre(
+        SaisieDemandeInscription(
+          campagneId: campagne.campagneId,
+          type: 'nouvelle',
+          nom: _nom.text.trim().toUpperCase(),
+          prenom: _prenom.text.trim(),
+          dateNaissance: _naissance,
+          sexe: _sexe,
+          lieuNaissance: _lieu.text.trim().isEmpty ? null : _lieu.text.trim(),
+          ecolePrecedente: _ecolePrecedente.text.trim().isEmpty
+              ? null
+              : _ecolePrecedente.text.trim(),
+          niveauId: niveau.niveauId,
+          demandeurQualite: _collegeOuPlus ? _qualite : 'parent',
+          responsableFinancier: _collegeOuPlus ? _payeur : 'parent',
+          telephone: _telephone.text.trim().isEmpty
+              ? null
+              : _telephone.text.trim(),
+          commentaire: _commentaire.text.trim().isEmpty
+              ? null
+              : _commentaire.text.trim(),
+          libelleEcole: campagne.etablissementNom,
+          libelleNiveau: niveau.nom,
+          niveauIsced: niveau.isced,
+          piecesRequises: campagne.piecesRequises,
+        ),
+      );
       var piecesNonEnvoyees = 0;
       for (final piece in _pieces.values) {
         try {
@@ -128,16 +149,23 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
       }
       ref.invalidate(mesDemandesInscriptionProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text([
-          resultat.enAttenteEnvoi
-              ? 'Demande enregistrée sur ce téléphone (${resultat.numeroDossier}) : elle partira au retour du réseau.'
-              : 'Demande envoyée — dossier ${resultat.numeroDossier}.',
-          if (piecesNonEnvoyees > 0) '$piecesNonEnvoyees pièce(s) à rajouter depuis le dossier.',
-        ].join(' ')),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            [
+              resultat.enAttenteEnvoi
+                  ? 'Demande enregistrée sur ce téléphone (${resultat.numeroDossier}) : elle partira au retour du réseau.'
+                  : 'Demande envoyée — dossier ${resultat.numeroDossier}.',
+              if (piecesNonEnvoyees > 0)
+                '$piecesNonEnvoyees pièce(s) à rajouter depuis le dossier.',
+            ].join(' '),
+          ),
+        ),
+      );
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => EcranDossierInscription(demandeId: resultat.id)),
+        MaterialPageRoute(
+          builder: (_) => EcranDossierInscription(demandeId: resultat.id),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -161,14 +189,20 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
                 if (i < _etape) setState(() => _etape = i);
               },
         onStepContinue: _enCours ? null : (_etape == 4 ? _envoyer : _continuer),
-        onStepCancel: _enCours || _etape == 0 ? null : () => setState(() => _etape--),
+        onStepCancel: _enCours || _etape == 0
+            ? null
+            : () => setState(() => _etape--),
         controlsBuilder: (context, details) => Padding(
           padding: const EdgeInsets.only(top: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_erreur != null) ...[
-                Encadre(texte: _erreur!, icone: Icons.error_outline, couleur: palette.erreur),
+                Encadre(
+                  texte: _erreur!,
+                  icone: Icons.error_outline,
+                  couleur: palette.erreur,
+                ),
                 const SizedBox(height: 12),
               ],
               Row(
@@ -177,11 +211,21 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
                     key: Key('etape_suivante_$_etape'),
                     onPressed: details.onStepContinue,
                     child: _enCours
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(_etape == 4 ? 'Envoyer la demande' : 'Continuer'),
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _etape == 4 ? 'Envoyer la demande' : 'Continuer',
+                          ),
                   ),
                   const SizedBox(width: 8),
-                  if (details.onStepCancel != null) TextButton(onPressed: details.onStepCancel, child: const Text('Retour')),
+                  if (details.onStepCancel != null)
+                    TextButton(
+                      onPressed: details.onStepCancel,
+                      child: const Text('Retour'),
+                    ),
                 ],
               ),
             ],
@@ -190,7 +234,9 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
         steps: [
           Step(
             title: const Text('École'),
-            subtitle: _campagne == null ? null : Text(_campagne!.etablissementNom),
+            subtitle: _campagne == null
+                ? null
+                : Text(_campagne!.etablissementNom),
             isActive: _etape >= 0,
             content: _etapeEcole(),
           ),
@@ -200,9 +246,21 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
             isActive: _etape >= 1,
             content: _etapeNiveau(),
           ),
-          Step(title: const Text("L'élève"), isActive: _etape >= 2, content: _etapeEleve()),
-          Step(title: const Text('Demandeur et paiement'), isActive: _etape >= 3, content: _etapeDemandeur()),
-          Step(title: const Text('Pièces du dossier'), isActive: _etape >= 4, content: _etapePieces()),
+          Step(
+            title: const Text("L'élève"),
+            isActive: _etape >= 2,
+            content: _etapeEleve(),
+          ),
+          Step(
+            title: const Text('Demandeur et paiement'),
+            isActive: _etape >= 3,
+            content: _etapeDemandeur(),
+          ),
+          Step(
+            title: const Text('Pièces du dossier'),
+            isActive: _etape >= 4,
+            content: _etapePieces(),
+          ),
         ],
       ),
     );
@@ -222,15 +280,27 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
           ),
           onChanged: (v) {
             _attenteRecherche?.cancel();
-            _attenteRecherche = Timer(const Duration(milliseconds: 400), () => setState(() => _recherche = v.trim()));
+            _attenteRecherche = Timer(
+              const Duration(milliseconds: 400),
+              () => setState(() => _recherche = v.trim()),
+            );
           },
         ),
         const SizedBox(height: 12),
         campagnes.when(
-          loading: () => const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator())),
-          error: (e, _) => Encadre(texte: messageErreur(e), icone: Icons.cloud_off_outlined),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (e, _) =>
+              Encadre(texte: messageErreur(e), icone: Icons.cloud_off_outlined),
           data: (liste) => liste.isEmpty
-              ? const Encadre(texte: "Aucune école n'a d'inscriptions ouvertes sous ce nom pour le moment.")
+              ? const Encadre(
+                  texte:
+                      "Aucune école n'a d'inscriptions ouvertes sous ce nom pour le moment.",
+                )
               : Column(
                   children: [
                     for (final c in liste)
@@ -241,14 +311,20 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
                         child: ListTile(
                           leading: const Icon(Icons.school_outlined),
                           title: Text(c.etablissementNom),
-                          subtitle: Text([
-                            if (c.ville != null) c.ville!,
-                            'Année ${c.annee}',
-                            "jusqu'au ${dateCourte(c.dateLimite)}",
-                          ].join(' · ')),
-                          trailing: _campagne?.campagneId == c.campagneId ? const Icon(Icons.check_circle) : null,
+                          subtitle: Text(
+                            [
+                              if (c.ville != null) c.ville!,
+                              'Année ${c.annee}',
+                              "jusqu'au ${dateCourte(c.dateLimite)}",
+                            ].join(' · '),
+                          ),
+                          trailing: _campagne?.campagneId == c.campagneId
+                              ? const Icon(Icons.check_circle)
+                              : null,
                           onTap: () => setState(() {
-                            if (_campagne?.campagneId != c.campagneId) _niveau = null;
+                            if (_campagne?.campagneId != c.campagneId) {
+                              _niveau = null;
+                            }
                             _campagne = c;
                             _erreur = null;
                           }),
@@ -289,7 +365,9 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
         if (_niveau != null) ...[
           const SizedBox(height: 12),
           Encadre(
-            icone: _niveau!.complet ? Icons.hourglass_empty : Icons.event_seat_outlined,
+            icone: _niveau!.complet
+                ? Icons.hourglass_empty
+                : Icons.event_seat_outlined,
             couleur: _niveau!.complet ? context.palette.accent : null,
             texte: [
               if (_niveau!.placesRestantes == null)
@@ -315,20 +393,30 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
           key: const Key('nom_eleve'),
           controller: _nom,
           textCapitalization: TextCapitalization.characters,
-          decoration: const InputDecoration(labelText: 'Nom', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Nom',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 10),
         TextField(
           key: const Key('prenom_eleve'),
           controller: _prenom,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Prénom(s)', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Prénom(s)',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 10),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.cake_outlined),
-          title: Text(_naissance == null ? 'Date de naissance' : 'Né(e) le ${dateCourte(_naissance!)}'),
+          title: Text(
+            _naissance == null
+                ? 'Date de naissance'
+                : 'Né(e) le ${dateCourte(_naissance!)}',
+          ),
           trailing: const Icon(Icons.edit_calendar_outlined),
           onTap: () async {
             final maintenant = DateTime.now();
@@ -348,18 +436,25 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
             ButtonSegment(value: 'F', label: Text('Fille')),
             ButtonSegment(value: 'M', label: Text('Garçon')),
           ],
-          selected: {if (_sexe != null) _sexe!},
-          onSelectionChanged: (s) => setState(() => _sexe = s.isEmpty ? null : s.first),
+          selected: {?_sexe},
+          onSelectionChanged: (s) =>
+              setState(() => _sexe = s.isEmpty ? null : s.first),
         ),
         const SizedBox(height: 10),
         TextField(
           controller: _lieu,
-          decoration: const InputDecoration(labelText: 'Lieu de naissance (facultatif)', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Lieu de naissance (facultatif)',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 10),
         TextField(
           controller: _ecolePrecedente,
-          decoration: const InputDecoration(labelText: 'École fréquentée cette année (facultatif)', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'École fréquentée cette année (facultatif)',
+            border: OutlineInputBorder(),
+          ),
         ),
       ],
     );
@@ -370,7 +465,10 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_collegeOuPlus) ...[
-          const Text('Qui fait la demande ?', style: TextStyle(fontWeight: FontWeight.w700)),
+          const Text(
+            'Qui fait la demande ?',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
           RadioGroup<String>(
             groupValue: _qualite,
             onChanged: (v) {
@@ -382,13 +480,22 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
             },
             child: const Column(
               children: [
-                RadioListTile<String>(value: 'parent', title: Text('Un parent ou tuteur')),
-                RadioListTile<String>(value: 'eleve', title: Text("L'élève lui-même")),
+                RadioListTile<String>(
+                  value: 'parent',
+                  title: Text('Un parent ou tuteur'),
+                ),
+                RadioListTile<String>(
+                  value: 'eleve',
+                  title: Text("L'élève lui-même"),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          const Text('Qui paie la scolarité ?', style: TextStyle(fontWeight: FontWeight.w700)),
+          const Text(
+            'Qui paie la scolarité ?',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
           RadioGroup<String>(
             groupValue: _payeur,
             onChanged: (v) {
@@ -396,13 +503,22 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
             },
             child: const Column(
               children: [
-                RadioListTile<String>(value: 'parent', title: Text('Un parent ou tuteur')),
-                RadioListTile<String>(value: 'eleve', title: Text("L'élève lui-même (à sa propre charge)")),
+                RadioListTile<String>(
+                  value: 'parent',
+                  title: Text('Un parent ou tuteur'),
+                ),
+                RadioListTile<String>(
+                  value: 'eleve',
+                  title: Text("L'élève lui-même (à sa propre charge)"),
+                ),
               ],
             ),
           ),
         ] else
-          const Encadre(texte: "Avant le collège, c'est le parent qui fait la demande et qui paie la scolarité."),
+          const Encadre(
+            texte:
+                "Avant le collège, c'est le parent qui fait la demande et qui paie la scolarité.",
+          ),
         const SizedBox(height: 12),
         TextField(
           controller: _telephone,
@@ -417,7 +533,10 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
         TextField(
           controller: _commentaire,
           maxLines: 3,
-          decoration: const InputDecoration(labelText: "Message pour l'école (facultatif)", border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: "Message pour l'école (facultatif)",
+            border: OutlineInputBorder(),
+          ),
         ),
       ],
     );
@@ -426,9 +545,15 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
   Widget _etapePieces() {
     final attendues = _piecesAttendues;
     if (attendues.isEmpty) {
-      return const Encadre(texte: "L'école ne demande aucune pièce en ligne. Vous pouvez envoyer la demande.");
+      return const Encadre(
+        texte:
+            "L'école ne demande aucune pièce en ligne. Vous pouvez envoyer la demande.",
+      );
     }
-    final manquantes = [for (final p in attendues) if (p.obligatoire && !_pieces.containsKey(p.code)) p];
+    final manquantes = [
+      for (final p in attendues)
+        if (p.obligatoire && !_pieces.containsKey(p.code)) p,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -443,7 +568,8 @@ class _EcranNouvelleInscriptionState extends ConsumerState<EcranNouvelleInscript
           Encadre(
             icone: Icons.attach_file,
             couleur: context.palette.accent,
-            texte: 'Vous pouvez envoyer la demande maintenant et ajouter les pièces manquantes plus tard depuis le dossier.',
+            texte:
+                'Vous pouvez envoyer la demande maintenant et ajouter les pièces manquantes plus tard depuis le dossier.',
           ),
         ],
       ],
