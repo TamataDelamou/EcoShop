@@ -48,3 +48,11 @@ app.*.map.json
 # déposée sur le poste de construction, jamais dans le dépôt.
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Publication : clé de signature et configuration de production, propres au
+# poste de construction (scripts/construire_android.ps1).
+android/key.properties
+*.jks
+*.keystore
+config/*.json
+!config/*.exemple.json

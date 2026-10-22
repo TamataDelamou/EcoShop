@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -10,6 +12,11 @@ plugins {
 // normalement, sans notifications push.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+}
+
+val proprietesCle = Properties().apply {
+    val fichier = rootProject.file("key.properties")
+    if (fichier.exists()) fichier.inputStream().use { load(it) }
 }
 
 android {
@@ -33,11 +40,28 @@ android {
         versionName = flutter.versionName
     }
 
+    // Signature de publication (Play Store) : clé de GSG décrite par
+    // android/key.properties, créé par scripts/construire_android.ps1 et
+    // jamais versionné. Sans lui (poste de développement), la clé de
+    // débogage permet toujours `flutter run --release`.
+    signingConfigs {
+        if (proprietesCle.isNotEmpty()) {
+            create("publication") {
+                keyAlias = proprietesCle.getProperty("keyAlias")
+                keyPassword = proprietesCle.getProperty("keyPassword")
+                storeFile = file(proprietesCle.getProperty("storeFile"))
+                storePassword = proprietesCle.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (proprietesCle.isNotEmpty()) {
+                signingConfigs.getByName("publication")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

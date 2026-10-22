@@ -28,6 +28,7 @@ attendue), `clos`.
 | REG-09 | Pointage des élèves au portail (QR code), notifications push, crédits SMS (alertes et relances d'impayés) ; GPS abandonné | P1 | **livré** (2026-10-21) — réception du push : REG-11 ; reste les comptes Firebase et Orange SMS au déploiement |
 | REG-10 | Encaissement de scolarité au guichet hors connexion, numéro de reçu continu | P1 | **livré** (2026-10-21) — à vérifier sur le poste |
 | REG-11 | Notifications push dans l'application (Firebase, Android) : réception, bandeau, ouverture, déconnexion | P1 | **livré** (2026-10-21) — projet Firebase à créer, voir `docs/DEPLOIEMENT_PUSH.md` ; iOS au compte Apple |
+| REG-12 | Kit de mise en service : script de déploiement, tâches planifiées, codes de connexion par Orange SMS, Android prêt pour le Play Store | **P0** | **livré** (2026-10-22) — à exécuter à la création du projet Supabase, voir `docs/MISE_EN_SERVICE.md` |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -800,6 +801,44 @@ téléphone ne savait pas encore recevoir). **Statut** : livré le
 - Vérification : tests Flutter `test/features/push/push_test.dart` ;
   Deno `fcm_client_test.ts` 4/4 (ajouté à la CI) — **à lancer sur le
   poste**. iOS : code prêt, demande un compte développeur Apple (clé APNs).
+
+## REG-12 — Kit de mise en service
+
+**Priorité** : P0 (demande du 2026-10-22 : que la publication soit courte
+une fois le projet Supabase créé). **Statut** : livré le 2026-10-22 —
+migration `…1548`, guide `docs/MISE_EN_SERVICE.md`.
+
+- **`scripts/deployer_supabase.ps1`** (Windows) : liaison au projet,
+  migrations, secrets (lus dans `supabase/mise_en_service/secrets.local.env`,
+  ignoré par git, jamais affichés ; déclencheurs générés), déploiement de
+  toutes les fonctions, coffre Vault et **8 tâches planifiées** (un seul
+  modèle `taches_planifiees.modele.sql`, rejouable sans doublon),
+  administrateur GSG, contrôle final. Relançable à volonté.
+- **`executer_taches_quotidiennes()`** : alertes de décrochage (M7) et
+  risque de réussite (M16) chaque nuit pour toutes les écoles actives —
+  ces deux calculs n'avaient jusque-là aucune planification. Une école en
+  erreur n'arrête pas les autres.
+- **`etat_mise_en_service()`** : liste de contrôle (extensions, tâches et
+  leur dernier passage, secrets rangés — présence seulement —,
+  administrateur GSG, packs SMS en vente), pour l'équipe GSG et le script.
+- **Codes de connexion par Orange SMS** (`envoyer_sms_auth`, crochet
+  « Send SMS » de Supabase Auth, signature Standard Webhooks vérifiée sans
+  bibliothèque tierce, rotation de secrets acceptée) au lieu de Twilio
+  (environ 0,25 USD par code). Numéros hors Guinée : invitation à se
+  connecter par e-mail. Le code n'est jamais journalisé.
+- **Android** : nom « EcoShop » ; **permission Internet ajoutée à la
+  version publiée** (Flutter ne la déclarait que pour les versions de
+  développement : l'application publiée n'aurait joint aucun serveur) ;
+  signature de publication par `key.properties` ;
+  `scripts/construire_android.ps1` crée la clé de GSG et la configuration
+  de production, puis construit l'`.aab` (ou un `.apk` pour le pilote).
+- Vérification : pgTAP `75` 11/11 ; Deno `sms_auth_test.ts` 5/5 (CI) ;
+  modèle des tâches exécuté deux fois sur une base de test (8 tâches, pas
+  de doublon, chaque commande planifiée s'exécute).
+- Reste manuel (documenté) : création du projet, réglages
+  d'authentification du tableau de bord, contrats Orange, compte Google
+  Play. **Décision à prendre** : la connexion par téléphone consomme un
+  SMS payé par GSG à chaque code ; la connexion par e-mail est gratuite.
 
 ## REG-05 — README à resynchroniser
 

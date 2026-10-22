@@ -41,9 +41,17 @@ enable_signup = true
 enable_confirmations = true
 otp_length = 6
 otp_expiry = 600
-# Twilio est renseigné par variables d'environnement (coffre-fort).
-[auth.sms.twilio]
+# Codes de connexion par SMS : envoyés par Orange SMS Guinée via le crochet
+# « Send SMS » (Edge Function envoyer_sms_auth), plus par Twilio (environ
+# 0,25 USD par code vers la Guinée, compte à part). Twilio reste décrit
+# ci-dessous, désactivé, pour un éventuel pays non couvert par Orange.
+[auth.hook.send_sms]
 enabled = true
+uri = "env(SEND_SMS_HOOK_URI)"
+secrets = "env(SEND_SMS_HOOK_SECRETS)"
+
+[auth.sms.twilio]
+enabled = false
 account_sid = "env(TWILIO_ACCOUNT_SID)"
 message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
 auth_token = "env(TWILIO_AUTH_TOKEN)"
@@ -81,6 +89,11 @@ enabled = true
 verify_jwt = false
 
 # Notifications push (REG-09) : appelée par pg_cron, en-tête x-declencheur-secret.
+# Kit de mise en service : codes de connexion par SMS Orange, appelée par
+# Supabase Auth (crochet « Send SMS », signature Standard Webhooks).
+[functions.envoyer_sms_auth]
+verify_jwt = false
+
 [functions.envoyer_push]
 enabled = true
 verify_jwt = false
