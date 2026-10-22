@@ -10,6 +10,17 @@ import '../../../core/sync/sync_engine.dart';
 import '../../pointage/domain/pointage.dart' show jetonDepuisLecture;
 import '../domain/transport.dart';
 
+/// Compte connecté, clé du cache local. Un client configuré avec
+/// `accessToken` (tests, intégrations) n'expose pas `auth` : on répond
+/// alors « aucun compte » au lieu de planter.
+String? _compteConnecte(SupabaseClient client) {
+  try {
+    return client.auth.currentUser?.id;
+  } on AuthException {
+    return null;
+  }
+}
+
 /// Transport scolaire (M18), d'abord hors connexion.
 ///
 /// Le téléphone du chauffeur garde ses circuits, arrêts, élèves et leurs
@@ -160,7 +171,7 @@ class SupabaseTransportRepository implements TransportRepository {
   @override
   Future<List<CircuitTransport>> mesCircuitsChauffeur() => _lire(
         'mes_circuits_chauffeur',
-        _client.auth.currentUser?.id ?? 'anonyme',
+        _compteConnecte(_client) ?? 'anonyme',
         () => _rpc('mes_circuits_chauffeur'),
         (json) => [for (final c in (json as List?) ?? const []) CircuitTransport.depuisJson((c as Map).cast<String, dynamic>())],
       );

@@ -8,6 +8,17 @@ import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../domain/reseau.dart';
 
+/// Compte connecté, clé du cache local. Un client configuré avec
+/// `accessToken` (tests, intégrations) n'expose pas `auth` : on répond
+/// alors « aucun compte » au lieu de planter.
+String? _compteConnecte(SupabaseClient client) {
+  try {
+    return client.auth.currentUser?.id;
+  } on AuthException {
+    return null;
+  }
+}
+
 /// Réseaux d'établissements (M19), d'abord hors connexion.
 ///
 /// - Consultation (mes réseaux, tableau de bord, circulaires, calendrier) :
@@ -144,7 +155,7 @@ class SupabaseReseauRepository implements ReseauRepository {
         enAttenteEnvoi: true,
       );
     }
-    final uid = _client.auth.currentUser?.id;
+    final uid = _compteConnecte(_client);
     if (uid == null) return null;
     return _lire('ma_demande_reseau', uid, () async {
       return await _client
@@ -196,7 +207,7 @@ class SupabaseReseauRepository implements ReseauRepository {
   Future<List<MonReseau>> mesReseaux() async {
     final reseaux = await _lire(
       'mes_reseaux',
-      _client.auth.currentUser?.id ?? 'anonyme',
+      _compteConnecte(_client) ?? 'anonyme',
       () => _rpc('mes_reseaux'),
       (json) => [for (final r in (json as List?) ?? const []) MonReseau.depuisJson((r as Map).cast<String, dynamic>())],
     );
