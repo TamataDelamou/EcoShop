@@ -21,7 +21,7 @@
 --    aux besoins actuels mais l'auto-référence autorise l'arborescence.
 -- ---------------------------------------------------------------------------
 create table if not exists public.unites_operationnelles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   parent_id uuid references public.unites_operationnelles (id) on delete restrict,
   code text not null,
@@ -80,7 +80,7 @@ create trigger unites_set_updated_at
 --    unique partiel plutôt que par du code applicatif.
 -- ---------------------------------------------------------------------------
 create table if not exists public.annees_scolaires (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   libelle text not null,                  -- ex. « 2026-2027 »
   date_debut date not null,

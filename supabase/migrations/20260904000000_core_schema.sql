@@ -55,7 +55,7 @@ create table if not exists public.profiles (
 -- livraison et de facturation, ch. 27)
 -- ---------------------------------------------------------------------------
 create table if not exists public.etablissements (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   nom text not null,
   slug text unique not null,
   pays_code text,                 -- code ISO 3166-1 alpha-2 (référentiel pédagogique)
@@ -73,7 +73,7 @@ create table if not exists public.etablissements (
 -- Table postes — postes déclarés (modèle de rôles à deux niveaux, ch. 4)
 -- ---------------------------------------------------------------------------
 create table if not exists public.postes (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   nom text not null,
   permissions jsonb not null default '[]'::jsonb,
@@ -86,7 +86,7 @@ create table if not exists public.postes (
 -- avec rôle dans l'établissement et poste déclaré.
 -- ---------------------------------------------------------------------------
 create table if not exists public.etablissements_membres (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles (id) on delete cascade,
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   role_dans_etablissement text not null,  -- ex. 'direction', 'enseignant', 'eleve', 'parent'

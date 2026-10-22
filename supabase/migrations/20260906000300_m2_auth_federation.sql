@@ -32,7 +32,7 @@ exception when duplicate_object then null;
 end $$;
 
 create table if not exists public.identifiants_comptes (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles (id) on delete cascade,
   type_identifiant public.type_identifiant not null,
   valeur text not null,                   -- E.164 normalisé, ou e-mail en minuscules
@@ -157,7 +157,7 @@ exception when duplicate_object then null;
 end $$;
 
 create table if not exists public.invitations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   role_cible public.role_racine not null,
   poste_id uuid references public.postes (id) on delete set null,
@@ -257,7 +257,7 @@ exception when duplicate_object then null;
 end $$;
 
 create table if not exists public.demandes_adhesion (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles (id) on delete cascade,
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   role_demande public.role_racine not null,
@@ -287,7 +287,7 @@ create index if not exists idx_demandes_etablissement on public.demandes_adhesio
 -- liaison sont introduites ici.
 -- ---------------------------------------------------------------------------
 create table if not exists public.fiches_eleves (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   etablissement_id uuid not null references public.etablissements (id) on delete cascade,
   matricule text not null,
   nom text not null,

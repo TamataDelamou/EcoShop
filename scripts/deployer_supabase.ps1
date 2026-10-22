@@ -38,7 +38,7 @@ function Echec([string]$texte) {
   exit 1
 }
 
-function Supabase {
+function Lancer-Supabase {
   & supabase @args
   if ($LASTEXITCODE -ne 0) { Echec "La commande « supabase $($args[0]) $($args[1]) » a échoué (voir le message ci-dessus)." }
 }
@@ -89,7 +89,7 @@ function Executer-Sql([string]$modele, [hashtable]$remplacements, [string]$nomLo
 
 # ---------------------------------------------------------------------------
 Etape 0 'Vérifications'
-if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
+if (-not (Get-Command supabase -CommandType Application -ErrorAction SilentlyContinue)) {
   Echec "Supabase CLI introuvable. Installez-le puis relancez (docs\MISE_EN_SERVICE.md, étape 2) :`n  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git`n  scoop install supabase"
 }
 Write-Host ("Supabase CLI " + (& supabase --version))
@@ -122,11 +122,11 @@ foreach ($nom in @('NOTIFICATIONS_DECLENCHEUR_SECRET', 'PAIEMENTS_DECLENCHEUR_SE
 
 # ---------------------------------------------------------------------------
 Etape 1 "Liaison au projet $ref (mot de passe de la base demandé)"
-Supabase link --project-ref $ref
+Lancer-Supabase link --project-ref $ref
 
 if (-not $SansMigrations) {
   Etape 2 'Base de données : application des migrations'
-  Supabase db push
+  Lancer-Supabase db push
 }
 
 # ---------------------------------------------------------------------------
@@ -150,7 +150,7 @@ if ($cheminFcm) {
 $temporaire = Join-Path $Dossier 'secrets_envoi.local.env'
 [IO.File]::WriteAllLines($temporaire, $lignes, $SansBom)
 try {
-  Supabase secrets set --env-file $temporaire
+  Lancer-Supabase secrets set --env-file $temporaire
 } finally {
   Remove-Item $temporaire -Force -ErrorAction SilentlyContinue
 }
@@ -158,7 +158,7 @@ Write-Host "$($lignes.Count) secrets envoyés (valeurs non affichées)."
 
 if (-not $SansFonctions) {
   Etape 4 'Déploiement des Edge Functions'
-  Supabase functions deploy --use-api
+  Lancer-Supabase functions deploy --use-api
 }
 
 # ---------------------------------------------------------------------------
