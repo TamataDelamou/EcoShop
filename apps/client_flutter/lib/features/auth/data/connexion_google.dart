@@ -33,10 +33,9 @@ abstract interface class ConnexionGoogle {
 
 class ConnexionGooglePlugin implements ConnexionGoogle {
   ConnexionGooglePlugin({
-    String serverClientId = Env.googleWebClientId,
-    String clientIdIos = Env.googleIosClientId,
-  })  : _serverClientId = serverClientId,
-        _clientIdIos = clientIdIos;
+    this._serverClientId = Env.googleWebClientId,
+    this._clientIdIos = Env.googleIosClientId,
+  });
 
   final String _serverClientId;
   final String _clientIdIos;
