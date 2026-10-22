@@ -58,6 +58,10 @@ import '../../scolarite/presentation/ecran_structure_etablissement.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
+import '../../transport/application/transport_providers.dart';
+import '../../transport/presentation/ecran_suivi_transport.dart';
+import '../../transport/presentation/ecran_transport_chauffeur.dart';
+import '../../transport/presentation/ecran_transport_direction.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
 import '../application/session_logout.dart';
@@ -668,6 +672,66 @@ class _VueProfil extends ConsumerWidget {
                       ),
                     ),
                 ],
+              );
+            },
+          ),
+        // Transport scolaire (M18, cahier ch. 24) : gestion par la direction,
+        // suivi du bus par la famille (enfant actif), trajets du chauffeur.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_transport_direction'),
+                leading: const Icon(Icons.directions_bus_outlined),
+                title: const Text('Transport scolaire'),
+                subtitle: const Text('Circuits, arrêts, élèves, chauffeurs, paiements'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranTransportDirection(
+                      etablissementId: etablissement.id,
+                      devise: etablissement.deviseCode,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.parent)
+          Consumer(
+            builder: (context, ref, _) {
+              final enfant = ref.watch(enfantActifProvider);
+              if (enfant == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_suivi_transport'),
+                leading: const Icon(Icons.directions_bus_outlined),
+                title: Text('Bus de ${enfant.prenom}'),
+                subtitle: const Text('Où est le bus, montée et descente'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranSuiviTransport(ficheEleveId: enfant.id, prenom: enfant.prenom),
+                  ),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine != RoleRacine.eleve && p.roleRacine != RoleRacine.adminGsg)
+          Consumer(
+            builder: (context, ref, _) {
+              final circuits = ref.watch(mesCircuitsChauffeurProvider).valueOrNull ?? const [];
+              if (circuits.isEmpty) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_chauffeur'),
+                leading: const Icon(Icons.airport_shuttle_outlined),
+                title: const Text('Conduire mon circuit'),
+                subtitle: const Text('Démarrer un trajet, scanner les élèves — fonctionne sans réseau'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EcranTransportChauffeur()),
+                ),
               );
             },
           ),

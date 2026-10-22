@@ -52,6 +52,10 @@ dependencies:
   # — Firebase Cloud Messaging, téléphones Android et iOS uniquement.
   firebase_core: ^5.0.0
   firebase_messaging: ^17.0.0
+
+  # Transport scolaire (M18) : position du bus pendant le trajet seulement,
+  # téléphone du chauffeur, écran ouvert (jamais en arrière-plan).
+  geolocator: ^14.0.2
   google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:

@@ -7,6 +7,7 @@ import '../../inscription_en_ligne/application/inscription_en_ligne_providers.da
 import '../../pointage/application/pointage_providers.dart';
 import '../../push/application/push_providers.dart';
 import '../../reseau/application/reseau_providers.dart';
+import '../../transport/application/transport_providers.dart';
 
 /// Déconnexion complète : ferme la session serveur **et** purge tout ce que
 /// le prototype local de messagerie/annonces/cahier de liaison (M9) a écrit
@@ -57,6 +58,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Réseaux d'établissements (M19) : tableaux de bord, circulaires.
   try {
     await lire(lectureReseauProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Transport (M18) : cartes des élèves du circuit, trajet en cours.
+  try {
+    await lire(lectureTransportProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

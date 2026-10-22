@@ -20,7 +20,7 @@ class EcranPilotageReseau extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reseau = ref.watch(mesReseauxProvider).value?.where((r) => r.id == reseauId).firstOrNull;
+    final reseau = ref.watch(mesReseauxProvider).valueOrNull?.where((r) => r.id == reseauId).firstOrNull;
     return DefaultTabController(
       length: 5,
       child: Scaffold(

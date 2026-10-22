@@ -30,6 +30,7 @@ attendue), `clos`.
 | REG-11 | Notifications push dans l'application (Firebase, Android) : réception, bandeau, ouverture, déconnexion | P1 | **livré** (2026-10-21) — projet Firebase à créer, voir `docs/DEPLOIEMENT_PUSH.md` ; iOS au compte Apple |
 | REG-12 | Kit de mise en service : script de déploiement, tâches planifiées, codes de connexion par Orange SMS, Android prêt pour le Play Store | **P0** | **livré** (2026-10-22) — à exécuter à la création du projet Supabase, voir `docs/MISE_EN_SERVICE.md` |
 | REG-13 | M19 — Réseaux d'établissements (cahier ch. 28, 30.1, 30.3) | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
+| REG-14 | M18 — Transport scolaire (cahier ch. 24) | P1 | **livré** (2026-10-22) — à vérifier sur le poste et sur un téléphone Android (GPS) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -887,6 +888,44 @@ le 2026-10-22 — migration `…1549`, conforme au cahier ch. 28, 30.1, 30.3.
   grille de frais harmonisée (28.2 : « selon le paramétrage de la Direction
   Générale ») ; paiement en ligne des frais de création (aujourd'hui
   constatés par GSG).
+
+## REG-14 — M18 : transport scolaire
+
+**Priorité** : P1 (demande du 2026-10-22). **Statut** : livré le
+2026-10-22 — migration `…1550`, conforme au cahier ch. 24.
+
+- **Recherche préalable** (applications de bus scolaire de référence) :
+  alerte d'approche avant l'arrêt de la famille, avis à la montée et à la
+  descente, position masquée hors trajet. Retenu, plus une sécurité que ces
+  applications réservent aux options payantes : la **vérification de fin de
+  trajet** (enfants scannés à la montée et jamais à la descente).
+- **Circuits et arrêts** (24.1) : véhicule, places, tarif annuel,
+  chauffeur désigné par le téléphone ou le courriel de son compte ; arrêts
+  ordonnés (le retour suit l'ordre inverse), repère, heures matin et soir,
+  position enregistrée sur place (« Je suis à l'arrêt »).
+- **Affectation** (24.2) : recherche de l'élève, arrêt, capacité du véhicule
+  respectée ; visible par la famille.
+- **Chauffeur** (24.3) : accès limité à ses circuits — jamais membre de
+  l'établissement (il verrait sinon toutes les fiches) ; démarre un trajet
+  aller ou retour, arrêts marqués automatiquement à moins de 120 m (GPS du
+  téléphone, écran ouvert, jamais en arrière-plan) ou à la main, carte QR de
+  l'élève (la même qu'au portail) scannée à la caméra ou à la douchette ; à
+  la fin, liste des enfants encore à bord et alerte à la direction.
+  **Tout fonctionne sans réseau** : circuits, élèves et cartes gardés sur le
+  téléphone, trajet repris après une coupure, gestes rejoués dans l'ordre
+  avec leur heure réelle, seule la dernière position attend le réseau.
+- **Familles** : « le bus vient de passer X, il arrive bientôt à votre
+  arrêt », montée et descente avec l'heure (même réglage que les avis du
+  portail) ; écran de suivi : enfant à bord, dernier arrêt passé, arrêts
+  restants avant le sien, « Voir le bus sur la carte » (ouvre la carte du
+  téléphone : aucune carte embarquée à télécharger), appeler le chauffeur.
+  Un avis rejoué plus de 15 minutes après les faits n'est plus envoyé.
+- **Vie privée** (rétention, 34) : seule la dernière position est gardée,
+  pendant le trajet ; effacée à la fin ; invisible hors trajet.
+- **Facturation** (24.4) : encaissement « transport » au guichet ou par
+  Orange Money ; payé et reste dû par élève dans l'écran de la direction.
+- Vérification : pgTAP `77` 37/37 ; Flutter `test/features/transport/transport_test.dart`
+  — **à lancer sur le poste** ; GPS à essayer sur un téléphone Android.
 
 ## REG-05 — README à resynchroniser
 

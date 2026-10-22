@@ -19,7 +19,7 @@ class EcranMesReseaux extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reseaux = ref.watch(mesReseauxProvider);
-    final demande = ref.watch(maDemandeReseauProvider).value;
+    final demande = ref.watch(maDemandeReseauProvider).valueOrNull;
     final peutDemander = demande == null || !demande.enAttente;
 
     return Scaffold(

@@ -11,6 +11,7 @@ import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
 import '../../pointage/data/supabase_pointage_repository.dart';
 import '../../reseau/data/supabase_reseau_repository.dart';
+import '../../transport/data/supabase_transport_repository.dart';
 import '../../scolarite/data/rejeu_encaissements.dart';
 import '../../marketplace/application/marketplace_providers.dart';
 import '../../notes/application/notes_providers.dart';
@@ -68,6 +69,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseReseauRepository.entites) {
     gestionnaires[entite] = rejeuReseau.rejouer;
   }
+  // Transport scolaire (M18) : trajet, arrêts, position, scans du chauffeur.
+  final rejeuTransport = RejeuTransport(client);
+  for (final entite in SupabaseTransportRepository.entites) {
+    gestionnaires[entite] = rejeuTransport.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -87,7 +93,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
               ? RejeuEncaissements.libelle(entree)
               : SupabaseReseauRepository.entites.contains(entree.entite)
                   ? RejeuReseau.libelle(entree)
-                  : RejeuComptabilite.libelle(entree),
+                  : SupabaseTransportRepository.entites.contains(entree.entite)
+                      ? RejeuTransport.libelle(entree)
+                      : RejeuComptabilite.libelle(entree),
     ),
   );
 });

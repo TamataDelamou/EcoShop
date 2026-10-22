@@ -36,6 +36,10 @@ const TITRES: Record<string, string> = {
   relance_impaye: "Scolarité",
   reseau_invitation: "Réseau d'établissements",
   reseau_circulaire: "Circulaire du réseau",
+  transport_approche: "Le bus approche",
+  transport_montee: "Bus scolaire",
+  transport_descente: "Bus scolaire",
+  transport_a_bord: "Bus : vérification",
 };
 
 function titre(type: string): string {

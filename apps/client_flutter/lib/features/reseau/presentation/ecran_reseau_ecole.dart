@@ -19,7 +19,7 @@ class EcranReseauEcole extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reseau = ref.watch(mesReseauxProvider).value?.where((r) => r.id == reseauId).firstOrNull;
+    final reseau = ref.watch(mesReseauxProvider).valueOrNull?.where((r) => r.id == reseauId).firstOrNull;
     final ecole = reseau?.ecoles.firstOrNull;
     return Scaffold(
       appBar: AppBar(title: Text(reseau?.nom ?? nom)),

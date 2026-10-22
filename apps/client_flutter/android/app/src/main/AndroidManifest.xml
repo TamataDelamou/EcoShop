@@ -11,6 +11,10 @@
     <!-- Notifications push (Android 13 et plus : autorisation demandée à
          l'ouverture du compte). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Transport scolaire (M18) : position du bus pendant le trajet, écran
+         ouvert seulement (aucune localisation en arrière-plan). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="EcoShop"
         android:name="${applicationName}"
@@ -75,6 +79,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Appeler le chauffeur du bus (suivi du transport). -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
         </intent>
         <!-- Ouverture de la page de paiement Orange Money (url_launcher). -->
         <intent>
