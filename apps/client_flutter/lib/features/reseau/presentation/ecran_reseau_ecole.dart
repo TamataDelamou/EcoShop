@@ -6,6 +6,8 @@ import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../application/reseau_providers.dart';
 import '../domain/reseau.dart';
 import 'ecran_pilotage_reseau.dart' show CarteCirculaire;
+import 'ecran_regles_reseau.dart';
+import 'ecran_transferts_reseau.dart';
 import 'elements_reseau.dart';
 
 /// Le réseau vu par la Direction d'une école : invitation à accepter ou
@@ -180,6 +182,42 @@ class _EspaceMembre extends ConsumerWidget {
                 subtitle: Text('En attente de la décision de Global Service Groupe.'),
               ),
             ),
+          // Règles du réseau et transferts d'élèves (REG-17).
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  key: const Key('ecole_regles_reseau'),
+                  leading: const Icon(Icons.rule_outlined),
+                  title: const Text('Règles du réseau'),
+                  subtitle: const Text('Frais de scolarité, conditions de transfert'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => EcranReglesReseau(
+                      reseauId: reseau.id,
+                      nom: reseau.nom,
+                      etablissementId: ecole.etablissementId,
+                    ),
+                  )),
+                ),
+                ListTile(
+                  key: const Key('ecole_transferts_reseau'),
+                  leading: const Icon(Icons.swap_horiz),
+                  title: const Text('Transferts d’élèves'),
+                  subtitle: const Text('Élèves à accueillir, départs vers une école du réseau'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => EcranTransfertsReseau(
+                      etablissementId: ecole.etablissementId,
+                      titre: 'Transferts — ${ecole.nom}',
+                      devise: reseau.deviseCode,
+                    ),
+                  )),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           Text('Circulaires', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           ...circulaires.when<List<Widget>>(

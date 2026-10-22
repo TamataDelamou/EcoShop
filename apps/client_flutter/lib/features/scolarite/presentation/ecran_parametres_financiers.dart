@@ -68,8 +68,11 @@ class _EcranParametresFinanciersState extends ConsumerState<EcranParametresFinan
       if (!mounted) return;
       ref.invalidate(fraisScolariteConfigProvider(_params));
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tarif enregistré.')));
-    } on ErreurScolarite {
-      setState(() => _erreurTarif = 'Enregistrement impossible pour le moment.');
+    } on ErreurScolarite catch (e) {
+      // Réseau à grille commune (REG-17) : les tarifs viennent du réseau.
+      setState(() => _erreurTarif = e.code == 'FRAIS_FIXES_PAR_RESEAU'
+          ? 'Les frais de votre école sont fixés par la grille commune de votre réseau.'
+          : 'Enregistrement impossible pour le moment.');
     } finally {
       if (mounted) setState(() => _enCoursTarif = false);
     }

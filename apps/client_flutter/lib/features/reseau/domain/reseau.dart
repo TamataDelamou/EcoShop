@@ -22,6 +22,21 @@ class ErreurReseau implements Exception {
         'PAS_MEMBRE' => 'Votre établissement n’est pas membre de ce réseau.',
         'ANNEE_COURANTE_ABSENTE' => 'Ouvrez d’abord l’année scolaire de votre établissement.',
         'ACCES_REFUSE' => 'Vous n’avez pas les droits pour cette action.',
+        // Règles du réseau et transferts (REG-17).
+        'GRILLE_VIDE' => 'Enregistrez d’abord la grille des frais du réseau.',
+        'NIVEAU_INCONNU' => 'Un niveau de la grille n’existe pas.',
+        'MONTANT_INVALIDE' => 'Un montant de la grille est invalide.',
+        'FRAIS_FIXES_PAR_RESEAU' => 'Les frais de cette école sont fixés par la grille commune du réseau.',
+        'ECOLE_SANS_ANNEE_OU_HORS_RESEAU' => 'Ouvrez d’abord l’année scolaire de votre école.',
+        'ECOLES_HORS_MEME_RESEAU' => 'Les deux écoles ne sont pas membres d’un même réseau.',
+        'TRANSFERTS_FERMES' => 'Le réseau a fermé les transferts entre ses écoles.',
+        'ELEVE_NON_INSCRIT' => 'Cet élève n’est pas inscrit cette année.',
+        'TRANSFERT_DEJA_EN_COURS' => 'Un transfert est déjà en cours pour cet élève.',
+        'SOLDE_IMPAYE' => 'Le réseau exige des frais soldés avant un transfert : réglez d’abord le reste dû.',
+        'TRANSFERT_DEJA_TRAITE' => 'Ce transfert a déjà été traité.',
+        'TRANSFERT_INTROUVABLE' => 'Ce transfert n’existe plus.',
+        'CLASSE_INVALIDE' => 'Choisissez une classe de votre école pour cette année.',
+        'FICHE_INTROUVABLE' => 'Fiche de l’élève introuvable.',
         _ => 'Opération impossible ($code).',
       };
 

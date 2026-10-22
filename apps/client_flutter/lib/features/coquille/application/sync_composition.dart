@@ -13,6 +13,7 @@ import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
 import '../../pointage/data/supabase_pointage_repository.dart';
 import '../../reseau/data/supabase_reseau_repository.dart';
+import '../../reseau/data/supabase_transferts_reseau_repository.dart';
 import '../../transport/data/supabase_transport_repository.dart';
 import '../../scolarite/data/rejeu_encaissements.dart';
 import '../../marketplace/application/marketplace_providers.dart';
@@ -72,6 +73,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     gestionnaires[entite] = rejeuReseau.rejouer;
   }
   // Transport scolaire (M18) : trajet, arrêts, position, scans du chauffeur.
+  // Transferts d'élèves (REG-17) : même rejeu que le reste du réseau.
+  for (final entite in SupabaseTransfertsReseauRepository.entites) {
+    gestionnaires[entite] = rejeuReseau.rejouer;
+  }
+
   final rejeuTransport = RejeuTransport(client);
   for (final entite in SupabaseTransportRepository.entites) {
     gestionnaires[entite] = rejeuTransport.rejouer;
@@ -98,6 +104,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       rejet,
       entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)
+          : SupabaseTransfertsReseauRepository.entites.contains(entree.entite)
+          ? SupabaseTransfertsReseauRepository.libelle(entree)
           : InscriptionHorsLigneRepository.entites.contains(entree.entite)
           ? RejeuInscriptions.libelle(entree)
           : RejeuEncaissements.entites.contains(entree.entite)

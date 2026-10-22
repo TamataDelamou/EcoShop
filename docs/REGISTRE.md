@@ -33,6 +33,7 @@ attendue), `clos`.
 | REG-14 | M18 — Transport scolaire (cahier ch. 24) | P1 | **livré** (2026-10-22) — à vérifier sur le poste et sur un téléphone Android (GPS) |
 | REG-15 | M17 — Bibliothèque physique (cahier ch. 25) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; bibliothèque numérique (ch. 26) à venir |
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
+| REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1028,4 +1029,40 @@ connexion par SMS, un SMS payé par connexion). **Statut** : livré le
   Firebase et Supabase, empreinte SHA-1 affichée par
   `construire_android.ps1`, SHA-1 de la clé Play à ajouter, modèle de
   courriel avec `{{ .Token }}`).
+
+## REG-17 — Réseaux : politique de frais et transferts d'élèves
+
+**Priorité** : P1 (demande du 2026-10-22 : certains réseaux laissent chaque
+école fixer ses frais selon sa localité, d'autres non). **Statut** : livré
+le 2026-10-22 — migration `…1553`, test `80` (40).
+
+- **Recherche préalable** (logiciels multi-campus) : la tête de réseau
+  définit les postes de frais, chaque campus ses montants ; un transfert
+  part de l'école de départ après quitus financier, l'école d'accueil
+  l'accepte et choisit la classe ; l'historique suit l'élève ; tout est
+  tracé. Retenu, avec le choix laissé au réseau.
+- **Politique de frais**, choisie par la Direction Générale :
+  « autonome » (chaque école, aucune grille), « indicative » (grille de
+  référence publiée ; une école l'adopte d'un geste puis reste libre),
+  « commune » (grille appliquée aussitôt à toutes les écoles membres et à
+  celles qui rejoignent le réseau ; un verrou serveur refuse toute
+  modification par l'école, `FRAIS_FIXES_PAR_RESEAU`). Grille par niveau
+  du pays du réseau, plus un tarif par défaut.
+- **Conditions de transfert** (Direction Générale) : transferts ouverts ou
+  non ; frais de l'année soldés avant le départ ; validation par la
+  Direction Générale ; frais d'inscription offerts à l'arrivée ; dossier
+  transmis (classe, assiduité, parents, personne à prévenir).
+- **Transfert** : l'école de départ choisit l'élève (solde affiché), l'école
+  d'accueil et le motif ; validation du réseau si exigée ; l'accueil choisit
+  la classe (celles du même niveau d'abord, effectif et capacité affichés)
+  ou refuse avec un motif. À l'acceptation, en une fois : fiche créée à
+  l'arrivée (identité et famille reprises, nouveau matricule, lien vers la
+  fiche d'origine), inscription, parents et compte élève rattachés, élève
+  retiré au départ, familles et directions prévenues (notification
+  « Transfert d'élève »).
+- **Hors connexion** : demander, valider, accepter, refuser marchent sans
+  réseau (clé fournie par l'appareil, jamais de doublon) et apparaissent
+  aussitôt « en attente d'envoi ». Règles et grille : en ligne seulement.
+- **Écrans** : pilotage du réseau (icônes « Règles » et « Transferts »),
+  espace de l'école membre (« Règles du réseau », « Transferts d'élèves »).
 

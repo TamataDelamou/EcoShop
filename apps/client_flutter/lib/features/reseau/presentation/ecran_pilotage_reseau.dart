@@ -7,6 +7,8 @@ import '../../../core/theme/app_palette.dart';
 import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../application/reseau_providers.dart';
 import '../domain/reseau.dart';
+import 'ecran_regles_reseau.dart';
+import 'ecran_transferts_reseau.dart';
 import 'elements_reseau.dart';
 
 /// Pilotage d'un réseau par sa Direction Générale (cahier 28.2 à 28.5) :
@@ -26,6 +28,36 @@ class EcranPilotageReseau extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(reseau?.nom ?? nom),
+          actions: [
+            if (reseau != null) ...[
+              IconButton(
+                key: const Key('reseau_regles'),
+                tooltip: 'Règles : frais et transferts',
+                icon: const Icon(Icons.rule_outlined),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => EcranReglesReseau(
+                    reseauId: reseau.id,
+                    nom: reseau.nom,
+                    peutRegler: reseau.estDirectionGenerale,
+                    peutComposerGrille: reseau.peutPiloter,
+                  ),
+                )),
+              ),
+              IconButton(
+                key: const Key('reseau_transferts'),
+                tooltip: 'Transferts d’élèves',
+                icon: const Icon(Icons.swap_horiz),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => EcranTransfertsReseau(
+                    reseauId: reseau.id,
+                    titre: 'Transferts — ${reseau.nom}',
+                    peutValider: reseau.peutPiloter,
+                    devise: reseau.deviseCode,
+                  ),
+                )),
+              ),
+            ],
+          ],
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
