@@ -422,8 +422,7 @@ class _EditeurArretsState extends ConsumerState<_EditeurArrets> {
         Expanded(
           child: ReorderableListView(
             padding: const EdgeInsets.all(16),
-            onReorder: (ancien, nouveau) => setState(() {
-              if (nouveau > ancien) nouveau -= 1;
+            onReorderItem: (ancien, nouveau) => setState(() {
               final a = _arrets.removeAt(ancien);
               _arrets.insert(nouveau, a);
               _modifie = true;
