@@ -42,6 +42,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
     // Push indisponible : rien à détacher.
   }
   await lire(authRepositoryProvider).deconnecter();
+  // Google (REG-16) : la prochaine connexion repropose le choix du compte.
+  try {
+    await lire(connexionGoogleProvider).oublier();
+  } catch (_) {
+    // Google indisponible : rien à oublier.
+  }
   await lire(communicationLocaleRepositoryProvider).purgerTout();
   // Comptabilité gardée pour le hors connexion (REG-03 C7) : données des
   // donateurs, états, pièces — jamais visibles du compte suivant.

@@ -187,6 +187,8 @@ Etape 7 'Contrôle de préparation'
 
 Write-Host ''
 Write-Host 'Déploiement terminé. Reste à faire dans le tableau de bord Supabase (docs\MISE_EN_SERVICE.md, étape 5) :' -ForegroundColor Green
-Write-Host '  - Authentication → Hooks : « Customize Access Token » et « Send SMS »'
+Write-Host '  - Authentication → Hooks : « Customize Access Token »'
+Write-Host '  - Authentication → Sign In / Providers : Google (identifiant client Web), Phone désactivé'
+Write-Host '  - Authentication → Emails → Templates : code à 6 chiffres ({{ .Token }})'
 Write-Host '  - Authentication → Emails → SMTP : Brevo'
 Write-Host '  - Authentication → URL Configuration'

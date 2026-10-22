@@ -5,6 +5,7 @@ import '../../etablissement/domain/etablissement.dart';
 import '../domain/auth_repository.dart';
 import '../domain/canal_otp.dart';
 import '../domain/profil.dart';
+import '../domain/telephone_profil.dart';
 
 /// Implémentation Supabase du port [AuthRepository] (ch. 5).
 ///
@@ -69,6 +70,56 @@ class SupabaseAuthRepository implements AuthRepository {
         );
       }
     });
+  }
+
+  @override
+  Future<void> connecterAvecGoogle(String jetonIdentite) async {
+    await _executer(() => _client.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: jetonIdentite,
+        ));
+  }
+
+  @override
+  Future<TelephoneProfil?> monTelephone() async {
+    if (_client.auth.currentUser == null) return null;
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>('mon_telephone');
+      if (lignes.isEmpty) return null;
+      return TelephoneProfil.depuisJson((lignes.first as Map).cast<String, dynamic>());
+    });
+  }
+
+  @override
+  Future<TelephoneProfil> declarerTelephone(String telephone) async {
+    return _executer(() async {
+      final r = await _client.rpc<dynamic>('declarer_mon_telephone', params: {'p_telephone': telephone});
+      return TelephoneProfil.depuisJson((r as Map).cast<String, dynamic>());
+    });
+  }
+
+  @override
+  Future<List<TelephoneAConfirmer>> telephonesAConfirmer(String etablissementId) async {
+    return _executer(() async {
+      final lignes = await _client.rpc<List<dynamic>>(
+        'telephones_a_confirmer',
+        params: {'p_etablissement': etablissementId},
+      );
+      return [for (final l in lignes) TelephoneAConfirmer.depuisJson((l as Map).cast<String, dynamic>())];
+    });
+  }
+
+  @override
+  Future<void> confirmerTelephone({
+    required String etablissementId,
+    required String profilId,
+    required String telephone,
+  }) async {
+    await _executer(() => _client.rpc<void>('confirmer_telephone', params: {
+          'p_etablissement': etablissementId,
+          'p_profil': profilId,
+          'p_telephone': telephone,
+        }));
   }
 
   @override
@@ -170,7 +221,11 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       return await action();
     } on AuthException catch (e) {
-      throw ErreurAuth(_codeDepuisMessage(e.message), e.message);
+      // Erreurs de Supabase Auth (code expiré, trop de demandes…) : leur
+      // code stable plutôt que le texte anglais.
+      final metier = _codeDepuisMessage(e.message);
+      final code = metier != 'ERREUR_INATTENDUE' || e.code == null ? metier : e.code!.toUpperCase();
+      throw ErreurAuth(code, e.message);
     } on PostgrestException catch (e) {
       throw ErreurAuth(_codeDepuisMessage(e.message), e.message);
     }

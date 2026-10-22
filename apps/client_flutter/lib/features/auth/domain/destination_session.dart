@@ -26,6 +26,10 @@ enum DestinationSession {
   /// obligation légale, pas d'un confort d'ergonomie.
   cguNonAcceptees,
 
+  /// Compte sans numéro de téléphone (REG-16) : on le demande une fois
+  /// connecté, par e-mail ou Google. « Plus tard » est permis.
+  telephoneProfil,
+
   /// Étape d'onboarding Langue/Région (D3), non bloquante — affichée une
   /// fois par profil, après l'établissement résolu (pays/devise en
   /// dépendent).
@@ -58,6 +62,8 @@ abstract final class GardeSession {
     // que `regionalisationVue` : ne casser aucun appelant existant qui
     // ignore ce paramètre.
     bool cguAcceptee = true,
+    // Défaut `false` (= rien à demander), même raison que ci-dessus.
+    bool telephoneAFournir = false,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -80,6 +86,8 @@ abstract final class GardeSession {
     }
 
     if (!cguAcceptee) return DestinationSession.cguNonAcceptees;
+
+    if (telephoneAFournir) return DestinationSession.telephoneProfil;
 
     if (!regionalisationVue) return DestinationSession.regionalisation;
 

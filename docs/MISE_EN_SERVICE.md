@@ -15,7 +15,7 @@
 | 2. Installer l'outil Supabase sur le PC | Achille | 5 min |
 | 3. Remplir les secrets | Achille | 15 min |
 | 4. Lancer le script de déploiement | Achille | 10 min |
-| 5. Réglages d'authentification (tableau de bord) | Achille | 10 min |
+| 5. Réglages d'authentification (Google, e-mail) | Achille | 25 min |
 | 6. Construire l'application Android | Achille | 15 min |
 | 7. Contrôle final et premier établissement | Achille + Direction | 30 min |
 
@@ -63,7 +63,7 @@ simplement la fonction concernée, on peut compléter plus tard et relancer.
 | `BREVO_API_KEY` | Brevo → SMTP & API → Clés API (`docs/DEPLOIEMENT_COURRIEL.md`) |
 | `FCM_COMPTE_SERVICE_FICHIER` | chemin du JSON téléchargé dans Firebase → Comptes de service (`docs/DEPLOIEMENT_PUSH.md`) |
 | `ORANGE_SMS_CLIENT_ID` / `_SECRET` | Orange Developer → application SMS Guinée |
-| `SEND_SMS_HOOK_SECRETS` | rempli à l'étape 5 |
+| `SEND_SMS_HOOK_SECRETS` | laisser vide : codes de connexion par SMS suspendus (REG-16) |
 | `ADMIN_GSG_COURRIEL` | adresse du compte qui administrera EcoShop |
 
 Les deux secrets des tâches planifiées sont **générés par le script**.
@@ -100,29 +100,70 @@ exemple) : rien n'est dupliqué. Options : `-SansMigrations`,
 
 ## 5. Réglages d'authentification (tableau de bord Supabase)
 
+Depuis REG-16, on se connecte **par e-mail** (code à 6 chiffres reçu par
+courriel) ou **avec le compte Google du téléphone** (un appui, sans
+saisie). Les codes par SMS sont suspendus : chaque connexion coûtait un
+SMS à GSG. Le numéro de téléphone est demandé après la connexion, puis
+confirmé par l'école au passage de la personne, gratuitement.
+
+### 5.1 Google (une fois, 15 min)
+
+1. **Firebase → Authentication → Sign-in method → Google** : activer.
+   Firebase crée alors l'identifiant client « Application Web ». Le
+   copier (il se termine par `.apps.googleusercontent.com`), ainsi que
+   son **secret** (Google Cloud → API et services → Identifiants → client
+   Web).
+2. **Firebase → Paramètres du projet → application Android
+   `com.gsg.ecoshop_client` → Ajouter une empreinte** : coller l'empreinte
+   **SHA-1** affichée par `scripts\construire_android.ps1` (clé de GSG).
+   Après le premier envoi sur le Play Store, ajouter aussi la SHA-1 de la
+   **clé de signature Google Play** (Play Console → Tester et publier →
+   Intégrité de l'application). Sans elle, le bouton Google échoue sur les
+   téléphones qui installent depuis le Play Store.
+3. Retélécharger `google-services.json` et le replacer dans
+   `apps\client_flutter\android\app\`.
+4. **Écran de consentement** (Google Cloud → API et services → Écran de
+   consentement OAuth) : nom « EcoShop », logo, adresse
+   `contact@globalservicegroupe.com`, puis **Publier l'application** pour
+   qu'elle ne soit pas limitée aux comptes de test.
+5. **Supabase → Authentication → Sign In / Providers → Google** :
+   activer ; **Client IDs** = l'identifiant client Web ; **Client Secret**
+   = son secret.
+6. Dans `apps\client_flutter\config\production.json`, renseigner
+   `GOOGLE_WEB_CLIENT_ID` avec le même identifiant client Web. Laissé vide,
+   l'application est construite sans le bouton Google (code par e-mail
+   seulement).
+
+### 5.2 E-mail et le reste
+
 1. **Authentication → Hooks → Customize Access Token** : activer, type
    Postgres, fonction `public.custom_access_token_hook` (rôle de
    l'utilisateur dans son jeton).
-2. **Authentication → Hooks → Send SMS** : activer, type **HTTPS**,
-   adresse `https://<ref>.supabase.co/functions/v1/envoyer_sms_auth`,
-   **Generate secret**, copier ce secret dans `SEND_SMS_HOOK_SECRETS`, puis
-   relancer le script avec `-SansMigrations -SansFonctions`.
-   Les codes de connexion partent alors par **Orange SMS Guinée** (même
-   contrat que les SMS des écoles) au lieu de Twilio (environ 0,25 USD par
-   code). Numéros hors Guinée : message invitant à se connecter par e-mail.
-3. **Authentication → Sign In / Providers → Phone** : activer ; ne pas
-   choisir de fournisseur (le crochet le remplace). **Email** : activé.
-4. **Authentication → Rate Limits** : SMS envoyés par heure, par exemple
-   100 (protège le budget SMS contre les abus).
-5. **Authentication → Emails → SMTP Settings** : Brevo
-   (`docs/DEPLOIEMENT_COURRIEL.md`, étape 5).
+2. **Authentication → Sign In / Providers** : **Email** activé ;
+   **Phone** désactivé (le crochet « Send SMS » reste prêt si GSG rouvre
+   les codes par SMS : `enable_signup` et `[auth.hook.send_sms]` dans
+   `supabase/config.toml`).
+3. **Authentication → Emails → SMTP Settings** : Brevo
+   (`docs/DEPLOIEMENT_COURRIEL.md`, étape 5). Indispensable : sans SMTP à
+   soi, Supabase n'envoie que quelques courriels par heure.
+4. **Authentication → Emails → Templates → Magic Link** : l'application
+   attend un **code**. Objet : `Votre code EcoShop : {{ .Token }}` ; corps :
+   `<p>Votre code de connexion EcoShop : <strong>{{ .Token }}</strong></p><p>Il est valable 10 minutes. Si vous n'avez rien demandé, ignorez ce message.</p>`.
+   Faire de même pour **Confirm signup** (premier compte).
+5. **Authentication → Rate Limits** : courriels envoyés par heure, par
+   exemple 100 (protège le quota Brevo).
 6. **Authentication → URL Configuration** : Site URL = adresse publique
    d'EcoShop ; Redirect URL `io.gsg.ecoshop://login-callback`.
 
-**Coût des codes SMS** : chaque connexion par téléphone consomme un SMS
-du contrat Orange de GSG. La connexion par e-mail est gratuite. À
-arbitrer : laisser le téléphone ouvert à tous, ou le réserver aux parents
-sans adresse e-mail.
+### 5.3 Numéros de téléphone
+
+Le numéro saisi dans l'application est **déclaré**, pas prouvé : il sert à
+joindre la famille, mais ne donne aucun droit (accepter une invitation
+envoyée à ce numéro, par exemple) et n'empêche pas son vrai titulaire de
+le saisir à son tour. À l'école, menu **Numéros à confirmer** : la personne
+est présente, l'agent appelle le numéro, son téléphone sonne, l'agent
+confirme. Les invitations du personnel se font de préférence à l'adresse
+e-mail.
 
 ## 6. Construire l'application Android
 

@@ -32,6 +32,7 @@ attendue), `clos`.
 | REG-13 | M19 — Réseaux d'établissements (cahier ch. 28, 30.1, 30.3) | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-14 | M18 — Transport scolaire (cahier ch. 24) | P1 | **livré** (2026-10-22) — à vérifier sur le poste et sur un téléphone Android (GPS) |
 | REG-15 | M17 — Bibliothèque physique (cahier ch. 25) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; bibliothèque numérique (ch. 26) à venir |
+| REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -994,3 +995,37 @@ commit propre. Chacune a été conservée sous forme d'étiquette annotée
 `main`. Côté GitHub : étiquettes publiées par `git push origin --tags`, et
 les deux branches distantes en double supprimées par
 `git push origin --delete m14-comptabilite-sans-ohada m15-marketplace-sans-auth`.
+
+## REG-16 — Connexion par e-mail et Google, téléphone au profil
+
+**Priorité** : P1 (décision GSG du 2026-10-22 : suspendre les codes de
+connexion par SMS, un SMS payé par connexion). **Statut** : livré le
+2026-10-22 — migration `…1552`, test `79` (22).
+
+- **Recherche préalable** : Sign in with Google sur Android passe par le
+  Gestionnaire d'identifiants du système ; la documentation Android
+  recommande à la fois la feuille proposée d'office (compte déjà autorisé)
+  et un bouton permanent (feuille fermée, réglages Google, aucun compte).
+  Supabase accepte le jeton d'identité Google (`signInWithIdToken`).
+- **Connexion** : bouton « Continuer avec Google » (`google_sign_in` 7),
+  tentative d'office à l'ouverture pour un compte déjà autorisé ; sinon code
+  à 6 chiffres par e-mail (adresse suggérée par le clavier, code collé ou
+  lu automatiquement, renvoi après 60 s). Le choix SMS reste dans le code,
+  masqué (`CONNEXION_TELEPHONE=true` le réaffiche ; `config.toml` :
+  `enable_signup` SMS et crochet Send SMS désactivés).
+- **Nouveau compte Google** : prénom et nom repris du compte Google.
+- **Téléphone** : étape « Votre numéro » après la connexion (sauf élève),
+  « Plus tard » possible (rappel à 30 jours), saisie sans réseau gardée et
+  envoyée au retour ; modifiable depuis « Mon profil ».
+- **Sécurité** : un numéro saisi n'est que **déclaré** ; il ne donne aucun
+  droit et ne bloque pas son vrai titulaire. Il devient **vérifié** quand
+  l'école le confirme en présence de la personne (menu « Numéros à
+  confirmer » : l'agent appelle, le téléphone sonne, il confirme). Seul un
+  identifiant vérifié est unique et permet d'accepter une invitation
+  (`IDENTIFIANT_NON_VERIFIE` sinon) ; la recherche de fratrie par numéro
+  privilégie le titulaire vérifié.
+- **Mise en service** : `docs/MISE_EN_SERVICE.md` §5 réécrit (Google dans
+  Firebase et Supabase, empreinte SHA-1 affichée par
+  `construire_android.ps1`, SHA-1 de la clé Play à ajouter, modèle de
+  courriel avec `{{ .Token }}`).
+

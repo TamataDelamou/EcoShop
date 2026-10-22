@@ -18,6 +18,8 @@ dependencies:
 
   # Backend Supabase
   supabase_flutter: ^2.8.0
+  # Connexion avec le compte Google du téléphone (REG-16).
+  google_sign_in: ^7.2.0
 
   # Stockage hors-ligne (SQLite/Drift)
   drift: ^2.20.0

@@ -4,16 +4,21 @@ import '../../../core/auth/supabase_auth_provider.dart';
 import '../../cgu/application/cgu_providers.dart';
 import '../../etablissement/domain/etablissement.dart';
 import '../../regionalisation/application/regionalisation_providers.dart';
+import '../data/connexion_google.dart';
 import '../data/supabase_auth_repository.dart';
 import '../domain/auth_repository.dart';
 import '../domain/destination_session.dart';
 import '../domain/profil.dart';
+import 'telephone_profil_providers.dart';
 
 /// Port d'authentification. Surchargé par un double en test — aucun test ne
 /// touche le réseau.
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return SupabaseAuthRepository(ref.watch(supabaseClientProvider));
 });
+
+/// Compte Google du téléphone (REG-16). Surchargé par un double en test.
+final connexionGoogleProvider = Provider<ConnexionGoogle>((ref) => ConnexionGooglePlugin());
 
 /// Vrai si une session est ouverte. Recalculé à chaque événement Auth.
 final sessionOuverteProvider = Provider<bool>((ref) {
@@ -70,6 +75,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final etablissements = ref.watch(mesEtablissementsProvider);
   final cguStatut = ref.watch(cguStatutProvider);
   final regionalisationVue = ref.watch(onboardingRegionalisationVuProvider);
+  final etapeTelephone = ref.watch(etapeTelephoneProvider);
 
   // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
@@ -77,7 +83,8 @@ final destinationProvider = Provider<DestinationSession>((ref) {
       fiche.isLoading ||
       etablissements.isLoading ||
       cguStatut.isLoading ||
-      regionalisationVue.isLoading) {
+      regionalisationVue.isLoading ||
+      etapeTelephone.isLoading) {
     return DestinationSession.chargement;
   }
 
@@ -89,6 +96,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     nombreEtablissements: etablissements.value?.length ?? 0,
     cguAcceptee: statutCgu == null || statutCgu.acceptee,
     regionalisationVue: regionalisationVue.value ?? true,
+    telephoneAFournir: etapeTelephone.valueOrNull ?? false,
   );
 });
 

@@ -2,6 +2,7 @@ import '../../../core/auth/role_racine.dart';
 import '../../etablissement/domain/etablissement.dart';
 import 'canal_otp.dart';
 import 'profil.dart';
+import 'telephone_profil.dart';
 
 /// Erreur métier d'authentification, portant un code stable.
 ///
@@ -36,6 +37,26 @@ abstract interface class AuthRepository {
     required String identifiant,
     required CanalOtp canal,
     required String code,
+  });
+
+  /// Ouvre la session avec le jeton d'identité du compte Google choisi sur
+  /// le téléphone (REG-16).
+  Future<void> connecterAvecGoogle(String jetonIdentite);
+
+  /// Numéro de téléphone du compte, ou null s'il n'en a pas déclaré.
+  Future<TelephoneProfil?> monTelephone();
+
+  /// Déclare (ou remplace) le numéro du compte, au format E.164.
+  Future<TelephoneProfil> declarerTelephone(String telephone);
+
+  /// Personnes de l'école dont le numéro attend d'être confirmé.
+  Future<List<TelephoneAConfirmer>> telephonesAConfirmer(String etablissementId);
+
+  /// Confirme le numéro d'une personne présente à l'école.
+  Future<void> confirmerTelephone({
+    required String etablissementId,
+    required String profilId,
+    required String telephone,
   });
 
   /// Profil du compte connecté, ou null hors session.

@@ -7,6 +7,7 @@ import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
+import '../../auth/data/rejeu_telephone.dart';
 import '../../bibliotheque/data/supabase_bibliotheque_repository.dart';
 import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
@@ -76,6 +77,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     gestionnaires[entite] = rejeuTransport.rejouer;
   }
   // Bibliothèque (M17) : prêts et retours faits au guichet sans réseau.
+  gestionnaires[RejeuTelephone.entite] = RejeuTelephone(client).rejouer;
+
   final rejeuBibliotheque = RejeuBibliotheque(client);
   for (final entite in SupabaseBibliothequeRepository.entites) {
     gestionnaires[entite] = rejeuBibliotheque.rejouer;
@@ -93,7 +96,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     surRejet: (entree, rejet) => journalRejets.enregistrer(
       entree,
       rejet,
-      InscriptionHorsLigneRepository.entites.contains(entree.entite)
+      entree.entite == RejeuTelephone.entite
+          ? RejeuTelephone.libelle(entree)
+          : InscriptionHorsLigneRepository.entites.contains(entree.entite)
           ? RejeuInscriptions.libelle(entree)
           : RejeuEncaissements.entites.contains(entree.entite)
               ? RejeuEncaissements.libelle(entree)

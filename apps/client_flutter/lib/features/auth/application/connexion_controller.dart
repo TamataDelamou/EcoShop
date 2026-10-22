@@ -21,7 +21,9 @@ enum EtapeConnexion {
 class EtatConnexion {
   const EtatConnexion({
     this.etape = EtapeConnexion.identifiant,
-    this.canal = CanalOtp.sms,
+    // Code par e-mail par défaut : la connexion par SMS est suspendue
+    // (REG-16), elle reste dans le code pour être rouverte.
+    this.canal = CanalOtp.emailOtp,
     this.indicatifPays = '+224',
     this.identifiantNormalise,
     this.enCours = false,
@@ -114,6 +116,19 @@ class ConnexionController extends Notifier<EtatConnexion> {
     }
   }
 
+  /// Renvoie un code au même identifiant (déjà normalisé).
+  Future<void> renvoyerCode() async {
+    final identifiant = state.identifiantNormalise;
+    if (identifiant == null || state.enCours) return;
+    state = state.copierAvec(enCours: true, effacerErreur: true);
+    try {
+      await _repo.demanderCode(identifiant: identifiant, canal: state.canal);
+      state = state.copierAvec(enCours: false);
+    } on ErreurAuth catch (e) {
+      state = state.copierAvec(enCours: false, codeErreur: e.code);
+    }
+  }
+
   /// Vérifie le code saisi et ouvre la session.
   Future<void> verifierCode(String code) async {
     final identifiant = state.identifiantNormalise;
@@ -136,6 +151,37 @@ class ConnexionController extends Notifier<EtatConnexion> {
       ref.rafraichirSession();
     } on ErreurAuth catch (e) {
       state = state.copierAvec(enCours: false, codeErreur: e.code);
+    }
+  }
+
+  /// Connexion avec le compte Google du téléphone (REG-16).
+  ///
+  /// [silencieux] : tentative à l'ouverture de l'écran, pour un compte qui a
+  /// déjà autorisé EcoShop ; aucune erreur n'est affichée si elle échoue,
+  /// le bouton reste là.
+  Future<void> connecterAvecGoogle({bool silencieux = false}) async {
+    final google = ref.read(connexionGoogleProvider);
+    if (!google.disponible || state.enCours) return;
+    if (!silencieux) state = state.copierAvec(enCours: true, effacerErreur: true);
+
+    try {
+      final jeton = silencieux ? await google.jetonSilencieux() : await google.jetonInteractif();
+      if (jeton == null) {
+        state = state.copierAvec(enCours: false);
+        return;
+      }
+      state = state.copierAvec(enCours: true, effacerErreur: true);
+      await _repo.connecterAvecGoogle(jeton);
+      state = state.copierAvec(enCours: false);
+      ref.rafraichirSession();
+    } on ErreurAuth catch (e) {
+      state = silencieux
+          ? state.copierAvec(enCours: false)
+          : state.copierAvec(enCours: false, codeErreur: e.code);
+    } catch (_) {
+      state = silencieux
+          ? state.copierAvec(enCours: false)
+          : state.copierAvec(enCours: false, codeErreur: 'GOOGLE_INDISPONIBLE');
     }
   }
 
@@ -179,6 +225,21 @@ String messageErreurAuth(String code) => switch (code) {
       'INVITATION_AUTRE_DESTINATAIRE' =>
         'Cette invitation ne vous est pas destinée.',
       'AUTH_REQUISE' => 'Votre session a expiré, reconnectez-vous.',
+      'GOOGLE_INDISPONIBLE' =>
+        'Connexion Google impossible pour le moment. Recevez plutôt un code par e-mail.',
+      'OTP_EXPIRED' => 'Code expiré ou incorrect. Demandez un nouveau code.',
+      'OVER_EMAIL_SEND_RATE_LIMIT' || 'OVER_REQUEST_RATE_LIMIT' =>
+        'Trop de demandes de code. Patientez une minute, puis réessayez.',
+      'EMAIL_ADDRESS_INVALID' => 'Cette adresse e-mail n’est pas acceptée.',
+      'TELEPHONE_INVALIDE' =>
+        'Numéro invalide. Vérifiez l’indicatif et le numéro.',
+      'TELEPHONE_DEJA_UTILISE' =>
+        'Ce numéro est déjà confirmé sur un autre compte. Rapprochez-vous de l’école.',
+      'TELEPHONE_NON_DECLARE' =>
+        'Cette personne a changé de numéro entre-temps. Actualisez la liste.',
+      'IDENTIFIANT_NON_VERIFIE' =>
+        'Votre numéro n’est pas encore confirmé. Faites-le confirmer par l’école, '
+            'ou demandez que l’invitation soit envoyée à votre adresse e-mail.',
       'CANAL_SANS_CODE' =>
         'Ce canal ouvre la session depuis le lien reçu, sans code.',
       _ => 'Une erreur est survenue. Réessayez.',

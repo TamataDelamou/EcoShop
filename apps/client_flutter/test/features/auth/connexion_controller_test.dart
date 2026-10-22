@@ -29,6 +29,7 @@ void main() {
 
   group('ConnexionController — normalisation (ch. 5.4.1)', () {
     test('normalise le numéro en E.164 avant l’appel', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       controleurCourant().choisirIndicatif('+224');
       await controleurCourant().demanderCode('620 00 00 00');
 
@@ -38,6 +39,7 @@ void main() {
     });
 
     test('refuse un numéro invalide sans appeler le serveur', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       await controleurCourant().demanderCode('abc');
 
       expect(faux.appels, isEmpty);
@@ -70,6 +72,7 @@ void main() {
     });
 
     test('transporte le code d’erreur du serveur sans le réinterpréter', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       faux.erreurALever = const ErreurAuth('TROP_DE_TENTATIVES');
       await controleurCourant().demanderCode('620000000');
 
@@ -78,6 +81,7 @@ void main() {
     });
 
     test('vérifie le code avec l’identifiant normalisé mémorisé', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       await controleurCourant().demanderCode('620 00 00 00');
       await controleurCourant().verifierCode(' 123456 ');
 
@@ -86,6 +90,7 @@ void main() {
     });
 
     test('un code refusé laisse l’utilisateur à l’étape de saisie', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       await controleurCourant().demanderCode('620 00 00 00');
       faux.erreurALever = const ErreurAuth('otp_expired');
       await controleurCourant().verifierCode('000000');
@@ -95,6 +100,7 @@ void main() {
     });
 
     test('changer d’étape efface l’erreur précédente', () async {
+      controleurCourant().choisirCanal(CanalOtp.sms);
       faux.erreurALever = const ErreurAuth('TROP_DE_TENTATIVES');
       await controleurCourant().demanderCode('620000000');
       expect(etatCourant().codeErreur, isNotNull);

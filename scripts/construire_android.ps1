@@ -91,6 +91,28 @@ if (-not (Test-Path $proprietes)) {
   Write-Host "Sans eux, les mises à jour sur le Play Store demandent une procédure de remplacement de clé." -ForegroundColor Yellow
 }
 
+# 3 bis. Empreinte SHA-1 de la clé : à déclarer dans Firebase pour le
+# bouton « Continuer avec Google » (docs\MISE_EN_SERVICE.md, étape 5).
+$lus = @{}
+foreach ($l in Get-Content -Encoding UTF8 $proprietes) { if ($l -match '^([^=]+)=(.*)$') { $lus[$Matches[1]] = $Matches[2] } }
+$keytool = (Get-Command keytool -ErrorAction SilentlyContinue).Source
+if (-not $keytool) {
+  foreach ($candidat in @("$env:ProgramFiles\Android\Android Studio\jbr\bin\keytool.exe", "$env:ProgramFiles\Android\Android Studio\jre\bin\keytool.exe")) {
+    if (Test-Path $candidat) { $keytool = $candidat; break }
+  }
+}
+if ($keytool -and $lus['storeFile']) {
+  $sha1 = & $keytool -list -v -keystore $lus['storeFile'] -alias $lus['keyAlias'] -storepass $lus['storePassword'] 2>$null | Select-String 'SHA1:' | Select-Object -First 1
+  if ($sha1) {
+    $sha1 = $sha1.ToString().Trim()
+    Write-Host ''
+    Write-Host "Empreinte de la clé (Firebase → Paramètres du projet → application Android) : $sha1" -ForegroundColor Cyan
+  }
+}
+if (-not $lu.GOOGLE_WEB_CLIENT_ID -or $lu.GOOGLE_WEB_CLIENT_ID -notmatch '\.apps\.googleusercontent\.com$') {
+  Write-Host 'Attention : GOOGLE_WEB_CLIENT_ID non renseigné, application construite SANS le bouton « Continuer avec Google » (connexion par code e-mail seulement).' -ForegroundColor Yellow
+}
+
 # 4. Construction
 & flutter pub get
 if ($LASTEXITCODE -ne 0) { Echec 'flutter pub get a échoué.' }

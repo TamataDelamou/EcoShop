@@ -6,7 +6,10 @@ import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
 import '../../../core/widgets/page_header.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
+import '../../auth/presentation/ecran_telephone_profil.dart';
+import '../../auth/presentation/ecran_telephones_a_confirmer.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_notifications.dart';
 import '../../push/presentation/ecouteur_push.dart';
@@ -470,6 +473,24 @@ class _VueProfil extends ConsumerWidget {
           title: Text(p.nomAffiche),
           subtitle: Text(p.identifiantCanonique),
         ),
+        // Téléphone (REG-16) : déclaré par la personne, confirmé à l'école.
+        Consumer(
+          builder: (context, ref, _) {
+            final tel = ref.watch(telephoneProfilProvider).valueOrNull;
+            return ListTile(
+              key: const Key('profil_telephone'),
+              leading: Icon(tel?.verifie == true ? Icons.verified_outlined : Icons.phone_outlined),
+              title: Text(tel == null ? 'Ajouter mon numéro de téléphone' : tel.lisible),
+              subtitle: Text(tel == null ? 'Pour que l’école puisse vous joindre' : tel.statut),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EcranTelephoneProfil(modification: true, actuel: tel),
+                ),
+              ),
+            );
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: const Text('Rôle'),
@@ -719,6 +740,26 @@ class _VueProfil extends ConsumerWidget {
                       ficheEleveId: fiche.id,
                       prenom: fiche.prenom,
                     ),
+                  ),
+                ),
+              );
+            },
+          ),
+        // Numéros à confirmer (REG-16) : en présence de la personne, sans SMS.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_telephones_a_confirmer'),
+                leading: const Icon(Icons.verified_user_outlined),
+                title: const Text('Numéros à confirmer'),
+                subtitle: const Text('Parents et personnel, à leur passage'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranTelephonesAConfirmer(etablissementId: etablissement.id),
                   ),
                 ),
               );

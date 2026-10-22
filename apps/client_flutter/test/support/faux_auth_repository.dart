@@ -2,6 +2,7 @@ import 'package:ecoshop_client/core/auth/role_racine.dart';
 import 'package:ecoshop_client/features/auth/domain/auth_repository.dart';
 import 'package:ecoshop_client/features/auth/domain/canal_otp.dart';
 import 'package:ecoshop_client/features/auth/domain/profil.dart';
+import 'package:ecoshop_client/features/auth/domain/telephone_profil.dart';
 import 'package:ecoshop_client/features/etablissement/domain/etablissement.dart';
 
 /// Double de test du port [AuthRepository].
@@ -14,7 +15,14 @@ class FauxAuthRepository implements AuthRepository {
     this.fiche = true,
     this.etablissements = const [],
     this.erreurALever,
+    this.telephone = const TelephoneProfil(numero: '+224620000000', verifie: true),
   });
+
+  /// Numéro du compte ; null = aucun (l'étape « Votre numéro » s'affiche).
+  TelephoneProfil? telephone;
+
+  /// Personnes dont le numéro attend d'être confirmé.
+  List<TelephoneAConfirmer> aConfirmer = [];
 
   Profil? profil;
   bool fiche;
@@ -50,6 +58,39 @@ class FauxAuthRepository implements AuthRepository {
     required String code,
   }) async {
     _peutEchouer('verifierCode:$identifiant:$code');
+  }
+
+  @override
+  Future<void> connecterAvecGoogle(String jetonIdentite) async {
+    _peutEchouer('connecterAvecGoogle:$jetonIdentite');
+  }
+
+  @override
+  Future<TelephoneProfil?> monTelephone() async {
+    appels.add('monTelephone');
+    return telephone;
+  }
+
+  @override
+  Future<TelephoneProfil> declarerTelephone(String numero) async {
+    _peutEchouer('declarerTelephone:$numero');
+    return telephone = TelephoneProfil(numero: numero);
+  }
+
+  @override
+  Future<List<TelephoneAConfirmer>> telephonesAConfirmer(String etablissementId) async {
+    appels.add('telephonesAConfirmer:$etablissementId');
+    return aConfirmer;
+  }
+
+  @override
+  Future<void> confirmerTelephone({
+    required String etablissementId,
+    required String profilId,
+    required String telephone,
+  }) async {
+    _peutEchouer('confirmerTelephone:$profilId:$telephone');
+    aConfirmer = [for (final t in aConfirmer) if (t.profilId != profilId) t];
   }
 
   @override

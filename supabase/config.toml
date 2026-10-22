@@ -14,10 +14,11 @@ enabled = true
 port = 54323
 
 # ---------------------------------------------------------------------------
-# Authentification (cahier v4.1, ch. 5)
-# Deux entrées — téléphone et e-mail — et quatre canaux de délivrance.
-# Les fournisseurs (Twilio SMS/WhatsApp, Resend) sont configurés par secrets,
-# jamais en clair dans ce fichier.
+# Authentification (cahier v4.1, ch. 5 ; REG-16)
+# Connexion par e-mail (code à 6 chiffres) ou par le compte Google du
+# téléphone. Les codes par SMS sont suspendus (coût d'un SMS par
+# connexion) ; le numéro est demandé après la connexion. Les fournisseurs
+# sont configurés par secrets, jamais en clair dans ce fichier.
 # ---------------------------------------------------------------------------
 [auth]
 enabled = true
@@ -37,7 +38,9 @@ otp_length = 6
 otp_expiry = 600
 
 [auth.sms]
-enable_signup = true
+# Suspendu (REG-16) : remettre à true, avec le crochet ci-dessous, pour
+# rouvrir la connexion par code SMS.
+enable_signup = false
 enable_confirmations = true
 otp_length = 6
 otp_expiry = 600
@@ -46,7 +49,7 @@ otp_expiry = 600
 # 0,25 USD par code vers la Guinée, compte à part). Twilio reste décrit
 # ci-dessous, désactivé, pour un éventuel pays non couvert par Orange.
 [auth.hook.send_sms]
-enabled = true
+enabled = false
 uri = "env(SEND_SMS_HOOK_URI)"
 secrets = "env(SEND_SMS_HOOK_SECRETS)"
 
@@ -55,6 +58,16 @@ enabled = false
 account_sid = "env(TWILIO_ACCOUNT_SID)"
 message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
 auth_token = "env(TWILIO_AUTH_TOKEN)"
+
+# Connexion avec le compte Google du téléphone (REG-16). L'application
+# obtient un jeton d'identité Google et le remet à Supabase
+# (signInWithIdToken) : client_id = identifiant client « Application Web »
+# du projet Google (celui du projet Firebase EcoShop).
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_WEB_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
 
 # Custom Access Token Hook — recopie role_racine / statut_compte dans
 # le jeton (cache de confort ; la source de vérité reste public.profiles).
