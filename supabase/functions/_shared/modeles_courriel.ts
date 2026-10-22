@@ -18,7 +18,11 @@ export type ModeleCourriel =
   | "demande_etablissement_recue"
   | "demande_etablissement_a_traiter"
   | "demande_etablissement_acceptee"
-  | "demande_etablissement_refusee";
+  | "demande_etablissement_refusee"
+  | "demande_reseau_recue"
+  | "demande_reseau_a_traiter"
+  | "demande_reseau_acceptee"
+  | "demande_reseau_refusee";
 
 export interface ContexteCourriel {
   /** Lien d'ouverture de l'application (site ou page de téléchargement). */
@@ -145,8 +149,93 @@ function contenuPour(modele: string, d: Record<string, unknown>, ctx: ContexteCo
         bouton: { libelle: "Ouvrir le backoffice", url: ctx.urlApplication },
       };
     }
+    case "demande_reseau_recue":
+    case "demande_reseau_a_traiter":
+    case "demande_reseau_acceptee":
+    case "demande_reseau_refusee":
+      return contenuReseau(modele, d, ctx, salutation, reference);
     default:
       throw new ModeleInconnu(modele);
+  }
+}
+
+// M19 — demandes de création d'un réseau d'établissements (cahier 28.3).
+function contenuReseau(
+  modele: string,
+  d: Record<string, unknown>,
+  ctx: ContexteCourriel,
+  salutation: string,
+  reference: string,
+): Contenu {
+  const reseau = texteDe(d, "nom_reseau", "votre réseau");
+  const recap = {
+    titre: "Votre demande",
+    lignes: [
+      ["Réseau", reseau],
+      ["Dénomination", texteDe(d, "denomination", "—")],
+      ["Pays", texteDe(d, "pays", "—")],
+      ["Référence", reference || "—"],
+    ] as Array<[string, string]>,
+  };
+  switch (modele) {
+    case "demande_reseau_recue":
+      return {
+        sujet: `Demande reçue : réseau ${reseau}`,
+        apercu: "Nous avons bien reçu votre demande de création de réseau d'établissements.",
+        titre: "Votre demande est bien reçue",
+        paragraphes: [
+          salutation,
+          `Votre demande de création du réseau ${reseau} est enregistrée et sera examinée par l'équipe Global Service Groupe.`,
+          "Les frais de création du réseau sont exigés une seule fois ; notre équipe vous contactera pour leur règlement avant la validation.",
+        ],
+        encadre: recap,
+        conclusion: "Conservez la référence ci-dessus : elle vous sera demandée si vous nous contactez.",
+      };
+    case "demande_reseau_acceptee":
+      return {
+        sujet: `Votre réseau ${reseau} est créé`,
+        apercu: "Votre réseau est créé : invitez dès maintenant vos établissements.",
+        titre: "Votre réseau est créé",
+        paragraphes: [
+          salutation,
+          `Le réseau ${reseau} est créé et votre compte en est la Direction Générale.`,
+          "Prochaines étapes : inviter vos établissements depuis l'annuaire (menu « Mon réseau »), nommer un adjoint, publier le calendrier commun.",
+        ],
+        encadre: recap,
+        bouton: { libelle: "Ouvrir EcoShop", url: ctx.urlApplication },
+      };
+    case "demande_reseau_refusee":
+      return {
+        sujet: `Votre demande de réseau ${reseau} n'a pas pu être acceptée`,
+        apercu: "Votre demande de réseau nécessite une correction.",
+        titre: "Votre demande doit être complétée",
+        paragraphes: [
+          salutation,
+          `Après examen, la demande de création du réseau ${reseau} n'a pas pu être acceptée en l'état.`,
+          `Motif indiqué par notre équipe : ${texteDe(d, "motif", "non précisé")}`,
+          "Vous pouvez soumettre une nouvelle demande corrigée depuis l'application, à tout moment.",
+        ],
+        encadre: recap,
+        bouton: { libelle: "Soumettre une nouvelle demande", url: ctx.urlApplication },
+      };
+    default:
+      return {
+        sujet: `[Backoffice] Nouvelle demande de réseau : ${reseau}`,
+        apercu: "Une demande de création de réseau attend une décision.",
+        titre: "Nouvelle demande de réseau à traiter",
+        paragraphes: [
+          "Une demande de création de réseau d'établissements attend une décision dans le backoffice (menu « Réseaux d'établissements »). Vérifier le règlement des frais de création avant de valider.",
+        ],
+        encadre: {
+          titre: "Demande",
+          lignes: [
+            ...recap.lignes,
+            ["Premier responsable", texteDe(d, "premier_responsable", "—")],
+            ["Téléphone", texteDe(d, "telephone", "—")],
+          ],
+        },
+        bouton: { libelle: "Ouvrir le backoffice", url: ctx.urlApplication },
+      };
   }
 }
 

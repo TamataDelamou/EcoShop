@@ -55,6 +55,8 @@ import '../../scolarite/presentation/ecran_parametres_financiers.dart';
 import '../../scolarite/presentation/ecran_reinscription.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
+import '../../reseau/presentation/ecran_mes_reseaux.dart';
+import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
@@ -669,6 +671,20 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
+        // Réseaux d'établissements (M19, cahier ch. 28) : Direction Générale
+        // d'un réseau, direction d'une école invitée ou membre, ou fondateur
+        // qui souhaite créer le réseau de son organisation.
+        if (p.roleRacine != RoleRacine.eleve && p.roleRacine != RoleRacine.adminGsg)
+          ListTile(
+            key: const Key('menu_reseaux'),
+            leading: const Icon(Icons.hub_outlined),
+            title: const Text("Réseau d'établissements"),
+            subtitle: const Text('Piloter un réseau, invitations, circulaires, calendrier commun'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranMesReseaux()),
+            ),
+          ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.notifications_outlined),
@@ -1276,6 +1292,19 @@ class _VueProfil extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranValidationEtablissementsGsg()),
+            ),
+          ),
+        // Réseaux d'établissements (M19, cahier §30.1/§30.3) : demandes de
+        // création, vue d'ensemble, retraits d'écoles à autoriser.
+        if (p.roleRacine == RoleRacine.adminGsg)
+          ListTile(
+            key: const Key('menu_reseaux_gsg'),
+            leading: const Icon(Icons.hub_outlined),
+            title: const Text("Réseaux d'établissements"),
+            subtitle: const Text('Demandes de création, réseaux, retraits à autoriser'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranReseauxGsg()),
             ),
           ),
         if (p.roleRacine == RoleRacine.adminGsg)

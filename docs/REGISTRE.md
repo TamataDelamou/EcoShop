@@ -29,6 +29,7 @@ attendue), `clos`.
 | REG-10 | Encaissement de scolarité au guichet hors connexion, numéro de reçu continu | P1 | **livré** (2026-10-21) — à vérifier sur le poste |
 | REG-11 | Notifications push dans l'application (Firebase, Android) : réception, bandeau, ouverture, déconnexion | P1 | **livré** (2026-10-21) — projet Firebase à créer, voir `docs/DEPLOIEMENT_PUSH.md` ; iOS au compte Apple |
 | REG-12 | Kit de mise en service : script de déploiement, tâches planifiées, codes de connexion par Orange SMS, Android prêt pour le Play Store | **P0** | **livré** (2026-10-22) — à exécuter à la création du projet Supabase, voir `docs/MISE_EN_SERVICE.md` |
+| REG-13 | M19 — Réseaux d'établissements (cahier ch. 28, 30.1, 30.3) | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -839,6 +840,53 @@ migration `…1548`, guide `docs/MISE_EN_SERVICE.md`.
   d'authentification du tableau de bord, contrats Orange, compte Google
   Play. **Décision à prendre** : la connexion par téléphone consomme un
   SMS payé par GSG à chaque code ; la connexion par e-mail est gratuite.
+
+## REG-13 — M19 : réseaux d'établissements
+
+**Priorité** : P1 (demande du 2026-10-22 ; le pilote Bambino Emmaüs
+appartient au réseau de l'Église Protestante Nationale). **Statut** : livré
+le 2026-10-22 — migration `…1549`, conforme au cahier ch. 28, 30.1, 30.3.
+
+- **Recherche préalable** (logiciels de gestion multi-écoles) : tableau de
+  bord consolidé avec détail par école, réglages communs adoptés librement
+  par chaque école, séparation stricte — le réseau voit des chiffres, pas
+  des dossiers d'élèves. Retenu tel quel, avec le cahier comme référence.
+- **Création** : demande (nom, dénomination, type, pays, devise, courriel,
+  téléphone, adresse, premier responsable) depuis l'application, même sans
+  réseau ; validée par GSG qui constate le règlement des **frais de
+  création** (17.7) ; courriels de réception, d'alerte GSG, de décision.
+  Le demandeur devient Direction Générale **sans changer le rôle de son
+  compte** (un directeur reste directeur, un parent fondateur garde son
+  espace famille).
+- **Écoles** : annuaire (nom, ville) insensible à la casse et aux accents ;
+  invitation (push + boîte de notifications de la direction) ; la direction
+  accepte ou refuse, même sans réseau ; retrait demandé par l'école et
+  **finalisé seulement par GSG** (28.4) ; **dissolution** par la Direction
+  Générale avec double confirmation, la seconde exigeant le nom exact du
+  réseau (vérifié aussi par le serveur).
+- **Tableau de bord consolidé** (28.5) : effectif de l'année courante,
+  retraits, présence sur 30 jours, recouvrement (dû selon les tarifs de
+  chaque école, encaissé), alertes de décrochage, personnel, élèves par
+  enseignant — par école et au total, alertes visuelles (recouvrement
+  < 50 %, présence < 85 %). **Aucun nom d'élève** ne sort de son école.
+- **Pilotage** : circulaires aux directions des écoles membres (push,
+  « importante », accusé de lecture « lue par n/N ») ; calendrier commun
+  (rentrée, congés, examens…) que chaque école **ajoute ou non** à son
+  agenda (harmonisation déclarative, 28.2) ; équipe : adjoint (pilote),
+  observateur (consulte).
+- **GSG** : demandes à traiter, vue d'ensemble en lecture seule, retraits
+  à autoriser.
+- **Hors connexion** : consultation resservie depuis l'appareil ; demande,
+  circulaire, date commune, réponse à une invitation et accusé de lecture
+  gardés avec leur clé et envoyés au retour du réseau, affichés « en
+  attente d'envoi ».
+- Vérification : pgTAP `76` 37/37, régression 01-75 inchangée ; Deno
+  `courriel_test.ts` 10/10 ; Flutter `test/features/reseau/reseau_test.dart`
+  — **à lancer sur le poste**.
+- Non couvert, à arbitrer : transferts d'élèves entre écoles du réseau et
+  grille de frais harmonisée (28.2 : « selon le paramétrage de la Direction
+  Générale ») ; paiement en ligne des frais de création (aujourd'hui
+  constatés par GSG).
 
 ## REG-05 — README à resynchroniser
 

@@ -34,6 +34,8 @@ const TITRES: Record<string, string> = {
   alerte_absence: "Absence",
   alerte_sortie_anticipee: "Sortie avant l'heure",
   relance_impaye: "Scolarité",
+  reseau_invitation: "Réseau d'établissements",
+  reseau_circulaire: "Circulaire du réseau",
 };
 
 function titre(type: string): string {

@@ -197,7 +197,7 @@ le passage au suivant (règle d'or du séquençage strict).*
 | M16 | IA à rôles (Tuteur IA, Directeur-Adviser, Parent IA, risque d'échec, scan d'exercice) | ✅ livré (7 sous-livrables, clôture formelle 2026-09-12) |
 | M17 | Bibliothèque & Ressources | ⏳ à venir |
 | M18 | Transport scolaire | ⏳ à venir |
-| M19 | Réseau d'établissements & Backoffice GSG | 🟡 partiel — validation des vendeurs et des demandes d'ouverture d'établissement livrées ; réseaux, paramètres globaux et CMS à venir |
+| M19 | Réseau d'établissements & Backoffice GSG | 🟡 partiel — réseaux d'établissements livrés (2026-10-22 : demande validée par GSG, invitations, tableau de bord consolidé, circulaires, calendrier commun, retrait et dissolution) ; validation des vendeurs et des établissements livrées ; paramètres globaux et CMS pédagogique à venir |
 | M20 | Reporting, Tableaux de bord & Premium | 🟡 partiel — Premium élève et quotas Tuteur IA livrés (facturation) ; tableaux de bord centraux portés par le Control Plane du Kernel |
 
 ### Chantiers transverses livrés

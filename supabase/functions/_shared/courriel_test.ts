@@ -100,3 +100,15 @@ Deno.test("panne réseau : temporaire, aucune exception", async () => {
   const v = await envoyerCourrielBrevo(CONFIG, MESSAGE, fetchImpl);
   assertEquals(v.issue, "temporaire");
 });
+
+Deno.test("M19 : les quatre courriels de demande de réseau se rendent, motif et référence compris", () => {
+  const d = { prenom: "Paul", nom_reseau: "Réseau EPN", denomination: "Église Protestante Nationale", pays: "Guinée",
+    reference: "AB12CD34", motif: "Statuts manquants", premier_responsable: "Pasteur Diallo", telephone: "+224620000000" };
+  for (const m of ["demande_reseau_recue", "demande_reseau_a_traiter", "demande_reseau_acceptee", "demande_reseau_refusee"]) {
+    const r = rendreCourriel(m, d, CTX);
+    assert(r.sujet.includes("Réseau EPN"), m);
+    assert(r.texte.includes("AB12CD34"), `${m} : référence`);
+  }
+  assert(rendreCourriel("demande_reseau_refusee", d, CTX).texte.includes("Statuts manquants"));
+  assert(rendreCourriel("demande_reseau_a_traiter", d, CTX).texte.includes("Pasteur Diallo"));
+});
