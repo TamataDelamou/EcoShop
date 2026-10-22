@@ -55,6 +55,8 @@ import '../../scolarite/presentation/ecran_parametres_financiers.dart';
 import '../../scolarite/presentation/ecran_reinscription.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../scolarite/presentation/ecran_structure_etablissement.dart';
+import '../../bibliotheque/presentation/ecran_bibliotheque.dart';
+import '../../bibliotheque/presentation/ecran_bibliotheque_famille.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
@@ -672,6 +674,53 @@ class _VueProfil extends ConsumerWidget {
                       ),
                     ),
                 ],
+              );
+            },
+          ),
+        // Bibliothèque physique (M17, cahier ch. 25) : gestion par la
+        // direction ; catalogue et emprunts pour l'élève et ses parents
+        // (gratuit, jamais premium — 25.1).
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_bibliotheque'),
+                leading: const Icon(Icons.local_library_outlined),
+                title: const Text('Bibliothèque'),
+                subtitle: const Text('Prêts et retours (sans réseau), catalogue, étiquettes, retards, inventaire'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranBibliotheque(etablissement: etablissement)),
+                ),
+              );
+            },
+          ),
+        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.eleve)
+          Consumer(
+            builder: (context, ref, _) {
+              final fiche = p.roleRacine == RoleRacine.parent
+                  ? ref.watch(enfantActifProvider)
+                  : ref.watch(maFicheProvider).valueOrNull;
+              if (fiche == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_bibliotheque_famille'),
+                leading: const Icon(Icons.local_library_outlined),
+                title: const Text('Bibliothèque'),
+                subtitle: Text(p.roleRacine == RoleRacine.parent
+                    ? 'Livres empruntés par ${fiche.prenom}, catalogue, réservation'
+                    : 'Mes emprunts, catalogue, réservation'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranBibliothequeFamille(
+                      etablissementId: fiche.etablissementId,
+                      ficheEleveId: fiche.id,
+                      prenom: fiche.prenom,
+                    ),
+                  ),
+                ),
               );
             },
           ),

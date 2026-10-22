@@ -40,6 +40,8 @@ const TITRES: Record<string, string> = {
   transport_montee: "Bus scolaire",
   transport_descente: "Bus scolaire",
   transport_a_bord: "Bus : vérification",
+  bibliotheque_relance: "Bibliothèque",
+  bibliotheque_reservation: "Bibliothèque : livre disponible",
 };
 
 function titre(type: string): string {

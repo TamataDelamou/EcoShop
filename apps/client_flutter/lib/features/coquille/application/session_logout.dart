@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../bibliotheque/application/bibliotheque_providers.dart';
 import '../../communication/prototype/application/communication_locale_providers.dart';
 import '../../inscription_en_ligne/application/inscription_en_ligne_providers.dart';
 import '../../pointage/application/pointage_providers.dart';
@@ -64,6 +65,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Transport (M18) : cartes des élèves du circuit, trajet en cours.
   try {
     await lire(lectureTransportProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Bibliothèque (M17) : cartes des élèves et prêts gardés au guichet.
+  try {
+    await lire(lectureBibliothequeProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

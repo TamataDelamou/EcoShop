@@ -31,6 +31,7 @@ attendue), `clos`.
 | REG-12 | Kit de mise en service : script de déploiement, tâches planifiées, codes de connexion par Orange SMS, Android prêt pour le Play Store | **P0** | **livré** (2026-10-22) — à exécuter à la création du projet Supabase, voir `docs/MISE_EN_SERVICE.md` |
 | REG-13 | M19 — Réseaux d'établissements (cahier ch. 28, 30.1, 30.3) | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-14 | M18 — Transport scolaire (cahier ch. 24) | P1 | **livré** (2026-10-22) — à vérifier sur le poste et sur un téléphone Android (GPS) |
+| REG-15 | M17 — Bibliothèque physique (cahier ch. 25) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; bibliothèque numérique (ch. 26) à venir |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -926,6 +927,43 @@ le 2026-10-22 — migration `…1549`, conforme au cahier ch. 28, 30.1, 30.3.
   Orange Money ; payé et reste dû par élève dans l'écran de la direction.
 - Vérification : pgTAP `77` 37/37 ; Flutter `test/features/transport/transport_test.dart`
   — **à lancer sur le poste** ; GPS à essayer sur un téléphone Android.
+
+## REG-15 — M17 : bibliothèque physique
+
+**Priorité** : P1 (demande du 2026-10-22). **Statut** : livré le
+2026-10-22 — migration `…1551`, conforme au cahier ch. 25 (la
+bibliothèque numérique et les flashcards du ch. 26 restent à faire, et ne
+sont jamais confondues avec elle).
+
+- **Recherche préalable** (logiciels de bibliothèque scolaire de
+  référence) : exemplaire étiqueté et scanné, limite d'emprunts par élève,
+  relances aux familles, réservation, inventaire par scan, rapports
+  (retards, pertes, plus empruntés), remplissage depuis l'ISBN. Tout est
+  retenu ; les amendes ne le sont pas (le cahier ne les prévoit pas).
+- **Catalogue** (25.1) gratuit pour tous les membres, avec la
+  disponibilité ; jamais premium.
+- **Exemplaires** (25.4) numérotés par école (`LIV-000001`), étiquettes QR
+  imprimables (planches 70 × 37 mm, 24 par page) ; fiche préremplie depuis
+  l'ISBN (Open Library, gratuit) quand il y a du réseau.
+- **Guichet** (25.2) : carte QR de l'élève (la même qu'au portail et au
+  bus), puis étiquette de chaque livre ; retour en scannant le livre seul ;
+  caméra ou douchette ; **fonctionne sans réseau** avec les mêmes contrôles
+  qu'au serveur (exemplaire déjà prêté, limite d'emprunts), le serveur
+  tranchant si deux guichets ont prêté le même livre.
+- **Statuts automatiques** (25.3) « en retard » puis « perdu », calculés à
+  chaque lecture ; durée du prêt, nombre d'emprunts, renouvellements et
+  délai de perte réglables par l'école. Relances (veille de l'échéance,
+  lendemain, une semaine après) par la tâche de nuit ; pertes répétées
+  signalées, **sans sanction automatique**.
+- **Réservation** d'un livre sorti par l'élève ou ses parents ; au retour,
+  l'exemplaire est gardé 3 jours et la famille est prévenue.
+- **Inventaire** par scan : exemplaires introuvables listés (hors prêts).
+- Vérification : pgTAP `78` 30/30, test `75` inchangé (la tâche de nuit
+  inclut les relances) ; Flutter `test/features/bibliotheque/bibliotheque_test.dart`
+  — **à lancer sur le poste**.
+- Accès : direction (et, côté serveur, tout membre ayant la permission
+  `bibliotheque.gerer`) ; le menu n'apparaît pour l'instant qu'à la
+  direction.
 
 ## REG-05 — README à resynchroniser
 

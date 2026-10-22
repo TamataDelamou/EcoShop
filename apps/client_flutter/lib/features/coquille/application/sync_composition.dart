@@ -7,6 +7,7 @@ import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
+import '../../bibliotheque/data/supabase_bibliotheque_repository.dart';
 import '../../inscription_en_ligne/data/inscription_hors_ligne_repository.dart';
 import '../../inscription_en_ligne/data/rejeu_inscriptions.dart';
 import '../../pointage/data/supabase_pointage_repository.dart';
@@ -74,6 +75,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseTransportRepository.entites) {
     gestionnaires[entite] = rejeuTransport.rejouer;
   }
+  // Bibliothèque (M17) : prêts et retours faits au guichet sans réseau.
+  final rejeuBibliotheque = RejeuBibliotheque(client);
+  for (final entite in SupabaseBibliothequeRepository.entites) {
+    gestionnaires[entite] = rejeuBibliotheque.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -95,7 +101,9 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
                   ? RejeuReseau.libelle(entree)
                   : SupabaseTransportRepository.entites.contains(entree.entite)
                       ? RejeuTransport.libelle(entree)
-                      : RejeuComptabilite.libelle(entree),
+                      : SupabaseBibliothequeRepository.entites.contains(entree.entite)
+                          ? RejeuBibliotheque.libelle(entree)
+                          : RejeuComptabilite.libelle(entree),
     ),
   );
 });
