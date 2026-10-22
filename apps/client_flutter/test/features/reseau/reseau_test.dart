@@ -33,7 +33,9 @@ class _Serveur {
         httpClient: MockClient((request) async {
           if (!enLigne) throw http.ClientException('Failed host lookup');
           final nom = request.url.pathSegments.last;
-          appels[nom] = request.body.isEmpty ? {} : (jsonDecode(request.body) as Map).cast<String, dynamic>();
+          // Une fonction appelée sans paramètres envoie le corps « null ».
+          final corps = request.body.isEmpty ? null : jsonDecode(request.body);
+          appels[nom] = corps is Map ? corps.cast<String, dynamic>() : {};
           final r = refus[nom];
           if (r != null) {
             return http.Response(jsonEncode({'code': 'P0001', 'message': r}), 400,
