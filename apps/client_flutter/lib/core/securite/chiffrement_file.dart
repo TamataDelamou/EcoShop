@@ -2,8 +2,18 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../config/env.dart';
 
 import 'coffre_fort.dart';
+
+/// Chiffreur de la file d'envoi. Null sans configuration Supabase (mode
+/// diagnostic, tests qui ne portent pas sur lui) : la file reste en clair.
+final chiffreurFileProvider = Provider<ChiffreurFile?>((ref) {
+  if (!Env.estConfigure) return null;
+  return ChiffreurFile(ref.watch(coffreFortProvider));
+});
 
 /// Chiffrement des opérations en attente d'envoi (REG-18).
 ///

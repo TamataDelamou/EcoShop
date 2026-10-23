@@ -10,6 +10,8 @@ import '../../../core/securite/delais_verrouillage.dart';
 import '../../auth/application/auth_providers.dart';
 import 'session_logout.dart';
 
+export '../../../core/securite/coffre_fort.dart' show coffreFortProvider, CoffreFortMemoire;
+
 /// Verrou de l'application (REG-18, partie C).
 ///
 /// On prouve son identité une fois par téléphone (code e-mail ou Google) ;
@@ -22,8 +24,8 @@ import 'session_logout.dart';
 /// surchargent à vrai.
 final verrouActifProvider = Provider<bool>((ref) => Env.estConfigure);
 
-/// Stockage protégé du système. Surchargé par [CoffreFortMemoire] en test.
-final coffreFortProvider = Provider<CoffreFort>((ref) => CoffreFortSysteme());
+// `coffreFortProvider` vit dans le socle (`core/securite/coffre_fort.dart`) :
+// la file d'envoi s'en sert aussi. Réexporté pour les appelants existants.
 
 final serviceCodeSecretProvider = Provider<ServiceCodeSecret>(
   (ref) => ServiceCodeSecret(coffre: ref.watch(coffreFortProvider)),

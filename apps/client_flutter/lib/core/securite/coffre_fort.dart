@@ -1,4 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+/// Stockage protégé du système. Surchargé par [CoffreFortMemoire] en test.
+final coffreFortProvider = Provider<CoffreFort>((ref) => CoffreFortSysteme());
 
 /// Stockage protégé par le système (REG-18) : Android Keystore (AES-GCM, clé
 /// jamais exportable), iOS Keychain (lisible seulement sur cet appareil).

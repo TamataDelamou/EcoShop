@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../db/cache_document_store.dart';
+import '../auth/supabase_auth_provider.dart';
 import '../offline/lecture_hors_ligne.dart';
 import '../providers.dart';
+import '../securite/chiffrement_file.dart';
 import 'drift_sync_repository.dart';
 import 'journal_rejets.dart';
 
@@ -14,8 +16,21 @@ import 'journal_rejets.dart';
 /// spécifique à chaque module) vit à la racine applicative
 /// (`features/coquille/application/sync_composition.dart`) : le socle ne doit
 /// pas connaître les entités métier qu'il rejoue.
+///
+/// Chiffrée par compte (REG-18) : chaque compte ne lit et n'envoie que ses
+/// propres opérations.
 final syncRepositoryProvider = Provider<DriftSyncRepository>((ref) {
-  return DriftSyncRepository(ref.watch(databaseProvider));
+  String? compte;
+  try {
+    compte = ref.watch(sessionProvider.select((s) => s?.user.id));
+  } catch (_) {
+    // Supabase non configuré (mode diagnostic, tests) : file en clair.
+  }
+  return DriftSyncRepository(
+    ref.watch(databaseProvider),
+    chiffreur: ref.watch(chiffreurFileProvider),
+    compte: compte,
+  );
 });
 
 /// Opérations en attente d'envoi et refusées, en direct (bandeau).

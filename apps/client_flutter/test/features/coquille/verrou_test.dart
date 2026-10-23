@@ -4,7 +4,6 @@ import 'package:ecoshop_client/core/db/app_database.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/core/securite/biometrie.dart';
 import 'package:ecoshop_client/core/securite/code_secret.dart';
-import 'package:ecoshop_client/core/securite/coffre_fort.dart';
 import 'package:ecoshop_client/core/securite/gardien_actions_sensibles.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/auth/domain/destination_session.dart';
