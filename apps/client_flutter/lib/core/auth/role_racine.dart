@@ -25,6 +25,18 @@ enum RoleRacine {
   bool get estPlateforme =>
       this == RoleRacine.adminGsg || this == RoleRacine.adminContenu;
 
+  /// Libellé affiché (en-tête de l'accueil, « Mon profil »).
+  String get libelle => switch (this) {
+        RoleRacine.eleve => 'Élève',
+        RoleRacine.parent => 'Parent',
+        RoleRacine.enseignant => 'Enseignant',
+        RoleRacine.direction => 'Direction',
+        RoleRacine.vendeur => 'Vendeur',
+        RoleRacine.fondateurReseau => 'Fondateur de réseau',
+        RoleRacine.adminGsg => 'Administration GSG',
+        RoleRacine.adminContenu => 'Administration du contenu',
+      };
+
   /// Résout un code issu de la base ou du JWT en [RoleRacine].
   static RoleRacine? depuisCode(String? code) {
     for (final role in RoleRacine.values) {

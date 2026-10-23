@@ -11,6 +11,7 @@ class Etablissement {
     this.fuseauHoraire = 'Africa/Conakry',
     this.couleurIdentite,
     this.logoChemin,
+    this.roleDansEtablissement,
   });
 
   factory Etablissement.depuisJson(Map<String, dynamic> json) {
@@ -25,6 +26,7 @@ class Etablissement {
       fuseauHoraire: json['fuseau_horaire'] as String? ?? 'Africa/Conakry',
       couleurIdentite: json['couleur_identite'] as String?,
       logoChemin: json['logo_chemin'] as String?,
+      roleDansEtablissement: json['role_dans_etablissement'] as String?,
     );
   }
 
@@ -46,6 +48,11 @@ class Etablissement {
   final String? couleurIdentite;
   final String? logoChemin;
 
+  /// Rôle du compte connecté dans cet établissement (`etablissements_membres`),
+  /// qui peut différer de son rôle principal : un parent invité comme
+  /// enseignant, par exemple.
+  final String? roleDansEtablissement;
+
   /// Même forme que la ligne lue par [Etablissement.depuisJson] (copie
   /// locale, REG-18).
   Map<String, dynamic> versJson() => {
@@ -59,6 +66,7 @@ class Etablissement {
         'fuseau_horaire': fuseauHoraire,
         'couleur_identite': couleurIdentite,
         'logo_chemin': logoChemin,
+        'role_dans_etablissement': roleDansEtablissement,
       };
 
   /// Libellé secondaire affiché sous le nom dans les listes.

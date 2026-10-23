@@ -16,7 +16,11 @@ import 'ajouter_enfant_sheet.dart';
 /// rendu que pour un compte parent — invisible et sans coût pour les autres
 /// rôles.
 class SelecteurEnfant extends ConsumerWidget {
-  const SelecteurEnfant({super.key});
+  const SelecteurEnfant({super.key, this.avecAjouter = true});
+
+  /// Faux dans l'en-tête de l'accueil, qui porte déjà le bouton « Ajouter »
+  /// sur la ligne du nom.
+  final bool avecAjouter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,6 +39,7 @@ class SelecteurEnfant extends ConsumerWidget {
             .whereType<FicheEleve>()
             .toList(growable: false);
         final actif = ref.watch(enfantActifProvider);
+        if (!avecAjouter && fiches.isEmpty) return const SizedBox.shrink();
 
         return Container(
           height: 88,
@@ -50,7 +55,7 @@ class SelecteurEnfant extends ConsumerWidget {
                   onTap: () =>
                       ref.read(enfantSelectionneProvider.notifier).state = fiche,
                 ),
-              _PuceAjouter(onTap: () => afficherAjouterEnfant(context, ref)),
+              if (avecAjouter) _PuceAjouter(onTap: () => afficherAjouterEnfant(context, ref)),
             ],
           ),
         );

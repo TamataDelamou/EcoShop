@@ -58,7 +58,6 @@ import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart
 import '../../themes/presentation/ecran_identite_visuelle.dart';
 import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
 import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
-import '../../themes/application/theme_providers.dart';
 import '../../scolarite/presentation/ecran_creation_inscription.dart';
 import '../../scolarite/presentation/ecran_parametres_financiers.dart';
 import '../../scolarite/presentation/ecran_reinscription.dart';
@@ -68,7 +67,6 @@ import '../../bibliotheque/presentation/ecran_bibliotheque.dart';
 import '../../bibliotheque/presentation/ecran_bibliotheque_famille.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
-import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
 import '../../transport/application/transport_providers.dart';
 import '../../transport/presentation/ecran_suivi_transport.dart';
 import '../../transport/presentation/ecran_transport_chauffeur.dart';
@@ -77,6 +75,7 @@ import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
 import '../application/session_logout.dart';
 import '../application/sync_composition.dart';
+import 'entete_utilisateur.dart';
 
 /// Onglet de la coquille applicative.
 ///
@@ -189,7 +188,6 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
         // uniquement l'identité de l'app + les raccourcis globaux.
         title: const Text('EcoShop'),
         actions: [
-          const _IndicateurEtablissement(),
           if (profil != null)
             IconButton(
               tooltip: 'Notifications',
@@ -215,7 +213,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
           const _BandeauHorsLigne(),
           // Notifications push : rattachement du téléphone, bandeau, ouverture.
           if (Env.estConfigure && profil != null) EcouteurPush(key: ValueKey(profil.id), profilId: profil.id),
-          const SelecteurEnfant(),
+          // En-tête : nom, rôle utilisé, établissement actif ; enfants du parent.
+          const EnteteUtilisateur(),
           Expanded(
             child: large
                 ? Row(
@@ -286,42 +285,6 @@ class _BandeauHorsLigne extends ConsumerWidget {
                 'Hors ligne — vos saisies seront synchronisées au retour du réseau.',
                 style: TextStyle(color: schema.onTertiaryContainer),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Rappel de l'établissement actif dans la barre d'application.
-class _IndicateurEtablissement extends ConsumerWidget {
-  const _IndicateurEtablissement();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final etablissement = ref.watch(etablissementActifProvider);
-    if (etablissement == null) return const SizedBox.shrink();
-    // Logo de l'établissement (REG-07 B), à côté de son nom.
-    final logoUrl = ref.watch(identiteEtablissementProvider).logoUrl;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (logoUrl != null) ...[
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: Colors.transparent,
-                backgroundImage: NetworkImage(logoUrl),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              etablissement.nom,
-              style: Theme.of(context).textTheme.labelLarge,
             ),
           ],
         ),
@@ -528,7 +491,7 @@ class _VueProfil extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: const Text('Rôle'),
-          subtitle: Text(p.roleRacine?.code ?? 'non défini'),
+          subtitle: Text(p.roleRacine?.libelle ?? 'Non défini'),
         ),
         ListTile(
           leading: const Icon(Icons.public_outlined),

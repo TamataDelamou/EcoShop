@@ -234,8 +234,23 @@ class SupabaseAuthRepository implements AuthRepository {
       // RLS restreint déjà la table aux établissements dont l'appelant est
       // membre actif : aucun filtre client n'est nécessaire ni suffisant.
       final lignes = await _client.from('etablissements').select().order('nom');
+      // Rôle du compte dans chaque établissement (ses propres rattachements,
+      // lisibles par RLS) : l'en-tête affiche le rôle utilisé.
+      final uid = _client.auth.currentUser?.id;
+      final roles = <String, String>{};
+      if (uid != null) {
+        final membres = await _client
+            .from('etablissements_membres')
+            .select('etablissement_id, role_dans_etablissement')
+            .eq('profile_id', uid)
+            .eq('actif', true)
+            .isFilter('deleted_at', null);
+        for (final m in membres) {
+          roles[m['etablissement_id'] as String] = m['role_dans_etablissement'] as String;
+        }
+      }
       return lignes
-          .map((l) => Etablissement.depuisJson(l))
+          .map((l) => Etablissement.depuisJson({...l, 'role_dans_etablissement': roles[l['id']]}))
           .toList(growable: false);
     });
   }
