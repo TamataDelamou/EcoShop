@@ -162,6 +162,25 @@ void main() {
     expect(find.byType(CoquilleApp), findsOneWidget);
   });
 
+  testWidgets('l’icône de profil ouvre directement « Mon profil », sans menu', (tester) async {
+    // Vendeur : sa liste « Mon profil » ne lit pas la scolarité (Supabase).
+    await monter(
+      tester,
+      session: true,
+      faux: FauxAuthRepository(profil: profilTest(role: RoleRacine.vendeur)),
+    );
+
+    await tester.tap(find.byKey(const Key('raccourci_profil')));
+    await tester.pumpAndSettle();
+
+    // Aucun menu intermédiaire : on est dans la liste « Mon profil »…
+    expect(find.byType(PopupMenuItem<String>), findsNothing);
+    expect(find.byKey(const Key('profil_telephone')), findsOneWidget);
+    // … et « Se déconnecter » n'y apparaît qu'une fois, en bas de la liste.
+    await tester.scrollUntilVisible(find.text('Se déconnecter'), 300, scrollable: find.byType(Scrollable).last);
+    expect(find.text('Se déconnecter'), findsOneWidget);
+  });
+
   testWidgets('la coquille n’expose que les onglets du rôle', (tester) async {
     await monter(
       tester,

@@ -326,37 +326,28 @@ class _IndicateurEtablissement extends ConsumerWidget {
   }
 }
 
-/// Raccourci avatar/menu profil compact (TopBar enrichi, D1) — ouvre l'onglet
-/// Profil ou déclenche la déconnexion (`session_logout.dart`, mécanisme déjà
-/// existant, jamais dupliqué ici). Pas de photo de profil dans `Profil` :
-/// avatar à initiales, dérivé de `nomAffiche` (déjà robuste au repli sur
-/// l'identifiant canonique si aucun nom n'est renseigné).
-class _RaccourciAvatar extends ConsumerWidget {
+/// Raccourci avatar (TopBar enrichi, D1) : ouvre directement « Mon profil ».
+/// La déconnexion se trouve seulement en bas de cette liste : pas de
+/// déconnexion d'un geste depuis la barre du haut. Pas de photo de profil
+/// dans `Profil` : avatar à initiales, dérivé de `nomAffiche` (déjà robuste
+/// au repli sur l'identifiant canonique si aucun nom n'est renseigné).
+class _RaccourciAvatar extends StatelessWidget {
   const _RaccourciAvatar({required this.profil, required this.onOuvrirProfil});
 
   final Profil profil;
   final VoidCallback onOuvrirProfil;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      tooltip: 'Mon compte',
-      onSelected: (valeur) {
-        if (valeur == 'profil') onOuvrirProfil();
-        if (valeur == 'deconnexion') ref.deconnecterEtPurgerDonneesLocales();
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'profil', child: Text('Mon profil')),
-        PopupMenuItem(value: 'deconnexion', child: Text('Se déconnecter')),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: CircleAvatar(
-          radius: 16,
-          child: Text(
-            _initiales(profil.nomAffiche),
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-          ),
+  Widget build(BuildContext context) {
+    return IconButton(
+      key: const Key('raccourci_profil'),
+      tooltip: 'Mon profil',
+      onPressed: onOuvrirProfil,
+      icon: CircleAvatar(
+        radius: 16,
+        child: Text(
+          _initiales(profil.nomAffiche),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
         ),
       ),
     );
