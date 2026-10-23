@@ -21,50 +21,16 @@ class EcranPreferencesApparence extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final modeAsync = ref.watch(themeModeProvider);
     final variante = ref.watch(themeVariantProvider);
     final palette = context.palette;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Apparence')),
+      appBar: AppBar(title: const Text('Langue et affichage')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Luminosité', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Card(
-            child: modeAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (_, _) => const ListTile(
-                title: Text('Préférence indisponible — mode système appliqué'),
-              ),
-              data: (mode) => RadioGroup<ThemeMode>(
-                groupValue: mode,
-                onChanged: (m) => _definir(ref, m),
-                child: const Column(
-                  children: [
-                    RadioListTile<ThemeMode>(
-                      title: Text('Clair'),
-                      value: ThemeMode.light,
-                    ),
-                    RadioListTile<ThemeMode>(
-                      title: Text('Sombre'),
-                      value: ThemeMode.dark,
-                    ),
-                    RadioListTile<ThemeMode>(
-                      title: Text('Système'),
-                      subtitle: Text('Suit le réglage de l\'appareil'),
-                      value: ThemeMode.system,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
+          // Clair, sombre ou automatique : dans la barre du haut
+          // (`BoutonApparence`), seul endroit où il se règle.
           Text('Charte graphique', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Card(
@@ -97,11 +63,6 @@ class EcranPreferencesApparence extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  void _definir(WidgetRef ref, ThemeMode? mode) {
-    if (mode == null) return;
-    ref.read(themeModeProvider.notifier).definir(mode);
   }
 
   static String _libelleVariante(AppThemeVariant variante) => switch (variante) {

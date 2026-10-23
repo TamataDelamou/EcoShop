@@ -71,6 +71,7 @@ import '../../transport/application/transport_providers.dart';
 import '../../transport/presentation/ecran_suivi_transport.dart';
 import '../../transport/presentation/ecran_transport_chauffeur.dart';
 import '../../transport/presentation/ecran_transport_direction.dart';
+import '../../themes/presentation/bouton_apparence.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import '../../vie_scolaire/presentation/ecran_alertes_decrochage.dart';
 import '../application/session_logout.dart';
@@ -206,6 +207,7 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                 if (i >= 0) setState(() => _index = i);
               },
             ),
+          const BoutonApparence(),
         ],
       ),
       body: Column(
@@ -503,9 +505,10 @@ class _VueProfil extends ConsumerWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.dark_mode_outlined),
-          title: const Text('Apparence'),
-          subtitle: const Text('Clair, sombre, système'),
+          leading: const Icon(Icons.translate_outlined),
+          key: const Key('menu_langue_affichage'),
+          title: const Text('Langue et affichage'),
+          subtitle: const Text('Choisissez la langue, la taille du texte et l’ambiance'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(

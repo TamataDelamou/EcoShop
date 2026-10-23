@@ -29,32 +29,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('rendu initial : système sélectionné par défaut, charte francophone_cfa affichée', (tester) async {
+  testWidgets('charte francophone_cfa affichée ; le clair/sombre n’est plus ici (barre du haut)', (tester) async {
     await monter(tester, overrides: [
       etablissementActifProvider.overrideWithValue(null),
       paysPedagogiquesProvider.overrideWith((ref) async => const []),
     ]);
 
-    final radioSysteme = tester.widget<RadioListTile<ThemeMode>>(
-      find.widgetWithText(RadioListTile<ThemeMode>, 'Système'),
-    );
-    expect(radioSysteme.value, ThemeMode.system);
     expect(find.textContaining('Francophone CFA'), findsOneWidget);
-  });
-
-  testWidgets('bascule vers Sombre : persiste le choix et redevient sélectionné après rechargement', (tester) async {
-    await monter(tester, overrides: [
-      etablissementActifProvider.overrideWithValue(null),
-      paysPedagogiquesProvider.overrideWith((ref) async => const []),
-    ]);
-
-    await tester.tap(find.widgetWithText(RadioListTile<ThemeMode>, 'Sombre'));
-    await tester.pumpAndSettle();
-
-    // Persisté dans le store hors-ligne partagé (CacheEntries / domaine 'preferences').
-    final container = ProviderContainer(overrides: [databaseProvider.overrideWithValue(db)]);
-    addTearDown(container.dispose);
-    expect(await container.read(themeModeProvider.future), ThemeMode.dark);
+    expect(find.text('Langue et affichage'), findsOneWidget);
+    expect(find.byType(RadioListTile<ThemeMode>), findsNothing);
   });
 
   testWidgets('affiche la charte anglophone_waec quand l\'établissement est au Ghana', (tester) async {
