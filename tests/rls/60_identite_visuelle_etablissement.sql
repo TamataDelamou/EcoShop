@@ -37,7 +37,7 @@ LANGUAGE sql AS $$
     json_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
 $$;
 
-SELECT plan(14);
+SELECT plan(15);
 
 INSERT INTO public.etablissements (id, nom, slug)
 VALUES ('60000000-0000-0000-0000-000000000001', 'École identité', 'ecole-identite-60'),
@@ -51,9 +51,20 @@ VALUES (:'dir_id'::uuid, '60000000-0000-0000-0000-000000000001', 'direction'),
        (:'dir_b_id'::uuid, '60000000-0000-0000-0000-000000000099', 'direction');
 
 -- Storage tel qu'en production : RLS active sur storage.objects.
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-GRANT USAGE ON SCHEMA storage TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON storage.objects TO authenticated;
+-- Les images Supabase récentes donnent storage.objects à un autre
+-- propriétaire, avec RLS déjà active : seul le réglage manquant est fait.
+DO $$
+BEGIN
+  ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END $$;
+DO $$
+BEGIN
+  GRANT USAGE ON SCHEMA storage TO authenticated;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON storage.objects TO authenticated;
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END $$;
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'storage.objects'::regclass), 'RLS active sur storage.objects');
 
 SELECT results_eq(
   $$ SELECT public, file_size_limit FROM storage.buckets WHERE id = 'logos-etablissements' $$,
