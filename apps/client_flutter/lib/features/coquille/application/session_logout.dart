@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
+import '../../cgu/application/cgu_providers.dart';
 import '../../communication/prototype/application/communication_locale_providers.dart';
 import '../../inscription_en_ligne/application/inscription_en_ligne_providers.dart';
 import '../../pointage/application/pointage_providers.dart';
@@ -29,25 +33,32 @@ import '../../transport/application/transport_providers.dart';
 /// sont déjà correctement soumis aux RLS serveur à la prochaine
 /// synchronisation et ne portent pas ce risque de fuite entre comptes —
 /// périmètre de ce patch volontairement limité au prototype local concerné.
+///
+/// Hors connexion d'abord : la session et les données de l'appareil sont
+/// effacées tout de suite, sans attendre le réseau. Ce qui demande le réseau
+/// (retrait du téléphone des notifications push, oubli du compte Google ;
+/// la révocation de la session, voir [AuthRepository.deconnecter]) part en
+/// arrière-plan, chacun avec un délai court.
 Future<void> _deconnecterEtPurgerDonneesLocales({
   required T Function<T>(ProviderListenable<T> provider) lire,
   required void Function(ProviderOrFamily provider) invalider,
 }) async {
+  final auth = lire(authRepositoryProvider);
+  // Lu avant la fermeture : les appels en arrière-plan partent au nom du
+  // compte qui se déconnecte.
+  final jetonAcces = auth.jetonAcces;
+  final push = _lireSansEchec(() => lire(servicePushProvider));
+  final google = _lireSansEchec(() => lire(connexionGoogleProvider));
+
+  await auth.deconnecter();
+
   // Notifications push : ce téléphone ne reçoit plus celles du compte
-  // (tablette partagée, téléphone prêté). Avant la déconnexion, tant que le
-  // serveur reconnaît encore le compte.
-  try {
-    await lire(servicePushProvider)?.detacher();
-  } catch (_) {
-    // Push indisponible : rien à détacher.
-  }
-  await lire(authRepositoryProvider).deconnecter();
+  // (tablette partagée, téléphone prêté). Sans réseau, la désinscription du
+  // téléphone suffit (voir ServicePush.detacher).
+  _enArrierePlan(push?.detacher(jetonAcces: jetonAcces));
   // Google (REG-16) : la prochaine connexion repropose le choix du compte.
-  try {
-    await lire(connexionGoogleProvider).oublier();
-  } catch (_) {
-    // Google indisponible : rien à oublier.
-  }
+  _enArrierePlan(google?.oublier());
+
   await lire(communicationLocaleRepositoryProvider).purgerTout();
   // Comptabilité gardée pour le hors connexion (REG-03 C7) : données des
   // donateurs, états, pièces — jamais visibles du compte suivant.
@@ -90,6 +101,26 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   invalider(profilProvider);
   invalider(ficheLieeProvider);
   invalider(mesEtablissementsProvider);
+  invalider(cguStatutProvider);
+}
+
+/// Délai maximum d'un appel réseau fait en arrière-plan à la déconnexion.
+const delaiArrierePlanDeconnexion = Duration(seconds: 10);
+
+T? _lireSansEchec<T>(T Function() lire) {
+  try {
+    return lire();
+  } catch (_) {
+    // Service indisponible sur cet appareil : rien à faire de ce côté.
+    return null;
+  }
+}
+
+/// Lance [tache] sans l'attendre ; son échec ou sa lenteur ne retient jamais
+/// la déconnexion.
+void _enArrierePlan(Future<void>? tache) {
+  if (tache == null) return;
+  unawaited(tache.timeout(delaiArrierePlanDeconnexion).then((_) {}, onError: (Object _) {}));
 }
 
 extension DeconnexionRef on Ref {

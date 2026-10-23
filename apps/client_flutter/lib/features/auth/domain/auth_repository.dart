@@ -80,6 +80,13 @@ abstract interface class AuthRepository {
   /// Sélectionne l'établissement actif (RPC `definir_etablissement_actif`).
   Future<void> definirEtablissementActif(String etablissementId);
 
-  /// Ferme la session.
+  /// Jeton d'accès de la session ouverte, ou null. Lu juste avant la
+  /// déconnexion, pour les derniers appels faits au nom du compte (retrait
+  /// du téléphone des notifications push).
+  String? get jetonAcces;
+
+  /// Ferme la session **sur l'appareil, tout de suite** ; le serveur est
+  /// prévenu en arrière-plan, avec un délai court. Ne lève pas : sans
+  /// réseau, la session de l'appareil est fermée quand même.
   Future<void> deconnecter();
 }

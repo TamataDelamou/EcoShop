@@ -89,7 +89,7 @@ void main() {
           if (!serveurJoignable) throw Exception('réseau');
           appelsServeur.add('enregistrer $id $plateforme');
         },
-        retirer: (id) async {
+        retirer: (id, _) async {
           if (!serveurJoignable) throw Exception('réseau');
           appelsServeur.add('retirer $id');
         },

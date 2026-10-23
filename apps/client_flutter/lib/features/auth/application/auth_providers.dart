@@ -113,6 +113,9 @@ void _invaliderSession(void Function(ProviderOrFamily) invalider) {
   invalider(profilProvider);
   invalider(ficheLieeProvider);
   invalider(mesEtablissementsProvider);
+  // Le statut CGU ne dépend que du compte : relu pour le compte qui vient
+  // d'ouvrir sa session, jamais hérité du précédent.
+  invalider(cguStatutProvider);
 }
 
 extension RafraichirSessionRef on Ref {

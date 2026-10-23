@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/role_racine.dart';
@@ -201,8 +203,20 @@ class SupabaseAuthRepository implements AuthRepository {
     );
   }
 
+  /// Au-delà, on n'attend plus la révocation de la session par le serveur.
+  static const delaiServeurDeconnexion = Duration(seconds: 5);
+
   @override
-  Future<void> deconnecter() => _executer(() => _client.auth.signOut());
+  String? get jetonAcces => _client.auth.currentSession?.accessToken;
+
+  @override
+  Future<void> deconnecter() async {
+    // gotrue efface la session de l'appareil avant d'appeler le serveur :
+    // seule la révocation attend le réseau, et on ne l'attend pas. Sans
+    // réseau, le jeton d'accès expire de lui-même (une heure au plus).
+    final revocation = _client.auth.signOut();
+    unawaited(revocation.timeout(delaiServeurDeconnexion).then((_) {}, onError: (Object _) {}));
+  }
 
   /// Lien profond de retour du lien magique (déclaré dans `config.toml`).
   static const String _redirectionLien = 'io.gsg.ecoshop://login-callback';

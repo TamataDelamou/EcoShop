@@ -137,6 +137,9 @@ class FauxAuthRepository implements AuthRepository {
   }
 
   @override
+  String? get jetonAcces => profil == null ? null : 'jeton-acces-test';
+
+  @override
   Future<void> deconnecter() async {
     appels.add('deconnecter');
     profil = null;

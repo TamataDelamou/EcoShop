@@ -24,6 +24,11 @@ final servicePushProvider = Provider<ServicePush?>((ref) {
       'enregistrer_jeton_push',
       params: {'p_jeton': identifiant, 'p_plateforme': plateforme},
     ),
-    retirer: (identifiant) => client.rpc<dynamic>('retirer_jeton_push', params: {'p_jeton': identifiant}),
+    retirer: (identifiant, jetonAcces) async {
+      final appel = client.rpc<dynamic>('retirer_jeton_push', params: {'p_jeton': identifiant});
+      // À la déconnexion, la session est déjà fermée sur l'appareil : le
+      // retrait part au nom du compte avec le jeton lu juste avant.
+      await (jetonAcces == null ? appel : appel.setHeader('Authorization', 'Bearer $jetonAcces'));
+    },
   );
 });

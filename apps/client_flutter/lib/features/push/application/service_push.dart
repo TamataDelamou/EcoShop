@@ -23,7 +23,9 @@ class ServicePush {
   final MessageriePush messagerie;
   final CacheDocumentStore memoire;
   final Future<void> Function(String identifiant, String plateforme) enregistrer;
-  final Future<void> Function(String identifiant) retirer;
+  /// [jetonAcces] : celui du compte, lu avant la fermeture de la session
+  /// (l'appel part quand elle est déjà fermée sur l'appareil).
+  final Future<void> Function(String identifiant, String? jetonAcces) retirer;
   final String plateforme;
   final DateTime Function() _maintenant;
 
@@ -57,12 +59,12 @@ class ServicePush {
   /// Le serveur est prévenu s'il est joignable ; dans tous les cas le
   /// téléphone est désinscrit du service push, et le serveur l'oublie au
   /// premier envoi refusé.
-  Future<void> detacher() async {
+  Future<void> detacher({String? jetonAcces}) async {
     final connu = await memoire.lireDocument(_type, _cle);
     final identifiant = connu?['identifiant'] as String?;
     if (identifiant != null) {
       try {
-        await retirer(identifiant).timeout(const Duration(seconds: 5));
+        await retirer(identifiant, jetonAcces).timeout(const Duration(seconds: 5));
       } catch (_) {
         // Hors connexion : la désinscription ci-dessous suffit.
       }
