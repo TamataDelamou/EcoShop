@@ -15,10 +15,21 @@
          ouvert seulement (aucune localisation en arrière-plan). -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Ouverture par empreinte ou visage (REG-18), facultative : sans cette
+         autorisation, Android refuse la lecture biométrique. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Aucune sauvegarde ni transfert vers un autre appareil (REG-18) : les
+         clés du Keystore ne quittent jamais ce téléphone, des données
+         restaurées sans elles seraient illisibles (« Failed to unwrap key ») ;
+         et la base locale (copie du profil, file d'envoi) ne part pas dans
+         Google Drive. Un nouveau téléphone se connecte par e-mail ou Google. -->
     <application
         android:label="EcoShop"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/regles_extraction_donnees">
         <activity
             android:name=".MainActivity"
             android:exported="true"
