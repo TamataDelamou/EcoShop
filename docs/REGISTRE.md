@@ -34,6 +34,7 @@ attendue), `clos`.
 | REG-15 | M17 — Bibliothèque physique (cahier ch. 25) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; bibliothèque numérique (ch. 26) à venir |
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
+| REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23) — à vérifier sur un téléphone Android ; acceptation des invitations dans l'application à arbitrer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1065,4 +1066,90 @@ le 2026-10-22 — migration `…1553`, test `80` (40).
   aussitôt « en attente d'envoi ». Règles et grille : en ligne seulement.
 - **Écrans** : pilotage du réseau (icônes « Règles » et « Transferts »),
   espace de l'école membre (« Règles du réseau », « Transferts d'élèves »).
+
+## REG-18 — Sécurité d'accès : inscription en étapes, code secret, identifiant EcoShop
+
+**Priorité** : P0 (premier essai de l'APK de production, nuit du
+2026-10-22 au 23 : un téléphone laissé sans surveillance donnait accès au
+compte sans aucune vérification). **Statut** : livré le 2026-10-23 —
+proposition validée `docs/propositions/REG-18_SECURITE_ACCES.md`
+(`44d6fcc`) ; cahier de conception §5.12.
+
+- **Partie A, défauts de l'APK** : connexion Google et code par e-mail
+  bloqués sur le chargement, déconnexion lente sans réseau (`4959888`),
+  bouton Google conforme aux règles de Google (`48fc385`), « Valider » ne
+  renvoie plus un code accepté (`dde131e`).
+- **Serveur** (`84e3062`, migrations `…1554` à `…1556`, tests `81` à
+  `83`, Edge Function `connexion_identifiant` et ses tests Deno) :
+  identifiant EcoShop, `finaliser_inscription`, purge horaire des comptes
+  jamais vérifiés, plafond de liaisons, notification de la direction,
+  acceptation, refus, révocation.
+- **Partie B, inscription en étapes** (`6f86507`) : accueil « Se
+  connecter » / « Créer un compte » ; espace (élève ; parent, aussi client
+  de la boutique ; « Je représente un établissement »), nom (ou Google),
+  vérification qui seule crée le compte, téléphone, code secret,
+  récapitulatif. Saisies gardées sur le téléphone, appliquées après la
+  vérification, jamais à un compte existant.
+- **Partie C, code secret et verrou** (`f5a5591`, corrections Android
+  `a670cc7`) : code de 6 chiffres vérifié sur le téléphone,
+  empreinte ou visage facultatifs, 5 échecs → session fermée et données
+  locales purgées, délais par rôle (2 à 30 min), code à chaque action
+  sensible, contenu caché dans les applications récentes.
+- **File d'envoi chiffrée par compte** (`0fed155`) : corrige aussi un
+  défaut ancien, les envois en attente d'un compte pouvaient partir au nom
+  du compte suivant sur la même tablette.
+- **Partie D, identifiant EcoShop** (`8cb5cb0`) : `EC-XXXX-XXX`, champ
+  « E-mail ou identifiant EcoShop », adresse masquée, « Mon profil ».
+- **Partie E, liaisons** (`60e39e3`) : écran « Comptes liés aux élèves »
+  de la direction ; le parent est informé quand sa liaison attend l'école.
+- **Défauts relevés pendant les essais** : ouverture impossible sans
+  réseau, relance manuelle au retour du réseau (`0c7e935`) ; icône de
+  profil qui ouvrait un menu au lieu de « Mon profil » (`3e38b72`).
+
+**Recherche préalable et choix techniques.**
+
+- **Modèle retenu** : appareil de confiance + code local (applications de
+  mobile money), plutôt qu'un mot de passe vérifié par le serveur à chaque
+  ouverture, impossible hors connexion. NIST SP 800-63B-4 (secret
+  d'activation vérifié sur l'appareil : 6 chiffres au moins, codes
+  évidents refusés, nombre d'échecs limité) ; OWASP MASVS-AUTH (contrôle
+  local contournable sur un téléphone rooté : le serveur reste l'autorité,
+  RLS inchangées).
+- **`flutter_secure_storage` 11.2.0** (version figée) : Android Keystore
+  et iOS Keychain ; seul paquet maintenu qui couvre aussi la **biométrie
+  liée à une clé** (`BiometricPrompt` + clé du Keystore, OWASP
+  MASWE-0020) : un simple « oui » du système, comme `local_auth`, se
+  contourne par instrumentation ; ici le secret ne se déchiffre qu'après
+  une lecture biométrique forte, et la clé est annulée quand une empreinte
+  est ajoutée au téléphone.
+- **`cryptography` 2.9.0 + `cryptography_flutter` 2.3.4** (figées) :
+  PBKDF2-HMAC-SHA256 pour l'empreinte du code, AES-256-GCM pour la file
+  d'envoi, calculs confiés à Android (`javax.crypto`), rapides sur un
+  téléphone d'entrée de gamme.
+- **Point de vigilance** : la dérivation du code utilise 210 000
+  itérations ; l'OWASP (Password Storage Cheat Sheet) en recommande
+  600 000 pour PBKDF2-HMAC-SHA256 (210 000 est sa valeur pour SHA-512).
+  Pour un code de 6 chiffres, la dérivation ne fait que ralentir : la
+  vraie barrière est le Keystore (empreinte et compteur illisibles hors du
+  téléphone) et le compteur de 5 échecs. Le nombre d'itérations est gardé
+  avec chaque code : il peut être relevé sans invalider les codes
+  existants, après une mesure du temps d'ouverture sur un téléphone
+  d'entrée de gamme.
+
+**Corrections Android trouvées à la relecture** (non visibles en test) :
+autorisation `USE_BIOMETRIC` absente (l'activation de l'empreinte aurait
+échoué sur téléphone) ; sauvegarde automatique Android active (données
+protégées par le Keystore restaurées sans leur clé sur un autre téléphone,
+« Failed to unwrap key », et base locale envoyée dans Google Drive) :
+sauvegarde et transfert désactivés.
+
+**Ce qui n'existe pas encore, relevé pendant le chantier** : l'application
+n'appelle jamais `accepter_invitation` ; le personnel et les vendeurs
+invités n'ont pas de moyen, dans l'application, d'accepter leur
+invitation. À arbitrer par le porteur de projet.
+
+**À vérifier sur un téléphone Android** : création du code, empreinte,
+verrouillage après le délai, écran caché dans les applications récentes,
+captures bloquées pour le personnel (Android 12 et moins), ouverture sans
+réseau puis retour du réseau.
 

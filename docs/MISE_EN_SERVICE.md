@@ -77,7 +77,7 @@ Relancer la même commande. Le script, sans jamais afficher de secret :
 3. envoie les secrets aux fonctions ;
 4. déploie toutes les Edge Functions ;
 5. range l'adresse du projet et les secrets dans le coffre (Vault), active
-   `pg_cron` et `pg_net` et crée les **8 tâches planifiées** :
+   `pg_cron` et `pg_net` et crée les **9 tâches planifiées** :
 
    | Tâche | Fréquence |
    |---|---|
@@ -86,6 +86,7 @@ Relancer la même commande. Le script, sans jamais afficher de secret :
    | Paiements Orange Money en suspens | toutes les 5 min |
    | Absences au portail | toutes les 10 min |
    | Places d'inscription non confirmées | chaque heure |
+   | Comptes jamais vérifiés depuis plus de 24 h, inscriptions abandonnées (`purger-comptes-non-verifies`, REG-18) | chaque heure |
    | Décrochage et risque de réussite, toutes les écoles | chaque nuit, 2 h 30 |
    | Ménage des notifications (90 jours) et de l'historique des tâches (7 jours) | chaque nuit |
    | Export vers le Kernel GSG | chaque heure, seulement si son secret est fourni |
@@ -165,6 +166,26 @@ est présente, l'agent appelle le numéro, son téléphone sonne, l'agent
 confirme. Les invitations du personnel se font de préférence à l'adresse
 e-mail.
 
+### 5.4 Sécurité d'accès (REG-18) : rien à régler
+
+- **Connexion avec l'identifiant EcoShop** (`EC-XXXX-XXX`) : l'Edge
+  Function `connexion_identifiant` est déployée par le script ; elle est
+  appelée avant toute connexion, donc **sans jeton** (`verify_jwt = false`
+  dans `supabase/config.toml`). Contrôle : Supabase → Edge Functions →
+  `connexion_identifiant` → « Verify JWT » **désactivé**. Le code part avec
+  le modèle de courriel « Magic Link » (§5.2, point 4) : rien d'autre.
+- **Code secret, empreinte, délais de verrouillage** : tout se passe sur le
+  téléphone. Les délais par rôle (2 à 30 min) se changent à un seul
+  endroit, `apps/client_flutter/lib/core/securite/delais_verrouillage.dart`,
+  puis nouvelle version de l'application.
+- **Plafond de comptes parents par élève** : 2 par défaut, réglé par
+  chaque direction dans l'application (« Comptes liés aux élèves »).
+- **Changement de téléphone** : l'application n'est ni sauvegardée ni
+  transférée (les clés du téléphone n'en sortent pas). Sur le nouveau
+  téléphone, on se reconnecte par e-mail ou Google, puis on choisit un
+  nouveau code secret. Les opérations restées en attente sur l'ancien
+  téléphone ne partent que de lui : les envoyer avant de le quitter.
+
 ## 6. Construire l'application Android
 
 Prérequis : Android Studio installé (il fournit Java et `keytool`),
@@ -189,8 +210,11 @@ powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1
 
 ## 7. Contrôle final et premier établissement
 
-1. Créer son compte dans l'application (e-mail), relancer le script pour
-   le désigner administrateur GSG.
+1. Dans l'application, **Se connecter** avec l'adresse
+   `ADMIN_GSG_COURRIEL` (le compte est créé à la vérification). S'arrêter
+   sur l'écran « Encore une étape » sans rien choisir, relancer le script
+   pour le désigner administrateur GSG, puis rouvrir l'application : elle
+   demande le nom, puis le code secret.
 2. Relancer le script : toutes les lignes du contrôle de préparation
    doivent être `OK`, sauf les packs SMS tant que leurs prix ne sont pas
    fixés (écran **Crédits SMS GSG**).

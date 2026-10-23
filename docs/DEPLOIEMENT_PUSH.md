@@ -42,10 +42,19 @@ notifications. Sans ce fichier, elle fonctionne normalement, sans push.
 1. Console Firebase → ⚙ **Paramètres du projet** → **Comptes de service** →
    **Générer une nouvelle clé privée**. Un fichier JSON est téléchargé :
    c'est un secret, à ne jamais envoyer par messagerie ni courriel.
-2. Le coller **tel quel** dans les secrets du projet Supabase EcoShop,
-   sous le nom `FCM_COMPTE_SERVICE` (Supabase → Edge Functions →
-   Secrets), puis supprimer le fichier téléchargé.
-3. Vérifier que `NOTIFICATIONS_DECLENCHEUR_SECRET` est défini (le même
+2. **Avec le script de mise en service (recommandé)** : dans
+   `supabase\mise_en_service\secrets.local.env`, indiquer le **chemin** du
+   fichier à la ligne `FCM_COMPTE_SERVICE_FICHIER`, puis lancer
+   `scripts\deployer_supabase.ps1` (`docs/MISE_EN_SERVICE.md` §3 et §4).
+   Le script vérifie que c'est bien un compte de service Firebase, l'envoie
+   aux fonctions sous le nom `FCM_COMPTE_SERVICE` sans jamais l'afficher, et
+   crée lui-même la tâche `envoyer-push` (chaque minute). Ranger ensuite le
+   fichier hors du PC (ou le supprimer : une nouvelle clé se génère au
+   besoin).
+3. **Sans le script** : coller le contenu du fichier **tel quel** dans les
+   secrets du projet Supabase EcoShop sous le nom `FCM_COMPTE_SERVICE`
+   (Supabase → Edge Functions → Secrets), puis supprimer le fichier.
+   Vérifier que `NOTIFICATIONS_DECLENCHEUR_SECRET` est défini (le même
    que pour les courriels, `docs/DEPLOIEMENT_COURRIEL.md` étape 4, déjà
    rangé dans le coffre Vault), puis planifier l'envoi chaque minute dans
    l'éditeur SQL Supabase, en remplaçant `<ref>` :

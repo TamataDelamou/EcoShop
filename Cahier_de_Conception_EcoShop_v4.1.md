@@ -788,6 +788,8 @@ Le rôle Élève ou Parent est le seul point d\'entrée sans invitation préalab
 
 Pour un élève du primaire, un parcours dédié « Créer le compte de mon enfant » permet au parent de créer directement le compte élève, avec création simultanée du compte parent superviseur si celui-ci n\'existe pas déjà. Ce parcours produit d\'emblée un compte en mode élève supervisé (voir 4.3) : l\'onboarding pédagogique (référentiel pays → niveau → classe → matières → objectif quotidien, voir chapitre 6) n\'est finalisé, pour un niveau primaire, qu\'une fois le compte parent associé et actif.
 
+> ***Révision REG-18 (2026-10-23) ---** l\'espace (Élève ou Parent) et le nom sont désormais choisis **avant** la vérification de l\'adresse et appliqués après, jamais à un compte existant ; voir 5.12.*
+
 ## **5.3 Onboarding des rôles à privilège**
 
 Trois parcours distincts couvrent l\'ensemble des rôles non auto-inscriptibles :
@@ -921,6 +923,8 @@ Les attributs métier (rôle racine, poste déclaré, établissement rattaché, 
 
 -   La révocation d\'une session à distance (déconnexion forcée de tous les appareils, en cas de compte compromis) s\'appuie sur \`admin.signOut(userId, scope: \'global\')\`, disponible depuis le Backoffice GSG et depuis le profil du compte lui-même (voir 30.6).
 
+-   Sur un téléphone déjà connu, l\'application s\'ouvre avec un code secret local ou l\'empreinte, et se verrouille après un délai propre au rôle ; elle s\'ouvre aussi sans réseau (voir 5.12).
+
 ## **5.8 Récupération de compte**
 
 N\'existant sur EcoShop aucune notion de mot de passe (authentification exclusivement par code ou lien à usage unique), la récupération de compte se confond avec une nouvelle vérification : un utilisateur ayant perdu l\'accès à son appareil se réauthentifie simplement en redemandant un code sur son identifiant canonique (voir 5.4.4), qui rejoint automatiquement sa session Supabase existante. Ce choix évite par construction toute la surface de risque associée à la récupération de mot de passe (questions secrètes, liens de réinitialisation piratables).
@@ -986,6 +990,56 @@ Conformément au gabarit d\'intégration Kernel commun à tous les cahiers de co
 **Événements candidats** (non branchés au lancement, publiables sur le bus le jour où l\'intégration est activée, sans jamais bloquer le fonctionnement autonome d\'EcoShop --- KER-EVT-02) : \`compte.cree\`, \`compte.role_attribue\`, \`etablissement.valide\`, \`abonnement.active\`.
 
 **État au moment de la rédaction** --- EcoShop est, à ce jour, le seul produit du portefeuille GSG déjà en production. Pour le seul module Authentification/Identité, le présent chapitre constitue le document d\'intégration a posteriori prévu par la règle KER-INT-03 du noyau : cartographie des champs ci-dessus, bascule additive et non bloquante (KER-ID-03), sans fenêtre de service ni migration de données existantes --- les colonnes ajoutées sont nullables et inertes tant que la fédération n\'est pas explicitement activée. L\'intégration des autres briques du noyau (Referential Engine, bus d\'événements, audit) reste hors périmètre de cette révision et ferait l\'objet d\'une décision et d\'une documentation dédiées ultérieures, conformément aux règles KER-VIS-06 et KER-INT-03.
+
+## **5.12 Sécurité d\'accès : inscription en étapes, code secret, identifiant EcoShop (REG-18)**
+
+Révision du 2026-10-23 (registre REG-18, proposition `docs/propositions/REG-18_SECURITE_ACCES.md`). Elle répond à deux constats du premier essai de l\'application de production : un téléphone laissé sans surveillance donnait accès au compte sans aucune vérification, et rien ne freinait les comptes multiples. Elle complète 5.1 à 5.9 sans les remplacer.
+
+**Accueil et inscription en étapes.** L\'écran d\'accueil propose « Se connecter » ou « Créer un compte ». La création suit cet ordre :
+
+1.  **Espace** : Élève ; Parent (aussi le client de la boutique, sans enfant inscrit) ; « Je représente un établissement » (direction ou fondateur d\'une école ou d\'un réseau).
+
+2.  **Nom et prénoms** --- ou « Continuer avec Google », qui les fournit ; ils sont alors seulement confirmés.
+
+3.  **Vérification de l\'adresse** (code à 6 chiffres par e-mail, ou Google). **Le compte n\'est créé qu\'ici** : l\'espace et le nom restent sur le téléphone (24 h au plus) et ne partent jamais avec la demande de code. Ils sont appliqués après la vérification par la fonction \`finaliser_inscription\`, qui **ne modifie jamais un compte existant**. Un compte dont l\'adresse n\'est jamais vérifiée est supprimé au bout de 24 h (tâche planifiée horaire).
+
+4.  **Numéro de téléphone** déclaré, sans SMS (REG-16), sauf pour l\'élève ; « Plus tard » possible.
+
+5.  **Code secret**, puis proposition d\'activer l\'empreinte ou le visage.
+
+6.  **Récapitulatif** : bienvenue, identifiant EcoShop, prochaine étape (lier la fiche de l\'enfant).
+
+Une adresse inconnue saisie dans « Se connecter » crée aussi le compte : l\'espace et le nom sont alors demandés juste après la vérification, pré-remplis depuis Google. Le représentant d\'un établissement ne reçoit aucun rôle : il dépose la demande d\'ouverture (5.3, REG-04) ou pilote son réseau (chapitre 28), et le rôle Direction n\'est attribué qu\'à la validation par Global Service Groupe. Le personnel et les vendeurs reçoivent leur compte par invitation ou de Global Service Groupe : « Se connecter » avec l\'adresse fournie, puis nom et prénoms demandés une fois s\'ils manquent. Les comptes créés avant cette révision ne repassent pas par l\'inscription : à la prochaine ouverture, ils reçoivent leur identifiant et créent leur code secret.
+
+**Code secret et verrouillage.** On prouve son identité **une fois par téléphone** (code e-mail ou Google). Ensuite l\'application s\'ouvre avec un **code secret de 6 chiffres**, vérifié sur le téléphone, sans réseau, ou avec l\'empreinte ou le visage. Ce modèle, celui des applications de mobile money, est préféré à un mot de passe vérifié par le serveur à chaque ouverture, qui ne fonctionnerait pas hors connexion (35.2).
+
+  ---------------------------------------------------------------------------------------------------------------------
+  **Règle**                    **Valeur**
+  ---------------------------- ----------------------------------------------------------------------------------------
+  Code                         6 chiffres ; suites et répétitions évidentes, codes trop courants et date de naissance refusés (NIST SP 800-63B-4)
+
+  Échecs                       5 codes faux de suite : session fermée sur ce téléphone, données locales purgées, reconnexion par e-mail ou Google puis nouveau code
+
+  Code oublié                  nouvelle vérification par e-mail ou Google, puis nouveau code
+
+  Actions sensibles            code ou empreinte **à chaque fois** : paiements, encaissements, écritures et clôtures comptables, publication des notes, proclamation, décisions de Global Service Groupe, changement de numéro
+
+  Contenu caché                jamais visible derrière le verrou ni dans la liste des applications récentes ; captures d\'écran bloquées pour le personnel avant Android 13
+
+  Hors connexion               tout fonctionne sans réseau
+  ---------------------------------------------------------------------------------------------------------------------
+
+Délai de verrouillage après passage en arrière-plan, selon le rôle (le plus court s\'il y en a plusieurs) : administration GSG et contenu 2 min ; direction, fondateur de réseau et vendeur 5 min ; enseignant 15 min ; parent et élève 30 min. Ces valeurs sont écrites en un seul endroit du code client.
+
+**Exigences techniques.** Le code n\'est jamais gardé : seule son empreinte (PBKDF2-HMAC-SHA256 salée), avec le compteur d\'échecs, est rangée dans le stockage protégé du système (Android Keystore, iOS Keychain), compté **avant** la vérification. L\'empreinte digitale est liée à une clé biométrique forte du Keystore (OWASP MASWE-0020), annulée quand une empreinte est ajoutée au téléphone. L\'application ne se sauvegarde pas et ne se transfère pas vers un autre appareil : un nouveau téléphone repasse par la vérification. Le verrou protège un téléphone laissé sans surveillance ; il n\'est pas un contrôle de droits. Un téléphone rooté peut le contourner : le serveur reste la seule autorité (RLS inchangées, 34.1).
+
+**Opérations en attente d\'envoi.** Les opérations faites sans réseau sont chiffrées par compte (AES-256-GCM, clé du compte dans le Keystore, contenu lié au compte). Un compte ne lit, ne compte et n\'envoie que les siennes ; celles d\'un autre compte restent intactes sur le téléphone et partent à son retour. Elles survivent à la déconnexion et aux 5 codes faux.
+
+**Ouverture hors connexion.** Le profil, les établissements, la liaison de fiche et l\'état des CGU sont gardés sur le téléphone : l\'application s\'ouvre sans réseau, puis les relit en arrière-plan, au retour du réseau et toutes les 30 secondes tant qu\'une lecture a échoué. Ces copies servent l\'affichage seulement et sont effacées à la déconnexion.
+
+**Identifiant EcoShop.** Chaque compte reçoit, à sa création, un identifiant court, propre à EcoShop (pas un identifiant GSG commun), de forme \`EC-XXXX-XXX\` : 6 caractères de l\'alphabet de Crockford (sans I, L, O, U) et un caractère de contrôle (Luhn mod 32), qui repère une faute de frappe sur le téléphone. Il n\'est jamais modifié ni réattribué. Affiché et copiable dans « Mon profil », utile au guichet de l\'école, distinct du matricule. Le champ de connexion accepte « E-mail ou identifiant EcoShop » : avec un identifiant, le serveur envoie le code à l\'adresse du compte et l\'écran n\'en montre qu\'une forme masquée (« a•••@gmail.com ») ; la réponse est la même que l\'identifiant existe ou non, et les essais sont limités. **L\'identifiant n\'est pas un secret** : la vérification par e-mail ou Google reste obligatoire.
+
+**Comptes multiples : protection à la liaison.** Empêcher les comptes multiples à l\'inscription est illusoire (une adresse se crée en deux minutes). La protection se place à la liaison compte ↔ fiche (5.9) : la direction est prévenue de chaque compte lié à un élève de son école et peut révoquer la liaison ; chaque école fixe un plafond de comptes parents par fiche (2 par défaut, de 1 à 10). Au-delà, ou après une révocation, la liaison attend l\'accord de la direction et ne donne aucun accès ; le parent en est informé. Rien ne change pour le personnel (invitation).
 
 # **6. Référentiel pédagogique multi-pays**
 
