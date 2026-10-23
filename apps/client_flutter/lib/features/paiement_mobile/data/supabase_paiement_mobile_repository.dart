@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import '../domain/paiement_mobile_repository.dart';
 import '../domain/rapprochement_mobile_money.dart';
@@ -21,7 +22,7 @@ class SupabasePaiementMobileRepository implements PaiementMobileRepository {
     required String cibleId,
     double? montant,
   }) {
-    return _executer(() async {
+    return avecCode('Payer avec Orange Money', () => _executer(() async {
       final reponse = await _client.functions.invoke(
         'initier_paiement_orange_money',
         body: {
@@ -41,7 +42,7 @@ class SupabasePaiementMobileRepository implements PaiementMobileRepository {
         montant: (corps['montant'] as num).toDouble(),
         devise: corps['devise'] as String? ?? 'GNF',
       );
-    });
+    }));
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import '../domain/agrement_vendeur.dart';
 import '../domain/validation_marketplace_repository.dart';
@@ -32,13 +33,13 @@ class SupabaseValidationMarketplaceRepository implements ValidationMarketplaceRe
     required String decision,
     String? motif,
   }) {
-    return _executer(() async {
+    return avecCode('Décision sur le vendeur', () => _executer(() async {
       await _client.rpc('valider_vendeur', params: {
         'p_commercant': commercantId,
         'p_decision': decision,
         'p_motif': motif,
       });
-    });
+    }));
   }
 
   @override

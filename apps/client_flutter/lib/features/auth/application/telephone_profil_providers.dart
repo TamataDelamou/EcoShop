@@ -5,6 +5,7 @@ import '../../../core/auth/role_racine.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/providers.dart';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../data/rejeu_telephone.dart';
 import '../domain/telephone_profil.dart';
@@ -68,6 +69,11 @@ class EtapeTelephoneNotifier extends AsyncNotifier<bool> {
   Future<TelephoneProfil> enregistrer(String telephone) async {
     final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) throw StateError('Aucun compte connecté');
+    // Changer un numéro déjà déclaré : action sensible (REG-18).
+    final actuel = ref.read(telephoneProfilProvider).valueOrNull;
+    if (actuel != null && actuel.numero != telephone) {
+      await exigerCodeSecret('Changer de numéro de téléphone');
+    }
     final store = ref.read(_storeTelephoneProvider);
 
     TelephoneProfil resultat;

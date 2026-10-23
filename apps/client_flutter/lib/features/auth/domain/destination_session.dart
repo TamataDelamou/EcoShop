@@ -26,6 +26,10 @@ enum DestinationSession {
   /// obligation légale, pas d'un confort d'ergonomie.
   cguNonAcceptees,
 
+  /// Aucun code secret sur ce téléphone pour ce compte (REG-18) : création
+  /// obligatoire, puis proposition de l'empreinte.
+  codeSecret,
+
   /// Compte sans numéro de téléphone (REG-16) : on le demande une fois
   /// connecté, par e-mail ou Google. « Plus tard » est permis.
   telephoneProfil,
@@ -64,6 +68,8 @@ abstract final class GardeSession {
     bool cguAcceptee = true,
     // Défaut `false` (= rien à demander), même raison que ci-dessus.
     bool telephoneAFournir = false,
+    // Défaut `false` (= code déjà créé ou verrou hors service).
+    bool codeSecretACreer = false,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -88,6 +94,8 @@ abstract final class GardeSession {
     if (!cguAcceptee) return DestinationSession.cguNonAcceptees;
 
     if (telephoneAFournir) return DestinationSession.telephoneProfil;
+
+    if (codeSecretACreer) return DestinationSession.codeSecret;
 
     if (!regionalisationVue) return DestinationSession.regionalisation;
 

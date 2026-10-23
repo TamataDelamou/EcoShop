@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -291,6 +292,7 @@ class InscriptionHorsLigneRepository implements InscriptionEnLigneRepository {
 
   @override
   Future<String?> finaliserAuGuichet(String demandeId, {String? classeId, double? montant, String moyen = 'especes'}) async {
+    await exigerCodeSecret('Encaisser et inscrire au guichet');
     try {
       return await _distant.finaliserAuGuichet(demandeId, classeId: classeId, montant: montant, moyen: moyen);
     } on ErreurInscriptionEnLigne catch (e) {

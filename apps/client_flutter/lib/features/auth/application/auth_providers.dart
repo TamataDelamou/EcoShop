@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../cgu/application/cgu_providers.dart';
+import '../../coquille/application/verrou_controller.dart';
 import '../../etablissement/domain/etablissement.dart';
 import '../../regionalisation/application/regionalisation_providers.dart';
 import '../data/connexion_google.dart';
@@ -76,6 +77,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final cguStatut = ref.watch(cguStatutProvider);
   final regionalisationVue = ref.watch(onboardingRegionalisationVuProvider);
   final etapeTelephone = ref.watch(etapeTelephoneProvider);
+  final verrou = ref.watch(verrouControllerProvider.select((e) => e.phase));
 
   // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
@@ -84,7 +86,8 @@ final destinationProvider = Provider<DestinationSession>((ref) {
       etablissements.isLoading ||
       cguStatut.isLoading ||
       regionalisationVue.isLoading ||
-      etapeTelephone.isLoading) {
+      etapeTelephone.isLoading ||
+      verrou == PhaseVerrou.chargement) {
     return DestinationSession.chargement;
   }
 
@@ -97,6 +100,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     cguAcceptee: statutCgu == null || statutCgu.acceptee,
     regionalisationVue: regionalisationVue.value ?? true,
     telephoneAFournir: etapeTelephone.valueOrNull ?? false,
+    codeSecretACreer: verrou == PhaseVerrou.codeACreer,
   );
 });
 

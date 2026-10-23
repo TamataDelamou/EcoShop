@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/e164_validator.dart';
+import '../../coquille/application/verrou_controller.dart';
 import '../domain/auth_repository.dart';
 import '../domain/canal_otp.dart';
 import 'auth_providers.dart';
@@ -147,6 +148,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
     }
 
     state = state.copierAvec(enCours: true, effacerErreur: true);
+    _identiteVerifiee(true);
 
     try {
       await _repo.verifierCode(
@@ -159,6 +161,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
       // rattachements plutôt que de supposer l'état d'arrivée.
       ref.rafraichirSession();
     } on ErreurAuth catch (e) {
+      _identiteVerifiee(false);
       state = state.copierAvec(enCours: false, codeErreur: e.code);
     }
   }
@@ -180,19 +183,27 @@ class ConnexionController extends Notifier<EtatConnexion> {
         return;
       }
       state = state.copierAvec(enCours: true, effacerErreur: true);
+      _identiteVerifiee(true);
       await _repo.connecterAvecGoogle(jeton);
       state = state.copierAvec(enCours: false, connecte: true);
       ref.rafraichirSession();
     } on ErreurAuth catch (e) {
+      _identiteVerifiee(false);
       state = silencieux
           ? state.copierAvec(enCours: false)
           : state.copierAvec(enCours: false, codeErreur: e.code);
     } catch (_) {
+      _identiteVerifiee(false);
       state = silencieux
           ? state.copierAvec(enCours: false)
           : state.copierAvec(enCours: false, codeErreur: 'GOOGLE_INDISPONIBLE');
     }
   }
+
+  /// Identité prouvée à l'instant (code ou Google) : le verrou (REG-18)
+  /// ouvre l'application sans redemander le code secret. Posé avant l'appel :
+  /// la session peut s'ouvrir avant que l'appel ne rende la main.
+  void _identiteVerifiee(bool valeur) => ref.read(identiteVerifieeProvider.notifier).state = valeur;
 
   /// Normalisation selon l'entrée du canal choisi.
   String? _normaliser(String saisie) {

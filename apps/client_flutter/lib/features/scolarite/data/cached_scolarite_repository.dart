@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -254,6 +255,7 @@ class CachedScolariteRepository implements ScolariteRepository {
 
   @override
   Future<EncaissementScolarite> enregistrerEncaissement(EncaissementScolarite encaissement) async {
+    await exigerCodeSecret('Enregistrer l’encaissement');
     final cle = encaissement.id.isEmpty ? const Uuid().v4() : encaissement.id;
     final avecCle = encaissement.avecCle(cle, saisiLe: encaissement.saisiLeClient ?? DateTime.now());
     final file = _file;
@@ -274,6 +276,7 @@ class CachedScolariteRepository implements ScolariteRepository {
 
   @override
   Future<void> annulerEncaissement({required String encaissementId, required String motif}) async {
+    await exigerCodeSecret('Annuler l’encaissement');
     final file = _file;
     try {
       return await _distant.annulerEncaissement(encaissementId: encaissementId, motif: motif);

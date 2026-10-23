@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import '../domain/demande_etablissement.dart';
 
@@ -49,11 +50,11 @@ class SupabaseCreationEtablissementRepository implements CreationEtablissementRe
 
   @override
   Future<void> traiter({required String demandeId, required bool accepter, String? motif}) {
-    return _executer(() => _client.rpc<dynamic>('traiter_demande_etablissement', params: {
+    return avecCode('Décision sur la demande d’établissement', () => _executer(() => _client.rpc<dynamic>('traiter_demande_etablissement', params: {
           'p_demande_id': demandeId,
           'p_decision': accepter ? 'acceptee' : 'refusee',
           'p_motif': motif,
-        }));
+        })));
   }
 
   static Future<T> _executer<T>(Future<T> Function() action) async {

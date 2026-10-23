@@ -10,6 +10,7 @@ import 'core/theme/ambiance_visuelle.dart';
 import 'features/accessibilite/application/accessibilite_providers.dart';
 import 'features/accessibilite/domain/echelle_texte.dart';
 import 'features/coquille/presentation/garde_session.dart';
+import 'features/coquille/presentation/gardien_verrou.dart';
 import 'features/push/data/firebase_messagerie_push.dart';
 import 'features/themes/application/theme_providers.dart';
 
@@ -79,6 +80,7 @@ class EcoShopApp extends ConsumerWidget {
       ),
       themeMode: mode,
       debugShowCheckedModeBanner: false,
+      navigatorKey: cleNavigateurRacine,
       // Taille de texte (D4, §34.9) : appliquée globalement via le
       // `textScaler` ambiant plutôt qu'écran par écran — un seul point
       // d'application, cohérent avec tout le reste de l'app (y compris les
@@ -87,7 +89,9 @@ class EcoShopApp extends ConsumerWidget {
         final media = MediaQuery.of(context);
         return MediaQuery(
           data: media.copyWith(textScaler: TextScaler.linear(echelleTexte.facteur)),
-          child: enfant!,
+          // Verrou (REG-18) au-dessus du navigateur : il couvre aussi les
+          // pages ouvertes par-dessus l'accueil.
+          child: Env.estConfigure ? GardienVerrou(navigateur: cleNavigateurRacine, child: enfant!) : enfant!,
         );
       },
       // Sans configuration Supabase, aucun provider d'authentification ne peut

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -53,6 +54,7 @@ class PiecesHorsLigneRepository implements PiecesComptablesRepository {
 
   @override
   Future<String> enregistrer(SaisiePiece saisie) async {
+    await exigerCodeSecret('Enregistrer l’écriture comptable');
     try {
       return await _distant.enregistrer(saisie);
     } on ErreurPiecesComptables catch (e) {
@@ -70,6 +72,7 @@ class PiecesHorsLigneRepository implements PiecesComptablesRepository {
 
   @override
   Future<String> valider(String pieceId) async {
+    await exigerCodeSecret('Valider l’écriture comptable');
     try {
       return await _distant.valider(pieceId);
     } on ErreurPiecesComptables catch (e) {
@@ -120,14 +123,14 @@ class PiecesHorsLigneRepository implements PiecesComptablesRepository {
   Future<List<ExerciceComptable>> exercices(String etablissementId) => _distant.exercices(etablissementId);
 
   @override
-  Future<String> ouvrirExercice(String etablissementId, DateTime debut, DateTime fin) =>
-      _distant.ouvrirExercice(etablissementId, debut, fin);
+  Future<String> ouvrirExercice(String etablissementId, DateTime debut, DateTime fin) => avecCode('Ouvrir l’exercice comptable', () =>
+      _distant.ouvrirExercice(etablissementId, debut, fin));
 
   @override
-  Future<void> cloturerPeriode(String etablissementId, DateTime jusquAu) => _distant.cloturerPeriode(etablissementId, jusquAu);
+  Future<void> cloturerPeriode(String etablissementId, DateTime jusquAu) => avecCode('Clôturer la période comptable', () => _distant.cloturerPeriode(etablissementId, jusquAu));
 
   @override
-  Future<ResultatClotureExercice> cloturerExercice(String exerciceId) => _distant.cloturerExercice(exerciceId);
+  Future<ResultatClotureExercice> cloturerExercice(String exerciceId) => avecCode('Clôturer l’exercice comptable', () => _distant.cloturerExercice(exerciceId));
 
   @override
   Future<void> supprimerBrouillard(String pieceId) async {
@@ -141,5 +144,5 @@ class PiecesHorsLigneRepository implements PiecesComptablesRepository {
   }
 
   @override
-  Future<String> contrepasser(String pieceId, String motif, DateTime date) => _distant.contrepasser(pieceId, motif, date);
+  Future<String> contrepasser(String pieceId, String motif, DateTime date) => avecCode('Contre-passer l’écriture', () => _distant.contrepasser(pieceId, motif, date));
 }

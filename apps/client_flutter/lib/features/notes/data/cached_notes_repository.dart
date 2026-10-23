@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
@@ -174,7 +175,7 @@ class CachedNotesRepository implements NotesRepository {
   Future<Evaluation> creerEvaluation(Evaluation evaluation) => _distant.creerEvaluation(evaluation);
 
   @override
-  Future<void> publierEvaluation(String evaluationId) => _distant.publierEvaluation(evaluationId);
+  Future<void> publierEvaluation(String evaluationId) => avecCode('Publier les notes', () => _distant.publierEvaluation(evaluationId));
 
   /// Exige la connectivité, comme [creerEvaluation]/[publierEvaluation] :
   /// une action admin explicite, jamais mise en file hors-ligne.

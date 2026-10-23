@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -62,6 +63,7 @@ class DonsHorsLigneRepository implements DonsRepository {
   // -------------------------------------------------------------------------
   @override
   Future<ResultatDon> enregistrerDon(SaisieDon saisie) async {
+    await exigerCodeSecret('Enregistrer le don');
     final id = saisie.id ?? _uuid.v4();
     final avecCle = saisie.avecId(id, saisiLe: saisie.saisiLe ?? DateTime.now());
     try {
@@ -76,6 +78,7 @@ class DonsHorsLigneRepository implements DonsRepository {
 
   @override
   Future<void> annulerDon(String donId, String motif) async {
+    await exigerCodeSecret('Annuler le don');
     try {
       await _distant.annulerDon(donId, motif);
     } on ErreurDons catch (e) {
@@ -165,6 +168,7 @@ class DonsHorsLigneRepository implements DonsRepository {
     required String libelle,
     required DateTime date,
   }) async {
+    await exigerCodeSecret('Constater l’emploi des fonds');
     try {
       return await _distant.constaterEmploi(affectationId: affectationId, montant: montant, libelle: libelle, date: date);
     } on ErreurDons catch (e) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -202,7 +203,7 @@ class SupabasePointageRepository implements PointageRepository {
       );
 
   @override
-  Future<Uri> acheterPack(String etablissementId, String pack) => _executer(() async {
+  Future<Uri> acheterPack(String etablissementId, String pack) => avecCode('Acheter un pack de SMS', () => _executer(() async {
         try {
           final reponse = await _client.functions.invoke('initier_paiement_cinetpay', body: {
             'typeObjetPaye': 'pack_sms_etablissement',
@@ -217,7 +218,7 @@ class SupabasePointageRepository implements PointageRepository {
           final code = detail is Map ? (detail['error'] as String? ?? '') : '';
           throw ErreurPointage(code.isEmpty ? 'ERREUR_SERVEUR' : code);
         }
-      });
+      }));
 
   @override
   Future<ApercuRelances> apercuRelances(String etablissementId) => _lire(
@@ -266,13 +267,13 @@ class SupabasePointageRepository implements PointageRepository {
       });
 
   @override
-  Future<void> definirPack(PackSms pack) => _executer(() => _client.rpc<dynamic>('definir_pack_sms', params: {
+  Future<void> definirPack(PackSms pack) => avecCode('Fixer le prix d’un pack de SMS', () => _executer(() => _client.rpc<dynamic>('definir_pack_sms', params: {
         'p_code': pack.code,
         'p_libelle': pack.libelle,
         'p_quantite': pack.quantite,
         'p_prix': pack.prix,
         'p_actif': pack.actif,
-      }));
+      })));
 
   @override
   Future<List<({String id, String nom, String? ville, int solde})>> soldesEtablissements() => _executer(() async {
@@ -299,14 +300,14 @@ class SupabasePointageRepository implements PointageRepository {
   }
 
   @override
-  Future<int> crediter(String etablissementId, int quantite, String reference) => _executer(() async {
+  Future<int> crediter(String etablissementId, int quantite, String reference) => avecCode('Créditer des SMS', () => _executer(() async {
         final solde = await _client.rpc<dynamic>('crediter_sms', params: {
           'p_etablissement': etablissementId,
           'p_quantite': quantite,
           'p_reference': reference,
         });
         return (solde as num).toInt();
-      });
+      }));
 
   static String _iso(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

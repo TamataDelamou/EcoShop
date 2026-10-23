@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -176,13 +177,13 @@ class SupabaseReseauRepository implements ReseauRepository {
       });
 
   @override
-  Future<void> traiterDemande({required String demandeId, required bool accepter, String? motif, bool fraisRegles = false}) =>
+  Future<void> traiterDemande({required String demandeId, required bool accepter, String? motif, bool fraisRegles = false}) => avecCode('Décision sur la demande de réseau', () =>
       _executer(() => _rpc('traiter_demande_reseau', {
             'p_demande': demandeId,
             'p_accepter': accepter,
             'p_motif': motif,
             'p_frais_regles': fraisRegles,
-          }));
+          })));
 
   @override
   Future<List<ReseauVueGsg>> vueEnsemble() => _lire(

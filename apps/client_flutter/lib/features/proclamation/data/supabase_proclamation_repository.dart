@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/securite/gardien_actions_sensibles.dart';
 
 import '../domain/eleve_mention.dart';
 import '../domain/proclamation_repository.dart';
@@ -54,12 +55,12 @@ class SupabaseProclamationRepository implements ProclamationRepository {
     required String inscriptionId,
     required String mention,
   }) {
-    return _executer(() async {
+    return avecCode('Enregistrer la mention finale', () => _executer(() async {
       await _client.rpc(
         'definir_mention_finale',
         params: {'p_inscription': inscriptionId, 'p_mention': mention},
       );
-    });
+    }));
   }
 
   @override
@@ -67,12 +68,12 @@ class SupabaseProclamationRepository implements ProclamationRepository {
     required String classeId,
     required String anneeScolaireId,
   }) {
-    return _executer(() async {
+    return avecCode('Proclamer les résultats (notes verrouillées)', () => _executer(() async {
       await _client.rpc(
         'proclamer_classe',
         params: {'p_classe': classeId, 'p_annee': anneeScolaireId},
       );
-    });
+    }));
   }
 
   static Future<T> _executer<T>(Future<T> Function() action) async {

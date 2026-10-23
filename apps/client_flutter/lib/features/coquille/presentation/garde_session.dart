@@ -12,6 +12,7 @@ import '../../etablissement/presentation/ecran_selection_etablissement.dart';
 import '../../regionalisation/presentation/ecran_onboarding_regionalisation.dart';
 import '../application/session_logout.dart';
 import 'coquille_app.dart';
+import 'ecran_creation_code.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
 /// calculée par [GardeSession].
@@ -36,6 +37,7 @@ class RacineApp extends ConsumerWidget {
         const EcranSelectionEtablissement(),
       DestinationSession.cguNonAcceptees => const EcranCgu(),
       DestinationSession.telephoneProfil => const EcranTelephoneProfil(),
+      DestinationSession.codeSecret => const EcranCreationCode(),
       DestinationSession.regionalisation =>
         const EcranOnboardingRegionalisation(),
       DestinationSession.accueil => const CoquilleApp(),
