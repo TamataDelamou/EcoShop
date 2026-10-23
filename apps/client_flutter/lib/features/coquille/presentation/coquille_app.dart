@@ -11,6 +11,7 @@ import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../auth/presentation/ecran_telephones_a_confirmer.dart';
+import '../../communication/prototype/application/visibilite_prototypes.dart';
 import '../../invitations/application/invitations_providers.dart';
 import '../../invitations/presentation/ecran_invitations.dart';
 import '../../invitations/presentation/ecran_invitations_etablissement.dart';
@@ -87,31 +88,31 @@ enum OngletCoquille {
     'Accueil',
     Icons.home_outlined,
     Icons.home,
-    'Tableau de bord et indicateurs clés de votre établissement',
+    'Retrouvez l’essentiel de votre journée',
   ),
   scolarite(
     'Scolarité',
     Icons.school_outlined,
     Icons.school,
-    'Inscriptions, notes, absences et suivi de la vie scolaire',
+    'Suivez les notes, les absences et la vie scolaire',
   ),
   revision(
     'Révision',
     Icons.psychology_outlined,
     Icons.psychology,
-    'Quiz, profil de maîtrise et préparation aux examens',
+    'Révisez avec des quiz et préparez vos examens',
   ),
   boutique(
     'Boutique',
     Icons.storefront_outlined,
     Icons.storefront,
-    "Marketplace AssoShop et paiements de l'établissement",
+    'Achetez les fournitures de l’école et suivez vos commandes',
   ),
   profil(
     'Profil',
     Icons.person_outline,
     Icons.person,
-    'Votre compte, vos préférences et vos outils IA',
+    'Gérez votre compte, vos réglages et vos outils',
   );
 
   const OngletCoquille(this.libelle, this.icone, this.iconeActive, this.descriptif);
@@ -439,13 +440,13 @@ class _CorpsOnglet extends ConsumerWidget {
 
   static String _moduleAttendu(OngletCoquille onglet) => switch (onglet) {
     OngletCoquille.accueil =>
-      'Tableau de bord — livré avec le module M20 (Reporting).',
+      'Votre tableau de bord arrive bientôt. En attendant, tout est accessible depuis les autres onglets et Profil.',
     OngletCoquille.scolarite =>
-      'Scolarité, notes et vie scolaire — modules M5 à M9.',
+      'Bientôt ici : notes, absences et vie scolaire.',
     OngletCoquille.revision =>
-      'Quiz, profil de maîtrise et préparation aux examens — modules M10 à M12.',
+      'Bientôt ici : quiz et préparation aux examens.',
     OngletCoquille.boutique =>
-      'Marketplace AssoShop et paiements — modules M13 et M14.',
+      'Bientôt ici : la boutique de votre école.',
     OngletCoquille.profil => '',
   };
 }
@@ -516,7 +517,7 @@ class _VueProfil extends ConsumerWidget {
               key: const Key('profil_mes_invitations'),
               leading: Badge(label: Text('$n'), child: const Icon(Icons.mail_outline)),
               title: const Text('Mes invitations'),
-              subtitle: const Text('Rejoindre une école comme membre du personnel ou vendeur'),
+              subtitle: const Text('Rejoignez une école comme membre du personnel ou vendeur'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EcranInvitations(depuisProfil: true)),
@@ -532,7 +533,7 @@ class _VueProfil extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.public_outlined),
           title: const Text('Référentiel pédagogique CEDEAO'),
-          subtitle: const Text('Consultable hors connexion'),
+          subtitle: const Text('Explorez les programmes officiels, même sans réseau'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const EcranPaysPedagogiques()),
@@ -552,7 +553,7 @@ class _VueProfil extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.gavel_outlined),
           title: const Text('Conditions générales d\'utilisation'),
-          subtitle: const Text('Accessibles à tout moment (§34.10)'),
+          subtitle: const Text('Relisez les conditions que vous avez acceptées'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const EcranCgu()),
@@ -568,7 +569,7 @@ class _VueProfil extends ConsumerWidget {
                 leading: const Icon(Icons.auto_awesome_outlined),
                 title: Text(persona.libelle),
                 subtitle: const Text(
-                  'Assistant IA — signal, pas une décision automatisée',
+                  'Posez vos questions : l’assistant conseille, vous décidez',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
@@ -617,7 +618,7 @@ class _VueProfil extends ConsumerWidget {
                 leading: const Icon(Icons.phonelink_lock_outlined),
                 title: const Text('PARENT IA'),
                 subtitle: const Text(
-                  'Autolimitation numérique — activable par toi seul(e)',
+                  'Fixe-toi des limites de temps d’écran, que toi seul(e) peux activer',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: fiche == null
@@ -645,7 +646,7 @@ class _VueProfil extends ConsumerWidget {
                 leading: const Icon(Icons.phonelink_lock_outlined),
                 title: const Text('PARENT IA'),
                 subtitle: const Text(
-                  'Historique des restrictions — lecture seule',
+                  'Consultez les limites que votre enfant s’est fixées',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: enfant == null
@@ -672,7 +673,7 @@ class _VueProfil extends ConsumerWidget {
             key: const Key('menu_inscriptions_famille'),
             leading: const Icon(Icons.how_to_reg_outlined),
             title: const Text('Inscriptions et réinscriptions'),
-            subtitle: const Text('Réinscrire, inscrire un nouvel élève, suivre ses dossiers'),
+            subtitle: const Text('Réinscrivez votre enfant, inscrivez-en un nouveau, suivez vos dossiers'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranInscriptionsFamille()),
@@ -696,7 +697,7 @@ class _VueProfil extends ConsumerWidget {
                       key: const Key('menu_presence_jour'),
                       leading: const Icon(Icons.fact_check_outlined),
                       title: const Text('Présence au portail'),
-                      subtitle: const Text('Arrivées, absents, retards, alertes aux familles, cartes'),
+                      subtitle: const Text('Voyez qui est arrivé, repérez absents et retards, imprimez les cartes'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => EcranPresenceJour(etablissement: etablissement)),
@@ -706,7 +707,7 @@ class _VueProfil extends ConsumerWidget {
                     key: const Key('menu_portail'),
                     leading: const Icon(Icons.qr_code_scanner),
                     title: const Text('Portail : scanner les cartes'),
-                    subtitle: const Text('Téléphone ou douchette à l\'entrée — fonctionne sans réseau'),
+                    subtitle: const Text('Scannez les cartes à l’entrée, même sans réseau'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => EcranPortail(etablissementId: etablissement.id)),
@@ -716,7 +717,7 @@ class _VueProfil extends ConsumerWidget {
                     ListTile(
                       leading: const Icon(Icons.campaign_outlined),
                       title: const Text('Relancer les impayés'),
-                      subtitle: const Text('Familles en retard sur les tranches échues (push, SMS)'),
+                      subtitle: const Text('Rappelez les tranches échues aux familles, par notification ou SMS'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
@@ -743,7 +744,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_bibliotheque'),
                 leading: const Icon(Icons.local_library_outlined),
                 title: const Text('Bibliothèque'),
-                subtitle: const Text('Prêts et retours (sans réseau), catalogue, étiquettes, retards, inventaire'),
+                subtitle: const Text('Enregistrez prêts et retours, même sans réseau, et gérez le catalogue'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => EcranBibliotheque(etablissement: etablissement)),
@@ -763,8 +764,8 @@ class _VueProfil extends ConsumerWidget {
                 leading: const Icon(Icons.local_library_outlined),
                 title: const Text('Bibliothèque'),
                 subtitle: Text(p.roleRacine == RoleRacine.parent
-                    ? 'Livres empruntés par ${fiche.prenom}, catalogue, réservation'
-                    : 'Mes emprunts, catalogue, réservation'),
+                    ? 'Voyez les livres de ${fiche.prenom} et réservez-en d’autres'
+                    : 'Suivez vos emprunts et réservez des livres'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -788,7 +789,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_telephones_a_confirmer'),
                 leading: const Icon(Icons.verified_user_outlined),
                 title: const Text('Numéros à confirmer'),
-                subtitle: const Text('Parents et personnel, à leur passage'),
+                subtitle: const Text('Confirmez le numéro d’une personne présente à l’école'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -809,7 +810,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_invitations_personnel'),
                 leading: const Icon(Icons.person_add_alt_1_outlined),
                 title: const Text('Invitations du personnel'),
-                subtitle: const Text('Enseignants, administration, vendeurs'),
+                subtitle: const Text('Invitez enseignants, administration et vendeurs'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -830,7 +831,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_liaisons_comptes'),
                 leading: const Icon(Icons.link_outlined),
                 title: const Text('Comptes liés aux élèves'),
-                subtitle: const Text('Demandes en attente, liaisons récentes'),
+                subtitle: const Text('Acceptez les demandes des parents, vérifiez les liaisons récentes'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -851,7 +852,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_transport_direction'),
                 leading: const Icon(Icons.directions_bus_outlined),
                 title: const Text('Transport scolaire'),
-                subtitle: const Text('Circuits, arrêts, élèves, chauffeurs, paiements'),
+                subtitle: const Text('Organisez circuits, arrêts et chauffeurs, affectez les élèves'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -873,7 +874,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_suivi_transport'),
                 leading: const Icon(Icons.directions_bus_outlined),
                 title: Text('Bus de ${enfant.prenom}'),
-                subtitle: const Text('Où est le bus, montée et descente'),
+                subtitle: const Text('Suivez le bus, soyez prévenu(e) à la montée et à la descente'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -892,7 +893,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_chauffeur'),
                 leading: const Icon(Icons.airport_shuttle_outlined),
                 title: const Text('Conduire mon circuit'),
-                subtitle: const Text('Démarrer un trajet, scanner les élèves — fonctionne sans réseau'),
+                subtitle: const Text('Démarrez un trajet et scannez les élèves, même sans réseau'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const EcranTransportChauffeur()),
@@ -908,7 +909,7 @@ class _VueProfil extends ConsumerWidget {
             key: const Key('menu_reseaux'),
             leading: const Icon(Icons.hub_outlined),
             title: const Text("Réseau d'établissements"),
-            subtitle: const Text('Piloter un réseau, invitations, circulaires, calendrier commun'),
+            subtitle: const Text('Pilotez votre réseau : écoles, circulaires, calendrier commun'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranMesReseaux()),
@@ -928,7 +929,7 @@ class _VueProfil extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.tune_outlined),
           title: const Text('Préférences de notification'),
-          subtitle: const Text('Canaux, horaires, fréquence'),
+          subtitle: const Text('Choisissez comment et quand être prévenu(e)'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
@@ -936,7 +937,10 @@ class _VueProfil extends ConsumerWidget {
             ),
           ),
         ),
+        // Prototypes locaux non synchronisés : masqués dans la version publiée.
+        if (ref.watch(prototypesCommunicationVisiblesProvider))
         ListTile(
+          key: const Key('menu_annonces_prototype'),
           leading: const Icon(Icons.campaign_outlined),
           title: const Text('Annonces'),
           subtitle: const Text('Prototype local — non synchronisé'),
@@ -951,9 +955,10 @@ class _VueProfil extends ConsumerWidget {
             ),
           ),
         ),
-        if (p.roleRacine == RoleRacine.parent ||
-            p.roleRacine == RoleRacine.enseignant)
+        if (ref.watch(prototypesCommunicationVisiblesProvider) &&
+            (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.enseignant))
           ListTile(
+            key: const Key('menu_cahier_liaison_prototype'),
             leading: const Icon(Icons.menu_book_outlined),
             title: const Text('Cahier de liaison'),
             subtitle: const Text('Prototype local — non synchronisé'),
@@ -975,7 +980,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.insights_outlined),
                 title: const Text('Tableau de bord communication'),
-                subtitle: const Text('Taux de lecture, modèles de messages'),
+                subtitle: const Text('Mesurez la lecture de vos messages, préparez vos modèles'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -996,7 +1001,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.query_stats_outlined),
                 title: const Text('Rapports & statistiques'),
-                subtitle: const Text('Indicateurs, anomalies, recommandations'),
+                subtitle: const Text('Repérez les classes en difficulté et agissez à temps'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1132,7 +1137,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.rule_outlined),
                 title: const Text('Conflits d\'occupation'),
-                subtitle: const Text('Signal IA — à arbitrer'),
+                subtitle: const Text('Résolvez les doubles réservations de salles et d’enseignants'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1210,7 +1215,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.summarize_outlined),
                 title: const Text('Rapports de mon enfant'),
-                subtitle: const Text('Bulletins, relevés de notes'),
+                subtitle: const Text('Téléchargez les bulletins et relevés de notes de votre enfant'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: enfant == null
                     ? null
@@ -1230,7 +1235,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.summarize_outlined),
                 title: const Text('Mes rapports'),
-                subtitle: const Text('Bulletins, relevés de notes'),
+                subtitle: const Text('Téléchargez vos bulletins et relevés de notes'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: fiche == null
                     ? null
@@ -1248,7 +1253,7 @@ class _VueProfil extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.apartment_outlined),
             title: const Text('Structures & annuaire'),
-            subtitle: const Text('Campus, années, périodes, classes'),
+            subtitle: const Text('Consultez et organisez campus, années, périodes et classes'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -1264,7 +1269,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.warning_amber_outlined),
                 title: const Text('Alertes de décrochage'),
-                subtitle: const Text('Signal IA — validation humaine'),
+                subtitle: const Text('Repérez les élèves qui décrochent et décidez de la suite'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1287,7 +1292,7 @@ class _VueProfil extends ConsumerWidget {
                     leading: const Icon(Icons.badge_outlined),
                     title: const Text('Personnel & RH'),
                     subtitle: const Text(
-                      'Annuaire, contrats, congés, absences',
+                      'Gérez l’annuaire, les contrats, les congés et les absences',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
@@ -1302,7 +1307,7 @@ class _VueProfil extends ConsumerWidget {
                     leading: const Icon(Icons.insights_outlined),
                     title: const Text('Tableau de bord RH'),
                     subtitle: const Text(
-                      'Effectifs et remplacements — signal IA',
+                      'Suivez les effectifs, trouvez des remplaçants',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
@@ -1324,7 +1329,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.folder_shared_outlined),
                 title: const Text('Mon dossier RH'),
-                subtitle: const Text('Contrat, congés, absences, paie'),
+                subtitle: const Text('Consultez votre contrat, demandez un congé, suivez votre paie'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
                   final employe = await ref.read(
@@ -1357,7 +1362,7 @@ class _VueProfil extends ConsumerWidget {
                 leading: const Icon(Icons.calculate_outlined),
                 title: const Text('Comptabilité'),
                 subtitle: const Text(
-                  'Journal, grand livre, balance — supervision IA',
+                  'Tenez le journal, le grand livre et la balance, avec l’aide de l’IA',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
@@ -1378,7 +1383,7 @@ class _VueProfil extends ConsumerWidget {
                 key: const Key('menu_campagne_inscription'),
                 leading: const Icon(Icons.how_to_reg_outlined),
                 title: const Text('Inscriptions en ligne'),
-                subtitle: const Text('Campagne, dossiers des familles, places, liste d\'attente'),
+                subtitle: const Text('Ouvrez la campagne, traitez les dossiers des familles, gérez les places'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1427,7 +1432,7 @@ class _VueProfil extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.request_quote_outlined),
                     title: const Text('Paramètres financiers'),
-                    subtitle: const Text('Tarifs, paliers de paiement'),
+                    subtitle: const Text('Fixez les tarifs et les échéances de paiement'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1453,7 +1458,7 @@ class _VueProfil extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.add_business_outlined),
                     title: const Text('Ouvrir un nouvel établissement'),
-                    subtitle: const Text('Demande validée par Global Service Groupe'),
+                    subtitle: const Text('Demandez l’ouverture d’une autre école, validée par Global Service Groupe'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const EcranDemandeEtablissement()),
@@ -1462,7 +1467,7 @@ class _VueProfil extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.palette_outlined),
                     title: const Text('Identité visuelle'),
-                    subtitle: const Text("Couleur et logo de l'établissement"),
+                    subtitle: const Text('Choisissez la couleur et le logo de votre école'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1473,7 +1478,7 @@ class _VueProfil extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.phone_iphone_rounded, color: Color(0xFFFF7900)),
                     title: const Text('Paiement Orange Money'),
-                    subtitle: const Text('Activation et suivi des paiements en ligne'),
+                    subtitle: const Text('Activez les paiements en ligne et suivez-les'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1498,7 +1503,7 @@ class _VueProfil extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.storefront_outlined),
                 title: const Text('Vendeurs marketplace'),
-                subtitle: const Text('Agrément des vendeurs déjà validés par GSG'),
+                subtitle: const Text('Choisissez les vendeurs autorisés à vendre à votre école'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1530,7 +1535,7 @@ class _VueProfil extends ConsumerWidget {
             key: const Key('menu_reseaux_gsg'),
             leading: const Icon(Icons.hub_outlined),
             title: const Text("Réseaux d'établissements"),
-            subtitle: const Text('Demandes de création, réseaux, retraits à autoriser'),
+            subtitle: const Text('Validez les créations de réseaux, autorisez les retraits'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranReseauxGsg()),
@@ -1540,7 +1545,7 @@ class _VueProfil extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.sms_outlined),
             title: const Text('Crédits SMS des écoles'),
-            subtitle: const Text('Prix des packs, crédit après paiement'),
+            subtitle: const Text('Fixez le prix des packs, créditez les écoles après paiement'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranCreditsSmsGsg()),

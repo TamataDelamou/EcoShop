@@ -141,7 +141,7 @@ class _CarteRemplacement extends StatelessWidget {
       child: ListTile(
         leading: Icon(Icons.swap_horiz, color: context.palette.accent),
         title: Text('${remplacement.absentMatricule} → ${remplacement.remplacantMatricule}'),
-        subtitle: const Text('Enseignant absent → remplaçant le moins chargé'),
+        subtitle: const Text('Trouvez un remplaçant : l’enseignant le moins chargé vous est proposé'),
       ),
     );
   }

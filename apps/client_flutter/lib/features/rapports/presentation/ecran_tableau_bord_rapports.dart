@@ -119,7 +119,7 @@ class _Contenu extends ConsumerWidget {
             child: ListTile(
               leading: Icon(Icons.warning_amber_outlined, color: context.palette.accent),
               title: const Text('Anomalies statistiques'),
-              subtitle: const Text('Notes aberrantes, absentéisme excessif'),
+              subtitle: const Text('Repérez les notes anormales et l’absentéisme excessif'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -132,7 +132,7 @@ class _Contenu extends ConsumerWidget {
             child: ListTile(
               leading: Icon(Icons.lightbulb_outline, color: context.palette.primaire),
               title: const Text('Recommandations stratégiques'),
-              subtitle: const Text('Tutorat, renforcement — classes à risque'),
+              subtitle: const Text('Proposez tutorat et renforcement aux classes à risque'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -145,7 +145,7 @@ class _Contenu extends ConsumerWidget {
             child: ListTile(
               leading: Icon(Icons.description_outlined, color: context.palette.succes),
               title: const Text('Rapports générés'),
-              subtitle: const Text('Bulletins, relevés, statistiques, exports'),
+              subtitle: const Text('Téléchargez bulletins, relevés et statistiques'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(

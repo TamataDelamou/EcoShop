@@ -32,7 +32,7 @@ class SectionAccessibilite extends ConsumerWidget {
             ),
             data: (actif) => SwitchListTile(
               title: const Text('Contraste élevé'),
-              subtitle: const Text('Remplace la charte graphique par une palette à contraste maximal'),
+              subtitle: const Text('Lisez plus facilement grâce à des couleurs très contrastées'),
               value: actif,
               onChanged: (v) => ref.read(contrasteEleveProvider.notifier).definir(v),
             ),

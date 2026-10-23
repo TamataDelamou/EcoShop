@@ -35,6 +35,7 @@ attendue), `clos`.
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
+| REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **à arbitrer** — évaluation : 5 à 6 jours (annonces et cahier), 7 à 8 avec les groupes de classe |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1174,3 +1175,47 @@ verrouillage après le délai, écran caché dans les applications récentes,
 captures bloquées pour le personnel (Android 12 et moins), ouverture sans
 réseau puis retour du réseau.
 
+## REG-19 — Annonces, cahier de liaison, messagerie : brancher sur le serveur
+
+**Priorité** : P1. **Statut** : à arbitrer (évaluation du 2026-10-23). En
+attendant, les deux prototypes accessibles (annonces, cahier de liaison)
+sont masqués dans la version publiée ; la messagerie prototype n'a aucun
+point d'entrée.
+
+**Constat.** Le module M9 livré ne couvre que les notifications
+(`notifications`, préférences, journaux, modèles). Il n'existe **aucune
+table** pour les annonces ni pour le cahier de liaison. Les groupes de
+discussion de classe existent côté serveur (`groupes_discussion`,
+`messages_groupe`, `signalements_message`, sept règles de protection des
+mineurs, migration `…0901`) mais aucun écran ne les utilise, et ils
+excluent les parents par construction : ce n'est pas la messagerie
+parent ↔ école du prototype. Le prototype local ne contient rien à
+reprendre (données propres à chaque téléphone, effacées à la
+déconnexion).
+
+**Travaux, par lot (estimation en jours de travail, tests compris).**
+
+| Lot | Serveur | Application | Durée |
+|---|---|---|---|
+| Annonces (école → familles et personnel, par école ou par classe, lu / non lu) | table, lectures, RLS selon le ciblage, publication par fonction, notification push existante | lecture avec copie hors connexion, publication en file d'envoi (clé fournie par l'appareil), écran direction | 2 à 3 j |
+| Cahier de liaison (mot de l'enseignant ou de la direction aux parents d'un élève, réponse, « vu ») | tables mots et réponses, RLS par parent **confirmé** (plafond REG-18) et enseignant affecté | fil par élève, réponse hors connexion, notification | 3 j |
+| Groupes de classe (tables existantes) | à revoir seulement | écrans, modération, signalement | 2 j |
+| Messagerie privée parent ↔ enseignant | à concevoir (règles de protection, modération, heures) | conversation, hors connexion | 4 à 5 j, après décision |
+
+Annonces et cahier de liaison : **5 à 6 jours** ; avec les groupes de
+classe, **7 à 8 jours**.
+
+**Risques.**
+- **Protection des mineurs** : qui écrit à qui. Le cahier de liaison ne
+  doit joindre que les parents confirmés de l'élève ; une messagerie
+  privée adulte ↔ élève est exclue par les règles M9.
+- **Envoi en double ou perdu hors connexion** : clé fournie par
+  l'appareil et file chiffrée par compte (déjà en place).
+- **Pièces jointes** : stockage, poids sur réseau mobile lent, contrôle
+  du contenu. Proposé : texte seul au premier lot.
+- **Volume de notifications** : regroupement, horaires (préférences
+  existantes).
+- **Coût** : la notification push est gratuite ; un repli par SMS
+  consomme des crédits, à n'activer que sur décision.
+- **Modération et signalement** : responsable désigné par école,
+  historique non effaçable.

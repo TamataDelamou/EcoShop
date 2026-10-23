@@ -190,7 +190,7 @@ class _EspaceMembre extends ConsumerWidget {
                   key: const Key('ecole_regles_reseau'),
                   leading: const Icon(Icons.rule_outlined),
                   title: const Text('Règles du réseau'),
-                  subtitle: const Text('Frais de scolarité, conditions de transfert'),
+                  subtitle: const Text('Consultez les frais et les conditions de transfert du réseau'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => EcranReglesReseau(
@@ -204,7 +204,7 @@ class _EspaceMembre extends ConsumerWidget {
                   key: const Key('ecole_transferts_reseau'),
                   leading: const Icon(Icons.swap_horiz),
                   title: const Text('Transferts d’élèves'),
-                  subtitle: const Text('Élèves à accueillir, départs vers une école du réseau'),
+                  subtitle: const Text('Accueillez des élèves, transférez-en vers une autre école du réseau'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => EcranTransfertsReseau(
