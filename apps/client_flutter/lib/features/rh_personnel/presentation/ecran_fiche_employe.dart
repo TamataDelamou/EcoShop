@@ -61,7 +61,7 @@ class _EcranFicheEmployeState extends ConsumerState<EcranFicheEmploye> {
   @override
   Widget build(BuildContext context) {
     final employe = _employe;
-    final profil = ref.watch(profilProvider).value;
+    final profil = ref.watch(profilProvider).valueOrNull;
     final estRh = profil?.roleRacine == RoleRacine.direction;
     final estSoiMeme = profil != null && profil.id == employe.profileId;
 

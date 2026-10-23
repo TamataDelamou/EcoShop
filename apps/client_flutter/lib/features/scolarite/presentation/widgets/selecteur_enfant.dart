@@ -20,7 +20,7 @@ class SelecteurEnfant extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final role = ref.watch(profilProvider).value?.roleRacine;
+    final role = ref.watch(profilProvider).valueOrNull?.roleRacine;
     if (role != RoleRacine.parent) return const SizedBox.shrink();
 
     final enfants = ref.watch(mesEnfantsProvider);

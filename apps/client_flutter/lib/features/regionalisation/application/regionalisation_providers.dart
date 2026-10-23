@@ -52,13 +52,13 @@ final onboardingRegionalisationVuProvider =
 class OnboardingRegionalisationNotifier extends AsyncNotifier<bool> {
   @override
   Future<bool> build() async {
-    final profilId = ref.watch(profilProvider).value?.id;
+    final profilId = ref.watch(profilProvider).valueOrNull?.id;
     if (profilId == null) return true;
     return ref.watch(_onboardingRegionalisationStoreProvider).lireVu(profilId);
   }
 
   Future<void> marquerVu() async {
-    final profilId = ref.read(profilProvider).value?.id;
+    final profilId = ref.read(profilProvider).valueOrNull?.id;
     if (profilId == null) return;
     state = const AsyncData(true);
     await ref.read(_onboardingRegionalisationStoreProvider).ecrireVu(profilId);

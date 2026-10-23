@@ -26,7 +26,7 @@ class EcranAnomalies extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final anomalies = ref.watch(anomaliesEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
-    final peutTraiter = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+    final peutTraiter = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
 
     return Scaffold(
       appBar: AppBar(
@@ -158,7 +158,7 @@ class _CarteAnomalie extends ConsumerWidget {
   }
 
   Future<void> _traiter(WidgetRef ref, String statut) async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
     await ref.read(rapportsRepositoryProvider).traiterAnomalie(anomalie.id, statut, traiteePar: profil.id);
     ref.invalidate(anomaliesEtablissementProvider((etablissementId: anomalie.etablissementId, anneeId: anomalie.anneeScolaireId)));

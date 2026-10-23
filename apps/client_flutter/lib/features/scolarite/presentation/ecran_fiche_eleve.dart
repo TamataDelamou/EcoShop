@@ -29,7 +29,7 @@ class EcranFicheEleve extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historique = ref.watch(inscriptionsDeFicheProvider(fiche.id));
-    final estDirection = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+    final estDirection = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
 
     return Scaffold(
       appBar: AppBar(
@@ -197,7 +197,7 @@ class _CarteFinanciere extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final solde = ref.watch(soldeScolariteProvider(inscription.id));
     final palette = context.palette;
-    final role = ref.watch(profilProvider).value?.roleRacine;
+    final role = ref.watch(profilProvider).valueOrNull?.roleRacine;
     // Paiement en ligne : réservé au payeur (parent confirmé ou élève), le
     // serveur le revérifie ; le personnel encaisse au guichet.
     final peutPayerEnLigne = role == RoleRacine.parent || role == RoleRacine.eleve;

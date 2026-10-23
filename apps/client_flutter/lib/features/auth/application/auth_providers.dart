@@ -10,6 +10,7 @@ import '../data/supabase_auth_repository.dart';
 import '../domain/auth_repository.dart';
 import '../domain/destination_session.dart';
 import '../domain/profil.dart';
+import 'session_locale.dart';
 import 'telephone_profil_providers.dart';
 
 /// Port d'authentification. Surchargé par un double en test — aucun test ne
@@ -30,10 +31,32 @@ final sessionOuverteProvider = Provider<bool>((ref) {
   return ref.watch(sessionProvider) != null;
 });
 
-/// Profil du compte connecté.
+/// Compte de la session ouverte (identifiant Supabase), ou null s'il n'est
+/// pas lisible (tests qui figent la session).
+String? _compteSession(Ref ref) {
+  try {
+    return ref.watch(sessionProvider.select((s) => s?.user.id));
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Profil du compte connecté. Copie locale affichée tout de suite à
+/// l'ouverture, même sans réseau ; serveur relu en arrière-plan
+/// (`session_locale.dart`).
 final profilProvider = FutureProvider<Profil?>((ref) async {
   if (!ref.watch(sessionOuverteProvider)) return null;
-  return ref.watch(authRepositoryProvider).profilCourant();
+  final repo = ref.watch(authRepositoryProvider);
+  final compte = _compteSession(ref);
+  if (compte == null) return repo.profilCourant();
+  return lireAvecCopieLocale<Profil?>(
+    ref,
+    type: 'profil',
+    compteId: compte,
+    serveur: repo.profilCourant,
+    versJson: (p) => p?.versJson(),
+    depuisJson: (j) => j == null ? null : Profil.depuisJson((j as Map).cast<String, dynamic>()),
+  );
 });
 
 /// Fiche élève revendiquée ?
@@ -42,19 +65,40 @@ final ficheLieeProvider = FutureProvider<bool>((ref) async {
   // Seul l'élève a une fiche à revendiquer : on évite une requête inutile
   // pour tous les autres rôles.
   if (profil == null || !profil.exigeLiaisonFiche) return true;
-  return ref.watch(authRepositoryProvider).ficheLiee();
+  final repo = ref.watch(authRepositoryProvider);
+  return lireAvecCopieLocale<bool>(
+    ref,
+    type: 'fiche_liee',
+    compteId: profil.id,
+    serveur: repo.ficheLiee,
+    versJson: (v) => v,
+    depuisJson: (j) => j == true,
+  );
 });
 
-/// Établissements dont le compte est membre actif.
+/// Établissements dont le compte est membre actif (copie locale comme le
+/// profil).
 final mesEtablissementsProvider = FutureProvider<List<Etablissement>>((ref) async {
   if (!ref.watch(sessionOuverteProvider)) return const [];
-  return ref.watch(authRepositoryProvider).mesEtablissements();
+  final repo = ref.watch(authRepositoryProvider);
+  final compte = _compteSession(ref);
+  if (compte == null) return repo.mesEtablissements();
+  return lireAvecCopieLocale<List<Etablissement>>(
+    ref,
+    type: 'etablissements',
+    compteId: compte,
+    serveur: repo.mesEtablissements,
+    versJson: (l) => [for (final e in l) e.versJson()],
+    depuisJson: (j) => [
+      for (final e in (j as List? ?? const [])) Etablissement.depuisJson((e as Map).cast<String, dynamic>()),
+    ],
+  );
 });
 
 /// Établissement actif résolu, ou null.
 final etablissementActifProvider = Provider<Etablissement?>((ref) {
-  final profil = ref.watch(profilProvider).value;
-  final etablissements = ref.watch(mesEtablissementsProvider).value ?? const [];
+  final profil = ref.watch(profilProvider).valueOrNull;
+  final etablissements = ref.watch(mesEtablissementsProvider).valueOrNull ?? const [];
   if (profil?.etablissementActifId == null) {
     // Rattachement unique : il est implicitement actif, l'écran de sélection
     // n'a pas lieu d'être (cohérent avec GardeSession).
@@ -91,14 +135,22 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     return DestinationSession.chargement;
   }
 
-  final statutCgu = cguStatut.value;
+  // Lecture impossible (sans réseau, et rien de gardé sur le téléphone) : on
+  // attend plutôt que de deviner (fiche non liée, CGU acceptées…). La relance
+  // au retour du réseau relit tout (`relance_reseau.dart`).
+  bool inconnu(AsyncValue<Object?> v) => v.hasError && !v.hasValue;
+  if (inconnu(profil) || inconnu(fiche) || inconnu(etablissements) || inconnu(cguStatut)) {
+    return DestinationSession.chargement;
+  }
+
+  final statutCgu = cguStatut.valueOrNull;
   return GardeSession.resoudre(
     sessionOuverte: true,
-    profil: profil.value,
-    ficheLiee: fiche.value ?? false,
-    nombreEtablissements: etablissements.value?.length ?? 0,
+    profil: profil.valueOrNull,
+    ficheLiee: fiche.valueOrNull ?? false,
+    nombreEtablissements: etablissements.valueOrNull?.length ?? 0,
     cguAcceptee: statutCgu == null || statutCgu.acceptee,
-    regionalisationVue: regionalisationVue.value ?? true,
+    regionalisationVue: regionalisationVue.valueOrNull ?? true,
     telephoneAFournir: etapeTelephone.valueOrNull ?? false,
     codeSecretACreer: verrou == PhaseVerrou.codeACreer,
   );

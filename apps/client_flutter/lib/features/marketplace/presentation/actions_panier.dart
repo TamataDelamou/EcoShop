@@ -13,7 +13,7 @@ import '../domain/panier_brouillon_local.dart';
 /// attendant le checkout (voir `panier_brouillon_local.dart`).
 Future<void> ajouterProduitAuPanier(BuildContext context, WidgetRef ref, CatalogueProduit produit) async {
   final messenger = ScaffoldMessenger.of(context);
-  final profil = ref.read(profilProvider).value;
+  final profil = ref.read(profilProvider).valueOrNull;
   final etablissement = ref.read(etablissementActifProvider);
 
   try {

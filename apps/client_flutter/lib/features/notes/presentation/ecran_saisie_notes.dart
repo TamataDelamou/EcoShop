@@ -164,7 +164,7 @@ class _LigneSaisieState extends ConsumerState<_LigneSaisie> {
   }
 
   Future<void> _enregistrer() async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
 
     final valeur = _absent ? null : double.tryParse(_valeurCtrl.text.replaceAll(',', '.'));

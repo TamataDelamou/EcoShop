@@ -63,6 +63,19 @@ class Profil {
   /// Identifiant EcoShop (REG-18), attribué par le serveur : `EC-XXXX-XXC`.
   final String? identifiantEcoshop;
 
+  /// Même forme que la ligne `profiles` lue par [Profil.depuisJson] (copie
+  /// locale, REG-18).
+  Map<String, dynamic> versJson() => {
+        'id': id,
+        'identifiant_canonique': identifiantCanonique,
+        'statut_compte': statutCompte.code,
+        'role_racine': roleRacine?.code,
+        'prenom': prenom,
+        'nom': nom,
+        'etablissement_actif_id': etablissementActifId,
+        'identifiant_ecoshop': identifiantEcoshop,
+      };
+
   bool get roleDefini => roleRacine != null;
 
   /// Un élève doit revendiquer sa fiche scolaire pour accéder à sa scolarité.

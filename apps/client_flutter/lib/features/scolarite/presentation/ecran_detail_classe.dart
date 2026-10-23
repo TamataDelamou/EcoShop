@@ -27,7 +27,7 @@ class EcranDetailClasse extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estDirection = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+    final estDirection = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
 
     return DefaultTabController(
       length: 2,

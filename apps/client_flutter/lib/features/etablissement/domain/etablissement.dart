@@ -46,6 +46,21 @@ class Etablissement {
   final String? couleurIdentite;
   final String? logoChemin;
 
+  /// Même forme que la ligne lue par [Etablissement.depuisJson] (copie
+  /// locale, REG-18).
+  Map<String, dynamic> versJson() => {
+        'id': id,
+        'nom': nom,
+        'slug': slug,
+        'pays_code': paysCode,
+        'ville': ville,
+        'devise_code': deviseCode,
+        'langue_code': langueCode,
+        'fuseau_horaire': fuseauHoraire,
+        'couleur_identite': couleurIdentite,
+        'logo_chemin': logoChemin,
+      };
+
   /// Libellé secondaire affiché sous le nom dans les listes.
   String get localisation =>
       [ville, paysCode].where((v) => v != null && v.isNotEmpty).join(' · ');

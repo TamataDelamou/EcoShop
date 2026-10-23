@@ -168,7 +168,7 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       });
     }
 
-    final profil = ref.watch(profilProvider).value;
+    final profil = ref.watch(profilProvider).valueOrNull;
     final onglets = OngletCoquille.pourRole(profil?.roleRacine);
     // Un changement de rôle ou de rattachement peut raccourcir la liste :
     // on borne l'index plutôt que de laisser une RangeError se produire.

@@ -68,7 +68,7 @@ class _EcranSaisieEcritureState extends ConsumerState<EcranSaisieEcriture> {
 
     try {
       final deviceId = await ref.read(deviceIdProvider.future);
-      final profil = ref.read(profilProvider).value;
+      final profil = ref.read(profilProvider).valueOrNull;
       final ecriture = construireEcriture(
         etablissementId: widget.etablissementId,
         journalId: journal.id,

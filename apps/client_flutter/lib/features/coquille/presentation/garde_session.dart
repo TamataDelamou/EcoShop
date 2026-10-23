@@ -13,6 +13,7 @@ import '../../regionalisation/presentation/ecran_onboarding_regionalisation.dart
 import '../application/session_logout.dart';
 import 'coquille_app.dart';
 import 'ecran_creation_code.dart';
+import '../../auth/application/relance_reseau.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
 /// calculée par [GardeSession].
@@ -26,6 +27,8 @@ class RacineApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final destination = ref.watch(destinationProvider);
+    // Relecture au retour du réseau, sans relancer l'application (REG-18).
+    ref.watch(relanceReseauProvider);
 
     return switch (destination) {
       DestinationSession.chargement => const _EcranChargement(),

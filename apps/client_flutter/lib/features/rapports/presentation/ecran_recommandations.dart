@@ -26,7 +26,7 @@ class EcranRecommandations extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recommandations =
         ref.watch(recommandationsEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
-    final peutValider = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+    final peutValider = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
 
     return Scaffold(
       appBar: AppBar(
@@ -132,7 +132,7 @@ class _CarteRecommandation extends ConsumerWidget {
   }
 
   Future<void> _statuer(WidgetRef ref, String statut) async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
     await ref.read(rapportsRepositoryProvider).statuerRecommandation(recommandation.id, statut, valideePar: profil.id);
     ref.invalidate(recommandationsEtablissementProvider(

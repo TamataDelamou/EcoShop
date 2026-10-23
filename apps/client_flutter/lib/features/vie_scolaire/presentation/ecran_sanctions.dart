@@ -39,7 +39,7 @@ class EcranSanctions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sanctions = ref.watch(sanctionsDeFicheProvider(fiche.id));
-    final estDirection = ref.watch(profilProvider).value?.roleRacine == RoleRacine.direction;
+    final estDirection = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
 
     return Scaffold(
       appBar: AppBar(
@@ -135,7 +135,7 @@ class _CarteSanction extends ConsumerWidget {
             if (peutGerer && sanction.estPropositionIaNonValidee)
               FilledButton.icon(
                 onPressed: () async {
-                  final profil = ref.read(profilProvider).value;
+                  final profil = ref.read(profilProvider).valueOrNull;
                   if (profil == null) return;
                   await ref
                       .read(vieScolaireRepositoryProvider)
@@ -272,7 +272,7 @@ class _FormulaireSanctionState extends ConsumerState<_FormulaireSanction> {
       setState(() => _erreur = 'Le motif est obligatoire.');
       return;
     }
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
 
     setState(() {

@@ -18,7 +18,7 @@ class EcranPanier extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profil = ref.watch(profilProvider).value;
+    final profil = ref.watch(profilProvider).valueOrNull;
     final etablissement = ref.watch(etablissementActifProvider);
 
     return Scaffold(
@@ -189,7 +189,7 @@ class _PanierBrouillon extends ConsumerWidget {
     );
     if (etablissementId == null || !context.mounted) return;
 
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
     final deviceId = await ref.read(deviceIdProvider.future);
     final depot = ref.read(marketplaceRepositoryProvider);

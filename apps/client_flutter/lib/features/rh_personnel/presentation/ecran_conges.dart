@@ -23,7 +23,7 @@ class EcranConges extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final conges = ref.watch(congesDeEmployeProvider(employe.id));
-    final profil = ref.watch(profilProvider).value;
+    final profil = ref.watch(profilProvider).valueOrNull;
     final peutDemander = profil != null && profil.id == employe.profileId;
 
     return Scaffold(
@@ -120,7 +120,7 @@ class _CarteConge extends ConsumerWidget {
   }
 
   Future<void> _valider(WidgetRef ref, String statut) async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
     await ref.read(rhRepositoryProvider).validerConge(conge.id, statut: statut, valideePar: profil.id);
     ref.invalidate(congesDeEmployeProvider(conge.employeId));

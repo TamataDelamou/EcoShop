@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../auth/application/session_locale.dart';
+import '../../auth/domain/profil.dart';
 import '../data/supabase_cgu_repository.dart';
 import '../domain/cgu_repository.dart';
 import '../domain/cgu_statut.dart';
@@ -9,21 +12,45 @@ final cguRepositoryProvider = Provider<CguRepository>((ref) {
   return SupabaseCguRepository(ref.watch(supabaseClientProvider));
 });
 
-/// Statut CGU du compte connecté — server-backed (jamais un cache local :
-/// l'acceptation doit survivre une réinstallation, contrairement à
+/// Statut CGU du compte connecté — le serveur fait foi (l'acceptation doit
+/// survivre une réinstallation, contrairement à
 /// `onboardingRegionalisationVuProvider`, une simple préférence d'ergonomie).
+/// La dernière réponse est gardée sur le téléphone pour ouvrir l'application
+/// sans réseau (REG-18) ; elle n'est jamais une acceptation inventée.
 final cguStatutProvider =
     AsyncNotifierProvider<CguStatutNotifier, CguStatut?>(CguStatutNotifier.new);
 
 class CguStatutNotifier extends AsyncNotifier<CguStatut?> {
   @override
-  Future<CguStatut?> build() => ref.watch(cguRepositoryProvider).statut();
+  Future<CguStatut?> build() async {
+    final repo = ref.watch(cguRepositoryProvider);
+    Profil? profil;
+    try {
+      profil = await ref.watch(profilProvider.future);
+    } catch (_) {
+      // Profil illisible : pas de copie possible, le serveur seul.
+    }
+    if (profil == null) return repo.statut();
+    return lireAvecCopieLocale<CguStatut?>(
+      ref,
+      type: 'cgu',
+      compteId: profil.id,
+      serveur: repo.statut,
+      versJson: (s) => s?.versJson(),
+      depuisJson: (j) => j == null ? null : CguStatut.depuisJson((j as Map).cast<String, dynamic>()),
+    );
+  }
 
   Future<void> accepter() async {
     final statut = state.value;
     if (statut == null) return;
     await ref.read(cguRepositoryProvider).accepter(statut.cguVersionId);
-    state = AsyncData(statut.copierAvecAcceptee(true));
+    final acceptee = statut.copierAvecAcceptee(true);
+    state = AsyncData(acceptee);
+    final profilId = ref.read(profilProvider).valueOrNull?.id;
+    if (profilId != null) {
+      await ecrireCopieLocale(ref, type: 'cgu', compteId: profilId, json: acceptee.versJson());
+    }
   }
 }
 

@@ -209,7 +209,7 @@ class _LigneAppelState extends ConsumerState<_LigneAppel> {
   }
 
   Future<void> _enregistrer() async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
 
     setState(() => _etat = _EtatLigne.enCours);

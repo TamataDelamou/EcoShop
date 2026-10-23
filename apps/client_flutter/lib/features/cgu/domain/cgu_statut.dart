@@ -26,4 +26,13 @@ class CguStatut {
   final String contenu;
   final DateTime publieeLe;
   final bool acceptee;
+
+  Map<String, dynamic> versJson() => {
+        'cgu_version_id': cguVersionId,
+        'parcours': parcours,
+        'numero_version': numeroVersion,
+        'contenu': contenu,
+        'publiee_le': publieeLe.toIso8601String(),
+        'acceptee': acceptee,
+      };
 }

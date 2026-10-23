@@ -86,7 +86,7 @@ final mesAffectationsProvider = FutureProvider<List<AffectationEnseignant>>((ref
 
 /// Enfants liés au parent connecté (support du sélecteur d'enfant).
 final mesEnfantsProvider = FutureProvider<List<RelationParentEleve>>((ref) {
-  if (ref.watch(profilProvider).value?.roleRacine != RoleRacine.parent) {
+  if (ref.watch(profilProvider).valueOrNull?.roleRacine != RoleRacine.parent) {
     return Future.value(const []);
   }
   return ref.watch(scolariteRepositoryProvider).mesEnfants();

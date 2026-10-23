@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/session_locale.dart';
 import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
 import '../../cgu/application/cgu_providers.dart';
@@ -94,6 +95,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Pointage (REG-09) : jetons des cartes et présence des élèves.
   try {
     await lire(lecturePointageProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Copie du profil, des établissements, de la fiche et des CGU (REG-18).
+  try {
+    await purgerSessionLocale(lire(storeSessionLocaleProvider));
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

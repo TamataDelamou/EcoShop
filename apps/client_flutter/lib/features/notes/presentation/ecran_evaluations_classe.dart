@@ -57,7 +57,7 @@ class EcranEvaluationsClasse extends ConsumerWidget {
   }
 
   Future<void> _creerEvaluation(BuildContext context, WidgetRef ref) async {
-    final profil = ref.read(profilProvider).value;
+    final profil = ref.read(profilProvider).valueOrNull;
     if (profil == null) return;
 
     final resultat = await showModalBottomSheet<Evaluation>(
