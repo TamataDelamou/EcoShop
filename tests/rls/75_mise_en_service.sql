@@ -35,6 +35,13 @@ $$;
 
 SELECT plan(11);
 
+-- Écoles déjà présentes (jeu de démonstration seed.sql) traitées elles aussi
+-- par les tâches quotidiennes : comptées à part.
+SELECT count(DISTINCT e.id)::int AS deja_la
+FROM public.etablissements e
+JOIN public.annees_scolaires a ON a.etablissement_id = e.id AND a.courante
+WHERE e.statut = 'actif' \gset
+
 INSERT INTO public.etablissements (id, nom, slug, devise_code) VALUES
   ('75000000-0000-0000-0000-000000000001', 'École A', 'ecole-a-75', 'GNF'),
   ('75000000-0000-0000-0000-000000000002', 'École B', 'ecole-b-75', 'GNF'),
@@ -60,7 +67,7 @@ SET LOCAL ROLE service_role;
 SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT public.executer_taches_quotidiennes() AS bilan \gset
 RESET ROLE;
-SELECT is((:'bilan'::jsonb ->> 'ecoles')::int, 2, 'chaque école active passe, une seule fois (année courante), l''école suspendue est sautée');
+SELECT is((:'bilan'::jsonb ->> 'ecoles')::int, :deja_la + 2,'chaque école active passe, une seule fois (année courante), l''école suspendue est sautée');
 SELECT is(jsonb_array_length(:'bilan'::jsonb -> 'erreurs'), 0, 'aucune erreur');
 
 -- Contrôle de préparation : équipe GSG seulement.
@@ -71,7 +78,7 @@ SELECT throws_ok($$ SELECT public.etat_mise_en_service() $$, '42501', NULL,
 
 SELECT pg_temp.en_tant_que(:'admin');
 SELECT public.etat_mise_en_service() AS etat \gset
-SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 8 + 3 + 2, 'extensions, 8 tâches, 3 secrets, administrateur, packs SMS');
+SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 9 + 3 + 2, 'extensions, 9 tâches, 3 secrets, administrateur, packs SMS');
 SELECT is(pg_temp.controle(:'etat', 'Administrateur GSG'), true, 'administrateur GSG désigné');
 SELECT is(pg_temp.controle(:'etat', 'Packs SMS en vente'), false, 'packs SMS encore sans prix');
 SELECT is((:'etat'::jsonb ->> 'pret')::boolean, false, 'pas prêt tant qu''un contrôle manque');
@@ -84,7 +91,8 @@ SELECT pg_temp.en_tant_que(:'admin');
 SELECT is(pg_temp.controle(public.etat_mise_en_service(), 'Packs SMS en vente'), true, 'pack au prix fixé : contrôle vert');
 RESET ROLE;
 
-SELECT is((SELECT count(*)::int FROM public.taches_planifiees_attendues()), 8, 'huit tâches planifiées attendues');
+SELECT is((SELECT count(*)::int FROM public.taches_planifiees_attendues()), 9,
+  'neuf tâches planifiées attendues (dont la purge des inscriptions abandonnées, REG-18)');
 
 SELECT * FROM finish();
 ROLLBACK;

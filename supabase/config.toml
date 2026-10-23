@@ -153,5 +153,11 @@ verify_jwt = true
 enabled = true
 verify_jwt = false
 
+# Connexion avec l'identifiant EcoShop (REG-18) : appelée avant toute
+# connexion, avec la seule clé publique — essais limités dans la fonction.
+[functions.connexion_identifiant]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 policy = "oneshot"

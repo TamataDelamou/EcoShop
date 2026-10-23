@@ -59,6 +59,9 @@ select pg_temp.planifier('detecter-absences-portail', '*/10 * * * *',
   'select public.detecter_absences_portail()');
 select pg_temp.planifier('expirer-offres-inscription', '7 * * * *',
   'select public.expirer_offres_inscription()');
+-- REG-18 : inscriptions abandonnées (adresse jamais vérifiée) après 24 h.
+select pg_temp.planifier('purger-comptes-non-verifies', '25 * * * *',
+  'select public.purger_comptes_non_verifies()');
 select pg_temp.planifier('taches-quotidiennes', '30 2 * * *',
   'select public.executer_taches_quotidiennes()');
 select pg_temp.planifier('purger-notifications', '15 3 * * *',
