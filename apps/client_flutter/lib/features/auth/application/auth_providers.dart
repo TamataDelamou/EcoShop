@@ -4,6 +4,7 @@ import '../../../core/auth/supabase_auth_provider.dart';
 import '../../cgu/application/cgu_providers.dart';
 import '../../coquille/application/verrou_controller.dart';
 import '../../etablissement/domain/etablissement.dart';
+import '../../invitations/application/invitations_providers.dart';
 import '../../regionalisation/application/regionalisation_providers.dart';
 import '../data/connexion_google.dart';
 import '../data/supabase_auth_repository.dart';
@@ -124,6 +125,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final etapeTelephone = ref.watch(etapeTelephoneProvider);
   final verrou = ref.watch(verrouControllerProvider.select((e) => e.phase));
   final recapitulatif = ref.watch(recapitulatifAMontrerProvider);
+  final invitations = ref.watch(invitationsAPresenterProvider);
 
   // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
@@ -134,6 +136,9 @@ final destinationProvider = Provider<DestinationSession>((ref) {
       regionalisationVue.isLoading ||
       etapeTelephone.isLoading ||
       recapitulatif.isLoading ||
+      // Compte sans rôle : attendre ses invitations, pour ne pas choisir
+      // « Élève » ou « Parent » à la place du rôle prévu par l'école.
+      (invitations.isLoading && profil.valueOrNull?.roleDefini == false) ||
       verrou == PhaseVerrou.chargement) {
     return DestinationSession.chargement;
   }
@@ -157,6 +162,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     telephoneAFournir: etapeTelephone.valueOrNull ?? false,
     codeSecretACreer: verrou == PhaseVerrou.codeACreer,
     recapitulatifAMontrer: recapitulatif.valueOrNull ?? false,
+    invitationsAPresenter: (invitations.valueOrNull ?? const []).isNotEmpty,
   );
 });
 

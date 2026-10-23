@@ -11,6 +11,9 @@ import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../auth/presentation/ecran_telephones_a_confirmer.dart';
+import '../../invitations/application/invitations_providers.dart';
+import '../../invitations/presentation/ecran_invitations.dart';
+import '../../invitations/presentation/ecran_invitations_etablissement.dart';
 import '../../liaisons_comptes/presentation/ecran_liaisons_comptes.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_notifications.dart';
@@ -505,6 +508,22 @@ class _VueProfil extends ConsumerWidget {
             );
           },
         ),
+        Consumer(
+          builder: (context, ref, _) {
+            final n = ref.watch(mesInvitationsProvider).valueOrNull?.length ?? 0;
+            if (n == 0) return const SizedBox.shrink();
+            return ListTile(
+              key: const Key('profil_mes_invitations'),
+              leading: Badge(label: Text('$n'), child: const Icon(Icons.mail_outline)),
+              title: const Text('Mes invitations'),
+              subtitle: const Text('Rejoindre une école comme membre du personnel ou vendeur'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EcranInvitations(depuisProfil: true)),
+              ),
+            );
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: const Text('Rôle'),
@@ -774,6 +793,27 @@ class _VueProfil extends ConsumerWidget {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => EcranTelephonesAConfirmer(etablissementId: etablissement.id),
+                  ),
+                ),
+              );
+            },
+          ),
+        // Invitations du personnel et des vendeurs (REG-18) : e-mail de
+        // préférence, suivi des réponses, retrait.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_invitations_personnel'),
+                leading: const Icon(Icons.person_add_alt_1_outlined),
+                title: const Text('Invitations du personnel'),
+                subtitle: const Text('Enseignants, administration, vendeurs'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranInvitationsEtablissement(etablissementId: etablissement.id),
                   ),
                 ),
               );

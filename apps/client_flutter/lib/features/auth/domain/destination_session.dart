@@ -11,6 +11,10 @@ enum DestinationSession {
   /// Compte suspendu ou supprimé : accès refusé, sans possibilité de contourner.
   compteBloque,
 
+  /// Invitations reçues (personnel, vendeurs) : accepter ou refuser, après
+  /// la connexion. Avant le choix de l'espace pour un compte neuf.
+  invitations,
+
   /// Rôle racine pas encore choisi (ch. 5.2) : fin de la création du
   /// compte (espace et nom, REG-18), ou espace du représentant d'un
   /// établissement en attente de validation.
@@ -82,6 +86,8 @@ abstract final class GardeSession {
     bool codeSecretACreer = false,
     // Défaut `false` (= rien à montrer).
     bool recapitulatifAMontrer = false,
+    // Défaut `false` (= aucune invitation à présenter).
+    bool invitationsAPresenter = false,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -89,6 +95,8 @@ abstract final class GardeSession {
     if (profil.statutCompte != StatutCompte.actif) {
       return DestinationSession.compteBloque;
     }
+
+    if (invitationsAPresenter) return DestinationSession.invitations;
 
     if (!profil.roleDefini) return DestinationSession.choixRole;
 

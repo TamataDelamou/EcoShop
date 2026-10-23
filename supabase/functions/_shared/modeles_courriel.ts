@@ -22,7 +22,8 @@ export type ModeleCourriel =
   | "demande_reseau_recue"
   | "demande_reseau_a_traiter"
   | "demande_reseau_acceptee"
-  | "demande_reseau_refusee";
+  | "demande_reseau_refusee"
+  | "invitation_membre";
 
 export interface ContexteCourriel {
   /** Lien d'ouverture de l'application (site ou page de téléchargement). */
@@ -154,6 +155,36 @@ function contenuPour(modele: string, d: Record<string, unknown>, ctx: ContexteCo
     case "demande_reseau_acceptee":
     case "demande_reseau_refusee":
       return contenuReseau(modele, d, ctx, salutation, reference);
+    // Invitation du personnel ou d'un vendeur (REG-18) : la personne n'a
+    // peut-être pas encore de compte ; le courriel lui dit comment l'ouvrir
+    // avec CETTE adresse, seule à recevoir l'invitation.
+    case "invitation_membre": {
+      const role = texteDe(d, "role", "membre");
+      const poste = texteDe(d, "poste");
+      const adresse = texteDe(d, "adresse");
+      const invitePar = texteDe(d, "invite_par");
+      return {
+        sujet: `Invitation : rejoindre ${ecole} sur EcoShop`,
+        apercu: `${ecole} vous invite à rejoindre son espace EcoShop.`,
+        titre: "Vous êtes invité(e)",
+        paragraphes: [
+          "Bonjour,",
+          `${invitePar ? `${invitePar}, pour ${ecole},` : ecole} vous invite à rejoindre son espace sur EcoShop.`,
+          `Ouvrez l'application, choisissez « Se connecter » avec l'adresse ${adresse || "à laquelle vous recevez ce message"}, puis acceptez l'invitation qui s'affiche. Sans compte, il est créé à cette étape.`,
+          "Si vous ne connaissez pas cet établissement, ignorez ce message ou refusez l'invitation dans l'application.",
+        ],
+        encadre: {
+          titre: "Invitation",
+          lignes: [
+            ["Établissement", ecole],
+            ["Rôle", role],
+            ...(poste ? [["Poste", poste] as [string, string]] : []),
+            ["Valable jusqu'au", texteDe(d, "expire_le", "—")],
+          ],
+        },
+        bouton: { libelle: "Ouvrir EcoShop", url: ctx.urlApplication },
+      };
+    }
     default:
       throw new ModeleInconnu(modele);
   }

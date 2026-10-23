@@ -13,6 +13,7 @@ import '../../regionalisation/presentation/ecran_onboarding_regionalisation.dart
 import '../application/session_logout.dart';
 import 'coquille_app.dart';
 import 'ecran_creation_code.dart';
+import '../../invitations/presentation/ecran_invitations.dart';
 import '../../auth/presentation/ecran_nom_profil.dart';
 import '../../auth/presentation/ecran_recapitulatif.dart';
 import '../../auth/application/relance_reseau.dart';
@@ -36,6 +37,7 @@ class RacineApp extends ConsumerWidget {
       DestinationSession.chargement => const _EcranChargement(),
       DestinationSession.connexion => const EcranChoixEspace(),
       DestinationSession.compteBloque => const _EcranCompteBloque(),
+      DestinationSession.invitations => const EcranInvitations(),
       DestinationSession.choixRole => const EcranChoixRole(),
       DestinationSession.nomACompleter => const EcranNomProfil(),
       DestinationSession.liaisonFiche => const EcranLiaisonFiche(),

@@ -34,7 +34,7 @@ attendue), `clos`.
 | REG-15 | M17 — Bibliothèque physique (cahier ch. 25) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; bibliothèque numérique (ch. 26) à venir |
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
-| REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23) — à vérifier sur un téléphone Android ; acceptation des invitations dans l'application à arbitrer |
+| REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1143,12 +1143,33 @@ protégées par le Keystore restaurées sans leur clé sur un autre téléphone,
 « Failed to unwrap key », et base locale envoyée dans Google Drive) :
 sauvegarde et transfert désactivés.
 
-**Ce qui n'existe pas encore, relevé pendant le chantier** : l'application
-n'appelle jamais `accepter_invitation` ; le personnel et les vendeurs
-invités n'ont pas de moyen, dans l'application, d'accepter leur
-invitation. À arbitrer par le porteur de projet.
+**Invitations du personnel et des vendeurs** (décision du porteur le
+2026-10-23 : bloquant pour le pilote ; migration `…1557`, test `84`) :
+l'application n'appelait jamais `accepter_invitation`, et rien ne
+permettait d'inviter ni d'envoyer le jeton. Désormais :
+- la direction invite depuis « Invitations du personnel » : adresse
+  e-mail (voie privilégiée, courriel `invitation_membre` envoyé aussitôt)
+  ou numéro (aucun SMS) ; rôle enseignant, direction et administration,
+  ou vendeur ; poste facultatif ; suivi des réponses et retrait ;
+- après sa connexion, l'invité voit ses invitations (avant le choix de
+  l'espace pour un compte neuf, pour ne pas choisir Élève ou Parent à la
+  place du rôle prévu) et les accepte ou les refuse ; « Plus tard » les
+  laisse dans « Mon profil › Mes invitations » ; la direction est prévenue
+  de chaque réponse ;
+- règle REG-16 : seul un identifiant prouvé vaut, pour accepter **et**
+  pour refuser (sinon déclarer le numéro d'un autre suffirait à refuser à
+  sa place). Une invitation à un numéro seulement déclaré est visible,
+  avec la marche à suivre (confirmation à l'école).
+Un compte vendeur reste sans lien avec un commerce (`commercants`) : le
+vendeur invité devient membre de l'école avec le rôle vendeur.
 
-**À vérifier sur un téléphone Android** : création du code, empreinte,
+**Code secret, mesure** : chaque dérivation (création, vérification)
+écrit son temps dans les journaux de débogage (versions debug et
+profile) : `Code secret : dérivation PBKDF2-HMAC-SHA256 (vérification),
+210000 itérations en … ms`. 210 000 itérations gardées en attendant la
+mesure sur un téléphone d'entrée de gamme.
+
+**À vérifier sur un téléphone Android** : invitation par e-mail reçue, acceptée, refusée ; création du code, empreinte,
 verrouillage après le délai, écran caché dans les applications récentes,
 captures bloquées pour le personnel (Android 12 et moins), ouverture sans
 réseau puis retour du réseau.

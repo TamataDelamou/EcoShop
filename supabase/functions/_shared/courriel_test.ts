@@ -112,3 +112,19 @@ Deno.test("M19 : les quatre courriels de demande de réseau se rendent, motif et
   assert(rendreCourriel("demande_reseau_refusee", d, CTX).texte.includes("Statuts manquants"));
   assert(rendreCourriel("demande_reseau_a_traiter", d, CTX).texte.includes("Pasteur Diallo"));
 });
+
+Deno.test("invitation : établissement, rôle, poste, adresse à utiliser ; données échappées", () => {
+  const r = rendreCourriel("invitation_membre", {
+    nom_etablissement: "École Bambino Emmaüs", role: "Enseignant", poste: "Comptable",
+    invite_par: "Mariama Diallo", adresse: "prof@exemple.org", expire_le: "06/11/2026",
+  }, CTX);
+  assert(r.sujet.includes("École Bambino Emmaüs"));
+  assert(r.texte.includes("Rôle : Enseignant"));
+  assert(r.texte.includes("Poste : Comptable"));
+  assert(r.texte.includes("« Se connecter » avec l'adresse prof@exemple.org"));
+  assert(r.texte.includes("06/11/2026"));
+  assert(!r.html.includes("<img"));
+  const piege = rendreCourriel("invitation_membre", { nom_etablissement: "<b>X</b>", invite_par: "<script>" }, CTX);
+  assert(!piege.html.includes("<script>"));
+  assert(!piege.texte.includes("Poste :"), "sans poste : ligne absente");
+});
