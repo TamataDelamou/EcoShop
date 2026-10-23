@@ -35,7 +35,7 @@ attendue), `clos`.
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
-| REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **à arbitrer** — évaluation : 5 à 6 jours (annonces et cahier), 7 à 8 avec les groupes de classe |
+| REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **en cours** — lot 1 annonces livré (2026-10-23) ; lot 2 cahier de liaison ; messagerie privée et groupes de classe en attente |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1177,7 +1177,8 @@ réseau puis retour du réseau.
 
 ## REG-19 — Annonces, cahier de liaison, messagerie : brancher sur le serveur
 
-**Priorité** : P1. **Statut** : à arbitrer (évaluation du 2026-10-23). En
+**Priorité** : P1. **Statut** : décidé le 2026-10-23 — lot 1 (annonces) puis lot 2 (cahier de
+liaison) ; messagerie privée et groupes de classe **en attente**. En
 attendant, les deux prototypes accessibles (annonces, cahier de liaison)
 sont masqués dans la version publiée ; la messagerie prototype n'a aucun
 point d'entrée.
@@ -1219,3 +1220,22 @@ classe, **7 à 8 jours**.
   consomme des crédits, à n'activer que sur décision.
 - **Modération et signalement** : responsable désigné par école,
   historique non effaçable.
+
+**Lot 1 — annonces, livré le 2026-10-23** (migration `…1558`, test `85`).
+Recherche préalable (Seesaw, Toddle, Remind, ParentSquare, ClassDojo) :
+ciblage école / niveau / classe, suivi de lecture par famille, messages
+courts, notification à chaque nouveau message, modération sans
+suppression et tracée (qui, quand). Retenu :
+- publication par la direction, texte seul, « important » ;
+  destinataires figés à la publication : parents **confirmés** et
+  comptes des élèves inscrits dans la portée (année courante) ;
+  notification push à chacun ; SMS aux parents sur demande, dans la
+  limite des crédits de l'école ;
+- lecture confirmée à l'ouverture ; la direction voit « x/y familles
+  ont lu » (une famille = un élève) ;
+- modération : masquer avec une raison ; jamais supprimée ; journal
+  d'audit (entité `annonce`) ;
+- hors connexion : annonces reçues lisibles sans réseau ; publication et
+  lecture gardées en file (chiffrée par compte) et renvoyées sans
+  doublon (clé de l'appareil) ;
+- prototype local « Annonces » retiré.

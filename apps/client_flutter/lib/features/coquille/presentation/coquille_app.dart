@@ -23,7 +23,8 @@ import '../../validation_marketplace/presentation/ecran_agrement_vendeurs_etabli
 import '../../validation_marketplace/presentation/ecran_validation_vendeurs_gsg.dart';
 import '../../communication/presentation/ecran_preferences_canaux.dart';
 import '../../communication/presentation/ecran_tableau_bord_communication.dart';
-import '../../communication/prototype/presentation/ecran_annonces_prototype.dart';
+import '../../annonces/presentation/ecran_annonces.dart';
+import '../../annonces/presentation/ecran_annonces_direction.dart';
 import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
 import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
@@ -904,24 +905,37 @@ class _VueProfil extends ConsumerWidget {
             ),
           ),
         ),
-        // Prototypes locaux non synchronisés : masqués dans la version publiée.
-        if (ref.watch(prototypesCommunicationVisiblesProvider))
-        ListTile(
-          key: const Key('menu_annonces_prototype'),
-          leading: const Icon(Icons.campaign_outlined),
-          title: const Text('Annonces'),
-          subtitle: const Text('Prototype local — non synchronisé'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => EcranAnnonces(
-                profileId: p.id,
-                profileNom: p.nomAffiche,
-                peutPublier: p.roleRacine == RoleRacine.direction,
-              ),
+        // Annonces de l'école (REG-19) : familles et élèves lisent ; la
+        // direction publie et voit qui a lu.
+        if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.eleve)
+          ListTile(
+            key: const Key('menu_annonces'),
+            leading: const Icon(Icons.campaign_outlined),
+            title: const Text('Annonces de l’école'),
+            subtitle: const Text('Lisez les annonces de votre école'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranAnnonces()),
             ),
           ),
-        ),
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_annonces_direction'),
+                leading: const Icon(Icons.campaign_outlined),
+                title: const Text('Annonces de l’école'),
+                subtitle: const Text('Publiez une annonce et voyez combien de familles l’ont lue'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranAnnoncesDirection(etablissementId: etablissement.id)),
+                ),
+              );
+            },
+          ),
+        // Prototype local non synchronisé : masqué dans la version publiée.
         if (ref.watch(prototypesCommunicationVisiblesProvider) &&
             (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.enseignant))
           ListTile(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../annonces/application/annonces_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
@@ -71,6 +72,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Inscriptions en ligne (REG-08) : dossiers d'élèves et de familles.
   try {
     await lire(lectureInscriptionsProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Annonces de l'école (REG-19) : gardées pour la lecture sans réseau.
+  try {
+    await lire(lectureAnnoncesProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

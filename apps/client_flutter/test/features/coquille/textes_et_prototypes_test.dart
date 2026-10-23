@@ -29,11 +29,11 @@ void main() {
   setUp(() => db = AppDatabase.pourTests(NativeDatabase.memory()));
   tearDown(() => db.close());
 
-  Future<void> monter(WidgetTester tester, {required bool prototypes}) async {
+  Future<void> monter(WidgetTester tester, {required bool prototypes, RoleRacine role = RoleRacine.vendeur}) async {
     await tester.pumpWidget(ProviderScope(
       overrides: [
-        // Vendeur : sa liste « Mon profil » ne lit pas la scolarité (Supabase).
-        authRepositoryProvider.overrideWithValue(FauxAuthRepository(profil: profilTest(role: RoleRacine.vendeur))),
+        // Vendeur, enseignant : leur liste « Mon profil » ne lit pas la scolarité (Supabase).
+        authRepositoryProvider.overrideWithValue(FauxAuthRepository(profil: profilTest(role: role))),
         sessionOuverteProvider.overrideWithValue(true),
         databaseProvider.overrideWithValue(db),
         onboardingRegionalisationVuProvider.overrideWith(_RegionalisationVue.new),
@@ -46,26 +46,26 @@ void main() {
   }
 
   testWidgets('accueil : texte d’aide engageant, sans jargon de développement', (tester) async {
-    await monter(tester, prototypes: false);
+    await monter(tester, prototypes: false, role: RoleRacine.enseignant);
     expect(find.text('Retrouvez l’essentiel de votre journée'), findsOneWidget);
     expect(find.textContaining('module M'), findsNothing);
   });
 
-  testWidgets('version publiée : annonces (prototype local) masquées', (tester) async {
-    await monter(tester, prototypes: false);
+  testWidgets('version publiée : cahier de liaison (prototype local) masqué', (tester) async {
+    await monter(tester, prototypes: false, role: RoleRacine.enseignant);
     await tester.tap(find.byKey(const Key('raccourci_profil')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Se déconnecter'), 300, scrollable: find.byType(Scrollable).last);
 
-    expect(find.byKey(const Key('menu_annonces_prototype')), findsNothing);
+    expect(find.byKey(const Key('menu_cahier_liaison_prototype')), findsNothing);
     expect(find.textContaining('Prototype local'), findsNothing);
   });
 
-  testWidgets('version d’essai : annonces visibles, avec la mention du prototype', (tester) async {
-    await monter(tester, prototypes: true);
+  testWidgets('version d’essai : cahier de liaison visible, avec la mention du prototype', (tester) async {
+    await monter(tester, prototypes: true, role: RoleRacine.enseignant);
     await tester.tap(find.byKey(const Key('raccourci_profil')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.byKey(const Key('menu_annonces_prototype')), 300,
+    await tester.scrollUntilVisible(find.byKey(const Key('menu_cahier_liaison_prototype')), 300,
         scrollable: find.byType(Scrollable).last);
 
     expect(find.text('Prototype local — non synchronisé'), findsOneWidget);

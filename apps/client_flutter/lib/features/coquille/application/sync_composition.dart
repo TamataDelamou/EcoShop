@@ -5,6 +5,7 @@ import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../annonces/data/supabase_annonces_repository.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../auth/data/rejeu_telephone.dart';
@@ -89,6 +90,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseBibliothequeRepository.entites) {
     gestionnaires[entite] = rejeuBibliotheque.rejouer;
   }
+  // Annonces de l'école (REG-19) : publications et lectures faites sans réseau.
+  final rejeuAnnonces = RejeuAnnonces(client);
+  for (final entite in SupabaseAnnoncesRepository.entites) {
+    gestionnaires[entite] = rejeuAnnonces.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -104,6 +110,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       rejet,
       entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)
+          : SupabaseAnnoncesRepository.entites.contains(entree.entite)
+          ? RejeuAnnonces.libelle(entree)
           : SupabaseTransfertsReseauRepository.entites.contains(entree.entite)
           ? SupabaseTransfertsReseauRepository.libelle(entree)
           : InscriptionHorsLigneRepository.entites.contains(entree.entite)
