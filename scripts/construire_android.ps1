@@ -102,7 +102,7 @@ if (-not $keytool) {
   }
 }
 if ($keytool -and $lus['storeFile']) {
-  $sha1 = & $keytool -list -v -keystore $lus['storeFile'] -alias $lus['keyAlias'] -storepass $lus['storePassword'] 2>$null | Select-String 'SHA1:' | Select-Object -First 1
+  $sha1 = & $keytool -list -v -keystore $lus['storeFile'] -alias $lus['keyAlias'] -storepass $lus['storePassword'] 2>$null | Select-String 'SHA-?\s?1:' | Select-Object -First 1
   if ($sha1) {
     $sha1 = $sha1.ToString().Trim()
     Write-Host ''
