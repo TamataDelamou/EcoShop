@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
@@ -473,6 +474,27 @@ class _VueProfil extends ConsumerWidget {
           title: Text(p.nomAffiche),
           subtitle: Text(p.identifiantCanonique),
         ),
+        // Identifiant EcoShop (REG-18) : utile au guichet de l'école et pour
+        // se connecter sans retaper son adresse. Pas un secret.
+        if (p.identifiantEcoshop != null)
+          ListTile(
+            key: const Key('profil_identifiant_ecoshop'),
+            leading: const Icon(Icons.qr_code_2_outlined),
+            title: Text(p.identifiantEcoshop!),
+            subtitle: const Text('Mon identifiant EcoShop'),
+            trailing: IconButton(
+              tooltip: 'Copier',
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: p.identifiantEcoshop!));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Identifiant copié')),
+                  );
+                }
+              },
+            ),
+          ),
         // Téléphone (REG-16) : déclaré par la personne, confirmé à l'école.
         Consumer(
           builder: (context, ref, _) {

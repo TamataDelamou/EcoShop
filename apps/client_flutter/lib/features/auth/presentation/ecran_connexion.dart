@@ -209,8 +209,10 @@ class _SaisieIdentifiant extends StatelessWidget {
                 autocorrect: false,
                 textInputAction: TextInputAction.go,
                 decoration: InputDecoration(
-                  labelText: parTelephone ? 'Numéro' : 'Adresse e-mail',
-                  hintText: parTelephone ? '620 00 00 00' : 'vous@exemple.com',
+                  // REG-18 : un seul champ pour l'adresse ou l'identifiant
+                  // EcoShop (le code part alors à l'adresse du compte).
+                  labelText: parTelephone ? 'Numéro' : 'E-mail ou identifiant EcoShop',
+                  hintText: parTelephone ? '620 00 00 00' : 'vous@exemple.com ou EC-XXXX-XXX',
                   prefixIcon: Icon(parTelephone ? Icons.smartphone : Icons.alternate_email),
                 ),
                 onSubmitted: etat.enCours ? null : controleur.demanderCode,
@@ -291,7 +293,9 @@ class _SaisieCodeState extends State<_SaisieCode> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Code envoyé à ${etat.identifiantNormalise}',
+          etat.parIdentifiantEcoshop
+              ? 'Code envoyé à l’adresse de ${etat.identifiantNormalise} : ${etat.adresseMasquee ?? ''}'
+              : 'Code envoyé à ${etat.identifiantNormalise}',
           style: Theme.of(context).textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),

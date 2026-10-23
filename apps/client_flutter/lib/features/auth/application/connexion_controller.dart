@@ -4,6 +4,7 @@ import '../../../core/auth/e164_validator.dart';
 import '../../coquille/application/verrou_controller.dart';
 import '../domain/auth_repository.dart';
 import '../domain/canal_otp.dart';
+import '../domain/identifiant_ecoshop.dart';
 import 'auth_providers.dart';
 
 /// Étape du parcours OTP (ch. 5.4).
@@ -27,6 +28,8 @@ class EtatConnexion {
     this.canal = CanalOtp.emailOtp,
     this.indicatifPays = '+224',
     this.identifiantNormalise,
+    this.parIdentifiantEcoshop = false,
+    this.adresseMasquee,
     this.enCours = false,
     this.connecte = false,
     this.codeErreur,
@@ -40,6 +43,13 @@ class EtatConnexion {
 
   /// Identifiant effectivement transmis à Supabase (E.164 ou e-mail).
   final String? identifiantNormalise;
+
+  /// Connexion avec l'identifiant EcoShop (REG-18) : le code part à l'adresse
+  /// du compte, que le téléphone ne voit que masquée.
+  final bool parIdentifiantEcoshop;
+
+  /// « a•••@gmail.com » : adresse où le code a été envoyé (identifiant).
+  final String? adresseMasquee;
 
   final bool enCours;
 
@@ -56,6 +66,8 @@ class EtatConnexion {
     CanalOtp? canal,
     String? indicatifPays,
     String? identifiantNormalise,
+    bool? parIdentifiantEcoshop,
+    String? adresseMasquee,
     bool? enCours,
     bool? connecte,
     String? codeErreur,
@@ -66,6 +78,8 @@ class EtatConnexion {
       canal: canal ?? this.canal,
       indicatifPays: indicatifPays ?? this.indicatifPays,
       identifiantNormalise: identifiantNormalise ?? this.identifiantNormalise,
+      parIdentifiantEcoshop: parIdentifiantEcoshop ?? this.parIdentifiantEcoshop,
+      adresseMasquee: adresseMasquee ?? this.adresseMasquee,
       enCours: enCours ?? this.enCours,
       connecte: connecte ?? this.connecte,
       codeErreur: effacerErreur ? null : (codeErreur ?? this.codeErreur),
@@ -100,6 +114,9 @@ class ConnexionController extends Notifier<EtatConnexion> {
   /// Normalise puis demande l'envoi du code. [saisie] est le numéro local ou
   /// l'adresse e-mail, tels que tapés par l'utilisateur.
   Future<void> demanderCode(String saisie) async {
+    if (state.canal.entree == TypeIdentifiant.email && IdentifiantEcoshop.ressemble(saisie)) {
+      return _demanderCodeParIdentifiant(saisie);
+    }
     final identifiant = _normaliser(saisie);
     if (identifiant == null) {
       state = state.copierAvec(codeErreur: 'IDENTIFIANT_INVALIDE');
@@ -125,13 +142,39 @@ class ConnexionController extends Notifier<EtatConnexion> {
     }
   }
 
+  /// Identifiant EcoShop : le serveur envoie le code à l'adresse du compte.
+  /// Une faute de frappe (caractère de contrôle) est signalée sans appel.
+  Future<void> _demanderCodeParIdentifiant(String saisie) async {
+    final identifiant = IdentifiantEcoshop.normaliser(saisie);
+    if (identifiant == null) {
+      state = state.copierAvec(codeErreur: 'IDENTIFIANT_ECOSHOP_INVALIDE');
+      return;
+    }
+    state = state.copierAvec(
+      enCours: true,
+      effacerErreur: true,
+      identifiantNormalise: identifiant,
+      parIdentifiantEcoshop: true,
+    );
+    try {
+      final adresse = await _repo.demanderCodeParIdentifiant(identifiant);
+      state = state.copierAvec(enCours: false, etape: EtapeConnexion.code, adresseMasquee: adresse);
+    } on ErreurAuth catch (e) {
+      state = state.copierAvec(enCours: false, codeErreur: e.code);
+    }
+  }
+
   /// Renvoie un code au même identifiant (déjà normalisé).
   Future<void> renvoyerCode() async {
     final identifiant = state.identifiantNormalise;
     if (identifiant == null || state.enCours || state.connecte) return;
     state = state.copierAvec(enCours: true, effacerErreur: true);
     try {
-      await _repo.demanderCode(identifiant: identifiant, canal: state.canal);
+      if (state.parIdentifiantEcoshop) {
+        await _repo.demanderCodeParIdentifiant(identifiant);
+      } else {
+        await _repo.demanderCode(identifiant: identifiant, canal: state.canal);
+      }
       state = state.copierAvec(enCours: false);
     } on ErreurAuth catch (e) {
       state = state.copierAvec(enCours: false, codeErreur: e.code);
@@ -151,11 +194,15 @@ class ConnexionController extends Notifier<EtatConnexion> {
     _identiteVerifiee(true);
 
     try {
-      await _repo.verifierCode(
-        identifiant: identifiant,
-        canal: state.canal,
-        code: code.trim(),
-      );
+      if (state.parIdentifiantEcoshop) {
+        await _repo.verifierCodeParIdentifiant(identifiant: identifiant, code: code.trim());
+      } else {
+        await _repo.verifierCode(
+          identifiant: identifiant,
+          canal: state.canal,
+          code: code.trim(),
+        );
+      }
       state = state.copierAvec(enCours: false, connecte: true);
       // La session vient de changer : la garde relit profil, fiche et
       // rattachements plutôt que de supposer l'état d'arrivée.
@@ -231,6 +278,8 @@ final connexionControllerProvider =
 String messageErreurAuth(String code) => switch (code) {
       'IDENTIFIANT_INVALIDE' =>
         'Identifiant invalide. Vérifiez le numéro ou l’adresse e-mail.',
+      'IDENTIFIANT_ECOSHOP_INVALIDE' =>
+        'Identifiant EcoShop incorrect. Il a la forme EC-XXXX-XXX : vérifiez chaque caractère.',
       'ROLE_DEJA_DEFINI' => 'Votre rôle a déjà été défini.',
       'ROLE_NON_AUTO_INSCRIPTIBLE' =>
         'Ce rôle s’obtient par invitation de votre établissement.',

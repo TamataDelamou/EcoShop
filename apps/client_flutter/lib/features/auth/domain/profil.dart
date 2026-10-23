@@ -33,6 +33,7 @@ class Profil {
     this.prenom,
     this.nom,
     this.etablissementActifId,
+    this.identifiantEcoshop,
   });
 
   factory Profil.depuisJson(Map<String, dynamic> json) {
@@ -44,6 +45,7 @@ class Profil {
       prenom: json['prenom'] as String?,
       nom: json['nom'] as String?,
       etablissementActifId: json['etablissement_actif_id'] as String?,
+      identifiantEcoshop: json['identifiant_ecoshop'] as String?,
     );
   }
 
@@ -57,6 +59,9 @@ class Profil {
   final String? prenom;
   final String? nom;
   final String? etablissementActifId;
+
+  /// Identifiant EcoShop (REG-18), attribué par le serveur : `EC-XXXX-XXC`.
+  final String? identifiantEcoshop;
 
   bool get roleDefini => roleRacine != null;
 

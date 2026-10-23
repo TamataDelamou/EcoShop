@@ -60,6 +60,20 @@ class FauxAuthRepository implements AuthRepository {
     _peutEchouer('verifierCode:$identifiant:$code');
   }
 
+  /// Adresse masquée renvoyée pour une connexion par identifiant.
+  String adresseMasquee = 'a•••@gmail.com';
+
+  @override
+  Future<String> demanderCodeParIdentifiant(String identifiant) async {
+    _peutEchouer('demanderCodeParIdentifiant:$identifiant');
+    return adresseMasquee;
+  }
+
+  @override
+  Future<void> verifierCodeParIdentifiant({required String identifiant, required String code}) async {
+    _peutEchouer('verifierCodeParIdentifiant:$identifiant:$code');
+  }
+
   @override
   Future<void> connecterAvecGoogle(String jetonIdentite) async {
     _peutEchouer('connecterAvecGoogle:$jetonIdentite');

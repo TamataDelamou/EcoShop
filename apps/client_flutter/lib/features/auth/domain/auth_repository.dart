@@ -43,6 +43,15 @@ abstract interface class AuthRepository {
   /// le téléphone (REG-16).
   Future<void> connecterAvecGoogle(String jetonIdentite);
 
+  /// Connexion avec l'identifiant EcoShop (REG-18) : le serveur envoie le
+  /// code à l'adresse du compte. Renvoie l'adresse masquée (« a•••@gmail.com »).
+  /// Même réponse si l'identifiant n'existe pas (pas d'énumération).
+  /// [identifiant] est déjà normalisé (`EC-XXXX-XXC`).
+  Future<String> demanderCodeParIdentifiant(String identifiant);
+
+  /// Vérifie le code reçu à l'adresse du compte et ouvre la session.
+  Future<void> verifierCodeParIdentifiant({required String identifiant, required String code});
+
   /// Numéro de téléphone du compte, ou null s'il n'en a pas déclaré.
   Future<TelephoneProfil?> monTelephone();
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -80,6 +81,35 @@ class SupabaseAuthRepository implements AuthRepository {
           provider: OAuthProvider.google,
           idToken: jetonIdentite,
         ));
+  }
+
+  @override
+  Future<String> demanderCodeParIdentifiant(String identifiant) async {
+    final corps = await _connexionIdentifiant({'action': 'envoyer', 'identifiant': identifiant});
+    return corps['adresseMasquee'] as String? ?? '';
+  }
+
+  @override
+  Future<void> verifierCodeParIdentifiant({required String identifiant, required String code}) async {
+    final corps = await _connexionIdentifiant({'action': 'verifier', 'identifiant': identifiant, 'code': code});
+    final session = corps['session'];
+    if (session is! Map) throw const ErreurAuth('OTP_EXPIRED');
+    // Session renvoyée par le serveur (Edge Function `connexion_identifiant`) :
+    // installée telle quelle, comme après `verifyOTP`.
+    await _executer(() => _client.auth.recoverSession(jsonEncode(session)));
+  }
+
+  /// Appel de l'Edge Function `connexion_identifiant` ; ses refus portent un
+  /// code stable (`OTP_EXPIRED`, `TROP_DE_TENTATIVES`…).
+  Future<Map<String, dynamic>> _connexionIdentifiant(Map<String, String> corps) async {
+    try {
+      final reponse = await _client.functions.invoke('connexion_identifiant', body: corps);
+      return (reponse.data as Map).cast<String, dynamic>();
+    } on FunctionException catch (e) {
+      final detail = e.details;
+      final code = detail is Map ? detail['error'] as String? : null;
+      throw ErreurAuth(code == null || code.isEmpty ? 'ERREUR_INATTENDUE' : code, e.reasonPhrase);
+    }
   }
 
   @override
