@@ -45,16 +45,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('barre du haut : notifications, profil, apparence — pas plus de 3', (tester) async {
+  testWidgets('barre du haut : notifications, apparence, profil tout à droite — pas plus de 3', (tester) async {
     await monter(tester);
     final actions = tester.widget<AppBar>(find.byType(AppBar).first).actions!;
     expect(actions, hasLength(3));
     final x = [
       tester.getCenter(find.byTooltip('Notifications')).dx,
-      tester.getCenter(find.byKey(const Key('raccourci_profil'))).dx,
       tester.getCenter(find.byKey(const Key('bouton_apparence'))).dx,
+      tester.getCenter(find.byKey(const Key('raccourci_profil'))).dx,
     ];
-    expect(x[0] < x[1] && x[1] < x[2], isTrue, reason: 'du plus utilisé au moins utilisé');
+    expect(x[0] < x[1] && x[1] < x[2], isTrue, reason: 'convention Google : le profil tout à droite');
   });
 
   testWidgets('choix Automatique / Clair / Sombre, automatique par défaut, gardé sur le téléphone', (tester) async {

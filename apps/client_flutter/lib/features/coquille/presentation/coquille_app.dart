@@ -199,6 +199,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                 ),
               ),
             ),
+          // Convention Google : le profil tout à droite.
+          const BoutonApparence(),
           if (profil != null)
             _RaccourciAvatar(
               profil: profil,
@@ -207,7 +209,6 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                 if (i >= 0) setState(() => _index = i);
               },
             ),
-          const BoutonApparence(),
         ],
       ),
       body: Column(
