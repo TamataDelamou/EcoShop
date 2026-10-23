@@ -10,6 +10,7 @@ import '../data/supabase_auth_repository.dart';
 import '../domain/auth_repository.dart';
 import '../domain/destination_session.dart';
 import '../domain/profil.dart';
+import 'inscription_providers.dart';
 import 'session_locale.dart';
 import 'telephone_profil_providers.dart';
 
@@ -122,6 +123,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final regionalisationVue = ref.watch(onboardingRegionalisationVuProvider);
   final etapeTelephone = ref.watch(etapeTelephoneProvider);
   final verrou = ref.watch(verrouControllerProvider.select((e) => e.phase));
+  final recapitulatif = ref.watch(recapitulatifAMontrerProvider);
 
   // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
   // l'écran de connexion pendant le chargement ferait clignoter le parcours.
@@ -131,6 +133,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
       cguStatut.isLoading ||
       regionalisationVue.isLoading ||
       etapeTelephone.isLoading ||
+      recapitulatif.isLoading ||
       verrou == PhaseVerrou.chargement) {
     return DestinationSession.chargement;
   }
@@ -153,6 +156,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     regionalisationVue: regionalisationVue.valueOrNull ?? true,
     telephoneAFournir: etapeTelephone.valueOrNull ?? false,
     codeSecretACreer: verrou == PhaseVerrou.codeACreer,
+    recapitulatifAMontrer: recapitulatif.valueOrNull ?? false,
   );
 });
 

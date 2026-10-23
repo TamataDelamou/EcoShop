@@ -79,11 +79,18 @@ void main() {
     expect(find.byType(EcranConnexion), findsNothing);
   });
 
-  testWidgets('choisir un espace mène à la connexion OTP (un seul mécanisme d’auth)', (tester) async {
+  testWidgets('« Se connecter » mène à la connexion, avec retour à l’accueil (REG-18)', (tester) async {
     await monter(tester, session: false, faux: FauxAuthRepository());
-    await tester.tap(find.text('Marketplace'));
+    expect(find.text('Se connecter'), findsOneWidget);
+    expect(find.text('Créer un compte'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('bouton_se_connecter')));
     await tester.pumpAndSettle();
     expect(find.byType(EcranConnexion), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('retour_connexion')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('bouton_creer_compte')), findsOneWidget);
   });
 
   testWidgets('rôle non défini, affiche le choix de rôle', (tester) async {

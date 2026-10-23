@@ -34,6 +34,7 @@ class Profil {
     this.nom,
     this.etablissementActifId,
     this.identifiantEcoshop,
+    this.inscriptionFinalisee = true,
   });
 
   factory Profil.depuisJson(Map<String, dynamic> json) {
@@ -46,6 +47,9 @@ class Profil {
       nom: json['nom'] as String?,
       etablissementActifId: json['etablissement_actif_id'] as String?,
       identifiantEcoshop: json['identifiant_ecoshop'] as String?,
+      // Colonne absente (copie locale d'avant REG-18) : compte en service.
+      inscriptionFinalisee:
+          !json.containsKey('inscription_finalisee_le') || json['inscription_finalisee_le'] != null,
     );
   }
 
@@ -63,6 +67,13 @@ class Profil {
   /// Identifiant EcoShop (REG-18), attribué par le serveur : `EC-XXXX-XXC`.
   final String? identifiantEcoshop;
 
+  /// Faux pour un compte jamais finalisé (REG-18) : nouveau compte, ou
+  /// personnel invité qui n'a pas encore donné son nom.
+  final bool inscriptionFinalisee;
+
+  /// Prénom ou nom manquant.
+  bool get nomIncomplet => (prenom ?? '').trim().isEmpty || (nom ?? '').trim().isEmpty;
+
   /// Même forme que la ligne `profiles` lue par [Profil.depuisJson] (copie
   /// locale, REG-18).
   Map<String, dynamic> versJson() => {
@@ -74,6 +85,7 @@ class Profil {
         'nom': nom,
         'etablissement_actif_id': etablissementActifId,
         'identifiant_ecoshop': identifiantEcoshop,
+        'inscription_finalisee_le': inscriptionFinalisee ? 'oui' : null,
       };
 
   bool get roleDefini => roleRacine != null;

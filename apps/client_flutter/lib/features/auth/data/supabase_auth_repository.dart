@@ -180,6 +180,23 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<bool> finaliserInscription({required RoleRacine espace, required String prenom, required String nom}) {
+    return _executer(() async {
+      final r = await _client.rpc<String>('finaliser_inscription', params: {
+        'p_espace': espace.code,
+        'p_prenom': prenom,
+        'p_nom': nom,
+      });
+      return r == 'appliquee';
+    });
+  }
+
+  @override
+  Future<void> definirMonNom({required String prenom, required String nom}) {
+    return _executer(() => _client.rpc<void>('definir_mon_nom', params: {'p_prenom': prenom, 'p_nom': nom}));
+  }
+
+  @override
   Future<void> lierFiche({
     required String matricule,
     required DateTime dateNaissance,

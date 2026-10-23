@@ -125,6 +125,42 @@ class FauxAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<bool> finaliserInscription({required RoleRacine espace, required String prenom, required String nom}) async {
+    _peutEchouer('finaliserInscription:${espace.code}:$prenom:$nom');
+    final actuel = profil;
+    if (actuel != null && (actuel.roleRacine != null || actuel.inscriptionFinalisee)) return false;
+    profil = Profil(
+      id: actuel?.id ?? 'p1',
+      identifiantCanonique: actuel?.identifiantCanonique ?? 'awa@exemple.com',
+      statutCompte: StatutCompte.actif,
+      roleRacine: espace,
+      prenom: prenom,
+      nom: nom,
+      identifiantEcoshop: actuel?.identifiantEcoshop,
+      inscriptionFinalisee: true,
+    );
+    return true;
+  }
+
+  @override
+  Future<void> definirMonNom({required String prenom, required String nom}) async {
+    _peutEchouer('definirMonNom:$prenom:$nom');
+    final a = profil;
+    if (a == null) return;
+    profil = Profil(
+      id: a.id,
+      identifiantCanonique: a.identifiantCanonique,
+      statutCompte: a.statutCompte,
+      roleRacine: a.roleRacine,
+      prenom: prenom,
+      nom: nom,
+      etablissementActifId: a.etablissementActifId,
+      identifiantEcoshop: a.identifiantEcoshop,
+      inscriptionFinalisee: a.inscriptionFinalisee,
+    );
+  }
+
+  @override
   Future<void> lierFiche({
     required String matricule,
     required DateTime dateNaissance,

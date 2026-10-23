@@ -74,6 +74,15 @@ abstract interface class AuthRepository {
   /// Fixe le rôle racine (RPC `choisir_role_racine`, rôles auto-inscriptibles).
   Future<void> choisirRole(RoleRacine role);
 
+  /// Applique l'espace et le nom choisis à la création du compte (REG-18,
+  /// RPC `finaliser_inscription`), après la vérification de l'adresse.
+  /// Vrai si appliqués ; faux si le compte existait déjà (rien n'a changé).
+  Future<bool> finaliserInscription({required RoleRacine espace, required String prenom, required String nom});
+
+  /// Nom et prénoms du compte connecté (personnel invité, représentant
+  /// d'un établissement). Ne touche pas au rôle.
+  Future<void> definirMonNom({required String prenom, required String nom});
+
   /// Revendique une fiche élève (RPC `lier_compte_a_fiche`).
   Future<void> lierFiche({
     required String matricule,

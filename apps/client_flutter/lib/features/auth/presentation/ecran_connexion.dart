@@ -21,8 +21,16 @@ import 'bouton_google.dart';
 /// La connexion par SMS est suspendue (coût) ; elle reste dans le code et
 /// se réaffiche avec `--dart-define=CONNEXION_TELEPHONE=true`. Le numéro
 /// est demandé après la connexion, pour compléter le profil.
+///
+/// Sert aussi d'étape « vérification de l'adresse » de « Créer un compte »
+/// ([creationCompte], REG-18) : le compte n'est créé qu'ici.
 class EcranConnexion extends ConsumerStatefulWidget {
-  const EcranConnexion({super.key});
+  const EcranConnexion({super.key, this.creationCompte = false, this.surRetour});
+
+  final bool creationCompte;
+
+  /// Retour à l'écran précédent (accueil, ou étape du nom).
+  final VoidCallback? surRetour;
 
   @override
   ConsumerState<EcranConnexion> createState() => _EcranConnexionState();
@@ -39,7 +47,8 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final etat = ref.read(connexionControllerProvider);
-      if (etat.etape == EtapeConnexion.identifiant) {
+      // Création d'un compte : pas d'ouverture d'office d'un compte existant.
+      if (etat.etape == EtapeConnexion.identifiant && !widget.creationCompte) {
         ref.read(connexionControllerProvider.notifier).connecterAvecGoogle(silencieux: true);
       }
     });
@@ -58,7 +67,19 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
     final controleur = ref.read(connexionControllerProvider.notifier);
     final google = ref.watch(connexionGoogleProvider).disponible;
 
-    return Scaffold(
+    final retour = widget.surRetour;
+    return PopScope(
+      canPop: retour == null,
+      onPopInvokedWithResult: (aQuitte, _) {
+        if (!aQuitte) retour?.call();
+      },
+      child: Scaffold(
+      appBar: retour == null
+          ? null
+          : AppBar(
+              leading: BackButton(key: const Key('retour_connexion'), onPressed: retour),
+              title: Text(widget.creationCompte ? 'Créer un compte' : 'Se connecter'),
+            ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -76,9 +97,11 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      etat.etape == EtapeConnexion.identifiant
-                          ? 'Connectez-vous en quelques secondes'
-                          : 'Vérifiez votre adresse',
+                      etat.etape != EtapeConnexion.identifiant
+                          ? 'Vérifiez votre adresse'
+                          : widget.creationCompte
+                              ? 'Vérifiez votre adresse : votre compte est créé à cette étape.'
+                              : 'Connectez-vous en quelques secondes',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -117,6 +140,7 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

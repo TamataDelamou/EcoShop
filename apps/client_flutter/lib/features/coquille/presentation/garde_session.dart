@@ -13,6 +13,8 @@ import '../../regionalisation/presentation/ecran_onboarding_regionalisation.dart
 import '../application/session_logout.dart';
 import 'coquille_app.dart';
 import 'ecran_creation_code.dart';
+import '../../auth/presentation/ecran_nom_profil.dart';
+import '../../auth/presentation/ecran_recapitulatif.dart';
 import '../../auth/application/relance_reseau.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
@@ -35,12 +37,14 @@ class RacineApp extends ConsumerWidget {
       DestinationSession.connexion => const EcranChoixEspace(),
       DestinationSession.compteBloque => const _EcranCompteBloque(),
       DestinationSession.choixRole => const EcranChoixRole(),
+      DestinationSession.nomACompleter => const EcranNomProfil(),
       DestinationSession.liaisonFiche => const EcranLiaisonFiche(),
       DestinationSession.selectionEtablissement =>
         const EcranSelectionEtablissement(),
       DestinationSession.cguNonAcceptees => const EcranCgu(),
       DestinationSession.telephoneProfil => const EcranTelephoneProfil(),
       DestinationSession.codeSecret => const EcranCreationCode(),
+      DestinationSession.recapitulatif => const EcranRecapitulatif(),
       DestinationSession.regionalisation =>
         const EcranOnboardingRegionalisation(),
       DestinationSession.accueil => const CoquilleApp(),

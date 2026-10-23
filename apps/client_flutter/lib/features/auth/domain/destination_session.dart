@@ -11,8 +11,14 @@ enum DestinationSession {
   /// Compte suspendu ou supprimé : accès refusé, sans possibilité de contourner.
   compteBloque,
 
-  /// Rôle racine pas encore choisi (ch. 5.2).
+  /// Rôle racine pas encore choisi (ch. 5.2) : fin de la création du
+  /// compte (espace et nom, REG-18), ou espace du représentant d'un
+  /// établissement en attente de validation.
   choixRole,
+
+  /// Compte au rôle déjà fixé (personnel invité) mais jamais finalisé et
+  /// sans nom complet : nom et prénoms demandés une fois (REG-18).
+  nomACompleter,
 
   /// Élève dont la fiche scolaire n'est pas encore revendiquée (ch. 5.8).
   liaisonFiche,
@@ -29,6 +35,10 @@ enum DestinationSession {
   /// Aucun code secret sur ce téléphone pour ce compte (REG-18) : création
   /// obligatoire, puis proposition de l'empreinte.
   codeSecret,
+
+  /// Compte tout juste créé : bienvenue, identifiant EcoShop, prochaine
+  /// étape (REG-18). Affiché une fois.
+  recapitulatif,
 
   /// Compte sans numéro de téléphone (REG-16) : on le demande une fois
   /// connecté, par e-mail ou Google. « Plus tard » est permis.
@@ -70,6 +80,8 @@ abstract final class GardeSession {
     bool telephoneAFournir = false,
     // Défaut `false` (= code déjà créé ou verrou hors service).
     bool codeSecretACreer = false,
+    // Défaut `false` (= rien à montrer).
+    bool recapitulatifAMontrer = false,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
     if (profil == null) return DestinationSession.chargement;
@@ -79,6 +91,10 @@ abstract final class GardeSession {
     }
 
     if (!profil.roleDefini) return DestinationSession.choixRole;
+
+    if (!profil.inscriptionFinalisee && profil.nomIncomplet) {
+      return DestinationSession.nomACompleter;
+    }
 
     if (profil.exigeLiaisonFiche && !ficheLiee) {
       return DestinationSession.liaisonFiche;
@@ -96,6 +112,8 @@ abstract final class GardeSession {
     if (telephoneAFournir) return DestinationSession.telephoneProfil;
 
     if (codeSecretACreer) return DestinationSession.codeSecret;
+
+    if (recapitulatifAMontrer) return DestinationSession.recapitulatif;
 
     if (!regionalisationVue) return DestinationSession.regionalisation;
 
