@@ -11,7 +11,6 @@ import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../auth/presentation/ecran_telephones_a_confirmer.dart';
-import '../../communication/prototype/application/visibilite_prototypes.dart';
 import '../../invitations/application/invitations_providers.dart';
 import '../../invitations/presentation/ecran_invitations.dart';
 import '../../invitations/presentation/ecran_invitations_etablissement.dart';
@@ -25,7 +24,7 @@ import '../../communication/presentation/ecran_preferences_canaux.dart';
 import '../../communication/presentation/ecran_tableau_bord_communication.dart';
 import '../../annonces/presentation/ecran_annonces.dart';
 import '../../annonces/presentation/ecran_annonces_direction.dart';
-import '../../communication/prototype/presentation/ecran_cahier_liaison_prototype.dart';
+import '../../cahier_liaison/presentation/ecran_eleves_liaison.dart';
 import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
@@ -935,23 +934,40 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
-        // Prototype local non synchronisé : masqué dans la version publiée.
-        if (ref.watch(prototypesCommunicationVisiblesProvider) &&
-            (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.enseignant))
+        // Cahier de liaison (REG-19) : parents confirmés, enseignants de la
+        // classe et direction, au sujet d'un élève.
+        if (p.roleRacine == RoleRacine.parent)
           ListTile(
-            key: const Key('menu_cahier_liaison_prototype'),
+            key: const Key('menu_cahier_liaison'),
             leading: const Icon(Icons.menu_book_outlined),
             title: const Text('Cahier de liaison'),
-            subtitle: const Text('Prototype local — non synchronisé'),
+            subtitle: const Text('Lisez les mots de l’école et répondez-y'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => EcranCahierLiaison(
-                  profileId: p.id,
-                  profileNom: p.nomAffiche,
-                ),
-              ),
+              MaterialPageRoute(builder: (_) => const EcranElevesLiaison()),
             ),
+          ),
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_cahier_liaison'),
+                leading: const Icon(Icons.menu_book_outlined),
+                title: const Text('Cahier de liaison'),
+                subtitle: const Text('Écrivez aux parents au sujet d’un élève'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranElevesLiaison(
+                      etablissementId: etablissement.id,
+                      direction: p.roleRacine == RoleRacine.direction,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         if (p.roleRacine == RoleRacine.direction)
           Consumer(

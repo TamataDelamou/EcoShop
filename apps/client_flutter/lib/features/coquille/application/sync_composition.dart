@@ -6,6 +6,7 @@ import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../annonces/data/supabase_annonces_repository.dart';
+import '../../cahier_liaison/data/supabase_cahier_liaison_repository.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../auth/data/rejeu_telephone.dart';
@@ -95,6 +96,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseAnnoncesRepository.entites) {
     gestionnaires[entite] = rejeuAnnonces.rejouer;
   }
+  // Cahier de liaison (REG-19) : mots, réponses et lectures faits sans réseau.
+  final rejeuCahier = RejeuCahierLiaison(client);
+  for (final entite in SupabaseCahierLiaisonRepository.entites) {
+    gestionnaires[entite] = rejeuCahier.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -112,6 +118,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
           ? RejeuTelephone.libelle(entree)
           : SupabaseAnnoncesRepository.entites.contains(entree.entite)
           ? RejeuAnnonces.libelle(entree)
+          : SupabaseCahierLiaisonRepository.entites.contains(entree.entite)
+          ? RejeuCahierLiaison.libelle(entree)
           : SupabaseTransfertsReseauRepository.entites.contains(entree.entite)
           ? SupabaseTransfertsReseauRepository.libelle(entree)
           : InscriptionHorsLigneRepository.entites.contains(entree.entite)

@@ -5,7 +5,6 @@ import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/cgu/application/cgu_providers.dart';
 import 'package:ecoshop_client/features/cgu/domain/cgu_statut.dart';
-import 'package:ecoshop_client/features/communication/prototype/application/visibilite_prototypes.dart';
 import 'package:ecoshop_client/features/coquille/presentation/garde_session.dart';
 import 'package:ecoshop_client/features/regionalisation/application/regionalisation_providers.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +37,6 @@ void main() {
         databaseProvider.overrideWithValue(db),
         onboardingRegionalisationVuProvider.overrideWith(_RegionalisationVue.new),
         cguStatutProvider.overrideWith(_CguRienAAccepter.new),
-        prototypesCommunicationVisiblesProvider.overrideWithValue(prototypes),
       ],
       child: const MaterialApp(home: RacineApp()),
     ));
@@ -51,23 +49,12 @@ void main() {
     expect(find.textContaining('module M'), findsNothing);
   });
 
-  testWidgets('version publiée : cahier de liaison (prototype local) masqué', (tester) async {
+  testWidgets('plus aucun prototype local accessible : le cahier de liaison passe par le serveur', (tester) async {
     await monter(tester, prototypes: false, role: RoleRacine.enseignant);
     await tester.tap(find.byKey(const Key('raccourci_profil')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Se déconnecter'), 300, scrollable: find.byType(Scrollable).last);
 
-    expect(find.byKey(const Key('menu_cahier_liaison_prototype')), findsNothing);
     expect(find.textContaining('Prototype local'), findsNothing);
-  });
-
-  testWidgets('version d’essai : cahier de liaison visible, avec la mention du prototype', (tester) async {
-    await monter(tester, prototypes: true, role: RoleRacine.enseignant);
-    await tester.tap(find.byKey(const Key('raccourci_profil')));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.byKey(const Key('menu_cahier_liaison_prototype')), 300,
-        scrollable: find.byType(Scrollable).last);
-
-    expect(find.text('Prototype local — non synchronisé'), findsOneWidget);
   });
 }

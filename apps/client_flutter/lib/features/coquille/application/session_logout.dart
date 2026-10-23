@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../annonces/application/annonces_providers.dart';
+import '../../cahier_liaison/application/cahier_liaison_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
@@ -78,6 +79,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Annonces de l'école (REG-19) : gardées pour la lecture sans réseau.
   try {
     await lire(lectureAnnoncesProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Cahier de liaison (REG-19) : fils gardés pour la lecture sans réseau.
+  try {
+    await lire(lectureCahierLiaisonProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

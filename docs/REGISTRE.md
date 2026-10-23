@@ -35,7 +35,7 @@ attendue), `clos`.
 | REG-16 | Connexion par e-mail et Google, téléphone au profil (SMS suspendu) | P1 | **livré** (2026-10-22) — à vérifier sur le poste ; réglages Google à faire (MISE_EN_SERVICE §5.1) |
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
-| REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **en cours** — lot 1 annonces livré (2026-10-23) ; lot 2 cahier de liaison ; messagerie privée et groupes de classe en attente |
+| REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **lots 1 et 2 livrés** (2026-10-23) : annonces, cahier de liaison ; messagerie privée et groupes de classe **en attente** |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1239,3 +1239,26 @@ suppression et tracée (qui, quand). Retenu :
   lecture gardées en file (chiffrée par compte) et renvoyées sans
   doublon (clé de l'appareil) ;
 - prototype local « Annonces » retiré.
+
+**Lot 2 — cahier de liaison, livré le 2026-10-23** (migration `…1559`,
+test `86`). Retenu :
+- un mot ouvre un fil au sujet d'un élève ; il est écrit par
+  l'enseignant affecté à la classe de l'élève (année courante) ou par la
+  direction ; chaque message reste rattaché à l'élève ;
+- seuls les parents **confirmés** de l'élève le lisent (ni l'élève, ni
+  un parent en attente) ; ils confirment la lecture (« J'ai lu », la
+  signature du cahier papier) et répondent en texte ; le personnel
+  autorisé répond aussi et voit « lu par x/y parents » ;
+- notification push aux parents pour un message du personnel, à l'auteur
+  du mot pour une réponse d'un parent ;
+- modération : la direction masque un mot ou une réponse avec une raison ;
+  jamais supprimé, encore visible pour le personnel ; journal d'audit
+  (entité `mot_liaison`, avec l'élève) ;
+- hors connexion : fils lisibles sans réseau ; mots, réponses et « J'ai
+  lu » gardés en file et renvoyés sans doublon ;
+- prototype local « Cahier de liaison » retiré ; il ne reste aucun
+  prototype de communication accessible (la messagerie prototype n'a
+  pas de point d'entrée).
+
+**En attente** (décision du 2026-10-23) : messagerie privée parent ↔
+enseignant et groupes de classe.
