@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 
 import 'coffre_fort.dart';
 
@@ -169,7 +170,7 @@ class ServiceCodeSecret {
     final refus = ReglesCode.verifierChoix(code, dateNaissance: dateNaissance);
     if (refus != null) throw CodeRefuse(refus);
     final sel = List<int>.generate(16, (_) => _aleatoire.nextInt(256));
-    final empreinte = await deriveur.deriver(code, sel, iterations);
+    final empreinte = await _deriverMesure(code, sel, iterations, 'création');
     await coffre.ecrire(
       _cleCode(compteId),
       jsonEncode({'v': 1, 'sel': base64Encode(sel), 'empreinte': base64Encode(empreinte), 'iterations': iterations}),
@@ -191,7 +192,7 @@ class ServiceCodeSecret {
     final enregistrement = jsonDecode(brut) as Map<String, dynamic>;
     final sel = base64Decode(enregistrement['sel'] as String);
     final attendue = base64Decode(enregistrement['empreinte'] as String);
-    final obtenue = await deriveur.deriver(code, sel, (enregistrement['iterations'] as num).toInt());
+    final obtenue = await _deriverMesure(code, sel, (enregistrement['iterations'] as num).toInt(), 'vérification');
 
     if (_egal(attendue, obtenue)) {
       await coffre.ecrire(_cleEchecs(compteId), '0');
@@ -199,6 +200,22 @@ class ServiceCodeSecret {
     }
     final restants = ReglesCode.echecsMax - (deja + 1);
     return restants <= 0 ? const CodeBloque() : CodeFaux(restants);
+  }
+
+  /// Dérivation chronométrée. Le temps part dans les journaux de débogage
+  /// (versions debug et profile, jamais en production) pour choisir le
+  /// nombre d'itérations sur un vrai téléphone d'entrée de gamme (REG-18 :
+  /// 210 000 aujourd'hui, l'OWASP en recommande 600 000 pour SHA-256).
+  /// Lecture : `adb logcat | findstr "Code secret"`.
+  Future<List<int>> _deriverMesure(String code, List<int> sel, int iterations, String operation) async {
+    final chrono = Stopwatch()..start();
+    final resultat = await deriveur.deriver(code, sel, iterations);
+    chrono.stop();
+    if (!kReleaseMode) {
+      debugPrint('Code secret : dérivation PBKDF2-HMAC-SHA256 ($operation), '
+          '$iterations itérations en ${chrono.elapsedMilliseconds} ms');
+    }
+    return resultat;
   }
 
   /// Efface le code et le compteur (déconnexion, 5 échecs, code oublié).

@@ -3,6 +3,7 @@ import 'package:ecoshop_client/core/securite/code_secret.dart';
 import 'package:ecoshop_client/core/securite/coffre_fort.dart';
 import 'package:ecoshop_client/core/securite/delais_verrouillage.dart';
 import 'package:ecoshop_client/core/securite/gardien_actions_sensibles.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// REG-18, partie C : règles du code secret, échecs, délais par rôle,
@@ -57,6 +58,21 @@ void main() {
       await service.creer('compte', '482617');
       expect(await service.existe('compte'), isTrue);
       expect(coffre.valeurs.values.any((v) => v.contains('482617')), isFalse);
+    });
+
+    test('temps de dérivation écrit dans le journal de débogage (création et vérification)', () async {
+      final journal = <String>[];
+      final avant = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) => journal.add(message ?? '');
+      try {
+        await service.creer('compte', '482617');
+        await service.verifier('compte', '482617');
+      } finally {
+        debugPrint = avant;
+      }
+      expect(journal.where((l) => l.startsWith('Code secret : dérivation PBKDF2-HMAC-SHA256')), hasLength(2));
+      expect(journal.first, matches(RegExp(r'\(création\), 1000 itérations en \d+ ms$')));
+      expect(journal.last, contains('(vérification)'));
     });
 
     test('code évident refusé à la création', () async {
