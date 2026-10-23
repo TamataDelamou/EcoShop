@@ -12,6 +12,7 @@ import 'package:ecoshop_client/features/auth/domain/auth_repository.dart';
 import 'package:ecoshop_client/features/auth/domain/canal_otp.dart';
 import 'package:ecoshop_client/features/auth/domain/destination_session.dart';
 import 'package:ecoshop_client/features/auth/domain/telephone_profil.dart';
+import 'package:ecoshop_client/features/auth/presentation/bouton_google.dart';
 import 'package:ecoshop_client/features/auth/presentation/ecran_connexion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -143,6 +144,17 @@ void main() {
 
       await monter(_FauxGoogle());
       expect(find.byKey(const Key('bouton_google')), findsOneWidget);
+      // Règles de présentation Google : logo « G » officiel, libellé
+      // permis, thème clair (fond blanc, contour #747775, texte #1F1F1F).
+      final bouton = find.byKey(const Key('bouton_google'));
+      final logo = tester.widget<Image>(find.descendant(of: bouton, matching: find.byType(Image)));
+      expect((logo.image as AssetImage).assetName, BoutonGoogle.logo);
+      expect(find.text('Continuer avec Google'), findsOneWidget);
+      final fond = tester.widget<Material>(find.descendant(of: bouton, matching: find.byType(Material)).first);
+      expect(fond.color, const Color(0xFFFFFFFF));
+      expect((fond.shape! as StadiumBorder).side.color, const Color(0xFF747775));
+      expect(tester.widget<Text>(find.text('Continuer avec Google')).style?.color, const Color(0xFF1F1F1F));
+      expect(tester.getSize(bouton).height, 40);
       expect(find.text('Recevoir le code'), findsOneWidget);
       expect(find.text('Téléphone'), findsNothing, reason: 'SMS suspendu');
 

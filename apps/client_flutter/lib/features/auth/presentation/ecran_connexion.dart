@@ -8,6 +8,7 @@ import '../../../core/config/env.dart';
 import '../application/auth_providers.dart';
 import '../application/connexion_controller.dart';
 import '../domain/canal_otp.dart';
+import 'bouton_google.dart';
 
 /// Écran de connexion (REG-16).
 ///
@@ -84,7 +85,8 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                     const SizedBox(height: 32),
                     if (etat.etape == EtapeConnexion.identifiant) ...[
                       if (google) ...[
-                        _BoutonGoogle(
+                        BoutonGoogle(
+                          key: const Key('bouton_google'),
                           enCours: etat.enCours,
                           onPressed: () => controleur.connecterAvecGoogle(),
                         ),
@@ -116,27 +118,6 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BoutonGoogle extends StatelessWidget {
-  const _BoutonGoogle({required this.enCours, required this.onPressed});
-
-  final bool enCours;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      key: const Key('bouton_google'),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-      ),
-      onPressed: enCours ? null : onPressed,
-      icon: const Icon(Icons.account_circle_outlined),
-      label: const Text('Continuer avec Google'),
     );
   }
 }
