@@ -79,7 +79,7 @@ class _FauxScolariteRepository implements ScolariteRepository {
   @override
   Future<int?> classeIsced(String classeId) async => null;
   @override
-  Future<String> lierEnfant({
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     dynamic type,

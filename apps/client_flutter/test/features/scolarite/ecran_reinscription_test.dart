@@ -9,6 +9,7 @@ import 'package:ecoshop_client/features/scolarite/domain/affectation_enseignant.
 import 'package:ecoshop_client/features/scolarite/domain/annee_scolaire.dart';
 import 'package:ecoshop_client/features/scolarite/domain/classe.dart';
 import 'package:ecoshop_client/features/scolarite/domain/encaissement_scolarite.dart';
+import 'package:ecoshop_client/features/scolarite/domain/enums_scolarite.dart';
 import 'package:ecoshop_client/features/scolarite/domain/fiche_eleve.dart';
 import 'package:ecoshop_client/features/scolarite/domain/frais_scolarite_config.dart';
 import 'package:ecoshop_client/features/scolarite/domain/inscription.dart';
@@ -106,7 +107,7 @@ class _FauxScolariteRepository implements ScolariteRepository {
   @override
   Future<int?> classeIsced(String classeId) async => null;
   @override
-  Future<String> lierEnfant({
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     dynamic type,

@@ -68,8 +68,10 @@ abstract interface class ScolariteRepository {
   Future<int?> classeIsced(String classeId);
 
   /// Lie le parent connecté à un nouvel enfant (RPC `lier_parent_a_fiche`,
-  /// double facteur matricule + date de naissance). Renvoie l'id de la relation.
-  Future<String> lierEnfant({
+  /// double facteur matricule + date de naissance). Renvoie le statut de la
+  /// liaison : en attente de la direction au-delà du plafond de comptes
+  /// parents par fiche, ou après une révocation (REG-18, partie E).
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     TypeRelationParentale type = TypeRelationParentale.parent,

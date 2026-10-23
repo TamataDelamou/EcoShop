@@ -209,7 +209,7 @@ class SupabaseScolariteRepository implements ScolariteRepository {
   }
 
   @override
-  Future<String> lierEnfant({
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     TypeRelationParentale type = TypeRelationParentale.parent,
@@ -223,7 +223,8 @@ class SupabaseScolariteRepository implements ScolariteRepository {
           'p_type': type.code,
         },
       );
-      return id;
+      final statut = await _client.rpc<String?>('statut_ma_liaison', params: {'p_relation': id});
+      return StatutRelation.depuisCode(statut);
     });
   }
 

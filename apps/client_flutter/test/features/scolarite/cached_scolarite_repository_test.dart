@@ -99,13 +99,13 @@ class _FauxDistant implements ScolariteRepository {
   }
 
   @override
-  Future<String> lierEnfant({
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     TypeRelationParentale type = TypeRelationParentale.parent,
   }) async {
     if (horsLigne) throw const ErreurScolarite('ERREUR_RESEAU');
-    return 'relation-1';
+    return StatutRelation.confirmee;
   }
 
   // --- M15quater — doublure minimale, non exercée par ces tests de cache --

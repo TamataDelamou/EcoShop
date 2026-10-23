@@ -11,6 +11,7 @@ import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../auth/presentation/ecran_telephones_a_confirmer.dart';
+import '../../liaisons_comptes/presentation/ecran_liaisons_comptes.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_notifications.dart';
 import '../../push/presentation/ecouteur_push.dart';
@@ -782,6 +783,27 @@ class _VueProfil extends ConsumerWidget {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => EcranTelephonesAConfirmer(etablissementId: etablissement.id),
+                  ),
+                ),
+              );
+            },
+          ),
+        // Comptes liés aux élèves (REG-18) : prévenue de chaque liaison, la
+        // direction accepte, refuse ou révoque.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_liaisons_comptes'),
+                leading: const Icon(Icons.link_outlined),
+                title: const Text('Comptes liés aux élèves'),
+                subtitle: const Text('Demandes en attente, liaisons récentes'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranLiaisonsComptes(etablissementId: etablissement.id),
                   ),
                 ),
               );

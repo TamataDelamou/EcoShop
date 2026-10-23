@@ -74,7 +74,7 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
     });
 
     try {
-      await ref.read(scolariteRepositoryProvider).lierEnfant(
+      final statut = await ref.read(scolariteRepositoryProvider).lierEnfant(
             matricule: matricule,
             dateNaissance: date,
             type: _type,
@@ -82,10 +82,16 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
       if (!mounted) return;
       ref.invalidate(mesEnfantsProvider);
       Navigator.of(context).pop();
+      // REG-18 : au-delà du plafond de comptes parents (ou après une
+      // révocation), la liaison attend l'accord de l'école.
+      final confirmee = statut == StatutRelation.confirmee;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Enfant lié avec succès.'),
-          backgroundColor: context.palette.succes,
+          content: Text(confirmee
+              ? 'Enfant lié avec succès.'
+              : 'Demande envoyée à l’école. La scolarité de votre enfant s’affichera dès que la direction l’aura acceptée.'),
+          backgroundColor: confirmee ? context.palette.succes : null,
+          duration: Duration(seconds: confirmee ? 4 : 8),
         ),
       );
     } on ErreurScolarite catch (e) {

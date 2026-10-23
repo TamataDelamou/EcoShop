@@ -166,7 +166,7 @@ class CachedScolariteRepository implements ScolariteRepository {
   }
 
   @override
-  Future<String> lierEnfant({
+  Future<StatutRelation> lierEnfant({
     required String matricule,
     required DateTime dateNaissance,
     TypeRelationParentale type = TypeRelationParentale.parent,
