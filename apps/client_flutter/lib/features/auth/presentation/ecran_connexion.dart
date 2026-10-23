@@ -87,7 +87,7 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                       if (google) ...[
                         BoutonGoogle(
                           key: const Key('bouton_google'),
-                          enCours: etat.enCours,
+                          enCours: etat.enCours || etat.connecte,
                           onPressed: () => controleur.connecterAvecGoogle(),
                         ),
                         const SizedBox(height: 20),
@@ -279,7 +279,7 @@ class _SaisieCodeState extends State<_SaisieCode> {
   }
 
   void _valider(String code) {
-    if (widget.etat.enCours) return;
+    if (widget.etat.enCours || widget.etat.connecte) return;
     widget.controleur.verifierCode(code);
   }
 
@@ -324,8 +324,10 @@ class _SaisieCodeState extends State<_SaisieCode> {
         const SizedBox(height: 12),
         FilledButton(
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          onPressed: etat.enCours ? null : () => _valider(widget.champ.text),
-          child: etat.enCours ? const _Patienter() : const Text('Valider'),
+          // Code vérifié : la session est ouverte, on attend seulement que
+          // l'écran suivant s'affiche ; le code ne doit pas repartir.
+          onPressed: etat.enCours || etat.connecte ? null : () => _valider(widget.champ.text),
+          child: etat.enCours || etat.connecte ? const _Patienter() : const Text('Valider'),
         ),
         const SizedBox(height: 8),
         Row(

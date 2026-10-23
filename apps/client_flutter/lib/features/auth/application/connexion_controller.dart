@@ -27,6 +27,7 @@ class EtatConnexion {
     this.indicatifPays = '+224',
     this.identifiantNormalise,
     this.enCours = false,
+    this.connecte = false,
     this.codeErreur,
   });
 
@@ -41,6 +42,11 @@ class EtatConnexion {
 
   final bool enCours;
 
+  /// Session ouverte par ce parcours : plus rien à envoyer au serveur. Un
+  /// second appui sur « Valider » renverrait un code déjà utilisé, refusé
+  /// comme « expiré ».
+  final bool connecte;
+
   /// Code d'erreur métier, à traduire à l'affichage.
   final String? codeErreur;
 
@@ -50,6 +56,7 @@ class EtatConnexion {
     String? indicatifPays,
     String? identifiantNormalise,
     bool? enCours,
+    bool? connecte,
     String? codeErreur,
     bool effacerErreur = false,
   }) {
@@ -59,6 +66,7 @@ class EtatConnexion {
       indicatifPays: indicatifPays ?? this.indicatifPays,
       identifiantNormalise: identifiantNormalise ?? this.identifiantNormalise,
       enCours: enCours ?? this.enCours,
+      connecte: connecte ?? this.connecte,
       codeErreur: effacerErreur ? null : (codeErreur ?? this.codeErreur),
     );
   }
@@ -119,7 +127,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
   /// Renvoie un code au même identifiant (déjà normalisé).
   Future<void> renvoyerCode() async {
     final identifiant = state.identifiantNormalise;
-    if (identifiant == null || state.enCours) return;
+    if (identifiant == null || state.enCours || state.connecte) return;
     state = state.copierAvec(enCours: true, effacerErreur: true);
     try {
       await _repo.demanderCode(identifiant: identifiant, canal: state.canal);
@@ -131,6 +139,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
 
   /// Vérifie le code saisi et ouvre la session.
   Future<void> verifierCode(String code) async {
+    if (state.enCours || state.connecte) return;
     final identifiant = state.identifiantNormalise;
     if (identifiant == null) {
       state = state.copierAvec(codeErreur: 'IDENTIFIANT_INVALIDE');
@@ -145,7 +154,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
         canal: state.canal,
         code: code.trim(),
       );
-      state = state.copierAvec(enCours: false);
+      state = state.copierAvec(enCours: false, connecte: true);
       // La session vient de changer : la garde relit profil, fiche et
       // rattachements plutôt que de supposer l'état d'arrivée.
       ref.rafraichirSession();
@@ -161,7 +170,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
   /// le bouton reste là.
   Future<void> connecterAvecGoogle({bool silencieux = false}) async {
     final google = ref.read(connexionGoogleProvider);
-    if (!google.disponible || state.enCours) return;
+    if (!google.disponible || state.enCours || state.connecte) return;
     if (!silencieux) state = state.copierAvec(enCours: true, effacerErreur: true);
 
     try {
@@ -172,7 +181,7 @@ class ConnexionController extends Notifier<EtatConnexion> {
       }
       state = state.copierAvec(enCours: true, effacerErreur: true);
       await _repo.connecterAvecGoogle(jeton);
-      state = state.copierAvec(enCours: false);
+      state = state.copierAvec(enCours: false, connecte: true);
       ref.rafraichirSession();
     } on ErreurAuth catch (e) {
       state = silencieux

@@ -67,12 +67,15 @@ class _Serveur {
   SupabaseClient client() => SupabaseClient(
         'http://localhost:54321',
         'test-anon-key',
-        authOptions: const AuthClientOptions(autoRefreshToken: false),
+        // Sans stockage PKCE en test (supabase_flutter le fournit dans l'application).
+        authOptions: const AuthClientOptions(autoRefreshToken: false, authFlowType: AuthFlowType.implicit),
         httpClient: MockClient((requete) async {
           appels.add('${requete.method} ${requete.url.path}?${requete.url.query}');
           if (!enLigne) throw http.ClientException('Failed host lookup');
           if (sansReponse) await Completer<void>().future;
-          final corps = requete.url.path.endsWith('/token') ? jsonEncode(_session()) : '{}';
+          // Jeton Google (/token) ou code reçu par e-mail (/verify) : session ouverte.
+          final ouvre = requete.url.path.endsWith('/token') || requete.url.path.endsWith('/verify');
+          final corps = ouvre ? jsonEncode(_session()) : '{}';
           return http.Response(corps, 200, headers: {'content-type': 'application/json'}, request: requete);
         }),
       );
@@ -170,6 +173,24 @@ void main() {
     expect(serveur.appels, contains(startsWith('POST /auth/v1/token?grant_type=id_token')));
     expect(c.read(connexionControllerProvider).enCours, isFalse);
     expect(await destinationStable(), DestinationSession.accueil);
+  });
+
+  test('code par e-mail : la session ouverte mène à l’accueil ; « Valider » ne renvoie plus le code', () async {
+    final ctrl = c.read(connexionControllerProvider.notifier);
+    expect(await destinationStable(), DestinationSession.connexion);
+
+    await ctrl.demanderCode('awa@exemple.com');
+    await ctrl.verifierCode('123456');
+
+    expect(c.read(connexionControllerProvider).connecte, isTrue);
+    expect(await destinationStable(), DestinationSession.accueil,
+        reason: 'code vérifié : l’écran suivant s’affiche sans relancer l’application');
+
+    // Second appui (ou validation automatique puis appui) : rien ne repart,
+    // sinon le serveur refuse le code déjà utilisé (« code expiré »).
+    await ctrl.verifierCode('123456');
+    expect(serveur.appels.where((a) => a.startsWith('POST /auth/v1/verify')), hasLength(1));
+    expect(c.read(connexionControllerProvider).codeErreur, isNull);
   });
 
   test('déconnexion sur un réseau qui ne répond plus : immédiate, rien n’attend le serveur', () async {
