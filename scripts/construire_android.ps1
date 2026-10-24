@@ -8,6 +8,15 @@
 
     powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1
     powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1 -Format apk
+    powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1 -Format apk -ParAbi
+
+  -ParAbi : un APK par type de téléphone (environ 45 Mo au lieu de 124 Mo),
+  plus léger à envoyer par WhatsApp. arm64-v8a convient à presque tous les
+  téléphones Android récents.
+
+  Avant Gradle, le script arrête la machine Podman si elle tourne (base de
+  test locale) : Gradle se réserve 8 Go de mémoire, et sans cette mémoire
+  la construction peut durer des heures.
 
   Au premier lancement, le script crée la clé de signature de GSG (gardée
   hors du dépôt) et le fichier de configuration de production.
@@ -16,8 +25,13 @@
 #>
 param(
   [ValidateSet('appbundle', 'apk')]
-  [string]$Format = 'appbundle'
+  [string]$Format = 'appbundle',
+  [switch]$ParAbi
 )
+if ($ParAbi -and $Format -ne 'apk') {
+  Write-Host '-ParAbi ne concerne que les APK : utilisez -Format apk -ParAbi.' -ForegroundColor Red
+  exit 1
+}
 
 $ErrorActionPreference = 'Stop'
 $Racine = Split-Path -Parent $PSScriptRoot
@@ -113,12 +127,55 @@ if (-not $lu.GOOGLE_WEB_CLIENT_ID -or $lu.GOOGLE_WEB_CLIENT_ID -notmatch '\.apps
   Write-Host 'Attention : GOOGLE_WEB_CLIENT_ID non renseigné, application construite SANS le bouton « Continuer avec Google » (connexion par code e-mail seulement).' -ForegroundColor Yellow
 }
 
-# 4. Construction
+# 4. Mémoire pour Gradle : la machine Podman (base de test locale) en
+# occupe une partie ; sans elle, la construction peut durer des heures.
+$podman = (Get-Command podman -ErrorAction SilentlyContinue).Source
+if (-not $podman -and (Test-Path "$env:ProgramFiles\RedHat\Podman\podman.exe")) { $podman = "$env:ProgramFiles\RedHat\Podman\podman.exe" }
+if ($podman) {
+  $machines = @()
+  try { $machines = @(& $podman machine list --format json 2>$null | Out-String | ConvertFrom-Json) } catch { }
+  $actives = @($machines | Where-Object { $_.Running -or $_.Starting })
+  foreach ($m in $actives) {
+    Write-Host "Arrêt de la machine Podman « $($m.Name) » pour libérer de la mémoire…" -ForegroundColor Yellow
+    & $podman machine stop $m.Name 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "Impossible d'arrêter Podman : arrêtez-le vous-même (podman machine stop), sinon la construction sera très lente." -ForegroundColor Red
+    }
+  }
+  # Windows rend la mémoire de la machine virtuelle quelques secondes après.
+  if ($actives.Count -gt 0) { Start-Sleep -Seconds 10 }
+}
+$libreGo = [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB, 1)
+if ($libreGo -lt 6) {
+  Write-Host "Attention : seulement $libreGo Go de mémoire libre. Fermez les autres applications (navigateur, émulateur), sinon la construction sera très lente." -ForegroundColor Yellow
+}
+
+# 5. Construction
 & flutter pub get
 if ($LASTEXITCODE -ne 0) { Echec 'flutter pub get a échoué.' }
-& flutter build $Format --release --dart-define-from-file=config/production.json
+$options = @('build', $Format, '--release', '--dart-define-from-file=config/production.json')
+if ($ParAbi) { $options += '--split-per-abi' }
+& flutter @options
 if ($LASTEXITCODE -ne 0) { Echec 'La construction a échoué (voir ci-dessus).' }
 
-$sortie = if ($Format -eq 'apk') { 'build\app\outputs\flutter-apk\app-release.apk' } else { 'build\app\outputs\bundle\release\app-release.aab' }
 Write-Host ''
-Write-Host "Application prête : $(Join-Path $App $sortie)" -ForegroundColor Green
+if ($ParAbi) {
+  $dossier = Join-Path $App 'build\app\outputs\flutter-apk'
+  Write-Host 'APK prêts, un par type de téléphone :' -ForegroundColor Green
+  foreach ($abi in @('arm64-v8a', 'armeabi-v7a', 'x86_64')) {
+    $fichier = Join-Path $dossier "app-$abi-release.apk"
+    if (-not (Test-Path $fichier)) { continue }
+    $taille = [math]::Round((Get-Item $fichier).Length / 1MB, 1)
+    $note = switch ($abi) {
+      'arm64-v8a' { '  <- À ENVOYER PAR DÉFAUT (presque tous les téléphones récents)' }
+      'armeabi-v7a' { '  (anciens téléphones 32 bits, si le premier refuse de s''installer)' }
+      default { '  (émulateurs et rares tablettes Intel)' }
+    }
+    Write-Host ("  {0}  {1} Mo{2}" -f $fichier, $taille, $note)
+  }
+} else {
+  $sortie = if ($Format -eq 'apk') { 'build\app\outputs\flutter-apk\app-release.apk' } else { 'build\app\outputs\bundle\release\app-release.aab' }
+  $fichier = Join-Path $App $sortie
+  $taille = [math]::Round((Get-Item $fichier).Length / 1MB, 1)
+  Write-Host "Application prête : $fichier ($taille Mo)" -ForegroundColor Green
+}

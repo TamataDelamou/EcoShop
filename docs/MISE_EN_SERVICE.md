@@ -202,9 +202,30 @@ powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1
   mot de passe. **Sauvegarder ce fichier `.jks` et son mot de passe hors
   du PC** : ils signent toutes les futures mises à jour.
 - Résultat : `app-release.aab`, à téléverser dans la Google Play Console
-  (compte développeur 25 USD, une fois). Pour installer directement sur
-  quelques téléphones du pilote sans passer par le Play Store :
-  `-Format apk`.
+  (compte développeur 25 USD, une fois).
+- **Installer directement sur les téléphones du pilote** (sans le Play
+  Store) : un APK par type de téléphone, plus léger à envoyer par
+  WhatsApp (environ 45 Mo au lieu de 124 Mo) :
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts\construire_android.ps1 -Format apk -ParAbi
+  ```
+
+  À la fin, le script affiche le chemin et la taille de chaque fichier
+  (`apps\client_flutter\build\app\outputs\flutter-apk\`) :
+  - `app-arm64-v8a-release.apk` : **à envoyer par défaut**, presque tous
+    les téléphones Android récents ;
+  - `app-armeabi-v7a-release.apk` : anciens téléphones 32 bits, si le
+    premier refuse de s'installer ;
+  - `app-x86_64-release.apk` : émulateurs et rares tablettes Intel.
+
+  `-Format apk` seul produit un APK unique pour tous les téléphones.
+- **Durée et mémoire** : 10 à 15 minutes sur le poste de développement.
+  Gradle se réserve 8 Go de mémoire : le script arrête d'abord la
+  machine Podman si elle tourne (base de test locale) et prévient s'il
+  reste moins de 6 Go libres. Fermer alors le navigateur et les autres
+  applications lourdes : sans mémoire, la construction peut durer des
+  heures.
 - Nom affiché sur le téléphone : **EcoShop**. Identifiant :
   `com.gsg.ecoshop_client` (celui déclaré dans Firebase, à ne plus changer).
 
