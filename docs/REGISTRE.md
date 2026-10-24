@@ -36,6 +36,7 @@ attendue), `clos`.
 | REG-17 | Réseaux : politique de frais (autonome, indicative, commune) et transferts d'élèves | P1 | **livré** (2026-10-22) — à vérifier sur le poste |
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
 | REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **lots 1 et 2 livrés** (2026-10-23) : annonces, cahier de liaison ; messagerie privée et groupes de classe **en attente** |
+| REG-20 | Référentiel pédagogique et paramètres globaux livrés en production (champ « Pays » vide) ; séries du lycée guinéen | **P0** | **livré** (2026-10-24, `48574fe`) — tâche **ouverte** : séries SM, SE, SS et coefficients officiels, avant le premier lycée |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1262,3 +1263,45 @@ test `86`). Retenu :
 
 **En attente** (décision du 2026-10-23) : messagerie privée parent ↔
 enseignant et groupes de classe.
+
+---
+
+## REG-20 — Référentiel pédagogique en production ; séries du lycée guinéen
+
+**Priorité** : P0. **Statut** : livré le 2026-10-24 (commit `48574fe`) ;
+une tâche reste **ouverte** (séries du lycée, ci-dessous).
+
+**Constat (production).** À la demande d'ouverture d'établissement, le
+champ obligatoire « Pays » ne proposait aucune valeur : le référentiel
+pédagogique et les paramètres globaux n'étaient remplis que par des seeds,
+que `supabase db push` n'applique pas. Aucune école n'existait encore en
+production : aucune licence n'a été calculée sans `seuil_effectif_gratuit`.
+
+**Livré.** Migration `…1560_referentiel_production.sql` (idempotente),
+test `87` :
+- Guinée complète (préscolaire → Terminale, 16 niveaux ; CEE, BEPC, Bac),
+  Sénégal et Ghana tels que déjà décrits ; 4 familles de systèmes ;
+- niveaux d'examen (CM2, 10e, Terminale et équivalents) ;
+- les 5 paramètres globaux de `seed.sql` ;
+- `etat_mise_en_service()` : pays ouverts, cycles/niveaux/examens par
+  pays, paramètres globaux ;
+- seeds réduits aux données de démonstration ;
+- application : liste des pays gardée sur le téléphone et réellement
+  servie hors connexion ; messages distincts (liste vide, hors connexion,
+  erreur du serveur).
+
+**Décisions du porteur de projet (2026-10-24).**
+- Préscolaire numéroté de 0 (Grande section) à -2 (Petite section) ;
+  1 reste la première année du primaire dans tous les pays.
+- Mention admis/recalé obligatoire pour les classes d'examen.
+- Pas de préscolaire pour le Sénégal et le Ghana pour l'instant.
+- Langue des pays en code (`fr`, `en`).
+
+**Tâche ouverte — séries du lycée guinéen (SM, SE, SS) avec leurs
+coefficients officiels.** À faire **avant l'arrivée du premier lycée**,
+**après une recherche des textes officiels du ministère** de
+l'Enseignement pré-universitaire (aucune valeur inventée). Aujourd'hui,
+les séries n'existent que dans le seed de démonstration, rattachées à la
+seule Terminale, sans coefficients officiels. À établir : niveaux
+concernés (11e, 12e, Terminale), matières et coefficients par série, puis
+livraison par migration comme le reste du référentiel.
