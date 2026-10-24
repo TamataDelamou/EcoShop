@@ -78,7 +78,8 @@ SELECT throws_ok($$ SELECT public.etat_mise_en_service() $$, '42501', NULL,
 
 SELECT pg_temp.en_tant_que(:'admin');
 SELECT public.etat_mise_en_service() AS etat \gset
-SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 9 + 3 + 2, 'extensions, 9 tâches, 3 secrets, administrateur, packs SMS');
+SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 9 + 3 + 2 + 3,
+  'extensions, 9 tâches, 3 secrets, administrateur, packs SMS, référentiel (2) et paramètres globaux');
 SELECT is(pg_temp.controle(:'etat', 'Administrateur GSG'), true, 'administrateur GSG désigné');
 SELECT is(pg_temp.controle(:'etat', 'Packs SMS en vente'), false, 'packs SMS encore sans prix');
 SELECT is((:'etat'::jsonb ->> 'pret')::boolean, false, 'pas prêt tant qu''un contrôle manque');

@@ -109,7 +109,7 @@ class _CartePays extends StatelessWidget {
                           icone: Icons.public,
                         ),
                         Pastille(
-                          texte: pays.langueEnseignementPrincipale,
+                          texte: libelleLangue(pays.langueEnseignementPrincipale),
                           couleur: context.palette.encreSecondaire,
                           icone: Icons.translate,
                         ),
@@ -181,3 +181,12 @@ class _EtatErreur extends StatelessWidget {
     );
   }
 }
+
+/// La langue est rangée en code (fr, en…) : on l'affiche en toutes lettres.
+String libelleLangue(String code) => switch (code) {
+      'fr' => 'français',
+      'en' => 'anglais',
+      'pt' => 'portugais',
+      'ar' => 'arabe',
+      _ => code,
+    };

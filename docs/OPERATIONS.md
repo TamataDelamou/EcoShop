@@ -49,7 +49,14 @@ audit de cohérence, et peut être relancé après une coupure réseau.
 Création d'un établissement : insérer `etablissements`, puis l'année scolaire,
 les unités opérationnelles, les postes et les rattachements membres.
 
-Seeds complémentaires (idempotents, ordre M4→M11) :
+**Les seeds sont des données de démonstration** (écoles, élèves, comptes
+fictifs) : ils ne vont jamais en production, et `supabase db push` ne les
+applique pas. Tout ce qui est indispensable au fonctionnement (référentiel
+pédagogique, paramètres globaux, catalogues) est livré par une migration
+(`20260906001560_referentiel_production.sql` pour le référentiel et les
+paramètres) et vérifié par `etat_mise_en_service()`.
+
+Seeds complémentaires de démonstration (idempotents, ordre M4→M11) :
 
 ```bash
 psql "$DATABASE_URL" -f supabase/seed_referentiel_pedagogique.sql     # M4

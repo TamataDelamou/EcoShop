@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/lecture_hors_ligne.dart';
 import '../domain/arborescence_niveau.dart';
 import '../domain/arborescence_pays.dart';
 import '../domain/cycle_educatif.dart';
@@ -152,6 +153,13 @@ class SupabaseReferentielRepository implements ReferentielRepository {
       return await action();
     } on PostgrestException catch (e) {
       throw ErreurReferentiel(_codeDepuisMessage(e.message), e.message);
+    } catch (e) {
+      // Sans réseau, le client lève une erreur de transport (pas une
+      // PostgrestException) : on la traduit pour que le cache prenne le relais.
+      if (estErreurReseau(e)) {
+        throw ErreurReferentiel(ErreurReferentiel.horsLigne, e.toString());
+      }
+      rethrow;
     }
   }
 

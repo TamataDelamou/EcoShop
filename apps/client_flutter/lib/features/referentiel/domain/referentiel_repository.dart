@@ -8,6 +8,9 @@ import 'systeme_educatif.dart';
 class ErreurReferentiel implements Exception {
   const ErreurReferentiel(this.code, [this.detail]);
 
+  /// Serveur injoignable (pas de réseau) — par opposition à un refus du serveur.
+  static const horsLigne = 'HORS_LIGNE';
+
   final String code;
   final String? detail;
 

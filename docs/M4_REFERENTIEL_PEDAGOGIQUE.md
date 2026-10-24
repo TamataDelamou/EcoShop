@@ -82,18 +82,23 @@ par pays, jamais montrée à l'utilisateur.
 - **Versioning** : `programmes_officiels.version` + `paquets_referentiel.version`
   préparent les mises à jour incrémentales de contenus hors-ligne.
 
-## 6. Maquette de données (seed)
+## 6. Données de référence (migration) et maquette (seed)
 
-`supabase/seed_referentiel_pedagogique.sql` — 3 pays, 2 systèmes :
+Livrées en production par `supabase/migrations/20260906001560_referentiel_production.sql`
+(idempotente, `on conflict do nothing`) :
 
 | Pays | Système | Cycles / niveaux | Examens |
 |---|---|---|---|
-| Guinée (GN) | francophone_cfa | primaire (CP1→CM2), collège (7e→10e), lycée (11e→Terminale) | CEE, BEPC, BAC |
+| Guinée (GN) | francophone_cfa | préscolaire (PS→GS), primaire (CP1→CM2), collège (7e→10e), lycée (11e→Terminale) | CEE, BEPC, BAC |
 | Sénégal (SN) | francophone_cfa | primaire (CI→CM2), moyen (6e→3e), secondaire (2nde→Terminale) | CFEE, BFEM, BAC |
 | Ghana (GH) | anglophone_waec | primary (P1→P6), JHS (JHS1→3), SHS (SHS1→3) | BECE, WASSCE |
 
-+ filières (séries), un programme officiel par pays et ses matières
-(coefficients et volumes horaires).
+Préscolaire : `grade_level_normalise` de -2 (Petite section) à 0 (Grande
+section) ; 1 reste la première année du primaire dans tous les pays. Le
+préscolaire du Sénégal et du Ghana n'est pas encore décrit.
+
+`supabase/seed_referentiel_pedagogique.sql` ne garde que la démonstration :
+quelques filières, un programme officiel par pays et ses matières.
 
 ## 7. État de vérification
 

@@ -1,23 +1,14 @@
 -- ============================================================================
 -- EcoShop — Seed de développement (M0 → M2)
 --
--- Données de démonstration uniquement. Le catalogue de permissions n'est pas
--- ici : c'est une donnée de référence, livrée par la migration M1.
+-- Données de démonstration uniquement, jamais appliquées en production.
+-- Les données de référence (catalogue de permissions, paramètres globaux,
+-- référentiel pédagogique) sont livrées par les migrations : M1 et
+-- 20260906001560_referentiel_production.sql.
 --
 -- Les profils sont créés par le trigger handle_new_user à l'inscription : ce
 -- seed ne fabrique aucun compte, il prépare l'environnement qui les accueille.
 -- ============================================================================
-
--- ---------------------------------------------------------------------------
--- Paramètres globaux — aucune valeur métier codée en dur côté client
--- ---------------------------------------------------------------------------
-insert into public.parametres_globaux (cle, valeur, description) values
-  ('seuil_effectif_gratuit',     '{"valeur": 100}',   'Effectif en deçà duquel la licence de base est gratuite'),
-  ('commission_marketplace_pct', '{"valeur": 3}',     'Commission GSG sur chaque vente marketplace (jamais sur la scolarité)'),
-  ('devise_defaut',              '{"valeur": "GNF"}', 'Devise par défaut des établissements'),
-  ('liaison_tentatives_max',     '{"valeur": 5}',     'Tentatives de liaison compte↔fiche par heure'),
-  ('invitation_validite_jours',  '{"valeur": 14}',    'Durée de validité d''une invitation')
-on conflict (cle) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- Établissements de démonstration

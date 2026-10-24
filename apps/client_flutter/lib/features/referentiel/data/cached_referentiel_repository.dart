@@ -20,34 +20,49 @@ class CachedReferentielRepository implements ReferentielRepository {
   final ReferentielCacheStore _cache;
 
   @override
-  Future<List<SystemeEducatif>> systemesEducatifs() async {
-    try {
-      final liste = await _distant.systemesEducatifs();
-      await _cache.ecrireListe(
-        ReferentielCacheStore.typeSystemes,
-        liste.map((s) => s.versJson()).toList(growable: false),
-      );
-      return liste;
-    } on ErreurReferentiel {
-      final lignes = await _cache.lireListe(ReferentielCacheStore.typeSystemes);
-      if (lignes == null) rethrow;
-      return lignes.map(SystemeEducatif.depuisJson).toList(growable: false);
-    }
+  Future<List<SystemeEducatif>> systemesEducatifs() {
+    return _liste(
+      ReferentielCacheStore.typeSystemes,
+      _distant.systemesEducatifs,
+      (s) => s.versJson(),
+      SystemeEducatif.depuisJson,
+    );
   }
 
   @override
-  Future<List<PaysPedagogique>> paysPedagogiques() async {
+  Future<List<PaysPedagogique>> paysPedagogiques() {
+    return _liste(
+      ReferentielCacheStore.typePays,
+      _distant.paysPedagogiques,
+      (p) => p.versJson(),
+      PaysPedagogique.depuisJson,
+    );
+  }
+
+  /// Liste « réseau d'abord » : une réponse vide du serveur n'efface jamais
+  /// une copie locale non vide (le référentiel ne se vide pas légitimement ;
+  /// un serveur vide est un défaut de déploiement, pas une donnée à garder).
+  Future<List<T>> _liste<T>(
+    String type,
+    Future<List<T>> Function() lire,
+    Map<String, dynamic> Function(T) versJson,
+    T Function(Map<String, dynamic>) depuisJson,
+  ) async {
     try {
-      final liste = await _distant.paysPedagogiques();
-      await _cache.ecrireListe(
-        ReferentielCacheStore.typePays,
-        liste.map((p) => p.versJson()).toList(growable: false),
-      );
+      final liste = await lire();
+      if (liste.isEmpty) {
+        final lignes = await _cache.lireListe(type);
+        if (lignes != null && lignes.isNotEmpty) {
+          return lignes.map(depuisJson).toList(growable: false);
+        }
+        return liste;
+      }
+      await _cache.ecrireListe(type, liste.map(versJson).toList(growable: false));
       return liste;
     } on ErreurReferentiel {
-      final lignes = await _cache.lireListe(ReferentielCacheStore.typePays);
+      final lignes = await _cache.lireListe(type);
       if (lignes == null) rethrow;
-      return lignes.map(PaysPedagogique.depuisJson).toList(growable: false);
+      return lignes.map(depuisJson).toList(growable: false);
     }
   }
 

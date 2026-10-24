@@ -17,7 +17,7 @@ class _FauxDistant implements ReferentielRepository {
   bool horsLigne = false;
   int appelsPays = 0;
 
-  final _pays = const [
+  List<PaysPedagogique> pays = const [
     PaysPedagogique(
       codeIso: 'GN',
       nom: 'Guinée',
@@ -36,7 +36,7 @@ class _FauxDistant implements ReferentielRepository {
   Future<List<PaysPedagogique>> paysPedagogiques() async {
     appelsPays++;
     if (horsLigne) throw const ErreurReferentiel('ERREUR_RESEAU');
-    return _pays;
+    return pays;
   }
 
   @override
@@ -90,6 +90,22 @@ void main() {
 
       expect(liste, hasLength(1));
       expect(liste.first.codeIso, 'GN');
+    });
+
+    test('une réponse vide du serveur n\'efface pas la copie du téléphone', () async {
+      await repository.paysPedagogiques();
+
+      distant.pays = const [];
+      final liste = await repository.paysPedagogiques();
+      expect(liste.single.codeIso, 'GN');
+
+      distant.horsLigne = true;
+      expect((await repository.paysPedagogiques()).single.codeIso, 'GN');
+    });
+
+    test('serveur vide et rien sur le téléphone : liste vide, pas d\'erreur', () async {
+      distant.pays = const [];
+      expect(await repository.paysPedagogiques(), isEmpty);
     });
 
     test('propage l\'erreur si le cache est vide et le réseau indisponible', () async {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_palette.dart';
 import '../../referentiel/application/referentiel_providers.dart';
+import '../../referentiel/domain/referentiel_repository.dart';
 import '../application/creation_etablissement_providers.dart';
 import '../domain/demande_etablissement.dart';
 
@@ -119,8 +120,24 @@ class _EcranDemandeEtablissementState extends ConsumerState<EcranDemandeEtabliss
             const SizedBox(height: 12),
             pays.when(
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('Liste des pays indisponible hors connexion.', style: TextStyle(color: palette.erreur)),
-              data: (liste) => DropdownButtonFormField<String>(
+              error: (e, _) => _AvisPays(
+                cle: e is ErreurReferentiel && e.code == ErreurReferentiel.horsLigne
+                    ? 'avis_pays_hors_ligne'
+                    : 'avis_pays_erreur',
+                texte: e is ErreurReferentiel && e.code == ErreurReferentiel.horsLigne
+                    ? 'Pas de connexion, et la liste des pays n’a pas encore été enregistrée sur ce '
+                        'téléphone. Connectez-vous à Internet puis réessayez.'
+                    : 'La liste des pays n’a pas pu être chargée. Réessayez dans un instant.',
+                onReessayer: () => ref.invalidate(paysPedagogiquesProvider),
+              ),
+              data: (liste) => liste.isEmpty
+                  ? _AvisPays(
+                      cle: 'avis_pays_vide',
+                      texte: 'Aucun pays n’est encore ouvert aux demandes. Global Service Groupe '
+                          'prépare l’ouverture : réessayez plus tard.',
+                      onReessayer: () => ref.invalidate(paysPedagogiquesProvider),
+                    )
+                  : DropdownButtonFormField<String>(
                 key: const Key('champ_pays'),
                 initialValue: _pays,
                 decoration: const InputDecoration(labelText: 'Pays *', border: OutlineInputBorder()),
@@ -230,6 +247,37 @@ class _EcranDemandeEtablissementState extends ConsumerState<EcranDemandeEtabliss
             label: const Text('Envoyer la demande'),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Remplace le champ « Pays » quand la liste ne peut pas être proposée :
+/// le formulaire ne peut pas partir sans pays, on dit pourquoi.
+class _AvisPays extends StatelessWidget {
+  const _AvisPays({required this.cle, required this.texte, required this.onReessayer});
+
+  final String cle;
+  final String texte;
+  final VoidCallback onReessayer;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Container(
+      key: Key(cle),
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+      decoration: BoxDecoration(
+        color: palette.erreur.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.public_off_rounded, color: palette.erreur),
+          const SizedBox(width: 12),
+          Expanded(child: Text(texte, style: TextStyle(color: palette.erreur))),
+          TextButton(onPressed: onReessayer, child: const Text('Réessayer')),
+        ],
       ),
     );
   }

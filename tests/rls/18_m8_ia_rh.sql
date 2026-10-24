@@ -30,18 +30,10 @@ $$;
 SELECT plan(5);
 
 -- ---------------------------------------------------------------------------
--- Référentiel M4 minimal (pays GN + deux matières)
+-- Référentiel M4 : Guinée livrée par migration (20260906001560), on y
+-- accroche un programme de test et deux matières
 -- ---------------------------------------------------------------------------
-INSERT INTO public.systemes_educatifs (code, nom) VALUES ('francophone_cfa', 'Francophone CFA');
-
-INSERT INTO public.pays_pedagogiques (code_iso, nom, type_systeme, langue_enseignement_principale, organisme_examinateur, devise_code, statut_deploiement)
-VALUES ('GN', 'Guinée', 'francophone_cfa', 'fr', 'Ministère', 'GNF', 'deploye');
-
-INSERT INTO public.cycles_educatifs (pays_code, code, nom, ordre, isced_min, isced_max, statut)
-VALUES ('GN', 'SEC', 'Secondaire', 2, 2, 3, 'publie') RETURNING id AS cycle_id \gset
-
-INSERT INTO public.niveaux_educatifs (cycle_id, pays_code, code, nom, grade_level_normalise, isced, ordre, statut)
-VALUES (:'cycle_id'::uuid, 'GN', '10e', '10e', 10, 2, 1, 'publie') RETURNING id AS niveau_id \gset
+SELECT id AS niveau_id FROM public.niveaux_educatifs WHERE pays_code = 'GN' AND code = '10e' \gset
 
 INSERT INTO public.programmes_officiels (pays_code, niveau_id, code, nom, version, statut)
 VALUES ('GN', :'niveau_id'::uuid, 'PROG-GN-10E', 'Programme 10e', 1, 'publie') RETURNING id AS prog_id \gset
