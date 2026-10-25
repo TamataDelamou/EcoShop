@@ -23,13 +23,20 @@ export type ModeleCourriel =
   | "demande_reseau_a_traiter"
   | "demande_reseau_acceptee"
   | "demande_reseau_refusee"
-  | "invitation_membre";
+  | "invitation_membre"
+  | "code_compte_nouvel_appareil"
+  | "code_compte_appareils_bloques"
+  | "code_compte_change"
+  | "code_compte_recuperation_lancee"
+  | "code_compte_recuperation_terminee";
 
 export interface ContexteCourriel {
   /** Lien d'ouverture de l'application (site ou page de téléchargement). */
   urlApplication: string;
   /** Adresse de contact affichée en pied de message. */
   adresseSupport: string;
+  /** Adresse des fonctions du serveur (lien « Ce n'est pas moi »). */
+  urlFonctions?: string;
 }
 
 export interface CourrielRendu {
@@ -185,6 +192,87 @@ function contenuPour(modele: string, d: Record<string, unknown>, ctx: ContexteCo
         bouton: { libelle: "Ouvrir EcoShop", url: ctx.urlApplication },
       };
     }
+    // Code du compte (REG-22 A). Aucun code ni lien de connexion dans ces
+    // messages : seulement l'alerte et, pour un nouvel appareil, le lien qui
+    // ferme cette connexion.
+    case "code_compte_nouvel_appareil": {
+      const jeton = texteDe(d, "jeton_pas_moi");
+      const lien = jeton && ctx.urlFonctions
+        ? `${ctx.urlFonctions}/pas_moi?j=${encodeURIComponent(jeton)}`
+        : "";
+      return {
+        sujet: "Nouvelle connexion à votre compte EcoShop",
+        apercu: "Un nouvel appareil s'est connecté à votre compte. Si ce n'est pas vous, fermez-le.",
+        titre: "Nouvel appareil connecté",
+        paragraphes: [
+          salutation,
+          "Un nouvel appareil vient de se connecter à votre compte EcoShop. Il devra saisir le code de votre compte avant de voir vos données.",
+          lien
+            ? "Si c'est vous, il n'y a rien à faire. Si ce n'est pas vous, touchez « Ce n'est pas moi » : cette connexion sera fermée et aucun nouvel appareil ne pourra entrer jusqu'à ce que vous changiez votre code depuis votre téléphone habituel."
+            : "Si ce n'est pas vous, ouvrez EcoShop sur votre téléphone habituel et changez le code de votre compte (Mon profil › Sécurité).",
+        ],
+        encadre: {
+          titre: "Connexion",
+          lignes: [["Appareil", texteDe(d, "modele", "Appareil inconnu")], ["Date", texteDe(d, "date", "—")]],
+        },
+        ...(lien ? { bouton: { libelle: "Ce n'est pas moi", url: lien } } : {}),
+        conclusion: "Ce lien est valable 7 jours et ne sert qu'une fois.",
+      };
+    }
+    case "code_compte_appareils_bloques": {
+      const pasMoi = texteDe(d, "motif") === "pas_moi";
+      return {
+        sujet: "Nouveaux appareils bloqués sur votre compte EcoShop",
+        apercu: pasMoi
+          ? "Vous avez signalé une connexion : les nouveaux appareils sont bloqués."
+          : "Trop de codes faux : les nouveaux appareils sont bloqués pour un temps.",
+        titre: "Nouveaux appareils bloqués",
+        paragraphes: [
+          salutation,
+          pasMoi
+            ? "Vous avez signalé une connexion qui n'était pas la vôtre. Elle est fermée, et aucun nouvel appareil ne peut entrer dans votre compte."
+            : `Le code de votre compte a été saisi faux 5 fois de suite sur un nouvel appareil. Les nouveaux appareils sont bloqués jusqu'au ${texteDe(d, "jusqu_a", "—")}.`,
+          pasMoi
+            ? "Pour lever ce blocage, changez le code de votre compte depuis votre téléphone habituel (Mon profil › Sécurité). Sans téléphone habituel, passez par « Code oublié ? » ou présentez-vous à l'école."
+            : "Vos appareils habituels ne sont pas touchés. Si ce n'est pas vous qui essayez, changez le code de votre compte depuis votre téléphone habituel.",
+        ],
+      };
+    }
+    case "code_compte_change":
+      return {
+        sujet: "Le code de votre compte EcoShop a changé",
+        apercu: "Le code de votre compte vient d'être changé.",
+        titre: "Code du compte changé",
+        paragraphes: [
+          salutation,
+          `Le code de votre compte a été changé le ${texteDe(d, "date", "—")}. Vos autres appareils vous le demanderont une fois, à leur prochaine connexion.`,
+          `Si ce n'est pas vous, contactez l'école ou écrivez à ${ctx.adresseSupport} sans attendre.`,
+        ],
+      };
+    case "code_compte_recuperation_lancee":
+      return {
+        sujet: "Récupération du code de votre compte EcoShop",
+        apercu: "Une récupération du code a été lancée. Si ce n'est pas vous, annulez-la.",
+        titre: "Récupération du code lancée",
+        paragraphes: [
+          salutation,
+          `Une récupération du code de votre compte a été demandée depuis l'appareil « ${texteDe(d, "modele", "inconnu")} ». Par sécurité, le nouveau code ne pourra être choisi qu'à partir du ${texteDe(d, "fin", "—")} (48 heures).`,
+          "Si ce n'est pas vous, ouvrez EcoShop sur votre téléphone habituel : un bandeau « Récupération en cours » vous permet de l'annuler.",
+        ],
+      };
+    case "code_compte_recuperation_terminee":
+      return {
+        sujet: "Nouveau code pour votre compte EcoShop",
+        apercu: "Le code de votre compte a été remplacé.",
+        titre: "Nouveau code choisi",
+        paragraphes: [
+          salutation,
+          texteDe(d, "voie") === "ecole"
+            ? "Après votre passage à l'école, un nouveau code a été choisi pour votre compte."
+            : "La récupération est terminée : un nouveau code a été choisi pour votre compte.",
+          `Si ce n'est pas vous, contactez l'école ou écrivez à ${ctx.adresseSupport} sans attendre.`,
+        ],
+      };
     default:
       throw new ModeleInconnu(modele);
   }

@@ -101,6 +101,12 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
+# Lien « Ce n'est pas moi » des courriels (REG-22 A) : publique, le jeton à
+# usage unique fait foi ; GET = confirmation, POST = action.
+[functions.pas_moi]
+enabled = true
+verify_jwt = false
+
 # Notifications push (REG-09) : appelée par pg_cron, en-tête x-declencheur-secret.
 # Kit de mise en service : codes de connexion par SMS Orange, appelée par
 # Supabase Auth (crochet « Send SMS », signature Standard Webhooks).

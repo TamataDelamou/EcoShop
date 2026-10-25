@@ -85,6 +85,7 @@ Deno.serve(async (req: Request) => {
   const contexte = {
     urlApplication: Deno.env.get("URL_APPLICATION") ?? "https://globalservicegroupe.com",
     adresseSupport: support,
+    urlFonctions: Deno.env.get("URL_FONCTIONS_PUBLIQUE") ?? `${Deno.env.get("SUPABASE_URL") ?? ""}/functions/v1`,
   };
   const adminsGsg = (Deno.env.get("COURRIEL_ADMIN_GSG") ?? "")
     .split(",").map((a) => a.trim()).filter((a) => a.includes("@"));

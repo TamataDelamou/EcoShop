@@ -96,6 +96,7 @@ supabase functions deploy initier_paiement_orange_money
 supabase functions deploy recevoir_notification_orange_money
 supabase functions deploy relancer_paiements_orange_money
 supabase functions deploy envoyer_notifications
+supabase functions deploy pas_moi       # lien « Ce n'est pas moi » des courriels (REG-22)
 supabase functions deploy kernel-export
 supabase functions deploy kernel-control-plane
 ```
