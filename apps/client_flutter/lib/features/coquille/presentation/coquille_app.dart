@@ -7,6 +7,7 @@ import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
 import '../../../core/widgets/page_header.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/session_locale.dart';
 import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
@@ -262,7 +263,9 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
   }
 }
 
-/// Bandeau affiché dès que la connectivité est perdue.
+/// Bandeau affiché sans connexion : plus de connectivité (mode avion,
+/// données coupées) ou serveur qui ne répond pas (Wi-Fi ou réseau mobile
+/// sans Internet — le téléphone se croit connecté).
 ///
 /// Les écritures continuent d'être acceptées et journalisées dans la file
 /// outbox ; le bandeau signale simplement que la synchronisation est différée
@@ -272,7 +275,8 @@ class _BandeauHorsLigne extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(estEnLigneProvider)) return const SizedBox.shrink();
+    final serveurMuet = ref.watch(donneesSessionPerimeesProvider);
+    if (ref.watch(estEnLigneProvider) && !serveurMuet) return const SizedBox.shrink();
 
     final schema = Theme.of(context).colorScheme;
     return Material(
@@ -285,7 +289,8 @@ class _BandeauHorsLigne extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Hors ligne — vos saisies seront synchronisées au retour du réseau.',
+                'Hors connexion — affichage des données enregistrées',
+                key: const Key('bandeau_hors_connexion'),
                 style: TextStyle(color: schema.onTertiaryContainer),
               ),
             ),

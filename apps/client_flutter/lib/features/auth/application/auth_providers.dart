@@ -144,11 +144,11 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   }
 
   // Lecture impossible (sans réseau, et rien de gardé sur le téléphone) : on
-  // attend plutôt que de deviner (fiche non liée, CGU acceptées…). La relance
+  // ne devine pas (fiche non liée, CGU acceptées…), on le dit. La relance
   // au retour du réseau relit tout (`relance_reseau.dart`).
   bool inconnu(AsyncValue<Object?> v) => v.hasError && !v.hasValue;
   if (inconnu(profil) || inconnu(fiche) || inconnu(etablissements) || inconnu(cguStatut)) {
-    return DestinationSession.chargement;
+    return DestinationSession.horsLigneSansCopie;
   }
 
   final statutCgu = cguStatut.valueOrNull;

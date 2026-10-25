@@ -40,6 +40,15 @@ final _reponsesFraichesProvider = Provider<Map<String, Object?>>((ref) => <Strin
 /// relance réessaie régulièrement ([RelanceReseau]).
 final donneesSessionPerimeesProvider = StateProvider<bool>((ref) => false);
 
+/// Attente maximale d'une réponse du serveur pour ces lectures (surchargée
+/// en test). Au-delà, on considère le réseau absent : copie du téléphone si
+/// elle existe, sinon écran « Pas de connexion » avec « Réessayer ».
+final delaiLectureServeurProvider = Provider<Duration>((ref) => const Duration(seconds: 8));
+
+/// Copie affichée et serveur toujours muet après ce délai : bandeau « Hors
+/// connexion » (l'accueil est déjà affiché, en 2 s au plus).
+final delaiAvantBandeauProvider = Provider<Duration>((ref) => const Duration(seconds: 2));
+
 Future<T> lireAvecCopieLocale<T>(
   Ref ref, {
   required String type,
@@ -55,6 +64,9 @@ Future<T> lireAvecCopieLocale<T>(
 
   if (fraiches.containsKey(cle)) return depuisJson(fraiches.remove(cle));
 
+  final delai = ref.read(delaiLectureServeurProvider);
+  Future<T> lireServeur() => serveur().timeout(delai);
+
   final copie = await _lire(store, type, compteId);
 
   // Ouverture : copie tout de suite, serveur en arrière-plan.
@@ -62,26 +74,48 @@ Future<T> lireAvecCopieLocale<T>(
     lues.add(cle);
     var actif = true;
     ref.onDispose(() => actif = false);
+    void signalerHorsConnexion(bool valeur) {
+      if (actif) ref.read(donneesSessionPerimeesProvider.notifier).state = valeur;
+    }
+
+    // Aucune connexion : la copie suffit, bandeau tout de suite ; la relance
+    // relira au retour du réseau.
+    if (!ref.read(estEnLigneProvider)) {
+      lues.remove(cle);
+      Future.microtask(() => signalerHorsConnexion(true));
+      return depuisJson(copie);
+    }
+
     unawaited(() async {
+      // Serveur muet au-delà de [delaiAvantBandeauProvider] (Wi-Fi sans
+      // Internet) : bandeau, sans abandonner la lecture (réseau lent).
+      final minuteur = Timer(ref.read(delaiAvantBandeauProvider), () => signalerHorsConnexion(true));
       try {
-        final json = versJson(await serveur());
+        final json = versJson(await lireServeur());
+        minuteur.cancel();
+        // Le serveur répond : plus de bandeau, la relance s'arrête.
+        signalerHorsConnexion(false);
         await _ecrire(store, type, compteId, json);
         if (jsonEncode(json) != jsonEncode(copie) && actif) {
           fraiches[cle] = json;
           ref.invalidateSelf();
         }
       } catch (e) {
+        minuteur.cancel();
         // Hors connexion : on garde la copie, la relance réessaiera.
         lues.remove(cle);
-        if (estErreurReseau(e) && actif) ref.read(donneesSessionPerimeesProvider.notifier).state = true;
+        if (estErreurReseau(e)) signalerHorsConnexion(true);
       }
     }());
     return depuisJson(copie);
   }
 
   try {
-    final valeur = await serveur();
+    // Aucune connexion (mode avion, données coupées) : inutile d'attendre.
+    if (!ref.read(estEnLigneProvider)) throw const HorsConnexion();
+    final valeur = await lireServeur();
     lues.add(cle);
+    ref.read(donneesSessionPerimeesProvider.notifier).state = false;
     await _ecrire(store, type, compteId, versJson(valeur));
     return valeur;
   } catch (e) {

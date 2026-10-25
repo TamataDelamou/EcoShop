@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthRetryableFetchException;
 
 import '../db/cache_document_store.dart';
 
@@ -9,11 +10,24 @@ import '../db/cache_document_store.dart';
 /// délai dépassé) — par opposition à un refus du serveur, qui reste une
 /// réponse à afficher telle quelle.
 bool estErreurReseau(Object e) =>
+    e is HorsConnexion ||
     e is http.ClientException ||
     e is TimeoutException ||
+    // Renouvellement du jeton impossible faute de réseau (Supabase Auth).
+    e is AuthRetryableFetchException ||
     e.runtimeType.toString() == 'SocketException' ||
     e.toString().contains('SocketException') ||
+    e.toString().contains('TimeoutException') ||
     e.toString().contains('Failed host lookup');
+
+/// Le téléphone n'a aucune connexion (mode avion, données coupées) : inutile
+/// d'interroger le serveur.
+class HorsConnexion implements Exception {
+  const HorsConnexion();
+
+  @override
+  String toString() => 'HorsConnexion';
+}
 
 /// Lecture « réseau d'abord, appareil ensuite » des écrans de consultation.
 ///

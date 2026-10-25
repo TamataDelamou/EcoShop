@@ -26,7 +26,8 @@ final relanceReseauProvider = Provider<void>((ref) {
 
   void relancer() {
     if (!ref.read(sessionOuverteProvider)) return;
-    ref.read(donneesSessionPerimeesProvider.notifier).state = false;
+    // Le bandeau reste affiché pendant l'essai : il disparaît quand une
+    // lecture réussit (`session_locale.dart`), sans clignoter.
     ref.rafraichirSession();
   }
 

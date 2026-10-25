@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../../core/offline/lecture_hors_ligne.dart';
+import '../../../core/providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/profil.dart';
@@ -27,10 +29,16 @@ class CguStatutNotifier extends AsyncNotifier<CguStatut?> {
     Profil? profil;
     try {
       profil = await ref.watch(profilProvider.future);
-    } catch (_) {
-      // Profil illisible : pas de copie possible, le serveur seul.
+    } catch (e) {
+      // Profil illisible faute de réseau : le statut ne le sera pas non
+      // plus, inutile d'attendre le serveur (« Pas de connexion »).
+      if (estErreurReseau(e)) rethrow;
+      // Autre refus : pas de copie possible, le serveur seul.
     }
-    if (profil == null) return repo.statut();
+    if (profil == null) {
+      if (!ref.read(estEnLigneProvider)) throw const HorsConnexion();
+      return repo.statut().timeout(ref.read(delaiLectureServeurProvider));
+    }
     return lireAvecCopieLocale<CguStatut?>(
       ref,
       type: 'cgu',

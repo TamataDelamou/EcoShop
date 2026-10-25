@@ -17,6 +17,7 @@ import '../../invitations/presentation/ecran_invitations.dart';
 import '../../auth/presentation/ecran_nom_profil.dart';
 import '../../auth/presentation/ecran_recapitulatif.dart';
 import '../../auth/application/relance_reseau.dart';
+import '../../auth/application/session_locale.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
 /// calculée par [GardeSession].
@@ -35,6 +36,7 @@ class RacineApp extends ConsumerWidget {
 
     return switch (destination) {
       DestinationSession.chargement => const _EcranChargement(),
+      DestinationSession.horsLigneSansCopie => const _EcranSansConnexion(),
       DestinationSession.connexion => const EcranChoixEspace(),
       DestinationSession.compteBloque => const _EcranCompteBloque(),
       DestinationSession.invitations => const EcranInvitations(),
@@ -54,12 +56,75 @@ class RacineApp extends ConsumerWidget {
   }
 }
 
+/// Ouverture en cours : jamais un chargement sans message. Les lectures ont
+/// un délai maximum ([delaiLectureServeurProvider]) ; au-delà, l'écran
+/// « Pas de connexion » prend le relais.
 class _EcranChargement extends StatelessWidget {
   const _EcranChargement();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              Text(
+                'Ouverture de votre espace…',
+                key: const Key('message_chargement'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Aucune connexion et rien de gardé sur ce téléphone pour ce compte
+/// (première ouverture sans réseau). L'application s'ouvre seule au retour
+/// du réseau ; « Réessayer » relance tout de suite.
+class _EcranSansConnexion extends ConsumerWidget {
+  const _EcranSansConnexion();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            key: const Key('ecran_sans_connexion'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 56),
+              const SizedBox(height: 16),
+              Text(
+                'Pas de connexion. Vos informations s’afficheront dès le retour du réseau.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                key: const Key('bouton_reessayer_connexion'),
+                onPressed: () {
+                  ref.read(donneesSessionPerimeesProvider.notifier).state = false;
+                  ref.rafraichirSession();
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

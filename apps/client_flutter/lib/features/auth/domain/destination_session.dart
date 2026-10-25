@@ -3,7 +3,13 @@ import 'profil.dart';
 /// Écran vers lequel la garde de session oriente l'utilisateur.
 enum DestinationSession {
   /// Profil pas encore chargé — on n'oriente pas tant qu'on ne sait pas.
+  /// L'écran dit toujours ce qui se passe (jamais de chargement muet).
   chargement,
+
+  /// Pas de réseau (ou serveur muet au-delà du délai) et rien de gardé sur
+  /// le téléphone pour ce compte : « Pas de connexion », avec « Réessayer ».
+  /// L'application s'ouvre seule au retour du réseau.
+  horsLigneSansCopie,
 
   /// Aucune session : parcours OTP.
   connexion,

@@ -14,6 +14,10 @@ import 'auth_providers.dart';
 /// L'étape « Votre numéro » revient après ce délai si on l'a passée.
 const delaiRappelTelephone = Duration(days: 30);
 
+/// Attente maximale du serveur pour savoir s'il faut demander le numéro :
+/// l'accueil ne l'attend jamais plus longtemps.
+const delaiEtapeTelephone = Duration(milliseconds: 1500);
+
 const _typeStore = 'telephone_profil';
 
 final _storeTelephoneProvider = Provider<CacheDocumentStore>(
@@ -57,8 +61,11 @@ class EtapeTelephoneNotifier extends AsyncNotifier<bool> {
     final passeLe = DateTime.tryParse(local?['passe_le'] as String? ?? '');
     if (passeLe != null && DateTime.now().difference(passeLe) < delaiRappelTelephone) return false;
 
+    // Non bloquante : sans réponse rapide du serveur (hors connexion, réseau
+    // lent), l'étape n'est pas montrée cette fois-ci ; elle reviendra.
+    if (!ref.read(estEnLigneProvider)) return false;
     try {
-      return await ref.watch(telephoneProfilProvider.future) == null;
+      return await ref.watch(telephoneProfilProvider.future).timeout(delaiEtapeTelephone) == null;
     } catch (_) {
       return false;
     }

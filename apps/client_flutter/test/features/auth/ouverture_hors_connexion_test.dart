@@ -170,12 +170,12 @@ void main() {
     expect(c.read(destinationProvider), DestinationSession.accueil);
   });
 
-  test('sans réseau et sans copie : attente, puis ouverture dès le retour du réseau', () async {
+  test('sans réseau et sans copie : « Pas de connexion », puis ouverture dès le retour du réseau', () async {
     serveur.enLigne = false;
     final c = lancer();
     c.read(reseau.notifier).state = false;
 
-    expect(await destinationStable(c), DestinationSession.chargement);
+    expect(await destinationStable(c), DestinationSession.horsLigneSansCopie);
 
     serveur.enLigne = true;
     c.read(reseau.notifier).state = true;
@@ -188,7 +188,7 @@ void main() {
     // Le téléphone se croit connecté, mais le serveur ne répond pas.
     serveur.enLigne = false;
     final c = lancer();
-    expect(await destinationStable(c), DestinationSession.chargement);
+    expect(await destinationStable(c), DestinationSession.horsLigneSansCopie);
 
     final appelsAvant = serveur.appels;
     serveur.enLigne = true;
