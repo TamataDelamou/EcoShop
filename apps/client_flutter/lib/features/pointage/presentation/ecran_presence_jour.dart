@@ -56,7 +56,7 @@ class _EcranPresenceJourState extends ConsumerState<EcranPresenceJour> {
   void _actualiser() => ref.invalidate(presenceDuJourProvider(_etab));
 
   Future<void> _imprimerCartes() async {
-    final structure = ref.read(structureEtablissementProvider(null)).value;
+    final structure = ref.read(structureEtablissementProvider(null)).valueOrNull;
     final classes = structure?.classes.where((c) => c.actif).toList() ?? const [];
     if (classes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aucune classe cette année.')));

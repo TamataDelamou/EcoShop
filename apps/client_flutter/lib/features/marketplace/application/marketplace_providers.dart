@@ -124,14 +124,14 @@ class PanierBrouillonLocalController extends AsyncNotifier<PanierBrouillonLocal>
   }
 
   Future<void> ajouter({required String commercantId, required String catalogueProduitId, int quantite = 1}) async {
-    final courant = state.value ?? PanierBrouillonLocal.vide;
+    final courant = state.valueOrNull ?? PanierBrouillonLocal.vide;
     final nouveau =
         courant.ajouter(commercantId: commercantId, catalogueProduitId: catalogueProduitId, quantite: quantite);
     await _persister(nouveau);
   }
 
   Future<void> definirQuantite(String catalogueProduitId, int quantite) async {
-    final courant = state.value ?? PanierBrouillonLocal.vide;
+    final courant = state.valueOrNull ?? PanierBrouillonLocal.vide;
     await _persister(courant.definirQuantite(catalogueProduitId, quantite));
   }
 

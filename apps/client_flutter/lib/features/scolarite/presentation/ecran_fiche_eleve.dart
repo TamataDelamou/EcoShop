@@ -226,7 +226,7 @@ class _CarteFinanciere extends ConsumerWidget {
                 ],
               ),
             ),
-            if (peutPayerEnLigne && (solde.value?.solde ?? 0) > 0) ...[
+            if (peutPayerEnLigne && (solde.valueOrNull?.solde ?? 0) > 0) ...[
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
@@ -243,7 +243,7 @@ class _CarteFinanciere extends ConsumerWidget {
                       builder: (_) => EcranPaiementOrangeMoney.scolarite(
                         inscriptionId: inscription.id,
                         nomEleve: nomEleve,
-                        resteAPayer: solde.value!.solde,
+                        resteAPayer: solde.valueOrNull!.solde,
                         devise: ref.read(etablissementActifProvider)?.deviseCode ?? 'GNF',
                         auSucces: (ref) {
                           ref.invalidate(soldeScolariteProvider(inscription.id));

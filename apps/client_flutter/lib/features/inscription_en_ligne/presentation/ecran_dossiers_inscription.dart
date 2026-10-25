@@ -70,7 +70,7 @@ class _EcranDossiersInscriptionState extends ConsumerState<EcranDossiersInscript
   Widget build(BuildContext context) {
     final dossiers = ref.watch(dossiersCampagneProvider(widget.campagneId));
     final tableau = ref.watch(tableauCampagneProvider(widget.campagneId));
-    final enAttente = ref.watch(dossiersActionEnAttenteProvider).value ?? const <String>{};
+    final enAttente = ref.watch(dossiersActionEnAttenteProvider).valueOrNull ?? const <String>{};
 
     return Scaffold(
       appBar: AppBar(title: const Text("Dossiers d'inscription")),
@@ -393,7 +393,7 @@ class _FeuilleDossierState extends ConsumerState<FeuilleDossier> {
     final palette = context.palette;
     final d = widget.demande;
     final classes = [
-      for (final c in ref.watch(structureEtablissementProvider(widget.anneeScolaireId)).value?.classes ?? const <Classe>[])
+      for (final c in ref.watch(structureEtablissementProvider(widget.anneeScolaireId)).valueOrNull?.classes ?? const <Classe>[])
         if (c.niveauId == d.niveauId && c.actif) c,
     ];
     final ouvert = !d.statut.estClos;

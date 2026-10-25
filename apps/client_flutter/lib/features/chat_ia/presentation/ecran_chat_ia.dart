@@ -201,7 +201,7 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
   }
 
   Future<void> _ouvrirDialogueAnalyse() async {
-    final structure = ref.read(structureEtablissementProvider(null)).value;
+    final structure = ref.read(structureEtablissementProvider(null)).valueOrNull;
     final anneeId = structure?.anneeCourante?.id;
     final classes = (structure?.classes ?? const <Classe>[])
         .where((c) => c.actif && c.anneeScolaireId == anneeId)

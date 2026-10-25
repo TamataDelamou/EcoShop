@@ -35,7 +35,7 @@ class EcranComptabilite extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // En référentiel OHADA, la saisie se fait obligatoirement par pièces
     // (REG-03 C2) : l'ancienne saisie à deux comptes est masquée.
-    final ohada = ref.watch(parametresComptablesProvider(etablissementId)).value?.referentiel.estReglementaire ?? false;
+    final ohada = ref.watch(parametresComptablesProvider(etablissementId)).valueOrNull?.referentiel.estReglementaire ?? false;
     return Scaffold(
       appBar: AppBar(title: const Text('Comptabilité')),
       body: ListView(

@@ -226,7 +226,7 @@ class _EcranCampagneInscriptionState extends ConsumerState<EcranCampagneInscript
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final structure = ref.watch(structureEtablissementProvider(null)).value;
+    final structure = ref.watch(structureEtablissementProvider(null)).valueOrNull;
     final annees = structure?.anneesScolaires ?? const <AnneeScolaire>[];
     _anneeId ??= _anneeParDefaut(annees);
     final anneeId = _anneeId;
@@ -246,11 +246,11 @@ class _EcranCampagneInscriptionState extends ConsumerState<EcranCampagneInscript
     );
     if (campagne.hasValue && _chargeePour != anneeId) {
       _chargeePour = anneeId;
-      _charger(campagne.value);
+      _charger(campagne.valueOrNull);
     }
-    final classes = ref.watch(structureEtablissementProvider(anneeId)).value?.classes ?? const [];
+    final classes = ref.watch(structureEtablissementProvider(anneeId)).valueOrNull?.classes ?? const [];
     final niveauIds = {for (final c in classes) if (c.niveauId != null && c.actif) c.niveauId!}.toList()..sort();
-    final noms = ref.watch(_nomsNiveauxProvider(niveauIds.join(','))).value ?? const <String, String>{};
+    final noms = ref.watch(_nomsNiveauxProvider(niveauIds.join(','))).valueOrNull ?? const <String, String>{};
 
     return Scaffold(
       appBar: AppBar(

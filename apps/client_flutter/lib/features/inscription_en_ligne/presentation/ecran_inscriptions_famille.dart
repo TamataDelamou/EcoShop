@@ -55,7 +55,7 @@ class EcranInscriptionsFamille extends ConsumerWidget {
                     ),
                     error: (e, _) => Encadre(texte: messageErreur(e), icone: Icons.cloud_off_outlined),
                     data: (liste) {
-                      final dossiersConnus = dossiers.value ?? const <DemandeInscription>[];
+                      final dossiersConnus = dossiers.valueOrNull ?? const <DemandeInscription>[];
                       if (liste.isEmpty) {
                         return const Encadre(
                           texte: "Aucune réinscription en cours pour le moment. Quand l'école ouvre ses "

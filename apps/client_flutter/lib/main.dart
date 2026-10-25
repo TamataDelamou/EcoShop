@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/env.dart';
+import 'core/erreurs/gestion_erreurs.dart';
 import 'core/theme/app_palette.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_variant.dart';
@@ -16,6 +17,8 @@ import 'features/themes/application/theme_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Plus d'écran gris : écran d'erreur lisible et erreur écrite au journal.
+  GestionErreurs.installer(navigateur: cleNavigateurRacine);
 
   // Initialisation conditionnelle : sans --dart-define, l'app démarre en mode
   // diagnostic (aucun appel réseau), conformément à Env.estConfigure.
@@ -28,39 +31,44 @@ Future<void> main() async {
     await InitialisationPush.initialiser();
   }
 
-  runApp(const ProviderScope(child: EcoShopApp()));
+  runApp(const RedemarrageApplication(child: ProviderScope(child: EcoShopApp())));
 }
 
 class EcoShopApp extends ConsumerWidget {
-  const EcoShopApp({super.key});
+  const EcoShopApp({super.key, this.configure});
+
+  /// Application branchée sur Supabase ; par défaut [Env.estConfigure].
+  /// Forcé à vrai par les tests qui montent l'application entière.
+  final bool? configure;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final estConfigure = configure ?? Env.estConfigure;
     // Mode diagnostic (aucun --dart-define) : les providers de thème dérivent
     // de l'établissement actif, lui-même dérivé de la session Supabase — les
     // regarder ici planterait sur `Supabase.instance` jamais initialisé. On
     // retombe alors sur la charte par défaut, exactement comme avant M15bis.
-    final variante = Env.estConfigure
+    final variante = estConfigure
         ? ref.watch(themeVariantProvider)
         : AppThemeVariant.francophoneCfa;
-    final mode = Env.estConfigure
+    final mode = estConfigure
         ? ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system
         : ThemeMode.system;
     // Accessibilité (D4, §34.9) : mêmes garde-fous qu'au-dessus en mode
     // diagnostic — regarder ces providers sans Supabase planterait sur des
     // dépendances jamais initialisées.
-    final contrasteEleve = Env.estConfigure
+    final contrasteEleve = estConfigure
         ? ref.watch(contrasteEleveProvider).valueOrNull ?? false
         : false;
-    final echelleTexte = Env.estConfigure
+    final echelleTexte = estConfigure
         ? ref.watch(echelleTexteProvider).valueOrNull ?? EchelleTexte.normal
         : EchelleTexte.normal;
     // Identité de l'établissement (REG-07 B) et ambiance personnelle
     // (REG-07 C) — mêmes garde-fous qu'au-dessus en mode diagnostic.
-    final ambiance = Env.estConfigure
+    final ambiance = estConfigure
         ? ref.watch(ambianceProvider).valueOrNull ?? AmbianceVisuelle.etablissement
         : AmbianceVisuelle.etablissement;
-    final couleurEtablissement = Env.estConfigure ? ref.watch(identiteEtablissementProvider).couleur : null;
+    final couleurEtablissement = estConfigure ? ref.watch(identiteEtablissementProvider).couleur : null;
 
     return MaterialApp(
       title: 'EcoShop',
@@ -91,13 +99,13 @@ class EcoShopApp extends ConsumerWidget {
           data: media.copyWith(textScaler: TextScaler.linear(echelleTexte.facteur)),
           // Verrou (REG-18) au-dessus du navigateur : il couvre aussi les
           // pages ouvertes par-dessus l'accueil.
-          child: Env.estConfigure ? GardienVerrou(navigateur: cleNavigateurRacine, child: enfant!) : enfant!,
+          child: estConfigure ? GardienVerrou(navigateur: cleNavigateurRacine, child: enfant!) : enfant!,
         );
       },
       // Sans configuration Supabase, aucun provider d'authentification ne peut
       // fonctionner : on affiche l'écran de diagnostic du socle plutôt que de
       // laisser l'application planter sur `Supabase.instance`.
-      home: Env.estConfigure ? const RacineApp() : const AccueilSocle(),
+      home: estConfigure ? const RacineApp() : const AccueilSocle(),
     );
   }
 }

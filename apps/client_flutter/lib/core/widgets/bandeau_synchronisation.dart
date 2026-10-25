@@ -18,7 +18,7 @@ class BandeauSynchronisation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final suivi = ref.watch(suiviSyncProvider).value;
+    final suivi = ref.watch(suiviSyncProvider).valueOrNull;
     final fraicheur = ref.watch(fraicheurHorsLigneProvider);
     return ValueListenableBuilder<DateTime?>(
       valueListenable: fraicheur,

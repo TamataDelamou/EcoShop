@@ -18,7 +18,7 @@ final connectivityProvider = StreamProvider<List<ConnectivityResult>>((ref) {
 /// Indique si une connectivité autre que « none » est disponible.
 final estEnLigneProvider = Provider<bool>((ref) {
   final async = ref.watch(connectivityProvider);
-  final resultats = async.value ?? const [ConnectivityResult.none];
+  final resultats = async.valueOrNull ?? const [ConnectivityResult.none];
   return resultats.any((r) => r != ConnectivityResult.none);
 });
 

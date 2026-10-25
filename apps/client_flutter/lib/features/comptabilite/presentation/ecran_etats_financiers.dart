@@ -257,7 +257,7 @@ class _CartePca extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final apercu = ref.watch(apercuPcaProvider(exerciceId)).value;
+    final apercu = ref.watch(apercuPcaProvider(exerciceId)).valueOrNull;
     if (apercu == null || (apercu.total == 0 && !apercu.dejaPasses)) return const SizedBox.shrink();
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),

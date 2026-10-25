@@ -172,7 +172,7 @@ class _EcranReinscriptionState extends ConsumerState<EcranReinscription> {
   Future<void> _confirmer() async {
     final fiche = _fiche;
     final classe = _classe;
-    final structure = ref.read(structureEtablissementProvider(null)).value;
+    final structure = ref.read(structureEtablissementProvider(null)).valueOrNull;
     final anneeId = structure?.anneeCourante?.id;
     if (fiche == null || classe == null || anneeId == null) return;
 

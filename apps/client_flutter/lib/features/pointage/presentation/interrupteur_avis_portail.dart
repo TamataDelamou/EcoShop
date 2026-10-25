@@ -16,7 +16,7 @@ class InterrupteurAvisPortail extends ConsumerWidget {
       secondary: const Icon(Icons.door_front_door_outlined),
       title: const Text("Avis d'arrivée et de sortie de l'école"),
       subtitle: const Text("Les alertes d'absence et de sortie avant l'heure arrivent toujours."),
-      value: valeur.value ?? true,
+      value: valeur.valueOrNull ?? true,
       onChanged: valeur.isLoading
           ? null
           : (v) async {

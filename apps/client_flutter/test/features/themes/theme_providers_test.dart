@@ -44,6 +44,55 @@ void main() {
       ]);
     }
 
+    /// Variante une fois la copie du téléphone lue (et complétée au besoin).
+    Future<AppThemeVariant> variante(ProviderContainer container) async {
+      final sub = container.listen(themeVariantProvider, (_, _) {});
+      addTearDown(sub.close);
+      for (var i = 0; i < 50; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        if (sub.read() != AppThemeVariant.francophoneCfa) break;
+      }
+      return sub.read();
+    }
+
+    const ghana = PaysPedagogique(
+      codeIso: 'GH',
+      nom: 'Ghana',
+      typeSysteme: 'anglophone_waec',
+      langueEnseignementPrincipale: 'en',
+    );
+
+    test('pays déjà connu sur le téléphone : bonne charte sans réseau, sans erreur', () async {
+      // Premier lancement en ligne : le type du pays est gardé.
+      final enLigne = construire(
+        etablissement: const Etablissement(id: 'e1', nom: 'Test', slug: 'test', paysCode: 'GH'),
+        pays: const [ghana],
+      );
+      expect(await variante(enLigne), AppThemeVariant.anglophoneWaec);
+      enLigne.dispose();
+
+      // Lancement sans réseau : la liste des pays échoue.
+      final horsLigne = ProviderContainer(overrides: [
+        databaseProvider.overrideWithValue(db),
+        etablissementActifProvider.overrideWithValue(
+            const Etablissement(id: 'e1', nom: 'Test', slug: 'test', paysCode: 'GH')),
+        paysPedagogiquesProvider.overrideWith((ref) async => throw Exception('Failed host lookup')),
+      ]);
+      addTearDown(horsLigne.dispose);
+      expect(await variante(horsLigne), AppThemeVariant.anglophoneWaec);
+    });
+
+    test('pays inconnu et réseau absent : charte par défaut, jamais d’erreur', () async {
+      final container = ProviderContainer(overrides: [
+        databaseProvider.overrideWithValue(db),
+        etablissementActifProvider.overrideWithValue(
+            const Etablissement(id: 'e1', nom: 'Test', slug: 'test', paysCode: 'GH')),
+        paysPedagogiquesProvider.overrideWith((ref) async => throw Exception('Failed host lookup')),
+      ]);
+      addTearDown(container.dispose);
+      expect(await variante(container), AppThemeVariant.francophoneCfa);
+    });
+
     test('aucun établissement actif → repli francophone_cfa', () async {
       final container = construire(etablissement: null);
       addTearDown(container.dispose);
@@ -80,9 +129,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      // Le référentiel est un FutureProvider : on attend sa résolution avant de lire.
-      await container.read(paysPedagogiquesProvider.future);
-      expect(container.read(themeVariantProvider), AppThemeVariant.anglophoneWaec);
+      expect(await variante(container), AppThemeVariant.anglophoneWaec);
     });
 
     test('établissement en Guinée-Bissau (lusophone) → variante lusophone', () async {
@@ -98,8 +145,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      await container.read(paysPedagogiquesProvider.future);
-      expect(container.read(themeVariantProvider), AppThemeVariant.lusophone);
+      expect(await variante(container), AppThemeVariant.lusophone);
     });
   });
 }

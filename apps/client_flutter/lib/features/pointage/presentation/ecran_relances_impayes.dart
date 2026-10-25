@@ -61,7 +61,7 @@ class _EcranRelancesImpayesState extends ConsumerState<EcranRelancesImpayes> {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final apercu = ref.watch(apercuRelancesProvider(widget.etablissementId));
-    final a = apercu.value;
+    final a = apercu.valueOrNull;
     final cibles = a == null
         ? 0
         : a.familles.where((f) => !_exclus.contains(f.inscriptionId) && !f.relanceeRecemment).length;

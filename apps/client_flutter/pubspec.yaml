@@ -68,6 +68,8 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  # Règle « jamais .value sur un AsyncValue » (test/regles/).
+  analyzer: ^10.2.0
   drift_dev: ^2.20.0
   build_runner: ^2.4.11
 

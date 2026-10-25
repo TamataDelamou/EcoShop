@@ -548,7 +548,7 @@ class _OngletDonateurs extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final donateurs = ref.watch(donateursProvider(etablissementId));
-    final campagnes = ref.watch(affectationsDonsProvider(etablissementId)).value ?? const <AffectationDon>[];
+    final campagnes = ref.watch(affectationsDonsProvider(etablissementId)).valueOrNull ?? const <AffectationDon>[];
     return donateurs.when(
       loading: _chargement,
       error: (e, _) => _erreur(e),
@@ -756,9 +756,9 @@ class _EcranSaisieDonState extends ConsumerState<EcranSaisieDon> {
 
   @override
   Widget build(BuildContext context) {
-    final donateurs = ref.watch(donateursProvider(widget.etablissementId)).value ?? const <Donateur>[];
+    final donateurs = ref.watch(donateursProvider(widget.etablissementId)).valueOrNull ?? const <Donateur>[];
     final campagnes = [
-      for (final c in ref.watch(affectationsDonsProvider(widget.etablissementId)).value ?? const <AffectationDon>[])
+      for (final c in ref.watch(affectationsDonsProvider(widget.etablissementId)).valueOrNull ?? const <AffectationDon>[])
         if (c.active) c,
     ];
     final campagne = campagnes.where((c) => c.id == _affectationId).firstOrNull;

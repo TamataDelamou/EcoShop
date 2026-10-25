@@ -26,8 +26,8 @@ class EcranEcrituresRecentes extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ecritures = ref.watch(ecrituresRecentesProvider(etablissementId));
-    final comptes = ref.watch(planComptableProvider(etablissementId)).value ?? const [];
-    final journaux = ref.watch(journauxProvider(etablissementId)).value ?? const [];
+    final comptes = ref.watch(planComptableProvider(etablissementId)).valueOrNull ?? const [];
+    final journaux = ref.watch(journauxProvider(etablissementId)).valueOrNull ?? const [];
     final libelleCompte = {for (final c in comptes) c.id: c.libelle};
     final libelleJournal = {for (final j in journaux) j.id: j.libelle};
 

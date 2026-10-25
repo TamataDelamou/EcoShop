@@ -41,22 +41,49 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
   }
 }
 
+/// Type de système éducatif de chaque pays (code ISO → `type_systeme`),
+/// gardé sur le téléphone : le thème ne lit jamais le réseau.
+final systemesPaysLocauxProvider = FutureProvider<Map<String, String>>((ref) async {
+  try {
+    final document = await ref.watch(_themePreferenceStoreProvider).lireSystemesPays();
+    return document;
+  } catch (_) {
+    return const {};
+  }
+});
+
+/// Complète la copie du téléphone quand le pays de l'établissement n'y est
+/// pas encore : liste des pays relue en arrière-plan. Ne lève jamais : sans
+/// réseau, le thème reste sur la charte par défaut.
+final _completerSystemesPaysProvider = FutureProvider<void>((ref) async {
+  try {
+    final pays = await ref.watch(paysPedagogiquesProvider.future);
+    if (pays.isEmpty) return;
+    await ref.read(_themePreferenceStoreProvider).ecrireSystemesPays({
+      for (final p in pays) p.codeIso: p.typeSysteme,
+    });
+    ref.invalidate(systemesPaysLocauxProvider);
+  } catch (_) {
+    // Hors connexion ou serveur indisponible : nouvel essai au prochain
+    // lancement.
+  }
+});
+
 /// Variante visuelle active, dérivée du pays pédagogique de l'établissement
 /// actif (M4 : `pays_pedagogiques.type_systeme`) — jamais un choix libre de
 /// l'utilisateur : la charte graphique reflète le système éducatif réel de
-/// l'établissement. Repli sur [AppThemeVariant.francophoneCfa] tant que
-/// l'établissement ou le référentiel pays n'est pas encore chargé.
+/// l'établissement. Repli sur [AppThemeVariant.francophoneCfa] tant que le
+/// type du pays n'est pas connu sur le téléphone. Ne dépend jamais du
+/// réseau et ne lève jamais (le thème est lu par la racine de l'app : une
+/// erreur ici ferait planter tous les écrans).
 final themeVariantProvider = Provider<AppThemeVariant>((ref) {
-  final etablissement = ref.watch(etablissementActifProvider);
-  final paysCode = etablissement?.paysCode;
+  final paysCode = ref.watch(etablissementActifProvider)?.paysCode;
   if (paysCode == null) return AppThemeVariant.francophoneCfa;
 
-  final pays = ref.watch(paysPedagogiquesProvider).value ?? const [];
-  for (final p in pays) {
-    if (p.codeIso == paysCode) {
-      return AppThemeVariant.depuisCodeSysteme(p.typeSysteme);
-    }
-  }
+  final type = ref.watch(systemesPaysLocauxProvider).valueOrNull?[paysCode];
+  if (type != null) return AppThemeVariant.depuisCodeSysteme(type);
+
+  ref.watch(_completerSystemesPaysProvider);
   return AppThemeVariant.francophoneCfa;
 });
 

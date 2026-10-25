@@ -246,7 +246,7 @@ class _ChoixCibleState extends ConsumerState<_ChoixCible> {
 
   @override
   Widget build(BuildContext context) {
-    final comptes = ref.watch(comptesCiblesProvider(widget.referentiel)).value ?? const <CompteCible>[];
+    final comptes = ref.watch(comptesCiblesProvider(widget.referentiel)).valueOrNull ?? const <CompteCible>[];
     final q = _recherche.text.trim().toLowerCase();
     final filtres = [
       for (final c in comptes)

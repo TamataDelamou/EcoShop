@@ -60,7 +60,7 @@ class _EcranParametresPointageState extends ConsumerState<EcranParametresPointag
   Widget build(BuildContext context) {
     final palette = context.palette;
     final charge = ref.watch(parametresPointageProvider(widget.etablissementId));
-    _p ??= charge.value;
+    _p ??= charge.valueOrNull;
     final p = _p;
 
     return Scaffold(

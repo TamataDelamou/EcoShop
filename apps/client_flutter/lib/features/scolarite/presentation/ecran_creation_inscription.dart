@@ -67,7 +67,7 @@ class _EcranCreationInscriptionState extends ConsumerState<EcranCreationInscript
 
   Future<void> _valider() async {
     final etablissement = ref.read(etablissementActifProvider);
-    final structure = ref.read(structureEtablissementProvider(null)).value;
+    final structure = ref.read(structureEtablissementProvider(null)).valueOrNull;
     final anneeId = structure?.anneeCourante?.id;
     final date = _dateNaissance;
     final classe = _classe;

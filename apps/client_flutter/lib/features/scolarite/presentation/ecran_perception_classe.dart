@@ -50,7 +50,7 @@ class EcranPerceptionClasse extends ConsumerWidget {
             itemCount: actives.length,
             itemBuilder: (context, i) => _CarteSolde(
               inscription: actives[i],
-              solde: soldes.value?[actives[i].id],
+              solde: soldes.valueOrNull?[actives[i].id],
               chargement: soldes.isLoading,
             ),
           );

@@ -42,7 +42,7 @@ class CguStatutNotifier extends AsyncNotifier<CguStatut?> {
   }
 
   Future<void> accepter() async {
-    final statut = state.value;
+    final statut = state.valueOrNull;
     if (statut == null) return;
     await ref.read(cguRepositoryProvider).accepter(statut.cguVersionId);
     final acceptee = statut.copierAvecAcceptee(true);

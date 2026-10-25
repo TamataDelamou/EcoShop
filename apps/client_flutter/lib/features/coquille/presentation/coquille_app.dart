@@ -553,7 +553,7 @@ class _VueProfil extends ConsumerWidget {
         if (p.roleRacine == RoleRacine.eleve)
           Consumer(
             builder: (context, ref, _) {
-              final fiche = ref.watch(maFicheProvider).value;
+              final fiche = ref.watch(maFicheProvider).valueOrNull;
               final etablissement = ref.watch(etablissementActifProvider);
               return ListTile(
                 leading: const Icon(Icons.document_scanner_outlined),
@@ -580,7 +580,7 @@ class _VueProfil extends ConsumerWidget {
         if (p.roleRacine == RoleRacine.eleve)
           Consumer(
             builder: (context, ref, _) {
-              final fiche = ref.watch(maFicheProvider).value;
+              final fiche = ref.watch(maFicheProvider).valueOrNull;
               return ListTile(
                 leading: const Icon(Icons.phonelink_lock_outlined),
                 title: const Text('PARENT IA'),
@@ -1016,7 +1016,7 @@ class _VueProfil extends ConsumerWidget {
               final etablissement = ref.watch(etablissementActifProvider);
               final structure = ref
                   .watch(structureEtablissementProvider(null))
-                  .value;
+                  .valueOrNull;
               final anneeId = structure?.anneeCourante?.id;
               if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
@@ -1044,7 +1044,7 @@ class _VueProfil extends ConsumerWidget {
               final etablissement = ref.watch(etablissementActifProvider);
               final structure = ref
                   .watch(structureEtablissementProvider(null))
-                  .value;
+                  .valueOrNull;
               final anneeId = structure?.anneeCourante?.id;
               if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
@@ -1082,7 +1082,7 @@ class _VueProfil extends ConsumerWidget {
               final etablissement = ref.watch(etablissementActifProvider);
               final structure = ref
                   .watch(structureEtablissementProvider(null))
-                  .value;
+                  .valueOrNull;
               final anneeId = structure?.anneeCourante?.id;
               if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
@@ -1126,7 +1126,7 @@ class _VueProfil extends ConsumerWidget {
               final etablissement = ref.watch(etablissementActifProvider);
               final structure = ref
                   .watch(structureEtablissementProvider(null))
-                  .value;
+                  .valueOrNull;
               final anneeId = structure?.anneeCourante?.id;
               if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();
@@ -1179,7 +1179,7 @@ class _VueProfil extends ConsumerWidget {
         if (p.roleRacine == RoleRacine.eleve)
           Consumer(
             builder: (context, ref, _) {
-              final fiche = ref.watch(maFicheProvider).value;
+              final fiche = ref.watch(maFicheProvider).valueOrNull;
               return ListTile(
                 leading: const Icon(Icons.calendar_view_week_outlined),
                 title: const Text('Mon emploi du temps'),
@@ -1228,7 +1228,7 @@ class _VueProfil extends ConsumerWidget {
         if (p.roleRacine == RoleRacine.eleve)
           Consumer(
             builder: (context, ref, _) {
-              final fiche = ref.watch(maFicheProvider).value;
+              final fiche = ref.watch(maFicheProvider).valueOrNull;
               return ListTile(
                 leading: const Icon(Icons.summarize_outlined),
                 title: const Text('Mes rapports'),
@@ -1419,7 +1419,7 @@ class _VueProfil extends ConsumerWidget {
               final etablissement = ref.watch(etablissementActifProvider);
               final structure = ref
                   .watch(structureEtablissementProvider(null))
-                  .value;
+                  .valueOrNull;
               final anneeId = structure?.anneeCourante?.id;
               if (etablissement == null || anneeId == null) {
                 return const SizedBox.shrink();

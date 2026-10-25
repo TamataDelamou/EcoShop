@@ -72,7 +72,7 @@ class _EcranSuiviPaiementState extends ConsumerState<EcranSuiviPaiement> with Wi
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Retour depuis la page Orange Money : relecture immédiate du statut.
     if (state == AppLifecycleState.resumed) {
-      final actuel = ref.read(suiviTransactionProvider(widget.transactionId)).value;
+      final actuel = ref.read(suiviTransactionProvider(widget.transactionId)).valueOrNull;
       if (actuel == null || !actuel.statut.estFinal) {
         ref.invalidate(suiviTransactionProvider(widget.transactionId));
       }
@@ -99,12 +99,12 @@ class _EcranSuiviPaiementState extends ConsumerState<EcranSuiviPaiement> with Wi
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<TransactionMobileMoney>>(suiviTransactionProvider(widget.transactionId), (_, suivant) {
-      final tx = suivant.value;
+      final tx = suivant.valueOrNull;
       if (tx != null && tx.statut.estFinal) _surStatutFinal(tx);
     });
 
     final suivi = ref.watch(suiviTransactionProvider(widget.transactionId));
-    final tx = suivi.value;
+    final tx = suivi.valueOrNull;
     final statut = tx?.statut ?? StatutTransactionMobile.initie;
 
     final Widget contenu = switch (statut) {

@@ -90,7 +90,7 @@ class _EcranComptabilisationAutomatiqueState extends ConsumerState<EcranComptabi
   @override
   Widget build(BuildContext context) {
     final etat = ref.watch(etatComptabilisationAutomatiqueProvider(widget.etablissementId));
-    final plan = ref.watch(planComptableProvider(widget.etablissementId)).value ?? const <PlanComptable>[];
+    final plan = ref.watch(planComptableProvider(widget.etablissementId)).valueOrNull ?? const <PlanComptable>[];
     final parents = {for (final c in plan) if (c.parentId != null) c.parentId};
     final imputables = [for (final c in plan) if (c.actif && !parents.contains(c.id)) c];
 

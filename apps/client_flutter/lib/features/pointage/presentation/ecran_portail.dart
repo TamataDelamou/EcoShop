@@ -151,7 +151,7 @@ class _EcranPortailState extends ConsumerState<EcranPortail> {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final enLigne = ref.watch(estEnLigneProvider);
-    final suivi = ref.watch(suiviSyncProvider).value;
+    final suivi = ref.watch(suiviSyncProvider).valueOrNull;
     final sens = _sens;
 
     return Scaffold(

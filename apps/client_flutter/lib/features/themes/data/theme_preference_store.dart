@@ -47,4 +47,22 @@ class ThemePreferenceStore {
   Future<void> ecrireAmbiance(AmbianceVisuelle ambiance) {
     return _store.ecrireDocument(_type, _cleAmbiance, {'ambiance': ambiance.code});
   }
+
+  static const _cleSystemesPays = 'systemes_pays';
+
+  /// Type de système éducatif par pays (code ISO → `type_systeme`) : la
+  /// charte de l'établissement se choisit sans réseau. Donnée publique du
+  /// référentiel, gardée à la déconnexion.
+  Future<Map<String, String>> lireSystemesPays() async {
+    final document = await _store.lireDocument(_type, _cleSystemesPays);
+    return {
+      for (final e in (document ?? const {}).entries)
+        if (e.value is String) e.key: e.value as String,
+    };
+  }
+
+  Future<void> ecrireSystemesPays(Map<String, String> systemes) async {
+    final actuels = await lireSystemesPays();
+    await _store.ecrireDocument(_type, _cleSystemesPays, {...actuels, ...systemes});
+  }
 }

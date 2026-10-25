@@ -100,7 +100,7 @@ final enfantSelectionneProvider = StateProvider<FicheEleve?>((ref) => null);
 /// Résout automatiquement l'enfant actif : le choix explicite s'il est
 /// toujours valide, sinon le premier enfant confirmé de la liste.
 final enfantActifProvider = Provider<FicheEleve?>((ref) {
-  final enfants = ref.watch(mesEnfantsProvider).value ?? const [];
+  final enfants = ref.watch(mesEnfantsProvider).valueOrNull ?? const [];
   final actifs = enfants.where((r) => r.estActive).map((r) => r.fiche).whereType<FicheEleve>();
   if (actifs.isEmpty) return null;
 
