@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil parent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#17603C}a:hover{color:#0F4429}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:14px 6px 12px;background:#FFFFFF;border:1px solid #E3E7E2;border-radius:18px;font:inherit;color:#1C2321;cursor:pointer;min-height:96px}
+.tile .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.tile .lb{font-size:13px;font-weight:600;line-height:1.2;text-align:center}
+.badge{position:absolute;top:8px;right:10px;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#B9480F;color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:22px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#1C2321}
+.todo{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#FFFFFF;border:none;border-radius:14px;font:inherit;color:#1C2321;text-align:left;cursor:pointer;width:100%}
+</style>
+</helmet>
+<div style="width: 390px; height: 1130px; box-sizing: border-box; background: #F5F7F4; font-family: 'Figtree', system-ui, sans-serif; color: #1C2321; display: flex; flex-direction: column">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 4px 20px">
+<span style="font-size: 20px; font-weight: 800; color: #17603C; letter-spacing: -0.3px">EcoShop</span>
+<div style="display: flex; align-items: center; gap: 2px">
+<button class="iconbtn" aria-label="Notifications, 3 nouvelles">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+<span class="badge" style="top: 4px; right: 2px">3</span>
+</button>
+<button class="iconbtn" aria-label="Apparence : automatique">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+</button>
+<button class="iconbtn" aria-label="Mon profil">
+<span style="width: 34px; height: 34px; border-radius: 17px; background: #17603C; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">MS</span>
+</button>
+</div>
+</div>
+
+<div role="status" style="margin: 6px 16px 0; padding: 9px 12px; border-radius: 12px; background: #FFF1D6; color: #6B4205; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0"></path><path d="M5 12.9a10 10 0 0 1 14 0"></path><path d="M8.5 16.4a5 5 0 0 1 7 0"></path><path d="M3 3l18 18"></path></svg>
+Hors connexion — affichage des données enregistrées
+</div>
+
+<div style="padding: 18px 20px 6px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.1">Mariama Sow</h1>
+<div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap">
+<span style="padding: 5px 12px; border-radius: 999px; background: #DDEFE4; color: #0F4429; font-size: 13px; font-weight: 700">Parent</span>
+<span style="padding: 5px 12px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E3E7E2; color: #3B4541; font-size: 13px; font-weight: 600">École Bambino Emmaüs</span>
+</div>
+</div>
+
+<div style="padding: 16px 20px 0">
+<h2 style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #4A5551; text-transform: uppercase; letter-spacing: 0.6px">Mes enfants</h2>
+<div style="display: flex; gap: 14px; align-items: flex-start">
+<button style="border: none; background: transparent; font: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 0; color: #1C2321">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: #FCE3CF; color: #8A3A08; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center">A</span>
+<span style="font-size: 13px; font-weight: 600">Aïcha · CM1</span>
+</button>
+<button style="border: none; background: transparent; font: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 0; color: #1C2321">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: #DCE7FB; color: #1E3F8A; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center">M</span>
+<span style="font-size: 13px; font-weight: 600">Moussa · 6e</span>
+</button>
+<button style="border: none; background: transparent; font: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 0; color: #17603C">
+<span style="width: 56px; height: 56px; border-radius: 28px; border: 2px dashed #8FB8A1; box-sizing: border-box; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+<span style="font-size: 13px; font-weight: 700">Ajouter</span>
+</button>
+</div>
+</div>
+
+<div style="margin: 20px 16px 0; padding: 14px; border-radius: 18px; background: #E9F3EC; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px 2px; font-size: 14px; font-weight: 700; color: #0F4429; text-transform: uppercase; letter-spacing: 0.6px">À faire</h2>
+<button class="todo">
+<span style="width: 10px; height: 10px; border-radius: 5px; background: #B9480F; flex: none"></span>
+<span style="flex: 1; font-size: 15px; font-weight: 600">2 mots du cahier à signer</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7672" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+<button class="todo">
+<span style="width: 10px; height: 10px; border-radius: 5px; background: #B9480F; flex: none"></span>
+<span style="flex: 1; font-size: 15px; font-weight: 600">Tranche de novembre à payer</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7672" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+</div>
+
+<div style="padding: 22px 16px 24px">
+<h2 style="margin: 0 4px 12px; font-size: 14px; font-weight: 700; color: #4A5551; text-transform: uppercase; letter-spacing: 0.6px">Tout EcoShop</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+
+<button class="tile"><span class="badge">3</span><span class="ic" style="background: #E6F0FB; color: #1E4FA8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M19 6a8 8 0 0 1 0 12"></path></svg></span><span class="lb">Annonces</span></button>
+
+<button class="tile"><span class="badge">2</span><span class="ic" style="background: #FCEBDD; color: #A2460D"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"></path><path d="M4 17a3 3 0 0 1 3-3h11"></path><path d="M8 8h6"></path></svg></span><span class="lb">Cahier de liaison</span></button>
+
+<button class="tile"><span class="ic" style="background: #EEE9FB; color: #5233A8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span><span class="lb">Emploi du temps</span></button>
+
+<button class="tile"><span class="ic" style="background: #E3F2EA; color: #17603C"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></span><span class="lb">Notes et bulletins</span></button>
+
+<button class="tile"><span class="ic" style="background: #FFF1D6; color: #855004"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20M6 15h4"></path></svg></span><span class="lb">Scolarité</span></button>
+
+<button class="tile"><span class="ic" style="background: #FBE4E8; color: #A3233B"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="14" rx="2"></rect><path d="M4 11h16M8 21v-4M16 21v-4M7.5 14h.01M16.5 14h.01"></path></svg></span><span class="lb">Bus</span></button>
+
+<button class="tile"><span class="ic" style="background: #E1F3F4; color: #136B72"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg></span><span class="lb">Parent IA</span></button>
+
+<button class="tile"><span class="ic" style="background: #EDEFEC; color: #3B4541"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M12 12v6M9 15h6"></path></svg></span><span class="lb">Inscriptions</span></button>
+
+<button class="tile"><span class="ic" style="background: #E3F2EA; color: #17603C"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path></svg></span><span class="lb">Boutique</span></button>
+
+</div>
+</div>
+<nav aria-label="Navigation principale" style="margin-top: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E3E7E2; padding: 6px 6px 12px">
+<a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; text-decoration: none; color: #0F4429; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 30px; border-radius: 15px; background: #DDEFE4; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></span>Accueil</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; text-decoration: none; color: #4A5551; font-size: 12px; font-weight: 600"><span style="position: relative; width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span class="badge" style="top: -2px; right: 6px">5</span></span>Messages</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; text-decoration: none; color: #4A5551; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 10h18M8 2v4M16 2v4"></path></svg></span>Agenda</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; text-decoration: none; color: #4A5551; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20M6 15h4"></path></svg></span>Paiements</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1130}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

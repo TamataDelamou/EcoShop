@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil enseignant</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#17603C}a:hover{color:#0F4429}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:14px 6px 12px;background:#FFFFFF;border:1px solid #E3E7E2;border-radius:18px;font:inherit;color:#1C2321;cursor:pointer;min-height:96px}
+.tile .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.tile .lb{font-size:13px;font-weight:600;line-height:1.2;text-align:center}
+.badge{position:absolute;top:8px;right:10px;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#B9480F;color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:22px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#1C2321}
+.todo{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#FFFFFF;border:none;border-radius:14px;font:inherit;color:#1C2321;text-align:left;cursor:pointer;width:100%}
+.nv{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;text-decoration:none;color:#4A5551;font-size:12px;font-weight:600}
+.nv .w{position:relative;width:56px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div style="width: 390px; height: 1130px; box-sizing: border-box; background: #F5F7F4; font-family: 'Figtree', system-ui, sans-serif; color: #1C2321; display: flex; flex-direction: column">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 4px 20px">
+<span style="font-size: 20px; font-weight: 800; color: #17603C; letter-spacing: -0.3px">EcoShop</span>
+<div style="display: flex; align-items: center; gap: 2px">
+<button class="iconbtn" aria-label="Notifications, 3 nouvelles"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="badge" style="top: 4px; right: 2px">3</span></button>
+<button class="iconbtn" aria-label="Apparence : automatique"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+<button class="iconbtn" aria-label="Mon profil"><span style="width: 34px; height: 34px; border-radius: 17px; background: #5233A8; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">AD</span></button>
+</div>
+</div>
+
+<div style="padding: 14px 20px 6px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.1">Aminata Diallo</h1>
+<div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap">
+<span style="padding: 5px 12px; border-radius: 999px; background: #EEE9FB; color: #3D2482; font-size: 13px; font-weight: 700">Enseignante</span>
+<span style="padding: 5px 12px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E3E7E2; color: #3B4541; font-size: 13px; font-weight: 600">École Bambino Emmaüs</span>
+</div>
+</div>
+
+<div style="padding: 18px 16px 0">
+<h2 style="margin: 0 4px 10px; font-size: 14px; font-weight: 700; color: #4A5551; text-transform: uppercase; letter-spacing: 0.6px">Aujourd'hui</h2>
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; padding: 12px; background: #FFFFFF; border: 2px solid #17603C; border-radius: 16px">
+<div style="font-size: 12px; font-weight: 700; color: #17603C">EN COURS · 8 h – 10 h</div>
+<div style="font-size: 16px; font-weight: 700; margin-top: 4px">Français</div>
+<div style="font-size: 13px; color: #5B6662; margin-top: 2px">CM1 B · Salle 4</div>
+</div>
+<div style="flex: 1; padding: 12px; background: #FFFFFF; border: 1px solid #E3E7E2; border-radius: 16px">
+<div style="font-size: 12px; font-weight: 700; color: #5B6662">10 h 15 – 12 h</div>
+<div style="font-size: 16px; font-weight: 700; margin-top: 4px">Mathématiques</div>
+<div style="font-size: 13px; color: #5B6662; margin-top: 2px">CM1 B · Salle 4</div>
+</div>
+</div>
+</div>
+
+<div style="margin: 18px 16px 0; padding: 14px; border-radius: 18px; background: #E9F3EC; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px 2px; font-size: 14px; font-weight: 700; color: #0F4429; text-transform: uppercase; letter-spacing: 0.6px">À faire</h2>
+<button class="todo"><span style="width: 10px; height: 10px; border-radius: 5px; background: #B9480F; flex: none"></span><span style="flex: 1; font-size: 15px; font-weight: 600">Faire l'appel du CM1 B</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7672" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<button class="todo"><span style="width: 10px; height: 10px; border-radius: 5px; background: #B9480F; flex: none"></span><span style="flex: 1; font-size: 15px; font-weight: 600">3 réponses de parents à lire</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7672" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+<button class="todo"><span style="width: 10px; height: 10px; border-radius: 5px; background: #B9480F; flex: none"></span><span style="flex: 1; font-size: 15px; font-weight: 600">Notes de la dictée à saisir</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7672" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+
+<div style="padding: 22px 16px 24px">
+<h2 style="margin: 0 4px 12px; font-size: 14px; font-weight: 700; color: #4A5551; text-transform: uppercase; letter-spacing: 0.6px">Tout EcoShop</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<button class="tile"><span class="ic" style="background: #E3F2EA; color: #17603C"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"></path><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"></path></svg></span><span class="lb">Faire l'appel</span></button>
+<button class="tile"><span class="ic" style="background: #E6F0FB; color: #1E4FA8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></span><span class="lb">Notes</span></button>
+<button class="tile"><span class="badge">3</span><span class="ic" style="background: #FCEBDD; color: #A2460D"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"></path><path d="M4 17a3 3 0 0 1 3-3h11"></path></svg></span><span class="lb">Cahier de liaison</span></button>
+<button class="tile"><span class="ic" style="background: #EEE9FB; color: #5233A8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg></span><span class="lb">Mes classes</span></button>
+<button class="tile"><span class="ic" style="background: #FBE4E8; color: #A3233B"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 8l8 8"></path></svg></span><span class="lb">Absences</span></button>
+<button class="tile"><span class="ic" style="background: #E6F0FB; color: #1E4FA8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"></path><path d="M16 9a4 4 0 0 1 0 6"></path></svg></span><span class="lb">Annonces</span></button>
+<button class="tile"><span class="ic" style="background: #E1F3F4; color: #136B72"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 9h8M8 13h8M8 17h5"></path></svg></span><span class="lb">Scan-Exercice</span></button>
+<button class="tile"><span class="ic" style="background: #FFF1D6; color: #855004"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M7 15l4-4 3 3 5-6"></path></svg></span><span class="lb">Progression</span></button>
+<button class="tile"><span class="ic" style="background: #EDEFEC; color: #3B4541"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h5"></path></svg></span><span class="lb">Mon dossier RH</span></button>
+</div>
+</div>
+
+<nav aria-label="Navigation principale" style="margin-top: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E3E7E2; padding: 6px 6px 12px">
+<a href="#" aria-current="page" class="nv" style="color: #0F4429; font-weight: 700"><span class="w" style="background: #DDEFE4"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></span>Accueil</a>
+<a href="#" class="nv"><span class="w"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span class="badge" style="top: -2px; right: 6px">3</span></span>Messages</a>
+<a href="#" class="nv"><span class="w"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 10h18M8 2v4M16 2v4"></path></svg></span>Agenda</a>
+<a href="#" class="nv"><span class="w"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg></span>Classes</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1130}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
