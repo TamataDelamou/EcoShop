@@ -54,7 +54,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(49);
+SELECT plan(50);
 
 -- ---------------------------------------------------------------------------
 -- Fixture : un établissement A (cible), un établissement B (isolation).
@@ -158,7 +158,10 @@ SELECT set_config('request.jwt.claims', json_build_object('sub', :'parent1_id', 
 SELECT is((SELECT count(*) FROM public.journal_audit WHERE entite = 'inscription' AND entite_id = '53000000-0000-0000-0000-000000000021'), 3::bigint, 'boursier : visible par le parent confirmé');
 
 SELECT set_config('request.jwt.claims', json_build_object('sub', :'ens_a_id', 'role', 'authenticated')::text, true);
-SELECT is((SELECT count(*) FROM public.journal_audit WHERE entite = 'inscription' AND entite_id = '53000000-0000-0000-0000-000000000021'), 3::bigint, 'boursier : visible par le personnel de l''établissement (fiche_visible inclut est_personnel)');
+SELECT is((SELECT count(*) FROM public.journal_audit WHERE entite = 'inscription' AND entite_id = '53000000-0000-0000-0000-000000000021'), 0::bigint, 'REG-22 : boursier invisible pour un enseignant (réservé à la scolarité et à la direction)');
+
+SELECT set_config('request.jwt.claims', json_build_object('sub', :'direction_a_id', 'role', 'authenticated')::text, true);
+SELECT is((SELECT count(*) FROM public.journal_audit WHERE entite = 'inscription' AND entite_id = '53000000-0000-0000-0000-000000000021'), 3::bigint, 'boursier : visible par la direction');
 
 SELECT set_config('request.jwt.claims', json_build_object('sub', :'eleve_tiers_id', 'role', 'authenticated')::text, true);
 SELECT is((SELECT count(*) FROM public.journal_audit WHERE entite = 'inscription' AND entite_id = '53000000-0000-0000-0000-000000000021'), 0::bigint, 'boursier : REFUSÉ à un tiers sans lien');

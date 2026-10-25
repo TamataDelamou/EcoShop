@@ -28,7 +28,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(6);
+SELECT plan(8);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classe + comptes
@@ -59,6 +59,13 @@ VALUES (:'etab_id'::uuid, :'parent_id'::uuid, :'fiche_id'::uuid, 'tuteur_legal',
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
 VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant');
 
+-- REG-22 : les rapports demandent la direction ou un poste « rapports ».
+SELECT pg_temp.creer_compte('224600009221', 'enseignant') AS censeur_id \gset
+INSERT INTO public.postes (etablissement_id, nom) VALUES (:'etab_id'::uuid, 'Censeur') RETURNING id AS poste_id \gset
+INSERT INTO public.poste_permissions (poste_id, permission_code) VALUES (:'poste_id'::uuid, 'rapports.consulter');
+INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement, poste_id)
+VALUES (:'censeur_id'::uuid, :'etab_id'::uuid, 'personnel', :'poste_id'::uuid);
+
 -- ---------------------------------------------------------------------------
 -- Un rapport individuel (bulletin élève) + un rapport de classe (relevé) + un KPI
 -- ---------------------------------------------------------------------------
@@ -80,8 +87,13 @@ SET LOCAL ROLE authenticated;
 
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'prof_id', 'role', 'authenticated')::text, true);
-SELECT is((SELECT count(*) FROM public.rapports)::int, 2, 'personnel : voit tous les rapports');
-SELECT is((SELECT count(*) FROM public.indicateurs_cles)::int, 1, 'personnel : voit les KPI');
+SELECT is((SELECT count(*) FROM public.rapports)::int, 0, 'REG-22 : enseignant sans poste, aucun rapport');
+SELECT is((SELECT count(*) FROM public.indicateurs_cles)::int, 0, 'REG-22 : enseignant sans poste, aucun KPI');
+
+SELECT set_config('request.jwt.claims',
+       json_build_object('sub', :'censeur_id', 'role', 'authenticated')::text, true);
+SELECT is((SELECT count(*) FROM public.rapports)::int, 2, 'poste rapports.consulter : voit tous les rapports');
+SELECT is((SELECT count(*) FROM public.indicateurs_cles)::int, 1, 'poste rapports.consulter : voit les KPI');
 
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'parent_id', 'role', 'authenticated')::text, true);

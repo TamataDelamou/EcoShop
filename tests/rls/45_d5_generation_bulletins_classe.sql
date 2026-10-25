@@ -107,6 +107,9 @@ VALUES (:'etab_id'::uuid, :'parent1_id'::uuid, :'fiche1_id'::uuid, 'tuteur_legal
 
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
 VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant');
+-- REG-22 : le classement est lu par l'enseignant affecté à la classe.
+INSERT INTO public.affectations_enseignants (etablissement_id, annee_scolaire_id, enseignant_profile_id, classe_id)
+VALUES (:'etab_id'::uuid, :'annee_id'::uuid, :'prof_id'::uuid, :'classe_id'::uuid);
 
 INSERT INTO public.postes (etablissement_id, code, nom)
 SELECT :'etab_id'::uuid, 'SCOLARITE', 'Scolarité'
@@ -152,7 +155,7 @@ SELECT set_config('request.jwt.claims',
 SELECT is(
   (SELECT count(*)::int FROM public.classer_eleves_classe(:'classe_id'::uuid, NULL, :'periode_id'::uuid)),
   2,
-  'classement : personnel voit les 2 fiches de la classe'
+  'classement : enseignant affecté voit les 2 fiches de la classe'
 );
 SELECT is(
   (SELECT rang FROM public.classer_eleves_classe(:'classe_id'::uuid, NULL, :'periode_id'::uuid) WHERE fiche_eleve_id = :'fiche1_id'::uuid),

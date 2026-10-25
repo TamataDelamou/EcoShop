@@ -27,7 +27,7 @@ BEGIN
 END;
 $$;
 
-SELECT plan(8);
+SELECT plan(9);
 
 -- ---------------------------------------------------------------------------
 -- Tenant + année + classe
@@ -118,11 +118,13 @@ SELECT throws_ok(
      WHERE e.slug = 'ecole-eval-m6' AND c.code = '4A' $$,
   '42501', NULL, 'evaluation : creation bloquee pour non affecte'
 );
-SELECT is((SELECT count(*) FROM public.evaluations)::int, 1, 'évaluation : création bloquée pour non affecté');
+-- REG-22 : un enseignant non affecté ne voit plus les évaluations de la classe.
+SELECT is((SELECT count(*) FROM public.evaluations)::int, 0, 'REG-22 : non affecté, évaluations de la classe invisibles');
 
 -- 4. Moyenne pondérée exacte : (16/20*2 + 12/20*1)/3 * 20 = 14.67.
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'ens1_id', 'role', 'authenticated')::text, true);
+SELECT is((SELECT count(*) FROM public.evaluations)::int, 1, 'évaluation : création bloquée pour non affecté');
 
 INSERT INTO public.evaluations
   (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, type, libelle, coefficient, bareme, statut, publie_le)

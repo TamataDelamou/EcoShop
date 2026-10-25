@@ -66,6 +66,9 @@ INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_da
 VALUES
   (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant'),
   (:'dir_id'::uuid, :'etab_id'::uuid, 'direction');
+-- REG-22 : le score de risque est lu par la direction, la vie scolaire ou le
+-- titulaire de la classe ; prof_id est titulaire.
+UPDATE public.classes SET enseignant_principal_id = :'prof_id'::uuid WHERE id = :'classe_id'::uuid;
 
 -- ---------------------------------------------------------------------------
 -- Une absence non justifiée (seule donnée d'entrée nécessaire pour un score
@@ -138,7 +141,7 @@ SELECT set_config('request.jwt.claims',
 SELECT is(
   public.risque_reussite_actuel(:'fiche_id'::uuid),
   :'score_attendu'::numeric,
-  'enseignant (personnel) : voit le score de risque, valeur exacte (même source, un seul chemin de lecture)'
+  'enseignant titulaire : voit le score de risque, valeur exacte (même source, un seul chemin de lecture)'
 );
 
 SELECT set_config('request.jwt.claims',

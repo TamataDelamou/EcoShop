@@ -48,6 +48,12 @@ VALUES
   (:'prof1_id'::uuid, :'etab_id'::uuid, 'enseignant'),
   (:'prof2_id'::uuid, :'etab_id'::uuid, 'enseignant');
 
+-- REG-22 : recommander des séances (lecture des résultats par classe) demande
+-- un poste de planification. prof1 est aussi responsable de l'emploi du temps.
+INSERT INTO public.postes (etablissement_id, nom) VALUES (:'etab_id'::uuid, 'Responsable emploi du temps') RETURNING id AS poste_id \gset
+INSERT INTO public.poste_permissions (poste_id, permission_code) VALUES (:'poste_id'::uuid, 'planification.generer');
+UPDATE public.etablissements_membres SET poste_id = :'poste_id'::uuid WHERE profile_id = :'prof1_id'::uuid;
+
 INSERT INTO public.classes (etablissement_id, annee_scolaire_id, code, nom, enseignant_principal_id)
 VALUES (:'etab_id'::uuid, :'annee_id'::uuid, '6A', '6e A', :'prof1_id'::uuid) RETURNING id AS classe_a_id \gset
 

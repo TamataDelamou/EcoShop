@@ -45,8 +45,14 @@ VALUES (:'etab_id'::uuid, 'M7-IA-001', 'BARRY', 'Mamadou', '2012-05-11') RETURNI
 
 SELECT pg_temp.creer_compte('224600001111', 'enseignant') AS prof_id \gset
 
-INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
-VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant');
+-- REG-22 : le suivi d'un élève demande un poste de vie scolaire (ou la
+-- direction, ou le titulaire). Ici un surveillant général.
+INSERT INTO public.postes (etablissement_id, nom) VALUES (:'etab_id'::uuid, 'Surveillant général')
+RETURNING id AS poste_id \gset
+INSERT INTO public.poste_permissions (poste_id, permission_code) VALUES
+  (:'poste_id'::uuid, 'scolarite.presence.lire'), (:'poste_id'::uuid, 'scolarite.sanction.lire');
+INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement, poste_id)
+VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'personnel', :'poste_id'::uuid);
 
 INSERT INTO public.inscriptions (etablissement_id, fiche_eleve_id, classe_id, annee_scolaire_id, statut)
 VALUES (:'etab_id'::uuid, :'fiche_id'::uuid, :'classe_id'::uuid, :'annee_id'::uuid, 'active');

@@ -102,6 +102,9 @@ SELECT is((SELECT statut FROM public.recommandations_strategiques WHERE id = :'r
 SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'ens_id', 'role', 'authenticated')::text, true);
 UPDATE public.anomalies_statistiques SET statut = 'traitee' WHERE signature = 'sig-anomalie-test';
+-- REG-22 : l'enseignant sans poste ne lit plus les anomalies ; contrôle relu
+-- hors de son rôle.
+RESET ROLE;
 SELECT is(
   (SELECT statut::text FROM public.anomalies_statistiques WHERE signature = 'sig-anomalie-test'),
   'confirmee',
@@ -109,7 +112,9 @@ SELECT is(
 );
 
 -- 5. L'enseignant ne peut pas valider une recommandation.
+SET LOCAL ROLE authenticated;
 UPDATE public.recommandations_strategiques SET statut = 'mise_en_oeuvre' WHERE type = 'tutorat';
+RESET ROLE;
 SELECT is(
   (SELECT statut::text FROM public.recommandations_strategiques WHERE type = 'tutorat'),
   'validee',

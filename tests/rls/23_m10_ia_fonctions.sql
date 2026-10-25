@@ -47,8 +47,11 @@ VALUES (:'etab_id'::uuid, :'annee_id'::uuid, '6A', '6e A') RETURNING id AS class
 SELECT pg_temp.creer_compte('224600001311', 'enseignant') AS prof_id \gset
 SELECT pg_temp.creer_compte('224600001312', 'eleve')      AS eleve_id \gset
 
-INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement)
-VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'enseignant');
+-- REG-22 : les analyses d'école demandent un poste « rapports » (ou la direction).
+INSERT INTO public.postes (etablissement_id, nom) VALUES (:'etab_id'::uuid, 'Censeur') RETURNING id AS poste_id \gset
+INSERT INTO public.poste_permissions (poste_id, permission_code) VALUES (:'poste_id'::uuid, 'rapports.generer');
+INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement, poste_id)
+VALUES (:'prof_id'::uuid, :'etab_id'::uuid, 'personnel', :'poste_id'::uuid);
 
 INSERT INTO public.fiches_eleves (etablissement_id, matricule, nom, prenom, date_naissance, profile_id, lie_le)
 VALUES (:'etab_id'::uuid, 'M10-IA-001', 'CONDÉ', 'Fatou', '2010-01-11', :'eleve_id'::uuid, now())
