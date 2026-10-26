@@ -33,7 +33,7 @@ BEGIN
   RETURN v_id;
 END $$;
 
-SELECT plan(101);
+SELECT plan(102);
 
 INSERT INTO public.etablissements (id, nom, slug, devise_code) VALUES
   ('89000000-0000-0000-0000-00000000000a', 'École A', 'ecole-a-89', 'GNF'),
@@ -51,6 +51,10 @@ INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_da
   (:'dir2_a', '89000000-0000-0000-0000-00000000000a', 'direction'),
   (:'dir_b', '89000000-0000-0000-0000-00000000000b', 'direction'),
   (:'prof_a', '89000000-0000-0000-0000-00000000000a', 'enseignant');
+
+SELECT is(public.parametre_vrai('code_compte_obligatoire'), true, 'code du compte en service (migration 1564)');
+-- Le test part interrupteur coupé, pour vérifier aussi ce cas.
+UPDATE public.parametres_globaux SET valeur = 'false'::jsonb WHERE cle = 'code_compte_obligatoire';
 
 SELECT pg_temp.connexion(:'awa') AS s1 \gset
 SELECT pg_temp.connexion(:'awa') AS s2 \gset
