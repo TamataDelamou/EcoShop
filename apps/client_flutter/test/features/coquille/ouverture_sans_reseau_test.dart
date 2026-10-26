@@ -101,7 +101,8 @@ void main() {
     await tester.tap(find.byKey(const Key('raccourci_profil')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Accueil').last);
+    // Le profil s'ouvre par-dessus (REG-21) : retour par la flèche.
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

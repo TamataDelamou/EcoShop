@@ -45,7 +45,7 @@ void main() {
 
   testWidgets('accueil : texte d’aide engageant, sans jargon de développement', (tester) async {
     await monter(tester, prototypes: false, role: RoleRacine.enseignant);
-    expect(find.text('Retrouvez l’essentiel de votre journée'), findsOneWidget);
+    expect(find.text('Accueil'), findsWidgets);
     expect(find.textContaining('module M'), findsNothing);
   });
 

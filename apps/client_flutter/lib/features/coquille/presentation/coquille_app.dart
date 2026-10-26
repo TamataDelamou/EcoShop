@@ -1,3 +1,4 @@
+import '../../accueil/presentation/ecrans_destinations.dart';
 import '../../postes/application/postes_providers.dart';
 import '../../postes/presentation/ecran_postes.dart';
 import '../../appareil/presentation/ecran_debloquer_code.dart';
@@ -10,7 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/role_racine.dart';
 import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
-import '../../../core/widgets/page_header.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/application/telephone_profil_providers.dart';
@@ -84,61 +84,49 @@ import '../application/session_logout.dart';
 import '../application/sync_composition.dart';
 import 'entete_utilisateur.dart';
 
-/// Onglet de la coquille applicative.
+/// Destination de la barre du bas (REG-21).
 ///
-/// La composition dépend du rôle racine : la barre de navigation n'affiche que
-/// ce que le rôle couvre. Ce filtrage est **ergonomique**, pas sécuritaire —
-/// atteindre un onglet ne donne accès à aucune donnée que RLS refuse.
+/// Quatre destinations au plus par rôle (Material 3 : 3 à 5, libellés
+/// visibles). Le profil n'y figure plus : il s'ouvre par l'avatar, en haut à
+/// droite. Ce filtrage est **ergonomique**, pas sécuritaire — atteindre une
+/// destination ne donne accès à aucune donnée que RLS refuse.
 enum OngletCoquille {
-  accueil(
-    'Accueil',
-    Icons.home_outlined,
-    Icons.home,
-    'Retrouvez l’essentiel de votre journée',
-  ),
-  scolarite(
-    'Scolarité',
-    Icons.school_outlined,
-    Icons.school,
-    'Suivez les notes, les absences et la vie scolaire',
-  ),
-  revision(
-    'Révision',
-    Icons.psychology_outlined,
-    Icons.psychology,
-    'Révisez avec des quiz et préparez vos examens',
-  ),
-  boutique(
-    'Boutique',
-    Icons.storefront_outlined,
-    Icons.storefront,
-    'Achetez les fournitures de l’école et suivez vos commandes',
-  ),
-  profil(
-    'Profil',
-    Icons.person_outline,
-    Icons.person,
-    'Gérez votre compte, vos réglages et vos outils',
-  );
+  accueil('Accueil', Icons.home_outlined, Icons.home),
+  messages('Messages', Icons.forum_outlined, Icons.forum),
+  annonces('Annonces', Icons.campaign_outlined, Icons.campaign),
+  agenda('Agenda', Icons.event_outlined, Icons.event),
+  paiements('Paiements', Icons.payments_outlined, Icons.payments),
+  mesNotes('Mes notes', Icons.grade_outlined, Icons.grade),
+  classes('Classes', Icons.class_outlined, Icons.class_),
+  tableauDeBord('Tableau de bord', Icons.insights_outlined, Icons.insights),
+  boutique('Boutique', Icons.storefront_outlined, Icons.storefront),
+  reseau('Réseau', Icons.hub_outlined, Icons.hub),
+  ecolesGsg('Écoles', Icons.add_business_outlined, Icons.add_business),
+  reseauxGsg('Réseaux', Icons.hub_outlined, Icons.hub),
+  vendeursGsg('Vendeurs', Icons.verified_user_outlined, Icons.verified_user),
+  referentiel('Référentiel', Icons.public_outlined, Icons.public),
+  notifications('Notifications', Icons.notifications_outlined, Icons.notifications);
 
-  const OngletCoquille(this.libelle, this.icone, this.iconeActive, this.descriptif);
+  const OngletCoquille(this.libelle, this.icone, this.iconeActive);
 
   final String libelle;
   final IconData icone;
   final IconData iconeActive;
 
-  /// Descriptif court affiché par `PageHeader` (D1) — appliqué uniquement
-  /// aux 5 onglets racine pour cette passe.
-  final String descriptif;
-
-  /// Onglets pertinents pour un rôle racine.
+  /// Destinations d'un rôle. Rôles absents de la proposition : les trois
+  /// destinations les plus utilisées après Accueil (voir le registre).
   static List<OngletCoquille> pourRole(RoleRacine? role) => switch (role) {
-    RoleRacine.eleve => const [accueil, scolarite, revision, boutique, profil],
-    RoleRacine.parent => const [accueil, scolarite, boutique, profil],
-    RoleRacine.enseignant => const [accueil, scolarite, profil],
-    RoleRacine.direction => const [accueil, scolarite, boutique, profil],
-    RoleRacine.vendeur => const [accueil, boutique, profil],
-    _ => const [accueil, profil],
+    RoleRacine.parent => const [accueil, messages, agenda, paiements],
+    RoleRacine.eleve => const [accueil, annonces, agenda, mesNotes],
+    RoleRacine.enseignant => const [accueil, messages, agenda, classes],
+    RoleRacine.direction => const [accueil, messages, agenda, tableauDeBord],
+    // Ses outils dépendent de son poste : ils sont sur l'accueil.
+    RoleRacine.personnel => const [accueil, messages, agenda],
+    RoleRacine.vendeur => const [accueil, boutique, messages],
+    RoleRacine.fondateurReseau => const [accueil, reseau, messages, agenda],
+    RoleRacine.adminGsg => const [accueil, ecolesGsg, reseauxGsg, vendeursGsg],
+    RoleRacine.adminContenu => const [accueil, referentiel, notifications],
+    null => const [accueil, messages, agenda],
   };
 }
 
@@ -183,57 +171,77 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     // Un changement de rôle ou de rattachement peut raccourcir la liste :
     // on borne l'index plutôt que de laisser une RangeError se produire.
     final index = _index < onglets.length ? _index : 0;
+    final onglet = onglets[index];
     final large = MediaQuery.sizeOf(context).width >= 720;
 
-    final corps = _CorpsOnglet(onglet: onglets[index], profil: profil);
+    // Toujours montés, quelle que soit la destination.
+    final veilleurs = <Widget>[
+      const _BandeauHorsLigne(),
+      // Code du compte (REG-22) : autorisations d'appareils, récupération en cours.
+      if (Env.estConfigure && profil != null) SurveillanceAppareils(key: ValueKey('appareils_${profil.id}')),
+      // Notifications push : rattachement du téléphone, bandeau, ouverture.
+      if (Env.estConfigure && profil != null) EcouteurPush(key: ValueKey(profil.id), profilId: profil.id),
+    ];
+
+    // Accueil : barre du haut de l'application. Autres destinations : écran
+    // complet avec sa propre barre de titre (convention Material 3).
+    final Widget contenu = onglet == OngletCoquille.accueil
+        ? Scaffold(
+            appBar: AppBar(
+              title: const Text('EcoShop'),
+              actions: [
+                if (profil != null)
+                  IconButton(
+                    tooltip: 'Notifications',
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => EcranNotifications(profileId: profil.id)),
+                    ),
+                  ),
+                // Convention Google : le profil tout à droite.
+                const BoutonApparence(),
+                if (profil != null)
+                  _RaccourciAvatar(
+                    profil: profil,
+                    onOuvrirProfil: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => EcranMonProfil(profil: profil)),
+                    ),
+                  ),
+              ],
+            ),
+            body: Column(
+              children: [
+                // En-tête : nom, rôle utilisé, établissement actif ; enfants du parent.
+                const EnteteUtilisateur(),
+                Expanded(child: _CorpsOnglet(onglet: onglet, profil: profil)),
+              ],
+            ),
+          )
+        : _CorpsOnglet(onglet: onglet, profil: profil);
+
+    final barre = large
+        ? null
+        : NavigationBar(
+            key: const Key('barre_navigation'),
+            selectedIndex: index,
+            onDestinationSelected: (i) => setState(() => _index = i),
+            destinations: [
+              for (final o in onglets)
+                NavigationDestination(icon: Icon(o.icone), selectedIcon: Icon(o.iconeActive), label: o.libelle),
+            ],
+          );
 
     return Scaffold(
-      appBar: AppBar(
-        // TopBar enrichi (D1) : le titre dynamique de l'onglet vit
-        // désormais dans `PageHeader` (voir `_CorpsOnglet`), pour ne pas le
-        // répéter à l'identique deux fois à l'écran — l'AppBar porte
-        // uniquement l'identité de l'app + les raccourcis globaux.
-        title: const Text('EcoShop'),
-        actions: [
-          if (profil != null)
-            IconButton(
-              tooltip: 'Notifications',
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => EcranNotifications(profileId: profil.id),
-                ),
-              ),
-            ),
-          // Convention Google : le profil tout à droite.
-          const BoutonApparence(),
-          if (profil != null)
-            _RaccourciAvatar(
-              profil: profil,
-              onOuvrirProfil: () {
-                final i = onglets.indexOf(OngletCoquille.profil);
-                if (i >= 0) setState(() => _index = i);
-              },
-            ),
-        ],
-      ),
       body: Column(
         children: [
-          const _BandeauHorsLigne(),
-          // Code du compte (REG-22) : autorisations d'appareils, récupération en cours.
-          if (Env.estConfigure && profil != null) SurveillanceAppareils(key: ValueKey('appareils_${profil.id}')),
-          // Notifications push : rattachement du téléphone, bandeau, ouverture.
-          if (Env.estConfigure && profil != null) EcouteurPush(key: ValueKey(profil.id), profilId: profil.id),
-          // En-tête : nom, rôle utilisé, établissement actif ; enfants du parent.
-          const EnteteUtilisateur(),
+          SafeArea(bottom: false, child: Column(mainAxisSize: MainAxisSize.min, children: veilleurs)),
           Expanded(
             child: large
                 ? Row(
                     children: [
                       NavigationRail(
                         selectedIndex: index,
-                        onDestinationSelected: (i) =>
-                            setState(() => _index = i),
+                        onDestinationSelected: (i) => setState(() => _index = i),
                         labelType: NavigationRailLabelType.all,
                         destinations: [
                           for (final o in onglets)
@@ -245,27 +253,29 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                         ],
                       ),
                       const VerticalDivider(width: 1),
-                      Expanded(child: corps),
+                      Expanded(child: contenu),
                     ],
                   )
-                : corps,
+                : contenu,
           ),
         ],
       ),
-      bottomNavigationBar: large
-          ? null
-          : NavigationBar(
-              selectedIndex: index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              destinations: [
-                for (final o in onglets)
-                  NavigationDestination(
-                    icon: Icon(o.icone),
-                    selectedIcon: Icon(o.iconeActive),
-                    label: o.libelle,
-                  ),
-              ],
-            ),
+      bottomNavigationBar: barre,
+    );
+  }
+}
+
+/// Mon profil, ouvert par l'avatar (REG-21).
+class EcranMonProfil extends StatelessWidget {
+  const EcranMonProfil({super.key, required this.profil});
+
+  final Profil profil;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Mon profil')),
+      body: _VueProfil(profil: profil),
     );
   }
 }
@@ -343,10 +353,7 @@ class _RaccourciAvatar extends StatelessWidget {
   }
 }
 
-/// Contenu de l'onglet courant.
-///
-/// Chaque onglet est un point d'ancrage : les verticaux (scolarité M5-M9,
-/// révision M10-M12, boutique M13-M14) viendront s'y brancher.
+/// Contenu d'une destination de la barre du bas.
 class _CorpsOnglet extends ConsumerWidget {
   const _CorpsOnglet({required this.onglet, required this.profil});
 
@@ -355,78 +362,50 @@ class _CorpsOnglet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // PageHeader (D1) : titre + descriptif, appliqué aux 5 onglets racine —
-    // SAUF quand le contenu délégué possède déjà son propre AppBar
-    // (`_delegueSonAppBar`), pour ne jamais superposer deux barres de titre.
-    if (_delegueSonAppBar) return _contenu(context);
-    return Column(
-      children: [
-        PageHeader(titre: onglet.libelle, descriptif: onglet.descriptif),
-        Expanded(child: _contenu(context)),
-      ],
-    );
+    final p = profil;
+    if (p == null) return const Center(child: CircularProgressIndicator());
+    final etablissement = ref.watch(etablissementActifProvider);
+    Widget page(String titre, Widget corps) => Scaffold(appBar: AppBar(title: Text(titre)), body: corps);
+    return switch (onglet) {
+      OngletCoquille.accueil => const _AccueilProvisoire(),
+      OngletCoquille.messages => EcranMessages(profil: p),
+      OngletCoquille.annonces => const EcranAnnonces(),
+      OngletCoquille.agenda => EcranAgenda(profil: p),
+      // Parent : la fiche de l'enfant actif (solde, paiements, Orange Money,
+      // notes, vie scolaire). Élève : sa fiche, notes et bulletins en tête.
+      OngletCoquille.paiements || OngletCoquille.mesNotes => EcranScolarite(profil: p),
+      OngletCoquille.classes => page('Mes classes', EcranScolarite(profil: p)),
+      OngletCoquille.tableauDeBord => etablissement == null
+          ? page('Tableau de bord', const Center(child: Text('Choisissez d’abord un établissement.')))
+          : EcranTableauBordRapports(etablissementId: etablissement.id),
+      OngletCoquille.boutique => EcranMarketplace(profil: p),
+      OngletCoquille.reseau => const EcranMesReseaux(),
+      OngletCoquille.ecolesGsg => const EcranValidationEtablissementsGsg(),
+      OngletCoquille.reseauxGsg => const EcranReseauxGsg(),
+      OngletCoquille.vendeursGsg => const EcranValidationVendeursGsg(),
+      OngletCoquille.referentiel => const EcranPaysPedagogiques(),
+      OngletCoquille.notifications => EcranNotifications(profileId: p.id),
+    };
   }
+}
 
-  /// `true` si l'écran rendu par [_contenu] pour ce couple onglet/rôle a déjà
-  /// son propre `Scaffold`+`AppBar` — l'empilement visuel avec `PageHeader`
-  /// serait sinon un défaut visible dès l'ouverture de l'onglet :
-  /// - Boutique → `EcranMarketplace` (AppBar « Marketplace »), pour tous les
-  ///   rôles qui y accèdent.
-  /// - Scolarité → `EcranFicheEleve` (AppBar = nom de la fiche) pour parent
-  ///   et élève, `EcranStructureEtablissement` (AppBar « Structures &
-  ///   annuaire ») pour la direction. Ne s'applique PAS à l'enseignant :
-  ///   `_VueEnseignant` n'a aucun AppBar propre et dépend de `PageHeader`
-  ///   pour son titre.
-  bool get _delegueSonAppBar => switch (onglet) {
-    OngletCoquille.boutique => true,
-    OngletCoquille.scolarite => switch (profil?.roleRacine) {
-      RoleRacine.direction || RoleRacine.parent || RoleRacine.eleve => true,
-      _ => false,
-    },
-    _ => false,
-  };
+/// Accueil en attendant les pastilles (REG-21, étape suivante).
+class _AccueilProvisoire extends StatelessWidget {
+  const _AccueilProvisoire();
 
-  Widget _contenu(BuildContext context) {
-    if (onglet == OngletCoquille.profil) {
-      return _VueProfil(profil: profil);
-    }
-    if (onglet == OngletCoquille.scolarite) {
-      return EcranScolarite(profil: profil);
-    }
-    if (onglet == OngletCoquille.boutique) {
-      return EcranMarketplace(profil: profil);
-    }
-
-    return Center(
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(onglet.iconeActive, size: 56),
-            const SizedBox(height: 16),
-            Text(
-              _moduleAttendu(onglet),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+        padding: EdgeInsets.all(32),
+        child: Text(
+          'Toutes vos fonctions sont dans « Mon profil », en haut à droite.',
+          key: Key('accueil_provisoire'),
+          textAlign: TextAlign.center,
         ),
       ),
     );
   }
-
-  static String _moduleAttendu(OngletCoquille onglet) => switch (onglet) {
-    OngletCoquille.accueil =>
-      'Votre tableau de bord arrive bientôt. En attendant, tout est accessible depuis les autres onglets et Profil.',
-    OngletCoquille.scolarite =>
-      'Bientôt ici : notes, absences et vie scolaire.',
-    OngletCoquille.revision =>
-      'Bientôt ici : quiz et préparation aux examens.',
-    OngletCoquille.boutique =>
-      'Bientôt ici : la boutique de votre école.',
-    OngletCoquille.profil => '',
-  };
 }
 
 /// Vue Profil — état civil, rôle, identité fédérée et déconnexion.
@@ -1619,6 +1598,18 @@ class _VueProfil extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const EcranDebloquerCode()),
+            ),
+          ),
+        // Boutique (REG-21) : n'est plus dans la barre du bas pour ce rôle.
+        if (p.roleRacine != RoleRacine.vendeur && p.roleRacine != RoleRacine.adminGsg && p.roleRacine != RoleRacine.adminContenu)
+          ListTile(
+            key: const Key('menu_boutique'),
+            leading: const Icon(Icons.storefront_outlined),
+            title: const Text('Boutique'),
+            subtitle: const Text('Fournitures de l’école, commandes'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => EcranMarketplace(profil: p)),
             ),
           ),
         // Sécurité (REG-22) : code du compte, appareils.

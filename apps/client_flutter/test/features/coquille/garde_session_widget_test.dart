@@ -188,36 +188,40 @@ void main() {
     expect(find.text('Se déconnecter'), findsOneWidget);
   });
 
-  testWidgets('la coquille n’expose que les onglets du rôle', (tester) async {
+  testWidgets('la barre du bas n’expose que les destinations du rôle', (tester) async {
     await monter(
       tester,
       session: true,
       faux: FauxAuthRepository(profil: profilTest(role: RoleRacine.vendeur)),
     );
 
-    // Un vendeur n'a ni scolarité ni moteur de révision.
+    // Un vendeur : Accueil, Boutique, Messages ; ni scolarité ni agenda.
     expect(find.text('Boutique'), findsWidgets);
-    expect(find.text('Scolarité'), findsNothing);
-    expect(find.text('Révision'), findsNothing);
+    expect(find.text('Agenda'), findsNothing);
+    expect(find.text('Paiements'), findsNothing);
+    expect(find.text('Profil'), findsNothing, reason: 'le profil s’ouvre par l’avatar');
   });
 
-  group('OngletCoquille.pourRole', () {
-    test('l’élève accède au moteur de révision, pas le parent', () {
-      expect(
-        OngletCoquille.pourRole(RoleRacine.eleve),
-        contains(OngletCoquille.revision),
-      );
-      expect(
-        OngletCoquille.pourRole(RoleRacine.parent),
-        isNot(contains(OngletCoquille.revision)),
-      );
+  group('OngletCoquille.pourRole (REG-21)', () {
+    test('quatre destinations par rôle de la proposition, l’accueil en premier', () {
+      expect(OngletCoquille.pourRole(RoleRacine.parent),
+          [OngletCoquille.accueil, OngletCoquille.messages, OngletCoquille.agenda, OngletCoquille.paiements]);
+      expect(OngletCoquille.pourRole(RoleRacine.eleve),
+          [OngletCoquille.accueil, OngletCoquille.annonces, OngletCoquille.agenda, OngletCoquille.mesNotes]);
+      expect(OngletCoquille.pourRole(RoleRacine.enseignant),
+          [OngletCoquille.accueil, OngletCoquille.messages, OngletCoquille.agenda, OngletCoquille.classes]);
+      expect(OngletCoquille.pourRole(RoleRacine.direction),
+          [OngletCoquille.accueil, OngletCoquille.messages, OngletCoquille.agenda, OngletCoquille.tableauDeBord]);
     });
 
-    test('un rôle inconnu retombe sur le strict minimum', () {
-      expect(
-        OngletCoquille.pourRole(null),
-        [OngletCoquille.accueil, OngletCoquille.profil],
-      );
+    test('rôles absents de la proposition : 3 à 4 destinations, jamais le profil', () {
+      for (final role in [...RoleRacine.values, null]) {
+        final d = OngletCoquille.pourRole(role);
+        expect(d.length, inInclusiveRange(3, 4), reason: '$role');
+        expect(d.first, OngletCoquille.accueil);
+      }
+      expect(OngletCoquille.pourRole(RoleRacine.personnel),
+          [OngletCoquille.accueil, OngletCoquille.messages, OngletCoquille.agenda]);
     });
   });
 }

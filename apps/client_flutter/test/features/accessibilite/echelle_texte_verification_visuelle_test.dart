@@ -93,7 +93,7 @@ void main() {
     await visiterTousLesOnglets(tester);
   });
 
-  testWidgets('rôle élève : les 5 onglets (dont Révision) ne débordent pas à ×1.3', (tester) async {
+  testWidgets('rôle élève : les 4 destinations ne débordent pas à ×1.3', (tester) async {
     await monter(
       tester,
       faux: FauxAuthRepository(profil: profilTest(role: RoleRacine.eleve), fiche: true),
