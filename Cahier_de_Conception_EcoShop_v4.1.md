@@ -596,6 +596,12 @@ Le choix Flutter permet de mutualiser une part significative de la base de code 
 
 L\'interface utilisateur (mobile et Web) constitue la couche de présentation du moteur d\'authentification décrit au chapitre 5 ; les deux cibles s\'appuient sur le même backend Supabase (Edge Functions et base de données Postgres) et sur le même mécanisme de session.
 
+### **Organisation de l\'interface : accueil, barre du bas, profil (REG-21)**
+
+L\'application s\'organise en trois niveaux : en haut de l\'accueil, **« À faire »** (ce qui attend une action, avec un compteur, chaque ligne menant à l\'écran concerné ; « À ne pas manquer » pour l\'élève) ; puis des **pastilles** regroupées par thème (grille de 3 colonnes, libellé de deux mots, badge de nouveauté) ; enfin **« Mon profil »**, ouvert par l\'avatar en haut à droite, qui ne garde que le personnel (informations, invitations, sécurité dont « Mes appareils », préférences, déconnexion). Une **barre de navigation du bas** de quatre destinations au plus suit le rôle (parent : Accueil, Messages, Agenda, Paiements ; élève : Accueil, Annonces, Agenda, Mes notes ; enseignant : Accueil, Messages, Agenda, Classes ; direction : Accueil, Messages, Agenda, Tableau de bord ; personnel : Accueil, Messages, Agenda). La direction et le personnel disposent d\'une recherche « Que voulez-vous faire ? » et de quatre raccourcis épinglés, gardés sur l\'appareil.
+
+> ***Règle de gestion ---** chaque pastille et chaque ligne « À faire » n\'apparaissent que si le rôle et les droits du poste le permettent ; le serveur reste seul juge des droits (une pastille affichée à tort n\'ouvre aucune donnée). Les compteurs et badges s\'affichent hors connexion avec la dernière valeur connue et se mettent à jour au retour du réseau ; aucune pastille ne bloque l\'accueil en attendant le serveur.*
+
 ## **2.4 Principe de gratuité progressive**
 
 L\'application reste gratuite pour un établissement jusqu\'à un effectif seuil d\'élèves inscrits ; au-delà, elle devient payante selon un barème indexé par tranche d\'effectif (abonnement Pro établissement, voir 17.7 et 36). Ce principe s\'applique indépendamment du modèle économique de la marketplace, qui repose sur des commissions et abonnements vendeurs, et indépendamment des abonnements de révision (Premium élève, IA admin, IA professeur, packs d\'examens), qui suivent chacun leur propre logique de facturation (voir chapitre 36).

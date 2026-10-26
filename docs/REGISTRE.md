@@ -37,6 +37,7 @@ attendue), `clos`.
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
 | REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **lots 1 et 2 livrés** (2026-10-23) : annonces, cahier de liaison ; messagerie privée et groupes de classe **en attente** |
 | REG-20 | Référentiel pédagogique et paramètres globaux livrés en production (champ « Pays » vide) ; séries du lycée guinéen | **P0** | **livré** (2026-10-24, `48574fe`) — tâche **ouverte** : séries SM, SE, SS et coefficients officiels, avant le premier lycée |
+| REG-21 | Accueil en pastilles, barre de navigation du bas, profil allégé, raccourcis et recherche | P1 | **livré** (2026-10-26) — à vérifier sur un téléphone Android (migration 1569 à appliquer) |
 | REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1568, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
@@ -1368,4 +1369,118 @@ appareil ? » reçu sur l'ancien téléphone ; lien « Ce n'est pas moi » du
 courriel ; « Mes appareils » et déconnexion à distance (le téléphone
 déconnecté efface ses données à son retour sur le réseau) ; menus d'un
 membre « personnel » selon son poste.
+
+## REG-21 — Accueil en pastilles, barre du bas, profil allégé
+
+**Priorité** : P1. **Statut** : livré le 2026-10-26. Proposition validée :
+`docs/propositions/REG-21_ACCUEIL_PASTILLES.md` ; maquettes
+`docs/maquettes/accueil_pastilles/`.
+
+**Recherche préalable.** Material 3 : une barre de navigation porte 3 à 5
+destinations, toutes avec leur libellé ; au-delà, tiroir ou onglets.
+Zones de toucher de 48 dp au moins (Android, Flutter) — plus large que les
+44 px de la proposition. Un badge n'est lu par TalkBack que si le libellé
+du bouton l'inclut : chaque pastille fusionne sa sémantique
+(« Annonces, 3 nouvelles »).
+
+**Livré (un commit et un push par étape).**
+
+| Étape | Commit | Contenu |
+|---|---|---|
+| Barre du bas | `73d2193` | destinations par rôle, profil par l'avatar, pages « Messages » et « Agenda » |
+| Accueil par rôle | `3dfb275` | catalogue des fonctions, « À faire », pastilles, groupes de la direction, « Mon travail » du personnel selon son poste ; migration 1569 (`accueil_resume`, `mon_aujourdhui`), test 94 |
+| Profil allégé | `0cd278b` | Mon compte, Sécurité (Code secret, Empreinte, Mes appareils), Préférences, déconnexion |
+| Raccourcis et recherche | `d51d8a2` | 4 raccourcis gardés sur l'appareil, « Que voulez-vous faire ? » |
+
+**Rôles hors proposition, destinations retenues.** Personnel : Accueil,
+Messages, Agenda (ses outils dépendent de son poste : ils sont sur
+l'accueil). Vendeur : Accueil, Boutique, Messages. Fondateur de réseau :
+Accueil, Réseau, Messages, Agenda. Administrateur GSG : Accueil, Écoles,
+Réseaux, Vendeurs (les trois files de validation). Administrateur du
+contenu : Accueil, Référentiel, Notifications.
+
+**Écarts aux maquettes.**
+- Élève « Ma carte (QR du portail) » et enseignant « Absences » : aucun
+  écran n'existe ; pastilles non créées (l'appel et l'absence passent par
+  « Faire l'appel »). Enseignant « Scan-Exercice » : l'écran exige une fiche
+  d'élève ; réservé à l'élève.
+- Parent : les enfants en pastilles rondes sont l'en-tête déjà livré
+  (sélecteur d'enfant) ; « Ajouter » y reste.
+- « Paiements » (parent) ouvre la fiche de l'enfant (solde, encaissements,
+  Orange Money, notes, vie scolaire), écran existant.
+
+**Table de correspondance — ancienne entrée de « Mon profil » → nouvel
+emplacement.** Aucune fonction supprimée.
+
+| Ancienne entrée | Nouvel emplacement |
+|---|---|
+| Mon numéro de téléphone | Mon profil › Mes informations |
+| Mes invitations | Mon profil › Mes invitations |
+| Rôle | Mon profil › Mes informations |
+| Référentiel pédagogique CEDEAO | Accueil › pastille « Programmes officiels » |
+| Langue et affichage | Mon profil › Préférences › Langue et affichage |
+| Conditions générales d'utilisation | Mon profil › Préférences › Conditions d'utilisation |
+| Assistant IA du rôle | Accueil › pastille « Assistant IA » |
+| Scan-Exercice (élève) | Accueil › pastille « Scan-Exercice » |
+| PARENT IA (élève, parent) | Accueil › pastille « Parent IA » |
+| Inscriptions et réinscriptions (famille) | Accueil › pastille « Inscriptions » |
+| Avis du portail (famille) | Mon profil › Préférences |
+| Présence au portail | Accueil › Vie de l'école › « Présence au portail » |
+| Portail : scanner les cartes | Accueil › « Scanner au portail » |
+| Relancer les impayés | Accueil › Finances › « Relances » (+ À faire « familles en retard ») |
+| Bibliothèque (gestion) | Accueil › Organisation › « Bibliothèque » |
+| Bibliothèque (famille) | Accueil › pastille « Bibliothèque » (+ À faire « livres à rendre ») |
+| Personnel et postes | Accueil › Personnel › « Postes » |
+| Débloquer le code d'une personne | Accueil › Personnel › « Débloquer un code » |
+| Numéros à confirmer | Accueil › Personnel › « Numéros à confirmer » (+ À faire) |
+| Invitations du personnel | Accueil › Personnel › « Invitations » |
+| Comptes liés aux élèves | Accueil › Élèves › « Comptes liés » (+ À faire « demandes de liaison ») |
+| Transport scolaire | Accueil › Organisation › « Transport » |
+| Bus de (enfant) | Accueil › pastille « Bus » |
+| Conduire mon circuit | Accueil › « Conduire mon circuit » |
+| Réseau d'établissements | Accueil › Établissement › « Réseau » (fondateur de réseau : barre du bas) |
+| Notifications (liste) | Barre du haut › cloche (admin contenu : barre du bas) |
+| Préférences de notification | Mon profil › Préférences › Notifications |
+| Annonces de l'école | Barre du bas › Messages (élève : Annonces) ; Accueil › « Annonces » |
+| Cahier de liaison | Barre du bas › Messages ; Accueil › « Cahier de liaison » (+ À faire) |
+| Tableau de bord communication | Accueil › Vie de l'école › « Lecture des messages » |
+| Rapports & statistiques | Barre du bas › Tableau de bord (direction) ; Accueil › « Rapports » |
+| Mon emploi du temps (enseignant) | Barre du bas › Agenda ; Accueil › « Emploi du temps » |
+| Classes — emploi du temps & progression | Accueil › Organisation › « Classes et emploi du temps » ; enseignant : « Progression » |
+| Salles | Accueil › Organisation › « Salles » |
+| Agenda de l'établissement | Barre du bas › Agenda ; Accueil › « Agenda de l'école » |
+| Conflits d'occupation | Accueil › Organisation › « Conflits d'occupation » |
+| Emploi du temps de mon enfant / Mon emploi du temps (élève) | Barre du bas › Agenda ; Accueil › « Emploi du temps » |
+| Rapports de mon enfant / Mes rapports | Accueil › « Mes rapports » |
+| Structures & annuaire | Accueil › Organisation › « Structures » |
+| Alertes de décrochage | Accueil › Vie de l'école › « Alertes décrochage » (+ À faire) |
+| Personnel & RH | Accueil › Personnel › « Personnel et RH » |
+| Tableau de bord RH | Accueil › Personnel › « Tableau RH » |
+| Mon dossier RH | Accueil › « Mon dossier RH » |
+| Comptabilité | Accueil › Finances › « Comptabilité » |
+| Inscriptions en ligne | Accueil › Élèves › « Inscriptions en ligne » (+ À faire « dossiers ») |
+| Nouvelle inscription | Accueil › Élèves › « Nouvelle inscription » |
+| Réinscription | Accueil › Élèves › « Réinscription » |
+| Paramètres financiers | Accueil › Finances › « Paramètres » |
+| Cahier des encaissements | Accueil › Finances › « Encaissements » (raccourci par défaut) |
+| Ouvrir un nouvel établissement | Accueil › Établissement › « Ouvrir un établissement » |
+| Identité visuelle | Accueil › Établissement › « Identité visuelle » |
+| Paiement Orange Money | Accueil › Finances › « Orange Money » |
+| Vendeurs marketplace | Accueil › Finances › « Vendeurs » |
+| Demandes d'établissement (GSG) | Barre du bas › Écoles ; Accueil › Plateforme GSG |
+| Réseaux d'établissements (GSG) | Barre du bas › Réseaux ; Accueil › Plateforme GSG |
+| Crédits SMS des écoles (GSG) | Accueil › Plateforme GSG › « Crédits SMS des écoles » |
+| Validation des vendeurs (GSG) | Barre du bas › Vendeurs ; Accueil › Plateforme GSG |
+| Débloquer un code (GSG) | Accueil › Plateforme GSG › « Débloquer un code » |
+| Sécurité (code du compte, appareils) | Mon profil › Sécurité (Code secret, Empreinte, Mes appareils) |
+| Se déconnecter | Mon profil, seul en bas |
+| onglet Scolarité | Barre du bas › Paiements (parent), Mes notes (élève), Classes (enseignant) ; direction : « Structures » |
+| onglet Boutique | Accueil › pastille « Boutique » (vendeur : barre du bas) |
+| onglet Révision | supprimé : ce n'était qu'un texte d'attente, aucune fonction |
+
+**À vérifier sur un téléphone Android** : barre du bas de chaque rôle ;
+« À faire » et badges hors connexion (dernière valeur), puis au retour du
+réseau ; recherche (« reçu ») ; raccourcis modifiés gardés après
+fermeture ; profil allégé ; TalkBack sur une pastille avec badge ; mode
+sombre ; texte agrandi (×1,3).
 
