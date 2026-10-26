@@ -1,3 +1,5 @@
+import '../../postes/application/postes_providers.dart';
+import '../../postes/presentation/ecran_postes.dart';
 import '../../appareil/presentation/ecran_debloquer_code.dart';
 import '../../appareil/presentation/ecran_securite.dart';
 import '../../appareil/presentation/surveillance_appareils.dart';
@@ -437,6 +439,11 @@ class _VueProfil extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = profil;
     if (p == null) return const Center(child: CircularProgressIndicator());
+    // Personnel (REG-22) : les menus suivent les droits de son poste.
+    final droits = p.roleRacine == RoleRacine.personnel
+        ? ref.watch(mesPermissionsProvider).valueOrNull ?? const <String>{}
+        : const <String>{};
+    bool peut(String code) => droits.contains(code);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -662,14 +669,14 @@ class _VueProfil extends ConsumerWidget {
         // Présence au portail (REG-09) : Direction (tableau, réglages,
         // cartes, crédits SMS) ; le portail lui-même aussi pour le
         // personnel habilité (le serveur vérifie le droit).
-        if (p.roleRacine == RoleRacine.direction || p.roleRacine == RoleRacine.enseignant)
+        if (p.roleRacine == RoleRacine.direction || p.roleRacine == RoleRacine.enseignant || peut('portail.scanner') || peut('scolarite.presence.gerer'))
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
               if (etablissement == null) return const SizedBox.shrink();
               return Column(
                 children: [
-                  if (p.roleRacine == RoleRacine.direction)
+                  if (p.roleRacine == RoleRacine.direction || peut('scolarite.presence.gerer'))
                     ListTile(
                       key: const Key('menu_presence_jour'),
                       leading: const Icon(Icons.fact_check_outlined),
@@ -712,7 +719,7 @@ class _VueProfil extends ConsumerWidget {
         // Bibliothèque physique (M17, cahier ch. 25) : gestion par la
         // direction ; catalogue et emprunts pour l'élève et ses parents
         // (gratuit, jamais premium — 25.1).
-        if (p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.direction || peut('bibliotheque.gerer'))
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
@@ -752,6 +759,24 @@ class _VueProfil extends ConsumerWidget {
                       prenom: fiche.prenom,
                     ),
                   ),
+                ),
+              );
+            },
+          ),
+        // Personnel et postes (REG-22) : rôle et poste de chacun, droits des postes.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_personnel_postes'),
+                leading: const Icon(Icons.badge_outlined),
+                title: const Text('Personnel et postes'),
+                subtitle: const Text('Le poste de chacun et ses droits ; créez un poste à partir d’un modèle'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranPersonnel(etablissementId: etablissement.id)),
                 ),
               );
             },
@@ -1378,7 +1403,7 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.direction || peut('comptabilite.lire'))
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
@@ -1399,7 +1424,7 @@ class _VueProfil extends ConsumerWidget {
               );
             },
           ),
-        if (p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.direction || peut('scolarite.inscription.gerer'))
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);

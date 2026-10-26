@@ -96,6 +96,21 @@ reconstruction de l'instance (schémas internes `auth`, `storage`,
 `realtime`, event triggers PostgREST, etc. inclus), ce qu'un simple
 `pg_restore` côté client ne peut pas reproduire (voir §3.3).
 
+### 3.1 bis Poivre du code du compte (REG-22)
+
+Les codes du compte sont gardés sous forme d'empreinte poivrée : le poivre
+`poivre_code_compte` est créé au hasard dans le coffre (Vault) par la
+migration `…1562`, jamais écrit dans le dépôt. Un backup natif Supabase le
+contient (coffre compris). En revanche, une base reconstruite ailleurs
+(`pg_restore`, nouveau projet) **sans ce même poivre** rend tous les codes
+inutilisables : chacun devrait passer par « Code oublié ? ». Avant toute
+migration de projet, copier la valeur (Dashboard › Vault, ou
+`select decrypted_secret from vault.decrypted_secrets where name =
+'poivre_code_compte'`) dans le gestionnaire de secrets de l'équipe, et la
+reposer avec `vault.create_secret` sur le projet cible **avant** d'appliquer
+les migrations. Ne jamais la changer. Le contrôle de mise en service
+(`etat_mise_en_service()`) vérifie sa présence.
+
 ### 3.2 RTO — non mesuré en conditions réelles
 
 **Aucun chiffre de RTO n'est documenté ici**, faute d'environnement de test

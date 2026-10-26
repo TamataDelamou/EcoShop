@@ -210,11 +210,12 @@ class _FormulaireInvitationState extends ConsumerState<_FormulaireInvitation> {
             const SizedBox(height: 16),
             DropdownButtonFormField<RoleRacine>(
               key: const Key('choix_role_invite'),
+              isExpanded: true,
               initialValue: _role,
               decoration: const InputDecoration(labelText: 'Rôle'),
               items: [
                 for (final r in rolesInvitables)
-                  DropdownMenuItem(value: r, child: Text(libelleRoleInvitation(r.code))),
+                  DropdownMenuItem(value: r, child: Text(libelleRoleInvitation(r.code), overflow: TextOverflow.ellipsis)),
               ],
               onChanged: (r) => setState(() => _role = r ?? _role),
             ),
@@ -222,12 +223,17 @@ class _FormulaireInvitationState extends ConsumerState<_FormulaireInvitation> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 key: const Key('choix_poste_invite'),
+                isExpanded: true,
                 initialValue: _posteId,
-                decoration: const InputDecoration(labelText: 'Poste (facultatif)'),
+                decoration: InputDecoration(
+                  labelText: _role == RoleRacine.personnel ? 'Poste (obligatoire)' : 'Poste (facultatif)',
+                  helperText: _role == RoleRacine.personnel ? 'Ses droits viennent uniquement de son poste.' : null,
+                ),
                 items: [
-                  const DropdownMenuItem<String?>(value: null, child: Text('Aucun')),
+                  if (_role != RoleRacine.personnel) const DropdownMenuItem<String?>(value: null, child: Text('Aucun')),
                   for (final p in postes) DropdownMenuItem<String?>(value: p.id, child: Text(p.nom)),
                 ],
+                validator: (v) => _role == RoleRacine.personnel && v == null ? 'Choisissez un poste.' : null,
                 onChanged: (v) => setState(() => _posteId = v),
               ),
             ],

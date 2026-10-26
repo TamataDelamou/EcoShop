@@ -9,12 +9,15 @@ library;
 
 import '../../../core/auth/role_racine.dart';
 
-/// Rôles qu'une école peut proposer par invitation.
-const rolesInvitables = [RoleRacine.enseignant, RoleRacine.direction, RoleRacine.vendeur];
+/// Rôles qu'une école peut proposer par invitation. « Direction » est
+/// réservé au fondateur et au directeur (REG-22) ; secrétaire, caissier,
+/// comptable, surveillant… sont du personnel, avec leur poste.
+const rolesInvitables = [RoleRacine.enseignant, RoleRacine.personnel, RoleRacine.direction, RoleRacine.vendeur];
 
 String libelleRoleInvitation(String? code) => switch (code) {
       'enseignant' => 'Enseignant',
-      'direction' => 'Direction et administration',
+      'direction' => 'Direction (fondateur, directeur)',
+      'personnel' => 'Personnel administratif et technique',
       'vendeur' => 'Vendeur',
       _ => code ?? '',
     };
@@ -134,6 +137,7 @@ class ErreurInvitations implements Exception {
         'IDENTIFIANT_INVALIDE' => 'Saisissez une adresse e-mail, ou un numéro avec l’indicatif (+224…).',
         'ROLE_NON_INVITABLE' => 'Ce rôle ne s’obtient pas par invitation.',
         'POSTE_INVALIDE' => 'Ce poste n’existe plus. Actualisez la liste.',
+        'POSTE_OBLIGATOIRE' => 'Choisissez le poste de cette personne : ses droits en dépendent.',
         'DEJA_MEMBRE' => 'Cette personne est déjà membre de l’école avec ce rôle.',
         'PERMISSION_REFUSEE' => 'Réservé à la direction de l’école.',
         'ERREUR_RESEAU' => 'Pas de connexion. Réessayez une fois en ligne.',

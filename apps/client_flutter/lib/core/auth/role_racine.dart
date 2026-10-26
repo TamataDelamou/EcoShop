@@ -6,6 +6,8 @@ enum RoleRacine {
   eleve('eleve'),
   parent('parent'),
   enseignant('enseignant'),
+  // Personnel administratif et technique (REG-22) : droits venus du poste.
+  personnel('personnel'),
   direction('direction'),
   vendeur('vendeur'),
   fondateurReseau('fondateur_reseau'),
@@ -30,6 +32,7 @@ enum RoleRacine {
         RoleRacine.eleve => 'Élève',
         RoleRacine.parent => 'Parent',
         RoleRacine.enseignant => 'Enseignant',
+        RoleRacine.personnel => 'Personnel',
         RoleRacine.direction => 'Direction',
         RoleRacine.vendeur => 'Vendeur',
         RoleRacine.fondateurReseau => 'Fondateur de réseau',

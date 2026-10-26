@@ -37,6 +37,7 @@ attendue), `clos`.
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
 | REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **lots 1 et 2 livrés** (2026-10-23) : annonces, cahier de liaison ; messagerie privée et groupes de classe **en attente** |
 | REG-20 | Référentiel pédagogique et paramètres globaux livrés en production (champ « Pays » vide) ; séries du lycée guinéen | **P0** | **livré** (2026-10-24, `48574fe`) — tâche **ouverte** : séries SM, SE, SS et coefficients officiels, avant le premier lycée |
+| REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1567, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1176,6 +1177,12 @@ verrouillage après le délai, écran caché dans les applications récentes,
 captures bloquées pour le personnel (Android 12 et moins), ouverture sans
 réseau puis retour du réseau.
 
+**Amendement (REG-22, 2026-10-26)** : le code secret à 6 chiffres devient
+le code du **compte**, vérifié par le serveur sur tout nouvel appareil
+(voir REG-22). Le rôle « direction » est réservé au fondateur et au
+directeur ; secrétaire, caissier, comptable… sont invités comme
+« personnel », avec un poste obligatoire.
+
 ## REG-19 — Annonces, cahier de liaison, messagerie : brancher sur le serveur
 
 **Priorité** : P1. **Statut** : décidé le 2026-10-23 — lot 1 (annonces) puis lot 2 (cahier de
@@ -1305,3 +1312,59 @@ les séries n'existent que dans le seed de démonstration, rattachées à la
 seule Terminale, sans coefficients officiels. À établir : niveaux
 concernés (11e, 12e, Terminale), matières et coefficients par série, puis
 livraison par migration comme le reste du référentiel.
+
+## REG-22 — Code du compte, appareils connectés, postes du personnel
+
+**Priorité** : P0. **Statut** : livré le 2026-10-26. Propositions
+validées : `docs/propositions/REG-22_CODE_COMPTE_APPAREILS_POSTES.md` et
+`docs/propositions/REG-22_SOLUTION_TECHNIQUE.md` (décisions Q1 à Q5).
+
+**Failles corrigées.**
+- La connexion (code e-mail ou Google) suffisait à ouvrir un compte sur un
+  nouveau téléphone : le code secret n'était connu que du téléphone
+  d'origine.
+- Tout membre du personnel (agent du portail, chauffeur…) lisait notes,
+  bulletins, absences, sanctions, encaissements, soldes, risques, rapports
+  et journal d'audit.
+- Trouvées en testant : élévation de droits par écriture directe dans les
+  postes et les membres ; `est_admin_gsg()` à NULL pour un compte sans rôle
+  racine, qui laissait passer plusieurs contrôles ; 5 codes vérifiés mais
+  absents du catalogue (dont l'encaissement : un caissier devait être
+  invité comme direction).
+
+**Livré, dans l'ordre validé (un commit et un push par étape).**
+
+| Étape | Commit | Contenu |
+|---|---|---|
+| C1 — lecture par permission | `90805d7` | migration 1561, test 88 (103) |
+| A — serveur | `616af33` | migration 1562 (code du compte, contrôle avant chaque requête, Storage), fonction Edge `pas_moi`, courriels ; test 89 |
+| A — application | `f251076` | étape « Code de votre compte », « Code oublié ? » (3 voies), invite « Autoriser ce nouvel appareil ? », bandeau de récupération, Sécurité, déblocage direction et GSG ; migration 1563, test 90 |
+| A — mise en service | `d6d3ef9` | migration 1564 : interrupteur `code_compte_obligatoire` allumé |
+| B — appareils connectés | `365ef3c` | migration 1565, test 91 ; Mon profil › Sécurité › Mes appareils |
+| C — postes, serveur | `66f3169` | migrations 1566-1567 (rôle « personnel », modèles, séparation des tâches, codes branchés ou retirés), test 92 |
+| C — postes, écrans | (ce commit) | Personnel et postes, fiche d'un membre, invitation avec poste, menus du personnel selon son poste |
+
+**Retour arrière sans migration** : `code_compte_obligatoire` et
+`controle_sessions` dans `parametres_globaux`.
+
+**Écarts assumés, à confirmer.**
+- Fiches élèves, inscriptions et classes restent lisibles par tout le
+  personnel (annuaire : l'agent du portail et le chauffeur doivent
+  reconnaître les élèves). À restreindre si l'école le souhaite.
+- Comptable : pas de `rapports.generer` (prévu « financiers » dans la
+  proposition) : ce code ouvre aussi les notes. Ses rapports financiers
+  passent par la comptabilité.
+- Chauffeur : pas de code `transport.circuit.suivre` ; il suit le circuit
+  qui lui est confié, par affectation (un code sans effet n'est pas créé).
+- Surveillant général : le cahier de liaison reste réservé à l'enseignant
+  de l'élève et à la direction (pas de code d'écriture aux parents).
+- Realtime : jeton valable jusqu'à 1 h après une déconnexion à distance
+  (Q5, accepté).
+
+**À vérifier sur un téléphone Android** : nouvel appareil (code du compte,
+5 codes faux, « Code oublié ? » et ses trois voies) ; « Autoriser ce nouvel
+appareil ? » reçu sur l'ancien téléphone ; lien « Ce n'est pas moi » du
+courriel ; « Mes appareils » et déconnexion à distance (le téléphone
+déconnecté efface ses données à son retour sur le réseau) ; menus d'un
+membre « personnel » selon son poste.
+
