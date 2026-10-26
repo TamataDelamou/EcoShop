@@ -69,8 +69,6 @@ where po.code = 'PROVISEUR'
     'etablissement.annee.gerer',
     'etablissement.poste.gerer',
     'etablissement.membre.gerer',
-    'etablissement.membre.lire',
-    'etablissement.invitation.gerer',
     'scolarite.eleve.gerer'
   )
 on conflict do nothing;
@@ -81,15 +79,11 @@ select po.id, perm.code
 from public.postes po
 cross join public.permissions perm
 where po.code = 'SECRETAIRE'
-  and perm.code in ('scolarite.eleve.gerer', 'etablissement.membre.lire')
+  and perm.code in ('scolarite.eleve.gerer', 'scolarite.inscription.gerer')
 on conflict do nothing;
 
--- Enseignant : lecture seule de l'annuaire à ce stade (M4+ élargira).
-insert into public.poste_permissions (poste_id, permission_code)
-select po.id, 'etablissement.membre.lire'
-from public.postes po
-where po.code = 'ENSEIGNANT'
-on conflict do nothing;
+-- Enseignant : aucun code ; ses droits viennent de ses affectations
+-- (REG-22 : « etablissement.membre.lire » retiré, tout membre voit l'annuaire).
 
 -- ---------------------------------------------------------------------------
 -- Fiches élèves de démonstration — support du parcours de liaison (ch. 5.8).
