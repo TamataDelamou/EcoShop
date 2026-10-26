@@ -1,4 +1,8 @@
+import 'package:drift/native.dart';
 import 'package:ecoshop_client/core/auth/role_racine.dart';
+import 'package:ecoshop_client/core/db/app_database.dart';
+import 'package:ecoshop_client/core/db/cache_document_store.dart';
+import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/accueil/application/accueil_providers.dart';
 import 'package:ecoshop_client/features/accueil/domain/catalogue_fonctions.dart';
 import 'package:ecoshop_client/features/accueil/domain/fonction.dart';
@@ -132,17 +136,16 @@ void main() {
       expect(find.text('12 familles en retard de paiement'), findsOneWidget);
       expect(find.text('4 annonces à lire'), findsNothing, reason: 'les annonces ont déjà leur badge');
       expect(find.text('VIE DE L’ÉCOLE'), findsOneWidget);
-      await tester.scrollUntilVisible(find.byKey(const Key('pastille_relances')), 300,
-          scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(find.text('FINANCES'), 300, scrollable: find.byType(Scrollable).first);
       expect(find.text('FINANCES'), findsOneWidget);
-      expect(find.descendant(of: find.byKey(const Key('pastille_relances')), matching: find.text('12')), findsOneWidget,
-          reason: 'badge Relances');
+      expect(find.descendant(of: find.byKey(const Key('raccourci_relances')), matching: find.text('12')), findsOneWidget,
+          reason: 'badge Relances (raccourci)');
     });
 
     testWidgets('badge lu par TalkBack : « Annonces, 4 nouvelles »', (tester) async {
       final s = tester.ensureSemantics();
       await monter(tester, _ctx(RoleRacine.direction), {'annonces_non_lues': 4});
-      expect(find.bySemanticsLabel('Annonces, 4 nouvelles'), findsOneWidget);
+      expect(find.bySemanticsLabel('Annonces, 4 nouvelles'), findsWidgets);
       s.dispose();
     });
 
@@ -172,6 +175,94 @@ void main() {
       final taille = tester.getSize(find.byKey(const Key('pastille_annonces')));
       expect(taille.width, greaterThanOrEqualTo(48));
       expect(taille.height, greaterThanOrEqualTo(48));
+    });
+  });
+
+  group('raccourcis et recherche (étape 4)', () {
+    late AppDatabase db;
+    setUp(() => db = AppDatabase.pourTests(NativeDatabase.memory()));
+    tearDown(() => db.close());
+
+    Future<void> monter(WidgetTester tester, ContexteAccueil c) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.75;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          contexteAccueilProvider.overrideWithValue(c),
+          resumeAccueilProvider.overrideWith((ref) async => const {}),
+          aujourdhuiProvider.overrideWith((ref) async => const []),
+          profilProvider.overrideWith((ref) async => c.profil),
+          storeRaccourcisProvider.overrideWithValue(CacheDocumentStore(db, 'preferences_accueil')),
+        ],
+        child: const MaterialApp(home: Scaffold(body: EcranAccueil())),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('direction : quatre raccourcis par défaut (maquette)', (tester) async {
+      await monter(tester, _ctx(RoleRacine.direction));
+      for (final id in ['encaissements', 'annonces', 'relances', 'rapports']) {
+        expect(find.byKey(Key('raccourci_$id')), findsOneWidget, reason: id);
+      }
+    });
+
+    testWidgets('« Modifier » : le choix est gardé sur l’appareil', (tester) async {
+      await monter(tester, _ctx(RoleRacine.direction));
+      await tester.tap(find.byKey(const Key('bouton_modifier_raccourcis')));
+      await tester.pumpAndSettle();
+      Future<void> toucher(String cle) async {
+        await tester.scrollUntilVisible(find.byKey(Key(cle)), 120, scrollable: find.descendant(of: find.byKey(const Key('liste_choix_raccourcis')), matching: find.byType(Scrollable)));
+        await tester.tap(find.byKey(Key(cle)));
+        await tester.pump();
+      }
+      await toucher('choix_raccourci_relances');
+      await toucher('choix_raccourci_transport');
+      await toucher('bouton_valider_raccourcis');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('raccourci_transport')), findsOneWidget);
+      expect(find.byKey(const Key('raccourci_relances')), findsNothing);
+      // Réouverture de l'application : relu sur l'appareil.
+      await tester.pumpWidget(const SizedBox());
+      await monter(tester, _ctx(RoleRacine.direction));
+      expect(find.byKey(const Key('raccourci_transport')), findsOneWidget);
+      expect(find.byKey(const Key('raccourci_relances')), findsNothing);
+    });
+
+    testWidgets('plus de quatre raccourcis : impossible', (tester) async {
+      await monter(tester, _ctx(RoleRacine.direction));
+      await tester.tap(find.byKey(const Key('bouton_modifier_raccourcis')));
+      await tester.pumpAndSettle();
+      expect(find.text('Choisissez jusqu’à 4 raccourcis (4/4)'), findsOneWidget);
+      final libre = tester.widget<CheckboxListTile>(find.byKey(const Key('choix_raccourci_cahier_liaison')));
+      expect(libre.onChanged, isNull);
+    });
+
+    testWidgets('recherche : « reçu » → Encaissements ; rien → message', (tester) async {
+      await monter(tester, _ctx(RoleRacine.direction));
+      await tester.enterText(find.byKey(const Key('recherche_accueil')), 'reçu');
+      await tester.pumpAndSettle();
+      expect(find.text('RÉSULTATS'), findsOneWidget);
+      expect(find.byKey(const Key('pastille_encaissements')), findsOneWidget);
+      expect(find.byKey(const Key('pastille_salles')), findsNothing);
+      await tester.enterText(find.byKey(const Key('recherche_accueil')), 'zzz');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('recherche_vide')), findsOneWidget);
+    });
+
+    testWidgets('personnel : recherche et raccourcis parmi ses seules pastilles', (tester) async {
+      await monter(tester, _ctx(RoleRacine.personnel, droits: {'portail.scanner'}));
+      expect(find.byKey(const Key('recherche_accueil')), findsOneWidget);
+      expect(find.byKey(const Key('raccourci_encaissements')), findsNothing);
+      await tester.enterText(find.byKey(const Key('recherche_accueil')), 'reçu');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('pastille_encaissements')), findsNothing);
+    });
+
+    testWidgets('parent : ni recherche ni raccourcis', (tester) async {
+      await monter(tester, _ctx(RoleRacine.parent));
+      expect(find.byKey(const Key('recherche_accueil')), findsNothing);
+      expect(find.byKey(const Key('bouton_modifier_raccourcis')), findsNothing);
     });
   });
 }

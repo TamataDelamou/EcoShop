@@ -40,15 +40,42 @@ final lignesAFaire = <LigneAFaire>[
   LigneAFaire('annonces_non_lues', 'annonces', (n) => '$n annonce${_s(n)} à lire', icone: Icons.campaign_outlined),
 ];
 
-/// Accueil en pastilles (REG-21) : « À faire », pastilles par thème.
-class EcranAccueil extends ConsumerWidget {
+/// Accueil en pastilles (REG-21) : recherche et raccourcis (direction,
+/// personnel), « À faire », pastilles par thème.
+class EcranAccueil extends ConsumerStatefulWidget {
   const EcranAccueil({super.key, this.catalogue});
 
   /// Catalogue des fonctions (surchargé en test).
   final List<Fonction>? catalogue;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EcranAccueil> createState() => _EcranAccueilState();
+}
+
+class _EcranAccueilState extends ConsumerState<EcranAccueil> {
+  final _recherche = TextEditingController();
+  String _texte = '';
+
+  List<Fonction>? get catalogue => widget.catalogue;
+
+  @override
+  void dispose() {
+    _recherche.dispose();
+    super.dispose();
+  }
+
+  Future<void> _modifierRaccourcis(List<Fonction> fonctions, List<String> actuels) async {
+    final choisis = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _ChoixRaccourcis(fonctions: fonctions, actuels: actuels),
+    );
+    if (choisis != null) await ref.read(raccourcisProvider.notifier).remplacer(choisis);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final c = ref.watch(contexteAccueilProvider);
     if (c == null) return const Center(child: CircularProgressIndicator());
     final resume = ref.watch(resumeAccueilProvider).valueOrNull ?? const {};
@@ -67,8 +94,16 @@ class EcranAccueil extends ConsumerWidget {
 
     Widget pastille(Fonction f) => Pastille(fonction: f, badge: f.badge == null ? 0 : resume[f.badge] ?? 0, onTap: () => ouvrir(f));
 
+    final avecOutils = c.direction || c.personnel;
     final sections = <Widget>[];
-    if (c.direction) {
+    final trouvees = rechercher(fonctions, _texte);
+    if (avecOutils && _texte.trim().isNotEmpty) {
+      sections
+        ..add(TitreSection(trouvees.isEmpty ? 'Aucun résultat' : 'Résultats'))
+        ..add(trouvees.isEmpty
+            ? const Text('Essayez un autre mot : « reçu », « inscription », « bus »…', key: Key('recherche_vide'))
+            : GrillePastilles(enfants: [for (final f in trouvees) pastille(f)]));
+    } else if (c.direction) {
       for (final g in groupesDirection) {
         final duGroupe = [for (final f in fonctions) if (f.groupe == g) f];
         if (duGroupe.isEmpty) continue;
@@ -91,9 +126,34 @@ class EcranAccueil extends ConsumerWidget {
         key: const Key('accueil_pastilles'),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
+          if (avecOutils)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextField(
+                key: const Key('recherche_accueil'),
+                controller: _recherche,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: 'Que voulez-vous faire ?',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  suffixIcon: _texte.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Effacer',
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(() {
+                            _recherche.clear();
+                            _texte = '';
+                          }),
+                        ),
+                ),
+                onChanged: (v) => setState(() => _texte = v),
+              ),
+            ),
           if (c.eleve) const _ProchainCours(),
           if (c.enseignant) const _Aujourdhui(),
-          if (lignes.isNotEmpty) ...[
+          if (lignes.isNotEmpty && _texte.trim().isEmpty) ...[
             TitreSection(c.eleve ? 'À ne pas manquer' : 'À faire'),
             for (final l in lignes)
               _LigneAFaireWidget(
@@ -102,8 +162,85 @@ class EcranAccueil extends ConsumerWidget {
                 onTap: () => ouvrir(parId[l.fonctionId]!),
               ),
           ],
+          if (avecOutils && _texte.trim().isEmpty) ..._raccourcis(fonctions, pastille),
           ...sections,
         ],
+      ),
+    );
+  }
+
+  /// « Mes raccourcis » : quatre pastilles épinglées, gardées sur l'appareil.
+  List<Widget> _raccourcis(List<Fonction> fonctions, Widget Function(Fonction) pastille) {
+    final parId = {for (final f in fonctions) f.id: f};
+    final gardes = ref.watch(raccourcisProvider).valueOrNull ?? RaccourcisController.parDefaut;
+    var choisis = [for (final id in gardes) if (parId.containsKey(id)) parId[id]!];
+    // Poste sans les raccourcis de la direction : ses premières pastilles.
+    if (choisis.isEmpty) choisis = fonctions.take(4).toList();
+    if (choisis.isEmpty) return const [];
+    return [
+      TitreSection(
+        'Mes raccourcis',
+        action: TextButton(
+          key: const Key('bouton_modifier_raccourcis'),
+          onPressed: () => _modifierRaccourcis(fonctions, [for (final f in choisis) f.id]),
+          child: const Text('Modifier'),
+        ),
+      ),
+      GrillePastilles(enfants: [for (final f in choisis.take(4)) KeyedSubtree(key: Key('raccourci_${f.id}'), child: pastille(f))]),
+    ];
+  }
+}
+
+/// Choix des raccourcis : quatre au plus.
+class _ChoixRaccourcis extends StatefulWidget {
+  const _ChoixRaccourcis({required this.fonctions, required this.actuels});
+
+  final List<Fonction> fonctions;
+  final List<String> actuels;
+
+  @override
+  State<_ChoixRaccourcis> createState() => _ChoixRaccourcisState();
+}
+
+class _ChoixRaccourcisState extends State<_ChoixRaccourcis> {
+  late final List<String> _choisis = [...widget.actuels];
+
+  @override
+  Widget build(BuildContext context) {
+    // Une seule liste défilante : aucune case cachée sous le bouton.
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.8),
+        child: ListView(
+          key: const Key('liste_choix_raccourcis'),
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Choisissez jusqu’à 4 raccourcis (${_choisis.length}/4)',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            for (final f in widget.fonctions)
+              CheckboxListTile(
+                key: Key('choix_raccourci_${f.id}'),
+                value: _choisis.contains(f.id),
+                secondary: Icon(f.icone),
+                title: Text(f.libelle),
+                onChanged: !_choisis.contains(f.id) && _choisis.length >= 4
+                    ? null
+                    : (v) => setState(() => v == true ? _choisis.add(f.id) : _choisis.remove(f.id)),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: FilledButton(
+                key: const Key('bouton_valider_raccourcis'),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                onPressed: () => Navigator.of(context).pop(_choisis),
+                child: const Text('Enregistrer'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
