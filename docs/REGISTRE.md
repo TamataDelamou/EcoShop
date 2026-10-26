@@ -37,7 +37,7 @@ attendue), `clos`.
 | REG-18 | Sécurité d'accès : inscription en étapes, code secret et verrou, identifiant EcoShop, protections à la liaison | **P0** | **livré** (2026-10-23), invitations du personnel comprises — à vérifier sur un téléphone Android |
 | REG-19 | Annonces, cahier de liaison, messagerie : brancher sur le serveur (prototypes masqués en version publiée) | P1 | **lots 1 et 2 livrés** (2026-10-23) : annonces, cahier de liaison ; messagerie privée et groupes de classe **en attente** |
 | REG-20 | Référentiel pédagogique et paramètres globaux livrés en production (champ « Pays » vide) ; séries du lycée guinéen | **P0** | **livré** (2026-10-24, `48574fe`) — tâche **ouverte** : séries SM, SE, SS et coefficients officiels, avant le premier lycée |
-| REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1567, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
+| REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1568, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1342,22 +1342,23 @@ validées : `docs/propositions/REG-22_CODE_COMPTE_APPAREILS_POSTES.md` et
 | A — mise en service | `d6d3ef9` | migration 1564 : interrupteur `code_compte_obligatoire` allumé |
 | B — appareils connectés | `365ef3c` | migration 1565, test 91 ; Mon profil › Sécurité › Mes appareils |
 | C — postes, serveur | `66f3169` | migrations 1566-1567 (rôle « personnel », modèles, séparation des tâches, codes branchés ou retirés), test 92 |
-| C — postes, écrans | (ce commit) | Personnel et postes, fiche d'un membre, invitation avec poste, menus du personnel selon son poste |
+| C — postes, écrans | `55b6c32` | Personnel et postes, fiche d'un membre, invitation avec poste, menus du personnel selon son poste |
 
 **Retour arrière sans migration** : `code_compte_obligatoire` et
 `controle_sessions` dans `parametres_globaux`.
 
-**Écarts assumés, à confirmer.**
-- Fiches élèves, inscriptions et classes restent lisibles par tout le
-  personnel (annuaire : l'agent du portail et le chauffeur doivent
-  reconnaître les élèves). À restreindre si l'école le souhaite.
-- Comptable : pas de `rapports.generer` (prévu « financiers » dans la
-  proposition) : ce code ouvre aussi les notes. Ses rapports financiers
-  passent par la comptabilité.
-- Chauffeur : pas de code `transport.circuit.suivre` ; il suit le circuit
-  qui lui est confié, par affectation (un code sans effet n'est pas créé).
-- Surveillant général : le cahier de liaison reste réservé à l'enseignant
-  de l'élève et à la direction (pas de code d'écriture aux parents).
+**Décisions du porteur de projet sur les écarts (2026-10-26).**
+- Fiche élève **restreinte** (migration 1568) : fiche complète pour la
+  direction, le secrétariat, le surveillant général, les enseignants de la
+  classe et la famille ; les autres ne voient que l'annuaire (nom, prénom,
+  classe), jamais le matricule ni la date de naissance (facteurs de la
+  liaison parent ; minimisation des données des mineurs, §34.2). Aucune
+  photo n'est stockée aujourd'hui.
+- Comptable sans `rapports.generer` : validé.
+- Chauffeur sans code de transport (affectation au circuit) : validé.
+- Cahier de liaison ouvert au surveillant général
+  (`scolarite.liaison.ecrire`), mêmes règles que l'enseignant ; chaque mot
+  écrit est journalisé.
 - Realtime : jeton valable jusqu'à 1 h après une déconnexion à distance
   (Q5, accepté).
 

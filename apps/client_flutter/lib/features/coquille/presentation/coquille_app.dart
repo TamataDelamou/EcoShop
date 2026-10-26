@@ -1000,7 +1000,7 @@ class _VueProfil extends ConsumerWidget {
               MaterialPageRoute(builder: (_) => const EcranElevesLiaison()),
             ),
           ),
-        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction)
+        if (p.roleRacine == RoleRacine.enseignant || p.roleRacine == RoleRacine.direction || peut('scolarite.liaison.ecrire'))
           Consumer(
             builder: (context, ref, _) {
               final etablissement = ref.watch(etablissementActifProvider);
