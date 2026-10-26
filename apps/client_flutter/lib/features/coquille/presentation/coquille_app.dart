@@ -1601,7 +1601,7 @@ class _VueProfil extends ConsumerWidget {
           key: const Key('menu_securite'),
           leading: const Icon(Icons.shield_outlined),
           title: const Text('Sécurité'),
-          subtitle: const Text('Code du compte'),
+          subtitle: const Text('Code du compte, mes appareils'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranSecurite())),
         ),

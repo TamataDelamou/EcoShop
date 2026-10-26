@@ -10,6 +10,7 @@ import 'package:ecoshop_client/features/appareil/application/appareil_providers.
 import 'package:ecoshop_client/features/appareil/data/appareil_repository.dart';
 import 'package:ecoshop_client/features/appareil/domain/etat_appareil.dart';
 import 'package:ecoshop_client/features/appareil/presentation/ecran_code_compte.dart';
+import 'package:ecoshop_client/features/appareil/presentation/ecran_mes_appareils.dart';
 import 'package:ecoshop_client/features/appareil/presentation/surveillance_appareils.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/auth/domain/destination_session.dart';
@@ -135,6 +136,25 @@ class _FauxRepo implements AppareilRepository {
   @override
   Future<DateTime> debloquer({required String compteId, required String motif, String? etablissementId}) async =>
       DateTime.now().add(const Duration(minutes: 30));
+
+  List<AppareilConnecte> appareils = [];
+
+  @override
+  Future<List<AppareilConnecte>> mesAppareils() async => appareils;
+
+  @override
+  Future<void> deconnecterAppareil(String sessionId) async {
+    appels.add('deconnecter:$sessionId');
+    appareils = [for (final a in appareils) if (a.sessionId != sessionId) a];
+  }
+
+  @override
+  Future<int> deconnecterAutres() async {
+    final n = appareils.where((a) => !a.cetAppareil).length;
+    appareils = [for (final a in appareils) if (a.cetAppareil) a];
+    appels.add('deconnecter_autres');
+    return n;
+  }
 }
 
 class _Banc {
@@ -422,6 +442,45 @@ void main() {
       await tester.pump();
       expect(banc.repo.appels, contains('finaliser:582014'));
       banc.fermer();
+    });
+
+    testWidgets('mes appareils : cartes, « Cet appareil », déconnexion d’un autre', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.75;
+      addTearDown(tester.view.reset);
+      final banc = _Banc(EtatAppareil.depuisJson(_etatJson(statut: 'approuvee')));
+      banc.repo.appareils = [
+        AppareilConnecte(sessionId: 's1', modele: 'Samsung Galaxy A14', systeme: 'Android 14', cetAppareil: true,
+            connecteLe: DateTime(2026, 10, 12, 9), derniereUtilisation: DateTime.now()),
+        AppareilConnecte(sessionId: 's2', modele: 'Tecno Spark 10', systeme: 'Android 13', cetAppareil: false,
+            connecteLe: DateTime(2026, 10, 20, 8), derniereUtilisation: DateTime.now().subtract(const Duration(days: 3))),
+      ];
+      await tester.runAsync(banc.etat);
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: banc.container,
+        child: const MaterialApp(home: EcranMesAppareils()),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Samsung Galaxy A14'), findsOneWidget);
+      expect(find.text('Cet appareil'), findsOneWidget);
+      expect(find.text('Connecté depuis le 12/10'), findsOneWidget);
+      expect(find.textContaining('Dernière utilisation : aujourd’hui à'), findsOneWidget);
+      expect(find.byKey(const Key('deconnecter_s1')), findsNothing);
+      await tester.tap(find.byKey(const Key('deconnecter_s2')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Déconnecter'));
+      await tester.pumpAndSettle();
+      expect(banc.repo.appels, contains('deconnecter:s2'));
+      expect(find.text('Tecno Spark 10'), findsNothing);
+      expect(find.byKey(const Key('bouton_deconnecter_autres')), findsNothing);
+      banc.fermer();
+    });
+
+    test('dernière utilisation lisible', () {
+      final m = DateTime(2026, 10, 25, 18);
+      expect(quandLisible(DateTime(2026, 10, 25, 14, 5), maintenant: m), 'aujourd’hui à 14 h 05');
+      expect(quandLisible(DateTime(2026, 10, 24, 9, 0), maintenant: m), 'hier à 9 h 00');
+      expect(quandLisible(DateTime(2026, 10, 12, 9, 0), maintenant: m), 'le 12/10 à 9 h 00');
     });
 
     testWidgets('appareil connu : « Autoriser ce nouvel appareil ? » avec le modèle', (tester) async {

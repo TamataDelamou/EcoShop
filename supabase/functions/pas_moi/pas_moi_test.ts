@@ -41,7 +41,7 @@ Deno.test("courriels du code du compte : rendus, sans code ni lien de connexion"
   assert(nouvel.html.includes(`https://projet/functions/v1/pas_moi?j=${JETON}`));
   assert(nouvel.texte.includes("Tecno Spark 10"));
   for (const m of ["code_compte_appareils_bloques", "code_compte_change", "code_compte_recuperation_lancee",
-                   "code_compte_recuperation_terminee"]) {
+                   "code_compte_recuperation_terminee", "appareils_deconnectes"]) {
     const r = rendreCourriel(m, { prenom: "Awa", motif: "pas_moi", fin: "27/10/2026 à 14 h 05" }, ctx);
     assert(r.sujet.length > 0 && r.texte.includes("Awa"), m);
     assert(!r.html.includes("<img"), m);

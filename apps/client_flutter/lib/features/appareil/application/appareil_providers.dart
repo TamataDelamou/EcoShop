@@ -307,6 +307,11 @@ class AppareilController {
   }
 }
 
+/// Mon profil › Sécurité › Mes appareils.
+final mesAppareilsProvider = FutureProvider.autoDispose<List<AppareilConnecte>>(
+  (ref) => ref.watch(appareilRepositoryProvider).mesAppareils(),
+);
+
 final appareilControllerProvider = Provider<AppareilController>((ref) => AppareilController(ref));
 
 /// Refus du serveur qui concernent toute la session (voir [SurveillanceSession]).

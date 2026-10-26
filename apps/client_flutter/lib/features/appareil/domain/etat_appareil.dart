@@ -256,10 +256,45 @@ class ErreurCodeCompte implements Exception {
     'MOTIF_OBLIGATOIRE' => 'Indiquez le motif (au moins 5 caractères).',
     'PERMISSION_REFUSEE' => 'Vous n’avez pas le droit de faire cela.',
     'APPAREIL_A_VERIFIER' => 'Saisissez d’abord le code de votre compte sur cet appareil.',
+    'CET_APPAREIL' => 'Pour cet appareil, utilisez « Se déconnecter ».',
+    'APPAREIL_INCONNU' => 'Cet appareil est déjà déconnecté.',
     'SESSION_INCONNUE' || 'SESSION_REVOQUEE' => 'Cet appareil a été déconnecté. Reconnectez-vous.',
     _ => 'Le serveur n’a pas pu traiter la demande. Réessayez.',
   };
 
   @override
   String toString() => message;
+}
+
+/// Connexion ouverte du compte (Mon profil › Sécurité › Mes appareils).
+class AppareilConnecte {
+  const AppareilConnecte({
+    required this.sessionId,
+    required this.modele,
+    required this.connecteLe,
+    required this.derniereUtilisation,
+    required this.cetAppareil,
+    this.systeme,
+    this.statut,
+  });
+
+  final String sessionId;
+  final String modele;
+  final String? systeme;
+  final String? statut;
+  final DateTime connecteLe;
+  final DateTime derniereUtilisation;
+  final bool cetAppareil;
+
+  bool get aVerifier => statut == 'a_verifier';
+
+  factory AppareilConnecte.depuisJson(Map<String, dynamic> j) => AppareilConnecte(
+    sessionId: j['session_id'] as String,
+    modele: (j['modele'] as String?) ?? 'Appareil inconnu',
+    systeme: j['systeme'] as String?,
+    statut: j['statut'] as String?,
+    connecteLe: DateTime.parse(j['connecte_le'] as String).toLocal(),
+    derniereUtilisation: DateTime.parse(j['derniere_utilisation'] as String).toLocal(),
+    cetAppareil: j['cet_appareil'] == true,
+  );
 }

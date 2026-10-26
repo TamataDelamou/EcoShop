@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../coquille/presentation/pave_code.dart';
 import '../application/appareil_providers.dart';
 import 'ecran_code_compte.dart';
+import 'ecran_mes_appareils.dart';
 
 /// Mon profil › Sécurité (REG-22).
 class EcranSecurite extends ConsumerWidget {
@@ -24,6 +25,14 @@ class EcranSecurite extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             enabled: etat?.aUnCode ?? false,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranChangerCodeCompte())),
+          ),
+          ListTile(
+            key: const Key('menu_mes_appareils'),
+            leading: const Icon(Icons.devices_outlined),
+            title: const Text('Mes appareils'),
+            subtitle: const Text('Voyez où votre compte est ouvert ; déconnectez un appareil perdu'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranMesAppareils())),
           ),
           if (etat != null && etat.bloque)
             ListTile(

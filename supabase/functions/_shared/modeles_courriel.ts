@@ -28,7 +28,8 @@ export type ModeleCourriel =
   | "code_compte_appareils_bloques"
   | "code_compte_change"
   | "code_compte_recuperation_lancee"
-  | "code_compte_recuperation_terminee";
+  | "code_compte_recuperation_terminee"
+  | "appareils_deconnectes";
 
 export interface ContexteCourriel {
   /** Lien d'ouverture de l'application (site ou page de téléchargement). */
@@ -273,6 +274,19 @@ function contenuPour(modele: string, d: Record<string, unknown>, ctx: ContexteCo
           `Si ce n'est pas vous, contactez l'école ou écrivez à ${ctx.adresseSupport} sans attendre.`,
         ],
       };
+    case "appareils_deconnectes": {
+      const nombre = Number(texteDe(d, "nombre", "1")) || 1;
+      return {
+        sujet: nombre > 1 ? "Appareils déconnectés de votre compte EcoShop" : "Appareil déconnecté de votre compte EcoShop",
+        apercu: "Des appareils ont été déconnectés de votre compte.",
+        titre: nombre > 1 ? `${nombre} appareils déconnectés` : "Appareil déconnecté",
+        paragraphes: [
+          salutation,
+          `Depuis votre appareil, vous avez déconnecté : ${texteDe(d, "modeles", "un appareil")}. Ses données EcoShop sont effacées dès qu'il se reconnecte au réseau.`,
+          `Si ce n'est pas vous, changez le code de votre compte (Mon profil › Sécurité) et écrivez à ${ctx.adresseSupport}.`,
+        ],
+      };
+    }
     default:
       throw new ModeleInconnu(modele);
   }

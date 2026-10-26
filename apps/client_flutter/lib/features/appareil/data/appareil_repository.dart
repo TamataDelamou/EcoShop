@@ -25,6 +25,10 @@ abstract interface class AppareilRepository {
   Future<List<PersonneDebloquable>> personnesDebloquables(String etablissementId, String recherche);
   Future<List<PersonneDebloquable>> chercherCompteGsg(String recherche);
   Future<DateTime> debloquer({required String compteId, required String motif, String? etablissementId});
+
+  Future<List<AppareilConnecte>> mesAppareils();
+  Future<void> deconnecterAppareil(String sessionId);
+  Future<int> deconnecterAutres();
 }
 
 class SupabaseAppareilRepository implements AppareilRepository {
@@ -130,6 +134,22 @@ class SupabaseAppareilRepository implements AppareilRepository {
         {'p_compte': compteId, 'p_motif': motif, 'p_etablissement': etablissementId});
     return DateTime.parse(r['echeance'] as String).toLocal();
   }
+
+  @override
+  Future<List<AppareilConnecte>> mesAppareils() => _executer(() async {
+    final r = await _client.rpc<dynamic>('mes_appareils');
+    return [for (final l in (r as List)) AppareilConnecte.depuisJson((l as Map).cast<String, dynamic>())];
+  });
+
+  @override
+  Future<void> deconnecterAppareil(String sessionId) =>
+      _executer(() => _client.rpc<dynamic>('deconnecter_appareil', params: {'p_session': sessionId}));
+
+  @override
+  Future<int> deconnecterAutres() => _executer(() async {
+    final r = await _client.rpc<dynamic>('deconnecter_autres_appareils');
+    return (r as num?)?.toInt() ?? 0;
+  });
 
   static Future<T> _executer<T>(Future<T> Function() action) async {
     try {
