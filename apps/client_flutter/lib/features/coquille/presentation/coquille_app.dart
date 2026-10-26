@@ -1,3 +1,5 @@
+import '../../accueil/application/accueil_providers.dart';
+import '../../accueil/presentation/ecran_accueil.dart';
 import '../../accueil/presentation/ecrans_destinations.dart';
 import '../../postes/application/postes_providers.dart';
 import '../../postes/presentation/ecran_postes.dart';
@@ -367,8 +369,8 @@ class _CorpsOnglet extends ConsumerWidget {
     final etablissement = ref.watch(etablissementActifProvider);
     Widget page(String titre, Widget corps) => Scaffold(appBar: AppBar(title: Text(titre)), body: corps);
     return switch (onglet) {
-      OngletCoquille.accueil => const _AccueilProvisoire(),
-      OngletCoquille.messages => EcranMessages(profil: p),
+      OngletCoquille.accueil => const EcranAccueil(),
+      OngletCoquille.messages => EcranMessages(profil: p, badges: ref.watch(resumeAccueilProvider).valueOrNull ?? const {}),
       OngletCoquille.annonces => const EcranAnnonces(),
       OngletCoquille.agenda => EcranAgenda(profil: p),
       // Parent : la fiche de l'enfant actif (solde, paiements, Orange Money,
@@ -386,25 +388,6 @@ class _CorpsOnglet extends ConsumerWidget {
       OngletCoquille.referentiel => const EcranPaysPedagogiques(),
       OngletCoquille.notifications => EcranNotifications(profileId: p.id),
     };
-  }
-}
-
-/// Accueil en attendant les pastilles (REG-21, étape suivante).
-class _AccueilProvisoire extends StatelessWidget {
-  const _AccueilProvisoire();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(32),
-        child: Text(
-          'Toutes vos fonctions sont dans « Mon profil », en haut à droite.',
-          key: Key('accueil_provisoire'),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
   }
 }
 
