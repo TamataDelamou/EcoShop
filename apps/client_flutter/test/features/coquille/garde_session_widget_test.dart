@@ -182,7 +182,7 @@ void main() {
 
     // Aucun menu intermédiaire : on est dans la liste « Mon profil »…
     expect(find.byType(PopupMenuItem<String>), findsNothing);
-    expect(find.byKey(const Key('profil_telephone')), findsOneWidget);
+    expect(find.byKey(const Key('profil_mes_informations')), findsOneWidget);
     // … et « Se déconnecter » n'y apparaît qu'une fois, en bas de la liste.
     await tester.scrollUntilVisible(find.text('Se déconnecter'), 300, scrollable: find.byType(Scrollable).last);
     expect(find.text('Se déconnecter'), findsOneWidget);
