@@ -18,6 +18,9 @@ import '../../auth/presentation/ecran_nom_profil.dart';
 import '../../auth/presentation/ecran_recapitulatif.dart';
 import '../../auth/application/relance_reseau.dart';
 import '../../auth/application/session_locale.dart';
+import '../../appareil/application/appareil_providers.dart';
+import '../../appareil/presentation/ecran_code_compte.dart';
+import '../../../core/securite/surveillance_session.dart';
 
 /// Racine de l'application : affiche l'écran correspondant à la destination
 /// calculée par [GardeSession].
@@ -34,10 +37,29 @@ class RacineApp extends ConsumerWidget {
     // Relecture au retour du réseau, sans relancer l'application (REG-18).
     ref.watch(relanceReseauProvider);
 
+    // Refus du serveur pour toute la session (REG-22).
+    ref.listen(refusSessionProvider, (_, refus) {
+      switch (refus.valueOrNull) {
+        case RefusSession.sessionRevoquee:
+          ref.read(appareilControllerProvider).sessionRevoquee();
+        case RefusSession.appareilAVerifier:
+          ref.invalidate(etatAppareilProvider);
+        case null:
+          break;
+      }
+    });
+    // Appareil tout juste vérifié (code, autre appareil, récupération,
+    // école) : les lectures refusées jusque-là sont relancées.
+    ref.listen(etatAppareilProvider.select((e) => e.valueOrNull?.aVerifier), (avant, maintenant) {
+      if (avant == true && maintenant == false) ref.rafraichirSession();
+    });
+
     return switch (destination) {
       DestinationSession.chargement => const _EcranChargement(),
       DestinationSession.horsLigneSansCopie => const _EcranSansConnexion(),
       DestinationSession.connexion => const EcranChoixEspace(),
+      DestinationSession.codeCompte => const EcranCodeCompte(),
+      DestinationSession.codeCompteAConfirmer => const EcranCodeCompteAConfirmer(),
       DestinationSession.compteBloque => const _EcranCompteBloque(),
       DestinationSession.invitations => const EcranInvitations(),
       DestinationSession.choixRole => const EcranChoixRole(),

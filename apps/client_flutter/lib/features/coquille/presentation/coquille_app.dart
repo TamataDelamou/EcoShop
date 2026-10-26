@@ -1,3 +1,6 @@
+import '../../appareil/presentation/ecran_debloquer_code.dart';
+import '../../appareil/presentation/ecran_securite.dart';
+import '../../appareil/presentation/surveillance_appareils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -215,6 +218,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       body: Column(
         children: [
           const _BandeauHorsLigne(),
+          // Code du compte (REG-22) : autorisations d'appareils, récupération en cours.
+          if (Env.estConfigure && profil != null) SurveillanceAppareils(key: ValueKey('appareils_${profil.id}')),
           // Notifications push : rattachement du téléphone, bandeau, ouverture.
           if (Env.estConfigure && profil != null) EcouteurPush(key: ValueKey(profil.id), profilId: profil.id),
           // En-tête : nom, rôle utilisé, établissement actif ; enfants du parent.
@@ -747,6 +752,24 @@ class _VueProfil extends ConsumerWidget {
                       prenom: fiche.prenom,
                     ),
                   ),
+                ),
+              );
+            },
+          ),
+        // Déblocage du code du compte (REG-22) : en présence de la personne.
+        if (p.roleRacine == RoleRacine.direction)
+          Consumer(
+            builder: (context, ref, _) {
+              final etablissement = ref.watch(etablissementActifProvider);
+              if (etablissement == null) return const SizedBox.shrink();
+              return ListTile(
+                key: const Key('menu_debloquer_code'),
+                leading: const Icon(Icons.lock_open_outlined),
+                title: const Text('Débloquer le code d’une personne'),
+                subtitle: const Text('Personnel, élève ou parent qui a oublié son code, présent à l’école'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => EcranDebloquerCode(etablissementId: etablissement.id)),
                 ),
               );
             },
@@ -1562,6 +1585,26 @@ class _VueProfil extends ConsumerWidget {
               MaterialPageRoute(builder: (_) => const EcranValidationVendeursGsg()),
             ),
           ),
+        if (p.roleRacine == RoleRacine.adminGsg)
+          ListTile(
+            key: const Key('menu_debloquer_code_gsg'),
+            leading: const Icon(Icons.lock_open_outlined),
+            title: const Text('Débloquer un code (direction, fondateur)'),
+            subtitle: const Text('Après vérification de l’identité de la personne'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const EcranDebloquerCode()),
+            ),
+          ),
+        // Sécurité (REG-22) : code du compte, appareils.
+        ListTile(
+          key: const Key('menu_securite'),
+          leading: const Icon(Icons.shield_outlined),
+          title: const Text('Sécurité'),
+          subtitle: const Text('Code du compte'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranSecurite())),
+        ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.logout),

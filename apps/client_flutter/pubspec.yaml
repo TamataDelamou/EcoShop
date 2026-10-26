@@ -62,6 +62,9 @@ dependencies:
   flutter_secure_storage: 11.2.0
   cryptography: 2.9.0
   cryptography_flutter: 2.3.4
+  # Modèle du téléphone (« Samsung Galaxy A14 ») pour la liste des appareils
+  # et l'invite « Autoriser ce nouvel appareil ? » (REG-22). Version figée.
+  device_info_plus: 13.3.0
 
 dev_dependencies:
   flutter_test:

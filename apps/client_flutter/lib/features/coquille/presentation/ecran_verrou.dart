@@ -119,8 +119,10 @@ class _EcranVerrouState extends ConsumerState<EcranVerrou> {
                             onPressed: () => _confirmer(
                               titre: 'Code oublié',
                               texte:
-                                  'Vous allez recevoir un code par e-mail (ou utiliser Google) pour prouver '
-                                  'que c’est bien vous, puis choisir un nouveau code secret.',
+                                  'Vous allez être déconnecté de ce téléphone. Reconnectez-vous par e-mail ou '
+                                  'Google : le code de votre compte vous sera demandé, avec « Code oublié ? » '
+                                  'pour l’autoriser depuis un autre appareil, le récupérer par e-mail ou vous '
+                                  'faire débloquer à l’école.',
                               action: controleur.codeOublie,
                             ),
                             child: const Text('Code oublié'),

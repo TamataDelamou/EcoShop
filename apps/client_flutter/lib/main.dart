@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/env.dart';
 import 'core/erreurs/gestion_erreurs.dart';
 import 'core/offline/client_avec_delai.dart';
+import 'core/securite/surveillance_session.dart';
 import 'core/theme/app_palette.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_variant.dart';
@@ -30,7 +31,9 @@ Future<void> main() async {
       publishableKey: Env.supabasePublishableKey,
       // Délai maximum par requête : un serveur injoignable ne fait plus
       // attendre l'ouverture (renouvellement du jeton compris).
-      httpClient: ClientAvecDelai(http.Client()),
+      // Refus de session (appareil déconnecté, nouvel appareil à vérifier)
+      // repérés sur toute requête (REG-22).
+      httpClient: SurveillanceSession(ClientAvecDelai(http.Client())),
     );
     // Notifications push (téléphones) : éteintes sans configuration Firebase.
     await InitialisationPush.initialiser();

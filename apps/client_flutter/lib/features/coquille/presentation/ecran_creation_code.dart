@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/securite/code_secret.dart';
+import '../../appareil/application/appareil_providers.dart';
 import '../application/verrou_controller.dart';
 import 'pave_code.dart';
 
@@ -48,6 +49,8 @@ class _EcranCreationCodeState extends ConsumerState<EcranCreationCode> {
       setState(() => _etape = _Etape.choix);
       return e.toString();
     }
+    // Il devient le code du compte (REG-22), le même sur tous les appareils.
+    await ref.read(appareilControllerProvider).codeLocalCree(code);
     setState(() => _etape = _Etape.biometrie);
     return null;
   }
@@ -85,7 +88,7 @@ class _EcranCreationCodeState extends ConsumerState<EcranCreationCode> {
                       Icon(Icons.pin_outlined, size: 40, color: theme.colorScheme.primary),
                       const SizedBox(height: 12),
                       Text(
-                        'Sur ce téléphone, EcoShop s’ouvrira avec ce code. Ne le donnez à personne.',
+                        'Ce code ouvrira EcoShop sur ce téléphone et sur vos autres appareils. Ne le donnez à personne.',
                         style: theme.textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),

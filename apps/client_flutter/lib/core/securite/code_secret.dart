@@ -162,12 +162,14 @@ class ServiceCodeSecret {
 
   static String _cleCode(String compteId) => 'code_secret.$compteId';
   static String _cleEchecs(String compteId) => 'code_echecs.$compteId';
+  static String _cleVersion(String compteId) => 'code_version.$compteId';
 
   Future<bool> existe(String compteId) async => await coffre.lire(_cleCode(compteId)) != null;
 
-  /// Enregistre un nouveau code (après vérification des règles).
-  Future<void> creer(String compteId, String code, {DateTime? dateNaissance}) async {
-    final refus = ReglesCode.verifierChoix(code, dateNaissance: dateNaissance);
+  /// Enregistre un nouveau code (après vérification des règles, sauf
+  /// [sansControle] : code du compte déjà accepté par le serveur).
+  Future<void> creer(String compteId, String code, {DateTime? dateNaissance, bool sansControle = false}) async {
+    final refus = sansControle ? null : ReglesCode.verifierChoix(code, dateNaissance: dateNaissance);
     if (refus != null) throw CodeRefuse(refus);
     final sel = List<int>.generate(16, (_) => _aleatoire.nextInt(256));
     final empreinte = await _deriverMesure(code, sel, iterations, 'création');
@@ -218,10 +220,17 @@ class ServiceCodeSecret {
     return resultat;
   }
 
+  /// Version du code du compte (REG-22) dont ce code local est la copie ;
+  /// null si inconnue (code créé avant REG-22).
+  Future<int?> versionCompte(String compteId) async => int.tryParse(await coffre.lire(_cleVersion(compteId)) ?? '');
+
+  Future<void> noterVersionCompte(String compteId, int version) => coffre.ecrire(_cleVersion(compteId), '$version');
+
   /// Efface le code et le compteur (déconnexion, 5 échecs, code oublié).
   Future<void> oublier(String compteId) async {
     await coffre.effacer(_cleCode(compteId));
     await coffre.effacer(_cleEchecs(compteId));
+    await coffre.effacer(_cleVersion(compteId));
   }
 
   /// Comparaison en temps constant.

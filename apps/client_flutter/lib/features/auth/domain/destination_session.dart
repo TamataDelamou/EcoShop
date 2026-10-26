@@ -14,6 +14,11 @@ enum DestinationSession {
   /// Aucune session : parcours OTP.
   connexion,
 
+  /// Nouvel appareil d'un compte doté d'un code (REG-22) : le code du compte
+  /// est demandé avant tout le reste — le serveur refuse toute autre
+  /// requête de cet appareil.
+  codeCompte,
+
   /// Compte suspendu ou supprimé : accès refusé, sans possibilité de contourner.
   compteBloque,
 
@@ -45,6 +50,11 @@ enum DestinationSession {
   /// Aucun code secret sur ce téléphone pour ce compte (REG-18) : création
   /// obligatoire, puis proposition de l'empreinte.
   codeSecret,
+
+  /// Code local pas encore (ou plus) celui du compte (REG-22) : compte
+  /// d'avant REG-22, ou code changé sur un autre appareil. Une fois, en
+  /// ligne.
+  codeCompteAConfirmer,
 
   /// Compte tout juste créé : bienvenue, identifiant EcoShop, prochaine
   /// étape (REG-18). Affiché une fois.
@@ -94,8 +104,15 @@ abstract final class GardeSession {
     bool recapitulatifAMontrer = false,
     // Défaut `false` (= aucune invitation à présenter).
     bool invitationsAPresenter = false,
+    // Défaut `false` (= appareil connu, ou code du compte hors service).
+    bool appareilAVerifier = false,
+    // Défaut `false` (= code local déjà aligné sur le code du compte).
+    bool codeCompteAConfirmer = false,
   }) {
     if (!sessionOuverte) return DestinationSession.connexion;
+    // Avant le profil : le serveur refuse sa lecture tant que l'appareil
+    // n'est pas vérifié.
+    if (appareilAVerifier) return DestinationSession.codeCompte;
     if (profil == null) return DestinationSession.chargement;
 
     if (profil.statutCompte != StatutCompte.actif) {
@@ -126,6 +143,8 @@ abstract final class GardeSession {
     if (telephoneAFournir) return DestinationSession.telephoneProfil;
 
     if (codeSecretACreer) return DestinationSession.codeSecret;
+
+    if (codeCompteAConfirmer) return DestinationSession.codeCompteAConfirmer;
 
     if (recapitulatifAMontrer) return DestinationSession.recapitulatif;
 

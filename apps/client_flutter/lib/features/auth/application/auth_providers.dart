@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
+import '../../appareil/application/appareil_providers.dart';
 import '../../cgu/application/cgu_providers.dart';
 import '../../coquille/application/verrou_controller.dart';
 import '../../etablissement/domain/etablissement.dart';
@@ -117,6 +118,12 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final sessionOuverte = ref.watch(sessionOuverteProvider);
   if (!sessionOuverte) return DestinationSession.connexion;
 
+  // Code du compte (REG-22) : avant tout le reste sur un nouvel appareil.
+  final appareil = ref.watch(etatAppareilProvider);
+  if (appareil.isLoading && !appareil.hasValue) return DestinationSession.chargement;
+  if (appareil.valueOrNull?.aVerifier ?? false) return DestinationSession.codeCompte;
+  final codeCompteAConfirmer = ref.watch(codeCompteAConfirmerProvider).valueOrNull ?? false;
+
   final profil = ref.watch(profilProvider);
   final fiche = ref.watch(ficheLieeProvider);
   final etablissements = ref.watch(mesEtablissementsProvider);
@@ -163,6 +170,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     codeSecretACreer: verrou == PhaseVerrou.codeACreer,
     recapitulatifAMontrer: recapitulatif.valueOrNull ?? false,
     invitationsAPresenter: (invitations.valueOrNull ?? const []).isNotEmpty,
+    codeCompteAConfirmer: codeCompteAConfirmer,
   );
 });
 
