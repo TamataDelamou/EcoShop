@@ -12,6 +12,7 @@ import '../../../core/providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/profil.dart';
+import '../../auth/presentation/avatar_profil.dart';
 import '../../communication/presentation/ecran_notifications.dart';
 import '../../push/presentation/ecouteur_push.dart';
 import '../../validation_marketplace/presentation/ecran_validation_vendeurs_gsg.dart';
@@ -19,7 +20,7 @@ import '../../annonces/presentation/ecran_annonces.dart';
 import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
-import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
+import '../../ecoles_gsg/presentation/ecran_ecoles_gsg.dart';
 import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
@@ -263,9 +264,8 @@ class _BandeauHorsLigne extends ConsumerWidget {
 
 /// Raccourci avatar (TopBar enrichi, D1) : ouvre directement « Mon profil ».
 /// La déconnexion se trouve seulement en bas de cette liste : pas de
-/// déconnexion d'un geste depuis la barre du haut. Pas de photo de profil
-/// dans `Profil` : avatar à initiales, dérivé de `nomAffiche` (déjà robuste
-/// au repli sur l'identifiant canonique si aucun nom n'est renseigné).
+/// déconnexion d'un geste depuis la barre du haut. Photo de profil (REG-23),
+/// ou initiales dérivées de `nomAffiche` tant qu'il n'y en a pas.
 class _RaccourciAvatar extends StatelessWidget {
   const _RaccourciAvatar({required this.profil, required this.onOuvrirProfil});
 
@@ -278,21 +278,9 @@ class _RaccourciAvatar extends StatelessWidget {
       key: const Key('raccourci_profil'),
       tooltip: 'Mon profil',
       onPressed: onOuvrirProfil,
-      icon: CircleAvatar(
-        radius: 16,
-        child: Text(
-          _initiales(profil.nomAffiche),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-        ),
-      ),
+      // Photo de profil (REG-23), initiales à défaut.
+      icon: AvatarProfil.duProfil(profil, rayon: 16),
     );
-  }
-
-  static String _initiales(String nomAffiche) {
-    final mots = nomAffiche.trim().split(RegExp(r'\s+')).where((m) => m.isNotEmpty).toList();
-    if (mots.isEmpty) return '?';
-    if (mots.length == 1) return mots.first.substring(0, 1).toUpperCase();
-    return (mots.first.substring(0, 1) + mots[1].substring(0, 1)).toUpperCase();
   }
 }
 
@@ -323,7 +311,8 @@ class _CorpsOnglet extends ConsumerWidget {
           : EcranTableauBordRapports(etablissementId: etablissement.id),
       OngletCoquille.boutique => EcranMarketplace(profil: p),
       OngletCoquille.reseau => const EcranMesReseaux(),
-      OngletCoquille.ecolesGsg => const EcranValidationEtablissementsGsg(),
+      // Écoles confirmées, tableau de bord par école ; demandes en haut (REG-23).
+      OngletCoquille.ecolesGsg => const EcranEcolesGsg(),
       OngletCoquille.reseauxGsg => const EcranReseauxGsg(),
       OngletCoquille.vendeursGsg => const EcranValidationVendeursGsg(),
       OngletCoquille.referentiel => const EcranPaysPedagogiques(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../configuration/presentation/ecran_configuration_etablissement.dart';
 import '../application/accueil_providers.dart';
 import '../domain/catalogue_fonctions.dart';
 import '../domain/fonction.dart';
@@ -122,7 +123,11 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
         ref.invalidate(resumeAccueilProvider);
         ref.invalidate(aujourdhuiProvider);
       },
-      child: ListView(
+      // Position de défilement gardée (retour d'une page, changement
+      // d'onglet, relecture du serveur) : l'accueil ne remonte plus en haut.
+      child: KeyedSubtree(
+        key: const PageStorageKey<String>('accueil_defilement'),
+        child: ListView(
         key: const Key('accueil_pastilles'),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -151,6 +156,9 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
                 onChanged: (v) => setState(() => _texte = v),
               ),
             ),
+          // Mise en route de l'école (REG-23) tant qu'elle n'est pas finie.
+          if (c.direction && c.ecole && ref.watch(accueilEnLigneProvider) && _texte.trim().isEmpty)
+            CarteMiseEnRoute(etablissement: c.etablissement!),
           if (c.eleve) const _ProchainCours(),
           if (c.enseignant) const _Aujourdhui(),
           if (lignes.isNotEmpty && _texte.trim().isEmpty) ...[
@@ -165,6 +173,7 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
           if (avecOutils && _texte.trim().isEmpty) ..._raccourcis(fonctions, pastille),
           ...sections,
         ],
+      ),
       ),
     );
   }

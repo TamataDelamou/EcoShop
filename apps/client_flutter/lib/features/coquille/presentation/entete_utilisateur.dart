@@ -34,6 +34,7 @@ class EnteteUtilisateur extends ConsumerWidget {
     final actif = ref.watch(etablissementActifProvider);
     final logoUrl = actif == null ? null : ref.watch(identiteEtablissementProvider).logoUrl;
     final parent = profil.roleRacine == RoleRacine.parent;
+    final slogan = actif?.slogan;
     final theme = Theme.of(context);
     final schema = theme.colorScheme;
 
@@ -116,6 +117,18 @@ class EnteteUtilisateur extends ConsumerWidget {
               ],
             ),
           ),
+          // Slogan de l'école (REG-23), sous l'en-tête.
+          if (slogan != null && slogan.isNotEmpty)
+            Padding(
+              key: const Key('entete_slogan'),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 2),
+              child: Text(
+                '« $slogan »',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: schema.primary),
+              ),
+            ),
           if (parent) const SelecteurEnfant(avecAjouter: false),
           const SizedBox(height: 4),
         ],

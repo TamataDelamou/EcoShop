@@ -11,8 +11,9 @@ abstract interface class IdentiteVisuelleRepository {
   /// Dépose le logo dans le dossier de l'établissement ; renvoie son chemin.
   Future<String> televerserLogo(String etablissementId, Uint8List octets, String extension);
 
-  /// Enregistre couleur (`#RRGGBB`) et logo ; null = retour au défaut.
-  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin});
+  /// Enregistre couleur (`#RRGGBB`), logo et slogan ; null = retour au
+  /// défaut (slogan : chaîne vide pour le retirer, null pour le garder).
+  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin, String? slogan});
 }
 
 class ErreurIdentiteVisuelle implements Exception {
@@ -24,6 +25,7 @@ class ErreurIdentiteVisuelle implements Exception {
         'ACCES_REFUSE' => "Seule la Direction de l'établissement peut modifier son identité visuelle.",
         'COULEUR_INVALIDE' => 'Couleur invalide : utilisez le format #RRGGBB.',
         'LOGO_TROP_LOURD' => 'Le logo dépasse 1 Mo. Choisissez une image plus légère.',
+        'SLOGAN_INVALIDE' => 'Le slogan doit compter de 2 à 120 caractères.',
         _ => 'Enregistrement impossible pour le moment. Vérifiez votre connexion et réessayez.',
       };
 
@@ -56,12 +58,13 @@ class SupabaseIdentiteVisuelleRepository implements IdentiteVisuelleRepository {
   }
 
   @override
-  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin}) async {
+  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin, String? slogan}) async {
     try {
       await _client.rpc<dynamic>('definir_identite_visuelle', params: {
         'p_etablissement_id': etablissementId,
         'p_couleur': couleurHex,
         'p_logo_chemin': logoChemin,
+        'p_slogan': slogan,
       });
     } on PostgrestException catch (e) {
       final premier = e.message.trim().split(RegExp(r'\s+')).first;

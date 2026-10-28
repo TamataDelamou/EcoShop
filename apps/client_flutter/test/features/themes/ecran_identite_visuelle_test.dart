@@ -28,7 +28,7 @@ class _FauxDepot implements IdentiteVisuelleRepository {
   }
 
   @override
-  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin}) async {
+  Future<void> enregistrer({required String etablissementId, String? couleurHex, String? logoChemin, String? slogan}) async {
     if (erreur != null) throw erreur!;
     enregistrements++;
     couleurEnregistree = couleurHex;

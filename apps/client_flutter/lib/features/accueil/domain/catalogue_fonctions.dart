@@ -12,9 +12,18 @@ import '../../cahier_liaison/presentation/ecran_eleves_liaison.dart';
 import '../../chat_ia/domain/persona_ia.dart';
 import '../../chat_ia/presentation/ecran_chat_ia.dart';
 import '../../communication/presentation/ecran_tableau_bord_communication.dart';
+import '../../configuration/presentation/ecran_affectations.dart';
+import '../../configuration/presentation/ecran_annees_scolaires.dart';
+import '../../configuration/presentation/ecran_classes_configuration.dart';
+import '../../configuration/presentation/ecran_configuration_etablissement.dart';
+import '../../configuration/presentation/ecran_emploi_du_temps_automatique.dart';
+import '../../configuration/presentation/ecran_groupes.dart';
+import '../../configuration/presentation/ecran_programme_etablissement.dart';
+import '../../configuration/presentation/ecran_salles_configuration.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
 import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
+import '../../ecoles_gsg/presentation/ecran_ecoles_gsg.dart';
 import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
 import '../../inscription_en_ligne/presentation/ecran_inscriptions_famille.dart';
 import '../../invitations/presentation/ecran_invitations_etablissement.dart';
@@ -372,6 +381,45 @@ final List<Fonction> catalogueFonctions = [
     ouvrir: _dossierRh,
   ),
   // ---------------------------------------------------------------- organisation
+  // Mise en route (REG-23) : chaque étape a aussi sa pastille.
+  Fonction(
+    id: 'annees_scolaires', libelle: 'Années scolaires', icone: Icons.event_note_outlined, teinte: Teinte.vert,
+    groupe: _organisation, motsCles: ['année', 'rentrée', 'trimestre', 'semestre', 'période', 'créer'],
+    visible: (c) => c.ecole && c.peut(['etablissement.annee.gerer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranAnneesScolaires(etablissement: c.etablissement!)),
+  ),
+  Fonction(
+    id: 'classes_config', libelle: 'Classes', icone: Icons.class_outlined, teinte: Teinte.sarcelle,
+    groupe: _organisation, motsCles: ['classe', 'créer', 'niveau', 'série', 'section'],
+    visible: (c) => c.ecole && c.anneeId != null && c.peut(['scolarite.classe.gerer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranClassesConfiguration(etablissement: c.etablissement!, anneeId: c.anneeId!)),
+  ),
+  Fonction(
+    id: 'groupes', libelle: 'Groupes', icone: Icons.groups_2_outlined, teinte: Teinte.violet,
+    groupe: _organisation, motsCles: ['groupe', 'demi-classe', 'langue', 'option', 'TP'],
+    visible: (c) => c.ecole && c.anneeId != null && c.peut(['scolarite.classe.gerer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranGroupes(etablissement: c.etablissement!, anneeId: c.anneeId!)),
+  ),
+  Fonction(
+    id: 'cours_enseignants', libelle: 'Cours et enseignants', icone: Icons.co_present_outlined, teinte: Teinte.orange,
+    groupe: _organisation, motsCles: ['affectation', 'matière', 'enseignant', 'heures', 'volume'],
+    visible: (c) => c.ecole && c.anneeId != null && c.peut(['rh.enseignant.affecter']),
+    ouvrir: (context, ref, c) => _aller(context, EcranAffectations(etablissement: c.etablissement!, anneeId: c.anneeId!)),
+  ),
+  Fonction(
+    id: 'emploi_automatique', libelle: 'Emploi du temps automatique', icone: Icons.auto_awesome_outlined,
+    teinte: Teinte.bleu, groupe: _organisation,
+    motsCles: ['emploi du temps', 'horaire', 'générer', 'calculer', 'grille', 'indisponibilité'],
+    visible: (c) => c.ecole && c.anneeId != null && c.peut(['planification.generer']),
+    ouvrir: (context, ref, c) =>
+        _aller(context, EcranEmploiDuTempsAutomatique(etablissement: c.etablissement!, anneeId: c.anneeId!)),
+  ),
+  Fonction(
+    id: 'programme_ecole', libelle: 'Programme officiel', icone: Icons.menu_book_outlined, teinte: Teinte.gris,
+    groupe: _organisation, motsCles: ['programme', 'matière', 'coefficient', 'référentiel', 'curriculum'],
+    visible: (c) => c.ecole && (c.direction || c.enseignant || c.personnel),
+    ouvrir: (context, ref, c) => _aller(context, EcranProgrammeEtablissement(etablissement: c.etablissement!)),
+  ),
   Fonction(
     id: 'classes_emploi', libelle: 'Classes et emploi du temps', icone: Icons.class_outlined, teinte: Teinte.bleu,
     groupe: _organisation, motsCles: ['classe', 'horaire', 'progression'], ancienne: 'Classes — emploi du temps & progression',
@@ -384,7 +432,10 @@ final List<Fonction> catalogueFonctions = [
     id: 'salles', libelle: 'Salles', icone: Icons.meeting_room_outlined, teinte: Teinte.gris, groupe: _organisation,
     motsCles: ['salle', 'occupation'], ancienne: 'Salles',
     visible: (c) => (c.direction || c.enseignant) && c.ecole && c.anneeId != null,
-    ouvrir: (context, ref, c) => _aller(context, EcranSalles(etablissementId: c.etablissement!.id, anneeId: c.anneeId!)),
+    // Direction : ajouter, modifier les salles (REG-23) ; enseignant : occupation.
+    ouvrir: (context, ref, c) => _aller(context, c.direction
+        ? EcranSallesConfiguration(etablissement: c.etablissement!)
+        : EcranSalles(etablissementId: c.etablissement!.id, anneeId: c.anneeId!)),
   ),
   Fonction(
     id: 'agenda_ecole', libelle: 'Agenda de l’école', icone: Icons.event_outlined, teinte: Teinte.orange,
@@ -427,8 +478,15 @@ final List<Fonction> catalogueFonctions = [
   ),
   // ---------------------------------------------------------------- établissement
   Fonction(
+    id: 'configuration', libelle: 'Configurer l’école', icone: Icons.checklist_rtl_rounded, teinte: Teinte.vert,
+    groupe: _etablissement,
+    motsCles: ['configuration', 'mise en route', 'paramétrer', 'année', 'classe', 'frais', 'démarrer'],
+    visible: (c) => c.direction && c.ecole,
+    ouvrir: (context, ref, c) => _aller(context, EcranConfigurationEtablissement(etablissement: c.etablissement!)),
+  ),
+  Fonction(
     id: 'identite_visuelle', libelle: 'Identité visuelle', icone: Icons.palette_outlined, teinte: Teinte.violet,
-    groupe: _etablissement, motsCles: ['logo', 'couleur'], ancienne: 'Identité visuelle',
+    groupe: _etablissement, motsCles: ['logo', 'couleur', 'slogan', 'devise'], ancienne: 'Identité visuelle',
     visible: (c) => c.direction && c.ecole,
     ouvrir: (context, ref, c) => _aller(context, EcranIdentiteVisuelle(etablissement: c.etablissement!)),
   ),
@@ -468,10 +526,27 @@ final List<Fonction> catalogueFonctions = [
   Fonction(
     id: 'referentiel', libelle: 'Programmes officiels', icone: Icons.public_outlined, teinte: Teinte.gris, groupe: _tout,
     motsCles: ['référentiel', 'cedeao', 'programme'], ancienne: 'Référentiel pédagogique CEDEAO',
-    visible: (c) => c.role != RoleRacine.adminContenu,
+    // Direction : « Programme officiel » de son pays (Organisation) ;
+    // Administrateur GSG : pastille de la plateforme.
+    visible: (c) =>
+        c.role != RoleRacine.adminContenu &&
+        c.role != RoleRacine.adminGsg &&
+        !(c.ecole && (c.direction || c.enseignant || c.personnel)),
     ouvrir: (context, ref, c) => _aller(context, const EcranPaysPedagogiques()),
   ),
   // ---------------------------------------------------------------- plateforme GSG
+  Fonction(
+    id: 'gsg_ecoles', libelle: 'Écoles', icone: Icons.school_outlined, teinte: Teinte.bleu, groupe: _plateforme,
+    motsCles: ['écoles confirmées', 'tableau de bord', 'élèves', 'utilisation', 'établissements'],
+    visible: (c) => c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranEcolesGsg()),
+  ),
+  Fonction(
+    id: 'gsg_referentiel', libelle: 'Programmes officiels', icone: Icons.public_outlined, teinte: Teinte.gris,
+    groupe: _plateforme, motsCles: ['référentiel', 'programme', 'matière', 'coefficient', 'pays'],
+    visible: (c) => c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranPaysPedagogiques()),
+  ),
   Fonction(
     id: 'gsg_etablissements', libelle: 'Demandes d’établissement', icone: Icons.add_business_outlined,
     teinte: Teinte.vert, groupe: _plateforme, ancienne: 'Demandes d’établissement',
@@ -513,6 +588,9 @@ const ordreParRole = <RoleRacine, List<String>>{
     'mes_rapports', 'boutique'],
   RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'mes_classes', 'annonces',
     'progression', 'dossier_rh', 'emploi_du_temps'],
+  // Administration GSG (REG-23) : les écoles d'abord.
+  RoleRacine.adminGsg: ['gsg_ecoles', 'gsg_etablissements', 'gsg_referentiel', 'gsg_reseaux', 'gsg_sms',
+    'gsg_vendeurs', 'gsg_debloquer'],
 };
 
 /// Groupes de la direction, dans l'ordre des maquettes.

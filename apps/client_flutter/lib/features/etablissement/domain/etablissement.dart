@@ -11,6 +11,7 @@ class Etablissement {
     this.fuseauHoraire = 'Africa/Conakry',
     this.couleurIdentite,
     this.logoChemin,
+    this.slogan,
     this.roleDansEtablissement,
   });
 
@@ -26,6 +27,7 @@ class Etablissement {
       fuseauHoraire: json['fuseau_horaire'] as String? ?? 'Africa/Conakry',
       couleurIdentite: json['couleur_identite'] as String?,
       logoChemin: json['logo_chemin'] as String?,
+      slogan: json['slogan'] as String?,
       roleDansEtablissement: json['role_dans_etablissement'] as String?,
     );
   }
@@ -48,6 +50,9 @@ class Etablissement {
   final String? couleurIdentite;
   final String? logoChemin;
 
+  /// Devise de l'école (« Travail – Discipline – Réussite »), REG-23.
+  final String? slogan;
+
   /// Rôle du compte connecté dans cet établissement (`etablissements_membres`),
   /// qui peut différer de son rôle principal : un parent invité comme
   /// enseignant, par exemple.
@@ -66,6 +71,7 @@ class Etablissement {
         'fuseau_horaire': fuseauHoraire,
         'couleur_identite': couleurIdentite,
         'logo_chemin': logoChemin,
+        'slogan': slogan,
         'role_dans_etablissement': roleDansEtablissement,
       };
 

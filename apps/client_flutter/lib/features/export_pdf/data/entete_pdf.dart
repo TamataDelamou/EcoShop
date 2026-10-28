@@ -43,6 +43,12 @@ pw.Widget enteteDocument({
                     etablissement.nom,
                     style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: palette.primaire),
                   ),
+                  // Slogan de l'école (REG-23), tirets ramenés à « - » (police de base).
+                  if ((etablissement.slogan ?? '').isNotEmpty)
+                    pw.Text(
+                      etablissement.slogan!.replaceAll(RegExp('[\u2013\u2014]'), '-'),
+                      style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic, color: palette.encreSecondaire),
+                    ),
                   if (etablissement.localisation.isNotEmpty)
                     pw.Text(
                       etablissement.localisation,

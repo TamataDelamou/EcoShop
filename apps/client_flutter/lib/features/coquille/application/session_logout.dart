@@ -16,6 +16,8 @@ import '../../pointage/application/pointage_providers.dart';
 import '../../push/application/push_providers.dart';
 import '../../reseau/application/reseau_providers.dart';
 import '../../transport/application/transport_providers.dart';
+import '../../configuration/application/configuration_providers.dart';
+import '../../ecoles_gsg/data/ecoles_gsg_repository.dart';
 
 /// Déconnexion complète : ferme la session serveur **et** purge tout ce que
 /// le prototype local de messagerie/annonces/cahier de liaison (M9) a écrit
@@ -109,6 +111,19 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Pointage (REG-09) : jetons des cartes et présence des élèves.
   try {
     await lire(lecturePointageProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Mise en route et emploi du temps (REG-23, REG-24) : personnel, groupes,
+  // proposition d'emploi du temps calculée sur l'appareil.
+  try {
+    await lire(lectureConfigurationProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Écoles et tableaux de bord vus par l'Administrateur GSG (REG-23).
+  try {
+    await lire(lectureEcolesGsgProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

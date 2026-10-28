@@ -7,6 +7,7 @@ import '../../appareil/presentation/ecran_mes_appareils.dart';
 import '../../appareil/presentation/ecran_securite.dart';
 import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
+import '../../auth/presentation/avatar_profil.dart';
 import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_preferences_canaux.dart';
@@ -47,7 +48,8 @@ class VueProfilAllegee extends ConsumerWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(radius: 28, child: Text(initiales(p.nomAffiche), style: const TextStyle(fontWeight: FontWeight.w700))),
+            // Photo de profil (REG-23) : toucher pour la changer.
+            AvatarProfilModifiable(profil: p),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

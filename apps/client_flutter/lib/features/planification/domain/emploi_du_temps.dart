@@ -23,6 +23,9 @@ class EmploiDuTemps {
     this.nomMatiere,
     this.libelleSalle,
     this.nomClasse,
+    this.groupeId,
+    this.verrouille = false,
+    this.automatique = false,
   });
 
   factory EmploiDuTemps.depuisJson(Map<String, dynamic> json) {
@@ -50,6 +53,9 @@ class EmploiDuTemps {
       nomMatiere: matiere?['nom'] as String?,
       libelleSalle: salle?['code'] as String?,
       nomClasse: classe?['nom'] as String?,
+      groupeId: json['groupe_id'] as String?,
+      verrouille: json['verrouille'] as bool? ?? false,
+      automatique: json['origine'] == 'automatique',
     );
   }
 
@@ -71,6 +77,9 @@ class EmploiDuTemps {
         nomMatiere: json['nom_matiere'] as String?,
         libelleSalle: json['libelle_salle'] as String?,
         nomClasse: json['nom_classe'] as String?,
+        groupeId: json['groupe_id'] as String?,
+        verrouille: json['verrouille'] as bool? ?? false,
+        automatique: json['origine'] == 'automatique',
       );
 
   Map<String, dynamic> versJsonCache() => {
@@ -91,6 +100,9 @@ class EmploiDuTemps {
         'nom_matiere': nomMatiere,
         'libelle_salle': libelleSalle,
         'nom_classe': nomClasse,
+        'groupe_id': groupeId,
+        'verrouille': verrouille,
+        'origine': automatique ? 'automatique' : 'manuelle',
       };
 
   /// Colonnes réelles de `public.emplois_du_temps` — pour l'upsert
@@ -150,6 +162,15 @@ class EmploiDuTemps {
   final String? nomMatiere;
   final String? libelleSalle;
   final String? nomClasse;
+
+  /// Partie de classe (groupe pédagogique), REG-24.
+  final String? groupeId;
+
+  /// Gardée telle quelle par le calcul automatique (REG-24).
+  final bool verrouille;
+
+  /// Placée par le calcul automatique (sinon saisie à la main).
+  final bool automatique;
 
   static String _tronquerHeure(String heure) => heure.length >= 5 ? heure.substring(0, 5) : heure;
 }

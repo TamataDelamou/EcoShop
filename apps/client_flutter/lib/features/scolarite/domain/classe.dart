@@ -8,6 +8,7 @@ class Classe {
     required this.nom,
     this.uniteId,
     this.niveauId,
+    this.filiereId,
     this.capacite,
     this.enseignantPrincipalId,
     this.actif = true,
@@ -22,6 +23,7 @@ class Classe {
       nom: json['nom'] as String,
       uniteId: json['unite_id'] as String?,
       niveauId: json['niveau_id'] as String?,
+      filiereId: json['filiere_id'] as String?,
       capacite: json['capacite'] as int?,
       enseignantPrincipalId: json['enseignant_principal_id'] as String?,
       actif: json['actif'] as bool? ?? true,
@@ -36,6 +38,7 @@ class Classe {
         'nom': nom,
         'unite_id': uniteId,
         'niveau_id': niveauId,
+        'filiere_id': filiereId,
         'capacite': capacite,
         'enseignant_principal_id': enseignantPrincipalId,
         'actif': actif,
@@ -48,6 +51,9 @@ class Classe {
   final String nom;
   final String? uniteId;
   final String? niveauId;
+
+  /// Série du lycée (REG-23) : choisit le programme officiel du niveau.
+  final String? filiereId;
   final int? capacite;
   final String? enseignantPrincipalId;
   final bool actif;

@@ -40,6 +40,7 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
   late final _hex = TextEditingController(
     text: widget.etablissement.couleurIdentite ?? '',
   );
+  late final _slogan = TextEditingController(text: widget.etablissement.slogan ?? '');
   /// Image choisie, pas encore déposée.
   Uint8List? _nouveauLogo;
 
@@ -51,6 +52,7 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
   @override
   void dispose() {
     _hex.dispose();
+    _slogan.dispose();
     super.dispose();
   }
 
@@ -86,6 +88,11 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
   }
 
   Future<void> _enregistrer() async {
+    final slogan = _slogan.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (slogan.length == 1 || slogan.length > 120) {
+      _signaler(const ErreurIdentiteVisuelle('SLOGAN_INVALIDE').messageUtilisateur);
+      return;
+    }
     setState(() => _enCours = true);
     final depot = ref.read(identiteVisuelleRepositoryProvider);
     try {
@@ -98,6 +105,8 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
         etablissementId: widget.etablissement.id,
         couleurHex: _couleur == null ? null : CouleurIdentite.versHex(_couleur!),
         logoChemin: chemin,
+        // Chaîne vide : slogan retiré.
+        slogan: slogan,
       );
       // L'établissement relu porte la nouvelle identité : toute l'application
       // change de couleur et affiche le logo aussitôt.
@@ -142,6 +151,7 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
                   brightness: Brightness.light,
                   couleur: _couleur,
                   nom: widget.etablissement.nom,
+                  slogan: _slogan.text.trim(),
                   logo: imageLogo,
                 ),
               ),
@@ -152,6 +162,7 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
                   brightness: Brightness.dark,
                   couleur: _couleur,
                   nom: widget.etablissement.nom,
+                  slogan: _slogan.text.trim(),
                   logo: imageLogo,
                 ),
               ),
@@ -159,6 +170,28 @@ class _EcranIdentiteVisuelleState extends ConsumerState<EcranIdentiteVisuelle> {
           ),
           _NoteAjustement(variante: variante, couleur: _couleur),
           const SizedBox(height: 24),
+          Text('Slogan', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            "La devise de l'école, affichée sous son nom dans l'application et sur les documents.",
+            style: TextStyle(color: palette.encreSecondaire, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('champ_slogan'),
+            controller: _slogan,
+            enabled: !_enCours,
+            maxLength: 120,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Slogan (facultatif)',
+              hintText: 'Travail – Discipline – Réussite',
+              prefixIcon: Icon(Icons.format_quote_rounded),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
           Text('Couleur principale', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
@@ -276,12 +309,14 @@ class _Apercu extends StatelessWidget {
     required this.couleur,
     required this.nom,
     required this.logo,
+    this.slogan = '',
   });
 
   final AppThemeVariant variante;
   final Brightness brightness;
   final Color? couleur;
   final String nom;
+  final String slogan;
   final ImageProvider? logo;
 
   @override
@@ -322,11 +357,23 @@ class _Apercu extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(
-                    nom,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: p.encre),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nom,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: p.encre),
+                      ),
+                      if (slogan.isNotEmpty)
+                        Text(
+                          slogan,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic, color: p.encreSecondaire),
+                        ),
+                    ],
                   ),
                 ),
               ],
