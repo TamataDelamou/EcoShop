@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/application/auth_providers.dart';
 import '../application/invitations_providers.dart';
 import '../domain/invitation.dart';
+import 'saisie_code_invitation.dart';
 
 /// Invitations reçues (personnel, vendeurs), présentées après la connexion
 /// et depuis « Mon profil › Mes invitations ».
@@ -50,6 +51,9 @@ class EcranInvitations extends ConsumerWidget {
                       child: Text('Aucune invitation en attente.', textAlign: TextAlign.center),
                     ),
                   for (final i in liste) _CarteInvitation(invitation: i),
+                  // Code remis par l'école (REG-27) : autre adresse, pas d'e-mail.
+                  const SizedBox(height: 12),
+                  const BoutonCodeInvitation(),
                   if (!depuisProfil && liste.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     TextButton(

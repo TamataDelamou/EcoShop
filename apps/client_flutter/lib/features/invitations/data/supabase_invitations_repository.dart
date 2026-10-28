@@ -50,6 +50,19 @@ class SupabaseInvitationsRepository implements InvitationsRepository {
           }));
 
   @override
+  Future<InvitationAcceptee> accepterParCode(String code) => _executer(() async {
+        final r = ((await _client.rpc<dynamic>('accepter_invitation_par_code', params: {'p_code': code})) as Map)
+            .cast<String, dynamic>();
+        final erreur = r['erreur'] as String?;
+        if (erreur != null) throw ErreurInvitations(erreur);
+        return InvitationAcceptee(
+          etablissementId: r['etablissement_id'] as String,
+          etablissement: r['etablissement'] as String? ?? 'l’école',
+          role: r['role'] as String? ?? '',
+        );
+      });
+
+  @override
   Future<void> revoquer(String invitationId) =>
       _executer(() => _client.rpc<dynamic>('revoquer_invitation', params: {'p_invitation': invitationId}));
 

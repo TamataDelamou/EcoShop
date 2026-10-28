@@ -90,6 +90,8 @@ class InvitationEnvoyee {
     this.creeLe,
     this.expireLe,
     this.membre,
+    this.code,
+    this.parCode = false,
   });
 
   factory InvitationEnvoyee.depuisJson(Map<String, dynamic> j) => InvitationEnvoyee(
@@ -101,6 +103,8 @@ class InvitationEnvoyee {
         creeLe: DateTime.tryParse(j['cree_le'] as String? ?? '')?.toLocal(),
         expireLe: DateTime.tryParse(j['expire_le'] as String? ?? '')?.toLocal(),
         membre: j['membre'] as String?,
+        code: j['code'] as String?,
+        parCode: j['par_code'] == true,
       );
 
   final String id;
@@ -113,6 +117,24 @@ class InvitationEnvoyee {
 
   /// Nom du compte qui a accepté.
   final String? membre;
+
+  /// Code à remettre à la personne (REG-27), tant que l'invitation attend.
+  final String? code;
+
+  /// Acceptée avec le code (et non avec l'identifiant invité).
+  final bool parCode;
+
+  /// « K7Q2M9XD » → « K7Q2-M9XD ».
+  String? get codeAffiche => code == null || code!.length != 8 ? code : '${code!.substring(0, 4)}-${code!.substring(4)}';
+}
+
+/// Invitation acceptée avec un code (REG-27).
+class InvitationAcceptee {
+  const InvitationAcceptee({required this.etablissementId, required this.etablissement, required this.role});
+
+  final String etablissementId;
+  final String etablissement;
+  final String role;
 }
 
 class PosteInvitable {
@@ -140,6 +162,9 @@ class ErreurInvitations implements Exception {
         'POSTE_OBLIGATOIRE' => 'Choisissez le poste de cette personne : ses droits en dépendent.',
         'DEJA_MEMBRE' => 'Cette personne est déjà membre de l’école avec ce rôle.',
         'PERMISSION_REFUSEE' => 'Réservé à la direction de l’école.',
+        'CODE_INVALIDE' => 'Le code compte 8 caractères (lettres et chiffres), par exemple K7Q2-M9XD.',
+        'CODE_INCONNU' => 'Code inconnu, déjà utilisé ou retiré. Vérifiez-le auprès de l’école.',
+        'TROP_D_ESSAIS' => 'Trop d’essais. Réessayez dans une heure, ou demandez un nouveau code à l’école.',
         'ERREUR_RESEAU' => 'Pas de connexion. Réessayez une fois en ligne.',
         _ => 'Une erreur est survenue. Réessayez.',
       };
@@ -166,6 +191,9 @@ abstract interface class InvitationsRepository {
   });
 
   Future<void> revoquer(String invitationId);
+
+  /// Accepte l'invitation dont la Direction a remis le code (REG-27).
+  Future<InvitationAcceptee> accepterParCode(String code);
 }
 
 /// Normalise la saisie de la direction : adresse en minuscules, ou numéro

@@ -12,6 +12,7 @@ import '../domain/auth_repository.dart';
 import '../domain/inscription_en_cours.dart';
 import '../domain/profil.dart';
 import 'ecran_creation_compte.dart';
+import '../../invitations/presentation/saisie_code_invitation.dart';
 
 /// Fin de la création du compte, après la vérification de l'adresse
 /// (REG-18, partie B ; cahier ch. 5.2).
@@ -204,6 +205,9 @@ class _EcranChoixRoleState extends ConsumerState<EcranChoixRole> {
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Continuer'),
           ),
+          const SizedBox(height: 16),
+          // Enseignant, personnel, vendeur : code remis par l'école (REG-27).
+          const BoutonCodeInvitation(),
           const SizedBox(height: 8),
           const _SeDeconnecter(),
         ],

@@ -88,6 +88,14 @@ class _FauxInvitations implements InvitationsRepository {
 
   @override
   Future<void> revoquer(String invitationId) async => appels.add('revoquer:$invitationId');
+
+  @override
+  Future<InvitationAcceptee> accepterParCode(String code) async {
+    appels.add('code:$code');
+    final e = erreur;
+    if (e != null) throw e;
+    return const InvitationAcceptee(etablissementId: 'e1', etablissement: 'Bambino', role: 'enseignant');
+  }
 }
 
 const _parEmail = InvitationRecue(

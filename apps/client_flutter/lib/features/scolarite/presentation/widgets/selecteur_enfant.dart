@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
-import '../../../auth/application/auth_providers.dart';
 import '../../application/scolarite_providers.dart';
 import '../../domain/fiche_eleve.dart';
 import 'ajouter_enfant_sheet.dart';
+import '../../../auth/application/espace_providers.dart';
 
 /// Sélecteur d'enfant — composant clé du multi-profils parent (M5).
 ///
@@ -24,7 +24,7 @@ class SelecteurEnfant extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final role = ref.watch(profilProvider).valueOrNull?.roleRacine;
+    final role = ref.watch(roleUtiliseProvider);
     if (role != RoleRacine.parent) return const SizedBox.shrink();
 
     final enfants = ref.watch(mesEnfantsProvider);

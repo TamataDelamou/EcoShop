@@ -43,6 +43,7 @@ attendue), `clos`.
 | REG-24 | Emploi du temps dynamique et automatisé (modèles EDT/Pronote, Horarium) | P1 | **livré** (2026-10-28) — migration 1573 à appliquer ; à vérifier sur le poste avec les classes et cours d'une école pilote |
 | REG-25 | Accueil : affichage défilant ou fixe, 2 ou 3 pastilles par ligne | P2 | **livré** (2026-10-28) — à vérifier sur un téléphone Android |
 | REG-26 | Autorisations des postes approfondies (délégation des actions réservées à la Direction) | P1 | **livré** (2026-10-28) — migration 1575 à appliquer |
+| REG-27 | Code d'invitation à saisir ; espaces d'un même compte (parent et enseignant) | P1 | **livré** (2026-10-28) — migration 1576 à appliquer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1589,9 +1590,37 @@ la communication**, **Coordinateur pédagogique**, **Gestionnaire des
 comptes**. Les postes créés depuis un modèle reçoivent ses nouveaux droits
 (ajout seulement ; séparation encaissement / comptabilité respectée).
 
-**Invitations (question du porteur, 2026-10-28)** : il n'existe pas de
-code d'invitation à saisir. L'identifiant de l'invitation est l'adresse
-e-mail (ou le numéro) que la Direction a saisi ; l'invité se connecte
-avec cette adresse et accepte l'invitation qui s'affiche. Code à saisir :
-proposé, en attente de décision (voir la réponse du 2026-10-28).
+**Invitations (question du porteur, 2026-10-28)** : l'identifiant de
+l'invitation est l'adresse e-mail (ou le numéro) saisi par la Direction ;
+l'invité se connecte avec cette adresse et accepte l'invitation qui
+s'affiche. Code à saisir : voir REG-27.
+
+## REG-27 — Code d'invitation ; parent et enseignant sur un même compte
+
+**Reçue le** : 2026-10-28 (décision du porteur : code validé). **Priorité** :
+P1. **Statut** : livré le 2026-10-28 (migration
+`20260906001576_code_invitation`).
+
+**Code d'invitation.** Chaque invitation (sauf Direction) porte un code de
+8 caractères (« K7Q2-M9XD », alphabet sans lettres ambiguës ; O, I et L
+saisis par erreur sont corrigés). La Direction le voit dans « Invitations
+du personnel », le copie ou l'envoie par WhatsApp avec la marche à suivre.
+L'invité, connecté avec n'importe quel compte, touche « J'ai un code
+d'invitation » (fin de création du compte, « Mes invitations ») :
+- usage unique, valable jusqu'à l'expiration de l'invitation (14 jours) ;
+- 5 codes faux par heure et par compte au plus ;
+- jamais le rôle Direction ;
+- la Direction voit qui a accepté et que c'était « avec le code ».
+Écart assumé à la règle REG-16 (identifiant prouvé seul) : le code est
+remis en main propre par l'école, qui en répond.
+
+**Parent et enseignant (question du porteur, 2026-10-28)** : un compte
+déjà inscrit (parent, élève) qui accepte une invitation garde son rôle
+principal et gagne un espace dans l'école. Avant ce correctif, l'accueil
+et la barre du bas ne suivaient que le rôle principal : un parent devenu
+enseignant ne voyait pas ses outils d'enseignant. Désormais l'étiquette du
+rôle, sous le nom, permet de changer d'espace (« Espace enseignant »,
+« Espace parent ») ; l'espace de l'école est proposé d'abord, le choix est
+gardé sur le téléphone. Les droits restent jugés par le serveur sur
+l'appartenance à l'école.
 

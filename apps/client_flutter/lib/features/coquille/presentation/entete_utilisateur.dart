@@ -8,6 +8,7 @@ import '../../etablissement/domain/etablissement.dart';
 import '../../scolarite/presentation/widgets/ajouter_enfant_sheet.dart';
 import '../../scolarite/presentation/widgets/selecteur_enfant.dart';
 import '../../themes/application/theme_providers.dart';
+import '../../auth/application/espace_providers.dart';
 
 /// Rôle utilisé à ce moment : celui du compte dans l'établissement actif
 /// (un parent invité comme enseignant y est enseignant), sinon son rôle
@@ -29,8 +30,11 @@ class EnteteUtilisateur extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profil = ref.watch(profilProvider).valueOrNull;
+    // Espace utilisé (REG-27) : parent ou enseignant, au choix.
+    final profil = ref.watch(profilAfficheProvider);
     if (profil == null) return const SizedBox.shrink();
+    final espaces = ref.watch(espacesDisponiblesProvider);
+    final role = ref.watch(roleUtiliseProvider);
     final actif = ref.watch(etablissementActifProvider);
     final logoUrl = actif == null ? null : ref.watch(identiteEtablissementProvider).logoUrl;
     final parent = profil.roleRacine == RoleRacine.parent;
@@ -66,18 +70,53 @@ class EnteteUtilisateur extends ConsumerWidget {
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Container(
-                            key: const Key('entete_role'),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: schema.secondaryContainer,
-                              borderRadius: BorderRadius.circular(999),
+                          if (espaces.length > 1)
+                            // Plusieurs espaces : toucher l'étiquette pour changer.
+                            PopupMenuButton<RoleRacine>(
+                              key: const Key('entete_changer_espace'),
+                              tooltip: 'Changer d’espace',
+                              initialValue: role,
+                              onSelected: (r) => ref.read(espaceChoisiProvider.notifier).choisir(r),
+                              itemBuilder: (_) => [
+                                for (final e in espaces)
+                                  PopupMenuItem<RoleRacine>(
+                                    key: Key('espace_${e.code}'),
+                                    value: e,
+                                    child: Text('Espace ${e.libelle.toLowerCase()}'),
+                                  ),
+                              ],
+                              child: Container(
+                                key: const Key('entete_role'),
+                                padding: const EdgeInsets.fromLTRB(10, 3, 4, 3),
+                                decoration: BoxDecoration(
+                                  color: schema.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      role?.libelle ?? libelleRoleUtilise(profil, actif),
+                                      style: theme.textTheme.labelMedium?.copyWith(color: schema.onSecondaryContainer),
+                                    ),
+                                    Icon(Icons.arrow_drop_down, size: 18, color: schema.onSecondaryContainer),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              key: const Key('entete_role'),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: schema.secondaryContainer,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                libelleRoleUtilise(profil, actif),
+                                style: theme.textTheme.labelMedium?.copyWith(color: schema.onSecondaryContainer),
+                              ),
                             ),
-                            child: Text(
-                              libelleRoleUtilise(profil, actif),
-                              style: theme.textTheme.labelMedium?.copyWith(color: schema.onSecondaryContainer),
-                            ),
-                          ),
                           if (actif != null)
                             Row(
                               key: const Key('entete_etablissement'),

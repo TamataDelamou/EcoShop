@@ -12,6 +12,7 @@ import '../../postes/application/postes_providers.dart';
 import '../../scolarite/application/scolarite_providers.dart';
 import '../../transport/application/transport_providers.dart';
 import '../domain/fonction.dart';
+import '../../auth/application/espace_providers.dart';
 
 /// Cours du jour (enseignant : les siens ; élève et parent : la classe).
 class CoursDuJour {
@@ -89,7 +90,8 @@ final accueilEnLigneProvider = Provider<bool>((ref) => Env.estConfigure);
 /// Ce que l'accueil sait du compte (jamais bloquant : chaque morceau
 /// manquant masque seulement les pastilles qui en dépendent).
 final contexteAccueilProvider = Provider<ContexteAccueil?>((ref) {
-  final profil = ref.watch(profilProvider).valueOrNull;
+  // Espace utilisé (REG-27) : un parent enseignant voit l'un ou l'autre.
+  final profil = ref.watch(profilAfficheProvider);
   if (profil == null) return null;
   final enLigne = ref.watch(accueilEnLigneProvider);
   final role = profil.roleRacine;

@@ -28,6 +28,7 @@ import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../themes/presentation/bouton_apparence.dart';
 import '../application/sync_composition.dart';
 import 'entete_utilisateur.dart';
+import '../../auth/application/espace_providers.dart';
 
 /// Destination de la barre du bas (REG-21).
 ///
@@ -111,7 +112,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       });
     }
 
-    final profil = ref.watch(profilProvider).valueOrNull;
+    // Espace utilisé (REG-27) : barre du bas et accueil de cet espace.
+    final profil = ref.watch(profilAfficheProvider);
     final onglets = OngletCoquille.pourRole(profil?.roleRacine);
     // Un changement de rôle ou de rattachement peut raccourcir la liste :
     // on borne l'index plutôt que de laisser une RangeError se produire.

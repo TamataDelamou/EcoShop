@@ -5,7 +5,6 @@ import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/auth/role_racine.dart';
 import '../../../core/widgets/entree_animee.dart';
 import '../../../core/widgets/shimmer.dart';
-import '../../auth/application/auth_providers.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
 import '../../notes/presentation/ecran_generation_bulletins_classe.dart';
 import '../../proclamation/presentation/ecran_proclamation_classe.dart';
@@ -15,6 +14,7 @@ import '../domain/affectation_enseignant.dart';
 import '../domain/classe.dart';
 import '../domain/inscription.dart';
 import 'ecran_perception_classe.dart';
+import '../../auth/application/espace_providers.dart';
 
 /// Détail d'une classe : élèves inscrits et enseignants affectés (M5).
 ///
@@ -27,7 +27,7 @@ class EcranDetailClasse extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estDirection = ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.direction;
+    final estDirection = ref.watch(roleUtiliseProvider) == RoleRacine.direction;
 
     return DefaultTabController(
       length: 2,

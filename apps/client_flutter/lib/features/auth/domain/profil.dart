@@ -96,6 +96,21 @@ class Profil {
 
   bool get roleDefini => roleRacine != null;
 
+  /// Même compte vu dans un autre espace (REG-27 : parent et enseignant).
+  /// Affichage seulement : le serveur juge les droits sur l'appartenance.
+  Profil avecRole(RoleRacine? role) => Profil(
+        id: id,
+        identifiantCanonique: identifiantCanonique,
+        statutCompte: statutCompte,
+        roleRacine: role,
+        prenom: prenom,
+        nom: nom,
+        etablissementActifId: etablissementActifId,
+        identifiantEcoshop: identifiantEcoshop,
+        inscriptionFinalisee: inscriptionFinalisee,
+        photoChemin: photoChemin,
+      );
+
   /// Un élève doit revendiquer sa fiche scolaire pour accéder à sa scolarité.
   bool get exigeLiaisonFiche => roleRacine == RoleRacine.eleve;
 

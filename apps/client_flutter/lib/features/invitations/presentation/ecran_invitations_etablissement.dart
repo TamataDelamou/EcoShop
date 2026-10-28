@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/role_racine.dart';
 import '../application/invitations_providers.dart';
@@ -104,10 +106,49 @@ class _LigneInvitation extends ConsumerWidget {
       child: ListTile(
         leading: Icon(parTelephone ? Icons.phone_outlined : Icons.alternate_email),
         title: Text(i.identifiant),
-        subtitle: Text([
-          libelleRoleInvitation(i.roleCible) + (i.poste != null ? ' · ${i.poste}' : ''),
-          i.statut.libelle + (i.membre != null ? ' par ${i.membre}' : ''),
-        ].join('\n')),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text([
+              libelleRoleInvitation(i.roleCible) + (i.poste != null ? ' · ${i.poste}' : ''),
+              i.statut.libelle + (i.membre != null ? ' par ${i.membre}' : '') + (i.parCode ? ' (avec le code)' : ''),
+            ].join('\n')),
+            // Code à remettre à la personne (REG-27).
+            if (i.codeAffiche != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Wrap(
+                  spacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SelectableText(
+                      'Code : ${i.codeAffiche}',
+                      key: Key('code_invitation_${i.id}'),
+                      style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.5),
+                    ),
+                    IconButton(
+                      tooltip: 'Copier le code',
+                      icon: const Icon(Icons.copy_outlined, size: 18),
+                      onPressed: () async {
+                        await Clipboard.setData(ClipboardData(text: i.codeAffiche!));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Code copié')));
+                        }
+                      },
+                    ),
+                    IconButton(
+                      tooltip: 'Envoyer par WhatsApp',
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      onPressed: () => launchUrl(
+                        Uri.parse('https://wa.me/?text=${Uri.encodeComponent(_messagePartage(i))}'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
         isThreeLine: true,
         trailing: i.statut == StatutInvitation.enAttente
             ? IconButton(
@@ -253,3 +294,9 @@ class _FormulaireInvitationState extends ConsumerState<_FormulaireInvitation> {
     );
   }
 }
+
+/// Message à envoyer à la personne invitée (WhatsApp).
+String _messagePartage(InvitationEnvoyee i) =>
+    'Bonjour, vous êtes invité(e) sur EcoShop comme ${libelleRoleInvitation(i.roleCible).toLowerCase()}. '
+    'Installez EcoShop, connectez-vous (ou créez votre compte), puis touchez « J’ai un code d’invitation » '
+    'et saisissez : ${i.codeAffiche}. Ce code est personnel : ne le partagez pas.';
