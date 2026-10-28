@@ -53,7 +53,6 @@ class MoteurEmploiDuTemps {
   // ------------------------------------------------------------- entités
   final _classes = <String, int>{};
   final _groupes = <String, int>{};
-  final _groupeClasse = <int>[];
   final _enseignants = <String, int>{};
   final _salles = <String, int>{};
 
@@ -131,8 +130,11 @@ class MoteurEmploiDuTemps {
     if (_s == 0 || _nbJours == 0) {
       return ResultatEmploi(
         seances: const [],
-        nonPlacees: [for (final u in _unites) _nonPlacee(u, 'Aucun créneau de cours dans la grille')],
-        bilan: BilanQualite.vide(_unites.length),
+        nonPlacees: [
+          for (final u in _unites)
+            if (!u.fixe) _nonPlacee(u, 'Aucun créneau de cours dans la grille'),
+        ],
+        bilan: BilanQualite.vide(_unites.where((u) => !u.fixe).length),
       );
     }
     List<int>? meilleur;
@@ -141,8 +143,10 @@ class MoteurEmploiDuTemps {
     final budgetParDepart = donnees.budget.inMilliseconds ~/ max(1, departs);
     for (var essai = 0; essai < departs; essai++) {
       _vider();
-      _construire();
-      _ameliorer(Duration(milliseconds: budgetParDepart), chrono);
+      // Construction puis amélioration, dans la part de temps du départ.
+      final finDepart = chrono.elapsedMilliseconds + budgetParDepart;
+      _construire(chrono, finDepart);
+      _ameliorer(Duration(milliseconds: max(100, finDepart - chrono.elapsedMilliseconds)), chrono);
       final nonPlaces = _unites.where((u) => !u.fixe && u.position < 0).length;
       final cout = _coutTotal();
       if (nonPlaces < meilleurNonPlaces || (nonPlaces == meilleurNonPlaces && cout < meilleurCout)) {
@@ -200,25 +204,19 @@ class MoteurEmploiDuTemps {
   int _indexClasse(String id) => _classes.putIfAbsent(id, () => _classes.length);
   int _indexEnseignant(String? id) => id == null ? -1 : _enseignants.putIfAbsent(id, () => _enseignants.length);
   int _indexSalle(String? id) => id == null ? -1 : _salles.putIfAbsent(id, () => _salles.length);
-  int _indexGroupe(String? id, int classe) {
-    if (id == null) return -1;
-    return _groupes.putIfAbsent(id, () {
-      _groupeClasse.add(classe);
-      return _groupes.length;
-    });
-  }
+  int _indexGroupe(String? id) => id == null ? -1 : _groupes.putIfAbsent(id, () => _groupes.length);
 
   void _preparer() {
     // Entités.
     for (final c in donnees.cours) {
-      final ci = _indexClasse(c.classeId);
-      _indexGroupe(c.groupeId, ci);
+      _indexClasse(c.classeId);
+      _indexGroupe(c.groupeId);
       _indexEnseignant(c.enseignantId);
       _indexSalle(c.salleId);
     }
     for (final f in donnees.seancesFixes) {
-      final ci = _indexClasse(f.classeId);
-      _indexGroupe(f.groupeId, ci);
+      _indexClasse(f.classeId);
+      _indexGroupe(f.groupeId);
       _indexEnseignant(f.enseignantId);
       _indexSalle(f.salleId);
     }
@@ -307,7 +305,7 @@ class MoteurEmploiDuTemps {
       _parClasse[u.classe].add(i);
       if (u.enseignant >= 0) _parEnseignant[u.enseignant].add(i);
       if (u.salle >= 0) _parSalle[u.salle].add(i);
-      if (!u.fixe) _chargeClasse[u.classe] += max(1, _besoin(0, u.minutes));
+      if (!u.fixe) _chargeClasse[u.classe] += _s == 0 ? 1 : max(1, _besoin(0, u.minutes));
     }
     _activiteJour = [for (var a = 0; a < donnees.cours.length; a++) List<int>.filled(_nbJours, 0)];
     _maxParJour = [
@@ -558,7 +556,7 @@ class MoteurEmploiDuTemps {
 
   // ============================================================ construction
 
-  void _construire() {
+  void _construire(Stopwatch chrono, int limiteMs) {
     final aPlacer = <int>[
       for (var i = 0; i < _unites.length; i++)
         if (!_unites[i].fixe) i,
@@ -568,6 +566,15 @@ class MoteurEmploiDuTemps {
     final file = aPlacer.toSet();
     var garde = aPlacer.length * 30;
     while (file.isNotEmpty && garde-- > 0) {
+      // Temps écoulé : les séances restantes prennent la première place
+      // libre ; l'amélioration fera le reste.
+      if (chrono.elapsedMilliseconds > limiteMs) {
+        for (final i in file) {
+          final places = _positionsPossibles(i);
+          if (places.isNotEmpty) _placer(i, places[_hasard.nextInt(places.length)]);
+        }
+        return;
+      }
       // La séance qui a le moins de places possibles (DSatur).
       int? choisie;
       var moinsDePlaces = 1 << 30;
