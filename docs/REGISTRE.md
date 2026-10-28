@@ -39,6 +39,8 @@ attendue), `clos`.
 | REG-20 | Référentiel pédagogique et paramètres globaux livrés en production (champ « Pays » vide) ; séries du lycée guinéen | **P0** | **livré** (2026-10-24, `48574fe`) — tâche **ouverte** : séries SM, SE, SS et coefficients officiels, avant le premier lycée |
 | REG-21 | Accueil en pastilles, barre de navigation du bas, profil allégé, raccourcis et recherche | P1 | **livré** (2026-10-26) — à vérifier sur un téléphone Android (migration 1569 à appliquer) |
 | REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1568, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
+| REG-23 | Retours du test sur téléphone (2026-10-28) : accueil qui remonte, ouverture hors connexion, mise en route de l'école, écoles confirmées (GSG), programme officiel, photo de profil, slogan, calendriers en français, APK | P1 | **livré** (2026-10-28) — migrations 1570 à 1572 et 1574 à appliquer ; à vérifier sur un téléphone Android |
+| REG-24 | Emploi du temps dynamique et automatisé (modèles EDT/Pronote, Horarium) | P1 | **livré** (2026-10-28) — migration 1573 à appliquer ; à vérifier sur le poste avec les classes et cours d'une école pilote |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1483,4 +1485,55 @@ emplacement.** Aucune fonction supprimée.
 réseau ; recherche (« reçu ») ; raccourcis modifiés gardés après
 fermeture ; profil allégé ; TalkBack sur une pastille avec badge ; mode
 sombre ; texte agrandi (×1,3).
+
+---
+
+## REG-23 — Retours du test sur téléphone (2026-10-28)
+
+**Reçue le** : 2026-10-28. **Priorité** : P1. **Statut** : livré le
+2026-10-28.
+
+| Retour | Cause | Correction |
+|---|---|---|
+| APK `x86_64` : « Application non installée » ; `armeabi-v7a` s'installe | L'APK x86_64 est fait pour les émulateurs (processeurs Intel) ; les téléphones sont ARM. Celui du test est en 32 bits (ou son système l'est) | `scripts/construire_android.ps1 -ParAbi` ne produit plus que `arm64-v8a` (téléphones récents) et `armeabi-v7a` (téléphones 32 bits) |
+| L'accueil « s'actualise » et renvoie en haut de la page | Toute relecture du profil (relance toutes les 30 s quand le serveur est lent, retour du réseau, nouvelle copie) faisait passer la session par « Ouverture de votre espace… » : l'accueil était démonté puis remonté | Une relecture garde la valeur connue ; l'accueil déjà atteint n'est plus retiré pendant une relecture ou un échec réseau ; position de défilement gardée |
+| Hors connexion, après 2 ou 3 ouvertures : « Pas de connexion », accueil inaccessible | Une copie illisible (format d'une version précédente) ou une panne réseau non reconnue (poignée de main TLS coupée, connexion fermée en cours de réponse) bloquait au lieu de servir la copie | Copie illisible traitée comme absente ; pannes réseau reconnues élargies ; hors connexion, toute erreur sert la copie ; l'accueil atteint reste affiché |
+| Calendriers en anglais | Aucune traduction des composants Flutter | `flutter_localizations`, application en français (`intl` 0.20) |
+| Dates sans barres obliques | Saisie libre du sélecteur Flutter | Sélecteur EcoShop (`choisirDate`) : calendrier français et champ JJ/MM/AAAA où les barres s'écrivent seules, dans les 19 écrans qui demandent une date |
+| Pas de photo de profil | — | Photo prise ou choisie depuis « Mon profil » (bucket privé `photos-profils`, 512 Ko), visible des membres de la même école ; gardée sur l'appareil ; avatar de la barre du haut |
+| Pas de slogan dans l'identité visuelle | — | `etablissements.slogan` (120 caractères) : écran Identité visuelle, en-tête de l'application, en-tête des reçus et bulletins |
+| Direction : où créer l'année, les classes, inscrire ? | Aucun écran ; et la base refusait ces écritures à la Direction (`a_permission` ne regardait que le poste, et le poste « Directeur » n'a aucun code) | Migration 1570 : la Direction détient toutes les permissions de son école. **« Configurer mon établissement »** : 13 étapes dans l'ordre, chacune avec son état (année et périodes, programme officiel, classes, frais, personnel, groupes, salles, cours et enseignants, emploi du temps, inscriptions, inscriptions en ligne, logo-couleur-slogan, Orange Money) ; carte sur l'accueil tant que ce n'est pas fini ; pastilles dans « Organisation » |
+| Groupes pédagogiques | N'existaient pas | `groupes_pedagogiques`, `groupes_membres` : demi-classe, langue, option, soutien ; composition par cases à cocher ou première moitié de la classe |
+| Administration : pas de liste des écoles confirmées ni de tableau de bord | — | Onglet « Écoles » : toutes les écoles en service (élèves, classes, personnel, parents, dernière activité, recherche, tri), tableau de bord par école (effectifs, comptes actifs 7 j / 30 j, actions par jour sur 30 jours, finances, crédits SMS, mise en route, renseignements de la demande) ; demandes à un toucher |
+| Programme officiel peu visible (administration, établissements) | Pastille rangée en dernier, dans « Tout EcoShop » | Direction, enseignants, personnel : « Programme officiel » de leur pays (Organisation), dans la mise en route et sur chaque classe ; Administrateur GSG : pastille de la plateforme |
+
+**Migrations** : `20260906001570_direction_tous_droits`,
+`20260906001571_slogan_photo_profil`,
+`20260906001572_configuration_etablissement`,
+`20260906001574_ecoles_gsg`.
+
+**À vérifier sur un téléphone Android** : accueil qui ne remonte plus
+(réseau lent, mode avion puis retour) ; trois ouvertures de suite en mode
+avion ; calendrier et saisie JJ/MM/AAAA ; photo de profil (appareil photo,
+galerie, retrait) ; slogan ; création d'une année avec reprise des classes ;
+création de 3 classes d'un niveau ; « Écoles » de l'Administrateur GSG.
+
+## REG-24 — Emploi du temps dynamique et automatisé
+
+**Reçue le** : 2026-10-28. **Priorité** : P1. **Statut** : livré le
+2026-10-28. Recherche et conception :
+`docs/propositions/REG-24_EMPLOI_DU_TEMPS_AUTOMATIQUE.md`.
+
+Calcul sur l'appareil, hors connexion (Dart pur, isolat) ; contraintes
+impératives (personne à deux endroits, indisponibilités, demi-journées
+libres, séances verrouillées, séances de 2 h sans pause au milieu, groupes
+en parallèle) et sept critères de qualité pondérés ; diagnostic avant
+calcul ; qualité en %, séances non placées et pourquoi ; aperçu par classe
+et par enseignant ; autre proposition ; publication en une transaction
+(`enregistrer_emploi_genere`, migration `20260906001573`). Tests :
+`test/features/planification/moteur_emploi_du_temps_test.dart`.
+
+**Choix faits, à confirmer** : 32 semaines de cours par an pour proposer
+les heures par semaine ; matière principale à partir du coefficient 3 ;
+matin = avant 12 h 30 ; groupes d'une même classe disjoints.
 
