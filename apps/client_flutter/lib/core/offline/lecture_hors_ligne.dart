@@ -18,7 +18,24 @@ bool estErreurReseau(Object e) =>
     e.runtimeType.toString() == 'SocketException' ||
     e.toString().contains('SocketException') ||
     e.toString().contains('TimeoutException') ||
-    e.toString().contains('Failed host lookup');
+    _messageReseau(e.toString());
+
+/// Pannes de réseau fréquentes sur les réseaux mobiles instables (poignée
+/// de main TLS coupée, connexion fermée en cours de réponse, réseau
+/// injoignable) : elles n'étaient pas reconnues et bloquaient l'ouverture
+/// hors connexion au lieu de servir la copie du téléphone.
+bool _messageReseau(String m) =>
+    m.contains('Failed host lookup') ||
+    m.contains('HandshakeException') ||
+    m.contains('HttpException') ||
+    m.contains('Connection closed') ||
+    m.contains('Connection reset') ||
+    m.contains('Connection refused') ||
+    m.contains('Connection timed out') ||
+    m.contains('Network is unreachable') ||
+    m.contains('Software caused connection abort') ||
+    m.contains('ClientException') ||
+    m.contains('AuthRetryableFetchException');
 
 /// Le téléphone n'a aucune connexion (mode avion, données coupées) : inutile
 /// d'interroger le serveur.

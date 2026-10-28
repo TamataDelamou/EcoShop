@@ -67,7 +67,18 @@ Future<T> lireAvecCopieLocale<T>(
   final delai = ref.read(delaiLectureServeurProvider);
   Future<T> lireServeur() => serveur().timeout(delai);
 
-  final copie = await _lire(store, type, compteId);
+  // Copie illisible (format d'une version précédente de l'application) :
+  // traitée comme absente plutôt que de bloquer l'ouverture hors connexion.
+  final brute = await _lire(store, type, compteId);
+  Object? copie;
+  if (brute != null) {
+    try {
+      depuisJson(brute);
+      copie = brute;
+    } catch (_) {
+      copie = null;
+    }
+  }
 
   // Ouverture : copie tout de suite, serveur en arrière-plan.
   if (copie != null && !lues.contains(cle)) {
@@ -119,7 +130,10 @@ Future<T> lireAvecCopieLocale<T>(
     await _ecrire(store, type, compteId, versJson(valeur));
     return valeur;
   } catch (e) {
-    if (!estErreurReseau(e)) rethrow;
+    // Hors connexion, toute erreur est une erreur de réseau (le téléphone
+    // ne peut pas avoir reçu de refus du serveur).
+    final reseau = estErreurReseau(e) || !ref.read(estEnLigneProvider);
+    if (!reseau) rethrow;
     ref.read(donneesSessionPerimeesProvider.notifier).state = true;
     if (copie == null) rethrow;
     return depuisJson(copie);

@@ -134,32 +134,45 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   final recapitulatif = ref.watch(recapitulatifAMontrerProvider);
   final invitations = ref.watch(invitationsAPresenterProvider);
 
-  // Tant qu'une de ces lectures est en cours, on n'oriente pas : afficher
-  // l'écran de connexion pendant le chargement ferait clignoter le parcours.
-  if (profil.isLoading ||
-      fiche.isLoading ||
-      etablissements.isLoading ||
-      cguStatut.isLoading ||
-      regionalisationVue.isLoading ||
-      etapeTelephone.isLoading ||
-      recapitulatif.isLoading ||
-      // Compte sans rôle : attendre ses invitations, pour ne pas choisir
-      // « Élève » ou « Parent » à la place du rôle prévu par l'école.
-      (invitations.isLoading && profil.valueOrNull?.roleDefini == false) ||
-      verrou == PhaseVerrou.chargement) {
-    return DestinationSession.chargement;
-  }
-
+  // Tant qu'une de ces lectures n'a encore jamais abouti, on n'oriente pas :
+  // afficher l'écran de connexion pendant le chargement ferait clignoter le
+  // parcours. Une **relecture** (relance toutes les 30 s sur un réseau lent,
+  // retour du réseau, rafraîchissement) garde la valeur connue : l'accueil
+  // n'est plus démonté puis remonté — il remontait en haut de la page à
+  // chaque relance (retour du porteur de projet, 2026-10-28).
+  bool premierChargement(AsyncValue<Object?> v) => v.isLoading && !v.hasValue && !v.hasError;
   // Lecture impossible (sans réseau, et rien de gardé sur le téléphone) : on
   // ne devine pas (fiche non liée, CGU acceptées…), on le dit. La relance
   // au retour du réseau relit tout (`relance_reseau.dart`).
   bool inconnu(AsyncValue<Object?> v) => v.hasError && !v.hasValue;
+
+  final compte = profil.valueOrNull?.id;
+  final memoire = ref.read(_derniereDestinationProvider);
+  // Accueil déjà atteint pour ce compte depuis le lancement : une relecture
+  // en cours ou en échec (réseau coupé, serveur muet) ne le retire plus.
+  // Le compte reste orienté par le serveur dès qu'une réponse arrive.
+  bool garderAccueil() => memoire.compte != null && memoire.compte == compte && memoire.destination == DestinationSession.accueil;
+
+  if (premierChargement(profil) ||
+      premierChargement(fiche) ||
+      premierChargement(etablissements) ||
+      premierChargement(cguStatut) ||
+      premierChargement(regionalisationVue) ||
+      premierChargement(etapeTelephone) ||
+      premierChargement(recapitulatif) ||
+      // Compte sans rôle : attendre ses invitations, pour ne pas choisir
+      // « Élève » ou « Parent » à la place du rôle prévu par l'école.
+      (premierChargement(invitations) && profil.valueOrNull?.roleDefini == false) ||
+      verrou == PhaseVerrou.chargement) {
+    return garderAccueil() ? DestinationSession.accueil : DestinationSession.chargement;
+  }
+
   if (inconnu(profil) || inconnu(fiche) || inconnu(etablissements) || inconnu(cguStatut)) {
-    return DestinationSession.horsLigneSansCopie;
+    return garderAccueil() ? DestinationSession.accueil : DestinationSession.horsLigneSansCopie;
   }
 
   final statutCgu = cguStatut.valueOrNull;
-  return GardeSession.resoudre(
+  final destination = GardeSession.resoudre(
     sessionOuverte: true,
     profil: profil.valueOrNull,
     ficheLiee: fiche.valueOrNull ?? false,
@@ -172,6 +185,22 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     invitationsAPresenter: (invitations.valueOrNull ?? const []).isNotEmpty,
     codeCompteAConfirmer: codeCompteAConfirmer,
   );
+  memoire
+    ..compte = compte
+    ..destination = destination;
+  return destination;
+});
+
+/// Dernière destination calculée (et son compte) : voir [destinationProvider].
+class _MemoireDestination {
+  String? compte;
+  DestinationSession? destination;
+}
+
+final _derniereDestinationProvider = Provider<_MemoireDestination>((ref) {
+  // Remise à zéro à l'ouverture et à la fermeture de session.
+  ref.watch(sessionOuverteProvider);
+  return _MemoireDestination();
 });
 
 /// Invalide l'ensemble des lectures dépendant du compte.

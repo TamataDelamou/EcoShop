@@ -12,7 +12,8 @@
 
   -ParAbi : un APK par type de téléphone (environ 45 Mo au lieu de 124 Mo),
   plus léger à envoyer par WhatsApp. arm64-v8a convient à presque tous les
-  téléphones Android récents.
+  téléphones Android récents ; armeabi-v7a convient aux téléphones 32 bits
+  (entrée de gamme). L'APK x86_64 (émulateurs) n'est plus produit.
 
   Avant Gradle, le script arrête la machine Podman si elle tourne (base de
   test locale) : Gradle se réserve 8 Go de mémoire, et sans cette mémoire
@@ -154,7 +155,13 @@ if ($libreGo -lt 6) {
 & flutter pub get
 if ($LASTEXITCODE -ne 0) { Echec 'flutter pub get a échoué.' }
 $options = @('build', $Format, '--release', '--dart-define-from-file=config/production.json')
-if ($ParAbi) { $options += '--split-per-abi' }
+# Seuls les téléphones ARM sont visés : l'APK x86_64 ne s'installe que sur
+# les émulateurs (« Application non installée » sur un vrai téléphone), il
+# n'est donc plus produit, pour éviter de l'envoyer par erreur.
+if ($ParAbi) {
+  $options += @('--split-per-abi', '--target-platform', 'android-arm,android-arm64')
+  Remove-Item (Join-Path $App 'build\app\outputs\flutter-apk\app-x86_64-release.apk') -ErrorAction SilentlyContinue
+}
 & flutter @options
 if ($LASTEXITCODE -ne 0) { Echec 'La construction a échoué (voir ci-dessus).' }
 
@@ -162,14 +169,13 @@ Write-Host ''
 if ($ParAbi) {
   $dossier = Join-Path $App 'build\app\outputs\flutter-apk'
   Write-Host 'APK prêts, un par type de téléphone :' -ForegroundColor Green
-  foreach ($abi in @('arm64-v8a', 'armeabi-v7a', 'x86_64')) {
+  foreach ($abi in @('arm64-v8a', 'armeabi-v7a')) {
     $fichier = Join-Path $dossier "app-$abi-release.apk"
     if (-not (Test-Path $fichier)) { continue }
     $taille = [math]::Round((Get-Item $fichier).Length / 1MB, 1)
     $note = switch ($abi) {
       'arm64-v8a' { '  <- À ENVOYER PAR DÉFAUT (presque tous les téléphones récents)' }
-      'armeabi-v7a' { '  (anciens téléphones 32 bits, si le premier refuse de s''installer)' }
-      default { '  (émulateurs et rares tablettes Intel)' }
+      default { '  (téléphones 32 bits : à envoyer si le premier affiche « Application non installée »)' }
     }
     Write-Host ("  {0}  {1} Mo{2}" -f $fichier, $taille, $note)
   }
