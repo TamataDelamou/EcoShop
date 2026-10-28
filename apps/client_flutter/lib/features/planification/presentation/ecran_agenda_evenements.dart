@@ -9,6 +9,7 @@ import '../../../core/widgets/shimmer.dart';
 import '../application/planification_providers.dart';
 import '../domain/enums_planification.dart';
 import '../domain/evenement_agenda.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Agenda des événements d'établissement (M11) — examens, conseils de
 /// classe, réunions, sorties, jours fériés. Vue personnel (tout
@@ -154,7 +155,7 @@ class _FormulaireEvenementState extends ConsumerState<_FormulaireEvenement> {
   }
 
   Future<void> _choisirDate() async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: _date,
       firstDate: DateTime(_date.year - 1),

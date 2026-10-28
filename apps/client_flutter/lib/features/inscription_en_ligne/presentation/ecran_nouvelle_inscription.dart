@@ -9,6 +9,7 @@ import '../domain/inscription_en_ligne.dart';
 import 'ecran_dossier_inscription.dart';
 import 'widgets/elements_inscription.dart';
 import 'widgets/prise_piece.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Demande d'inscription d'un nouvel élève (REG-08), en cinq étapes :
 /// école, niveau, élève, demandeur et payeur, pièces. Sans réseau, le
@@ -420,7 +421,7 @@ class _EcranNouvelleInscriptionState
           trailing: const Icon(Icons.edit_calendar_outlined),
           onTap: () async {
             final maintenant = DateTime.now();
-            final choisie = await showDatePicker(
+            final choisie = await choisirDate(
               context: context,
               initialDate: _naissance ?? DateTime(maintenant.year - 10),
               firstDate: DateTime(maintenant.year - 30),

@@ -6,6 +6,7 @@ import '../../planification/presentation/ecran_choix_classe.dart';
 import '../application/scolarite_providers.dart';
 import '../domain/classe.dart';
 import '../domain/scolarite_repository.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Création d'une inscription pour un nouvel élève (M15quater) — écart signalé
 /// par l'audit : jusqu'ici, aucun écran ne permettait d'inscrire un élève
@@ -41,7 +42,7 @@ class _EcranCreationInscriptionState extends ConsumerState<EcranCreationInscript
 
   Future<void> _choisirDate() async {
     final maintenant = DateTime.now();
-    final date = await showDatePicker(
+    final date = await choisirDate(
       context: context,
       initialDate: DateTime(maintenant.year - 10),
       firstDate: DateTime(maintenant.year - 25),

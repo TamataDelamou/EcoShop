@@ -8,6 +8,7 @@ import '../application/pieces_comptables_providers.dart';
 import '../domain/pieces_comptables.dart';
 import 'ecran_exercices_comptables.dart';
 import 'ecran_saisie_piece.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 enum _Filtre { toutes, brouillards, validees }
 
@@ -429,7 +430,7 @@ class _DialogueContrepassationState extends State<_DialogueContrepassation> {
         const SizedBox(height: 8),
         TextButton.icon(
           onPressed: () async {
-            final d = await showDatePicker(
+            final d = await choisirDate(
               context: context,
               initialDate: _date,
               firstDate: widget.piece.datePiece,

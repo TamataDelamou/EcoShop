@@ -10,6 +10,7 @@ import '../domain/conge.dart';
 import '../domain/employe.dart';
 import '../domain/enums_rh.dart';
 import 'widgets/pastille_statut_conge.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Congés d'un employé (M8) — demande hors-ligne possible (file `sync_queue`,
 /// même politique que le pointage de présence en M7), validation RH toujours
@@ -156,7 +157,7 @@ class _FormulaireCongeState extends ConsumerState<_FormulaireConge> {
   int get _nbJours => _dateFin.difference(_dateDebut).inDays + 1;
 
   Future<void> _choisirDate({required bool debut}) async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: debut ? _dateDebut : _dateFin,
       firstDate: DateTime(_dateDebut.year - 1),

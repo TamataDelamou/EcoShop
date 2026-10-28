@@ -7,6 +7,7 @@ import '../../../core/widgets/shimmer.dart';
 import '../application/comptabilite_providers.dart';
 import '../application/pieces_comptables_providers.dart';
 import '../domain/pieces_comptables.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Exercices comptables et clôtures (REG-03 C2) : ouverture, clôture de
 /// période (au moins trimestrielle, art. 22 de l'Acte uniforme), clôture
@@ -91,7 +92,7 @@ class _EcranExercicesComptablesState extends ConsumerState<EcranExercicesComptab
   Future<void> _cloturerPeriode(ExerciceComptable x) async {
     final suggestion = _finDeMoisPrecedent(DateTime.now());
     final initiale = suggestion.isBefore(x.dateDebut) || suggestion.isAfter(x.dateFin) ? x.dateFin : suggestion;
-    final date = await showDatePicker(
+    final date = await choisirDate(
       context: context,
       helpText: 'Clôturer jusqu\'au (inclus)',
       initialDate: initiale,
@@ -246,7 +247,7 @@ class _ChampDate extends StatelessWidget {
         onTap: onChange == null
             ? null
             : () async {
-                final d = await showDatePicker(
+                final d = await choisirDate(
                   context: context,
                   initialDate: valeur,
                   firstDate: DateTime(2000),

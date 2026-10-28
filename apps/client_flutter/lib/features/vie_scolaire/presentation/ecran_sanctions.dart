@@ -12,6 +12,7 @@ import '../application/vie_scolaire_providers.dart';
 import '../domain/enums_vie_scolaire.dart';
 import '../domain/sanction.dart';
 import 'widgets/badge_signal_ia.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Sanctions d'un élève (M7) — éducatives, jamais punitives par défaut.
 ///
@@ -249,7 +250,7 @@ class _FormulaireSanctionState extends ConsumerState<_FormulaireSanction> {
   }
 
   Future<void> _choisirDate({required bool debut}) async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: debut ? _dateDebut : (_dateFin ?? _dateDebut),
       firstDate: DateTime(_dateDebut.year - 1),

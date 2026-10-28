@@ -7,6 +7,7 @@ import '../application/comptabilite_providers.dart';
 import '../domain/comptabilite_repository.dart';
 import '../domain/journal.dart';
 import '../domain/plan_comptable.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Saisie d'une écriture comptable (M14) — partie double : un débit et un
 /// crédit de même montant. Le garde-fou mono-compte (débit ≠ crédit) est
@@ -119,7 +120,7 @@ class _EcranSaisieEcritureState extends ConsumerState<EcranSaisieEcriture> {
               subtitle: Text('${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}'),
               trailing: const Icon(Icons.calendar_today_outlined),
               onTap: () async {
-                final choisie = await showDatePicker(
+                final choisie = await choisirDate(
                   context: context,
                   initialDate: _date,
                   firstDate: DateTime(2020),

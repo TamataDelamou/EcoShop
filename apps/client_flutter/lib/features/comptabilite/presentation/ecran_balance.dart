@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/comptabilite_providers.dart';
 import 'widgets/montant.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Balance comptable (M14) — soldes débit/crédit par compte à une date, via
 /// la RPC `balance_comptable` (calcul à la volée) ; le bouton « Générer »
@@ -41,7 +42,7 @@ class _EcranBalanceState extends ConsumerState<EcranBalance> {
             tooltip: 'Choisir la date',
             icon: const Icon(Icons.calendar_today_outlined),
             onPressed: () async {
-              final choisie = await showDatePicker(
+              final choisie = await choisirDate(
                 context: context,
                 initialDate: _date,
                 firstDate: DateTime(2020),

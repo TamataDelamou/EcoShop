@@ -12,6 +12,7 @@ import '../../scolarite/domain/inscription.dart';
 import '../application/vie_scolaire_providers.dart';
 import '../domain/enums_vie_scolaire.dart';
 import '../domain/presence.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Appel d'une classe (M7, mode enseignant/surveillant) — pointage
 /// quotidien, fonctionne sans réseau (file `sync_queue`, même mécanisme que
@@ -76,7 +77,7 @@ class _EcranAppelClasseState extends ConsumerState<EcranAppelClasse> {
   }
 
   Future<void> _choisirDate() async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: _date,
       firstDate: DateTime(_date.year - 1),

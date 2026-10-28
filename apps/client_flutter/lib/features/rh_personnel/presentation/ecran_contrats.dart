@@ -8,6 +8,7 @@ import '../application/rh_providers.dart';
 import '../domain/contrat.dart';
 import '../domain/employe.dart';
 import '../domain/enums_rh.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Contrats d'un employé (M8, gestion RH). Toujours en ligne — un contrat
 /// engage juridiquement l'établissement (cf. `RhRepository.creerContrat`).
@@ -113,7 +114,7 @@ class _FormulaireContratState extends ConsumerState<_FormulaireContrat> {
   }
 
   Future<void> _choisirDate({required bool debut}) async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: debut ? _dateDebut : (_dateFin ?? _dateDebut),
       firstDate: DateTime(_dateDebut.year - 5),

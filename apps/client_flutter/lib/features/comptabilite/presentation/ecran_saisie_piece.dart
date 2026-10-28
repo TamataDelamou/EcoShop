@@ -9,6 +9,7 @@ import '../application/pieces_comptables_providers.dart';
 import '../domain/journal.dart';
 import '../domain/pieces_comptables.dart';
 import '../domain/plan_comptable.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Saisie d'une pièce comptable à plusieurs lignes (REG-03 C2).
 ///
@@ -216,7 +217,7 @@ class _EcranSaisiePieceState extends ConsumerState<EcranSaisiePiece> {
                   child: InkWell(
                   key: const Key('piece_date'),
                   onTap: () async {
-                    final d = await showDatePicker(
+                    final d = await choisirDate(
                       context: context,
                       initialDate: _date,
                       firstDate: DateTime(2020),

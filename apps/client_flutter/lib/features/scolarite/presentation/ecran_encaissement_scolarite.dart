@@ -14,6 +14,7 @@ import '../domain/encaissement_scolarite.dart';
 import '../domain/enums_financier_scolaire.dart';
 import '../domain/inscription.dart';
 import '../domain/scolarite_repository.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 String _formaterMontant(double montant) => NumberFormat.decimalPattern('fr').format(montant);
 
@@ -243,7 +244,7 @@ class _EcranEncaissementScolariteState extends ConsumerState<EcranEncaissementSc
             subtitle: Text('${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}'),
             trailing: const Icon(Icons.calendar_today_outlined),
             onTap: () async {
-              final choisie = await showDatePicker(
+              final choisie = await choisirDate(
                 context: context,
                 initialDate: _date,
                 firstDate: DateTime(2020),

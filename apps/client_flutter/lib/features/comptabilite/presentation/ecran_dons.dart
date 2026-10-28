@@ -14,6 +14,7 @@ import '../domain/comptabilisation_automatique.dart';
 import '../domain/dons.dart';
 import '../domain/montant_en_lettres.dart';
 import '../domain/pieces_comptables.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Dons et donateurs (REG-03 C5) : synthèse de l'année, dons avec reçus
 /// numérotés, registre des donateurs, campagnes et projets à fonds
@@ -701,7 +702,7 @@ class _EcranSaisieDonState extends ConsumerState<EcranSaisieDon> {
   double? get _valeur => double.tryParse(_montant.text.replaceAll(RegExp(r'\s'), '').replaceAll(',', '.'));
 
   Future<void> _choisirDate() async {
-    final d = await showDatePicker(
+    final d = await choisirDate(
       context: context,
       initialDate: _date,
       firstDate: DateTime(DateTime.now().year - 5),

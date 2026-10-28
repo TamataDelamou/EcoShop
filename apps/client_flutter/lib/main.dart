@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -96,6 +97,11 @@ class EcoShopApp extends ConsumerWidget {
       ),
       themeMode: mode,
       debugShowCheckedModeBanner: false,
+      // Calendriers, heures et boutons système en français (ils étaient en
+      // anglais) ; saisie des dates au format JJ/MM/AAAA.
+      locale: const Locale('fr', 'FR'),
+      supportedLocales: const [Locale('fr', 'FR'), Locale('fr'), Locale('ar'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       navigatorKey: cleNavigateurRacine,
       // Taille de texte (D4, §34.9) : appliquée globalement via le
       // `textScaler` ambiant plutôt qu'écran par écran — un seul point

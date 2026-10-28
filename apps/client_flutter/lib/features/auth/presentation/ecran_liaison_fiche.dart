@@ -5,6 +5,7 @@ import '../../coquille/application/session_logout.dart';
 import '../application/auth_providers.dart';
 import '../application/connexion_controller.dart';
 import '../domain/auth_repository.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Liaison compte ↔ fiche scolaire (cahier v4.1, ch. 5.8).
 ///
@@ -34,7 +35,7 @@ class _EcranLiaisonFicheState extends ConsumerState<EcranLiaisonFiche> {
 
   Future<void> _choisirDate() async {
     final maintenant = DateTime.now();
-    final date = await showDatePicker(
+    final date = await choisirDate(
       context: context,
       initialDate: _dateNaissance ?? DateTime(maintenant.year - 12),
       firstDate: DateTime(maintenant.year - 100),

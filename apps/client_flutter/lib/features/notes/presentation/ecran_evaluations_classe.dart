@@ -11,6 +11,7 @@ import '../domain/enums_notes.dart';
 import '../domain/evaluation.dart';
 import 'ecran_saisie_notes.dart';
 import 'widgets/pastille_statut_evaluation.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Évaluations d'une classe (M6) — point d'entrée du mode enseignant.
 class EcranEvaluationsClasse extends ConsumerWidget {
@@ -225,7 +226,7 @@ class _FeuilleNouvelleEvaluationState extends ConsumerState<_FeuilleNouvelleEval
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () async {
-                final choisie = await showDatePicker(
+                final choisie = await choisirDate(
                   context: context,
                   initialDate: _date,
                   firstDate: DateTime(_date.year - 1),

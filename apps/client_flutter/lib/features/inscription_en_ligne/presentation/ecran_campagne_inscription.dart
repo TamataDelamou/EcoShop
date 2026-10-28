@@ -10,6 +10,7 @@ import '../application/inscription_en_ligne_providers.dart';
 import '../domain/inscription_en_ligne.dart';
 import 'ecran_dossiers_inscription.dart';
 import 'widgets/elements_inscription.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Campagne d'inscription d'une année (Direction, REG-08) : dates, délai de
 /// réservation, pièces exigées, places par niveau, consignes, publication.
@@ -101,7 +102,7 @@ class _EcranCampagneInscriptionState extends ConsumerState<EcranCampagneInscript
   }
 
   Future<void> _choisirDate(DateTime actuelle, void Function(DateTime) affecter) async {
-    final d = await showDatePicker(
+    final d = await choisirDate(
       context: context,
       initialDate: actuelle,
       firstDate: DateTime(actuelle.year - 1),

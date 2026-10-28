@@ -8,6 +8,7 @@ import '../application/rh_providers.dart';
 import '../domain/absence_personnel.dart';
 import '../domain/employe.dart';
 import '../domain/enums_rh.dart';
+import '../../../core/widgets/choisir_date.dart';
 
 /// Absences pointées d'un employé (M8) — pointage RH, hors-ligne possible
 /// (file `sync_queue`, même politique que l'appel de classe en M7).
@@ -107,7 +108,7 @@ class _FormulaireAbsenceState extends ConsumerState<_FormulaireAbsence> {
   }
 
   Future<void> _choisirDate() async {
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: _date,
       firstDate: DateTime(_date.year - 1),

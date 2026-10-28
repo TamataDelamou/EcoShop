@@ -5,6 +5,7 @@ import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../application/scolarite_providers.dart';
 import '../../domain/enums_scolarite.dart';
 import '../../domain/scolarite_repository.dart';
+import '../../../../core/widgets/choisir_date.dart';
 
 /// Ouvre la feuille de liaison d'un enfant (RPC `lier_parent_a_fiche`).
 Future<void> afficherAjouterEnfant(BuildContext context, WidgetRef ref) {
@@ -50,7 +51,7 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
 
   Future<void> _choisirDate() async {
     final maintenant = DateTime.now();
-    final choisie = await showDatePicker(
+    final choisie = await choisirDate(
       context: context,
       initialDate: DateTime(maintenant.year - 10),
       firstDate: DateTime(maintenant.year - 30),
