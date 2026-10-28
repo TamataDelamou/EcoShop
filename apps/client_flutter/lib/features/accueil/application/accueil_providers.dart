@@ -196,3 +196,57 @@ class RaccourcisController extends AsyncNotifier<List<String>> {
 
 final raccourcisProvider = AsyncNotifierProvider<RaccourcisController, List<String>>(RaccourcisController.new);
 
+
+/// Disposition des pastilles de l'accueil (REG-25) : défilante (toutes les
+/// pastilles, de haut en bas) ou fixe (une ligne par thème, qu'on fait
+/// glisser de côté) ; deux grandes pastilles ou trois par ligne.
+class AffichageAccueil {
+  const AffichageAccueil({this.fixe = false, this.colonnes = 3});
+
+  factory AffichageAccueil.depuisJson(Map<String, dynamic>? j) => AffichageAccueil(
+        fixe: j?['disposition'] == 'fixe',
+        colonnes: (j?['colonnes'] as num?)?.toInt() == 2 ? 2 : 3,
+      );
+
+  Map<String, dynamic> versJson() => {'disposition': fixe ? 'fixe' : 'defilante', 'colonnes': colonnes};
+
+  AffichageAccueil copier({bool? fixe, int? colonnes}) =>
+      AffichageAccueil(fixe: fixe ?? this.fixe, colonnes: colonnes ?? this.colonnes);
+
+  /// Une ligne par thème, qu'on fait glisser à l'horizontale.
+  final bool fixe;
+
+  /// Pastilles par ligne sur un téléphone : 2 (grandes) ou 3.
+  final int colonnes;
+
+  bool get grandes => colonnes == 2;
+}
+
+/// Affichage de l'accueil, gardé sur l'appareil pour chaque compte (comme
+/// les raccourcis).
+class AffichageAccueilController extends AsyncNotifier<AffichageAccueil> {
+  static const _type = 'affichage_accueil';
+
+  @override
+  Future<AffichageAccueil> build() async {
+    final compte = ref.watch(profilProvider.select((p) => p.valueOrNull?.id));
+    if (compte == null) return const AffichageAccueil();
+    try {
+      return AffichageAccueil.depuisJson(await ref.read(storeRaccourcisProvider).lireDocument(_type, compte));
+    } catch (_) {
+      return const AffichageAccueil();
+    }
+  }
+
+  Future<void> definir(AffichageAccueil affichage) async {
+    state = AsyncData(affichage);
+    final compte = ref.read(profilProvider).valueOrNull?.id;
+    if (compte == null) return;
+    try {
+      await ref.read(storeRaccourcisProvider).ecrireDocument(_type, compte, affichage.versJson());
+    } catch (_) {}
+  }
+}
+
+final affichageAccueilProvider =
+    AsyncNotifierProvider<AffichageAccueilController, AffichageAccueil>(AffichageAccueilController.new);

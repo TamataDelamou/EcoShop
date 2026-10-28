@@ -93,7 +93,16 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
     // que s'il n'y a rien d'autre.
     final lignes = aFaire.length > 1 ? aFaire.where((l) => l.cle != 'annonces_non_lues').toList() : aFaire;
 
-    Widget pastille(Fonction f) => Pastille(fonction: f, badge: f.badge == null ? 0 : resume[f.badge] ?? 0, onTap: () => ouvrir(f));
+    // Affichage choisi (REG-25) : défilant ou fixe, 2 ou 3 par ligne.
+    final affichage = ref.watch(affichageAccueilProvider).valueOrNull ?? const AffichageAccueil();
+    Widget pastille(Fonction f) => Pastille(
+          fonction: f,
+          badge: f.badge == null ? 0 : resume[f.badge] ?? 0,
+          grande: affichage.grandes,
+          onTap: () => ouvrir(f),
+        );
+    Widget grille(List<Widget> enfants, {bool parTheme = true}) =>
+        GrillePastilles(enfants: enfants, colonnes: affichage.colonnes, fixe: parTheme && affichage.fixe);
 
     final avecOutils = c.direction || c.personnel;
     final sections = <Widget>[];
@@ -103,19 +112,19 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
         ..add(TitreSection(trouvees.isEmpty ? 'Aucun résultat' : 'Résultats'))
         ..add(trouvees.isEmpty
             ? const Text('Essayez un autre mot : « reçu », « inscription », « bus »…', key: Key('recherche_vide'))
-            : GrillePastilles(enfants: [for (final f in trouvees) pastille(f)]));
+            : grille([for (final f in trouvees) pastille(f)], parTheme: false));
     } else if (c.direction) {
       for (final g in groupesDirection) {
         final duGroupe = [for (final f in fonctions) if (f.groupe == g) f];
         if (duGroupe.isEmpty) continue;
         sections
           ..add(TitreSection(g))
-          ..add(GrillePastilles(enfants: [for (final f in duGroupe) pastille(f)]));
+          ..add(grille([for (final f in duGroupe) pastille(f)]));
       }
     } else if (fonctions.isNotEmpty) {
       sections
         ..add(TitreSection(c.personnel ? 'Mon travail' : 'Tout EcoShop'))
-        ..add(GrillePastilles(enfants: [for (final f in fonctions) pastille(f)]));
+        ..add(grille([for (final f in fonctions) pastille(f)]));
     }
 
     return RefreshIndicator(
@@ -170,7 +179,7 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
                 onTap: () => ouvrir(parId[l.fonctionId]!),
               ),
           ],
-          if (avecOutils && _texte.trim().isEmpty) ..._raccourcis(fonctions, pastille),
+          if (avecOutils && _texte.trim().isEmpty) ..._raccourcis(fonctions, pastille, affichage.colonnes),
           ...sections,
         ],
       ),
@@ -179,7 +188,7 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
   }
 
   /// « Mes raccourcis » : quatre pastilles épinglées, gardées sur l'appareil.
-  List<Widget> _raccourcis(List<Fonction> fonctions, Widget Function(Fonction) pastille) {
+  List<Widget> _raccourcis(List<Fonction> fonctions, Widget Function(Fonction) pastille, int colonnes) {
     final parId = {for (final f in fonctions) f.id: f};
     final gardes = ref.watch(raccourcisProvider).valueOrNull ?? RaccourcisController.parDefaut;
     var choisis = [for (final id in gardes) if (parId.containsKey(id)) parId[id]!];
@@ -195,7 +204,10 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
           child: const Text('Modifier'),
         ),
       ),
-      GrillePastilles(enfants: [for (final f in choisis.take(4)) KeyedSubtree(key: Key('raccourci_${f.id}'), child: pastille(f))]),
+      GrillePastilles(
+        colonnes: colonnes,
+        enfants: [for (final f in choisis.take(4)) KeyedSubtree(key: Key('raccourci_${f.id}'), child: pastille(f))],
+      ),
     ];
   }
 }

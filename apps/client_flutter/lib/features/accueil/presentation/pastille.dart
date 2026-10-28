@@ -7,11 +7,14 @@ import '../domain/fonction.dart';
 /// plus, badge orange. Vrai bouton, zone de toucher ≥ 96 × 96, libellé lu par
 /// TalkBack avec le badge (« Annonces, 3 nouvelles »).
 class Pastille extends StatelessWidget {
-  const Pastille({super.key, required this.fonction, required this.onTap, this.badge = 0});
+  const Pastille({super.key, required this.fonction, required this.onTap, this.badge = 0, this.grande = false});
 
   final Fonction fonction;
   final VoidCallback onTap;
   final int badge;
+
+  /// Deux pastilles par ligne (REG-25) : icône et libellé plus grands.
+  final bool grande;
 
   static String libelleAccessible(Fonction f, int badge) {
     if (badge <= 0) return f.libelle;
@@ -39,30 +42,30 @@ class Pastille extends StatelessWidget {
           key: Key('pastille_${fonction.id}'),
           onTap: onTap,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 96),
+            constraints: BoxConstraints(minHeight: grande ? 116 : 96),
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 14, 6, 12),
+                  padding: grande ? const EdgeInsets.fromLTRB(8, 16, 8, 14) : const EdgeInsets.fromLTRB(6, 14, 6, 12),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: grande ? 56 : 44,
+                        height: grande ? 56 : 44,
                         decoration: BoxDecoration(
                           color: sombre ? t.fondSombre : t.fondClair,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(grande ? 18 : 14),
                         ),
-                        child: Icon(fonction.icone, color: sombre ? t.iconeSombre : t.iconeClair, size: 24),
+                        child: Icon(fonction.icone, color: sombre ? t.iconeSombre : t.iconeClair, size: grande ? 30 : 24),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: grande ? 10 : 8),
                       Text(
                         fonction.libelle,
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.2),
+                        style: TextStyle(fontSize: grande ? 15 : 13, fontWeight: FontWeight.w600, height: 1.2),
                       ),
                     ],
                   ),
@@ -92,18 +95,42 @@ class Pastille extends StatelessWidget {
   }
 }
 
-/// Grille de 3 colonnes (maquettes : écart 10).
+/// Pastilles d'une section (maquettes : écart 10), selon l'affichage choisi
+/// (REG-25) :
+/// - **défilante** : grille de 2 ou 3 colonnes sur un téléphone (plus sur
+///   tablette et ordinateur), la page défile de haut en bas ;
+/// - **fixe** : une seule ligne qu'on fait glisser de côté ; la pastille
+///   suivante dépasse un peu pour montrer qu'il y en a d'autres.
 class GrillePastilles extends StatelessWidget {
-  const GrillePastilles({super.key, required this.enfants});
+  const GrillePastilles({super.key, required this.enfants, this.colonnes = 3, this.fixe = false});
 
   final List<Widget> enfants;
+
+  /// Pastilles par ligne sur un téléphone : 2 ou 3.
+  final int colonnes;
+  final bool fixe;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, contraintes) {
-      // Trois colonnes sur téléphone ; plus sur tablette et ordinateur.
-      final colonnes = contraintes.maxWidth >= 720 ? 6 : (contraintes.maxWidth >= 480 ? 4 : 3);
-      final largeur = (contraintes.maxWidth - 10 * (colonnes - 1)) / colonnes;
+      final large = contraintes.maxWidth;
+      final parLigne = large >= 720 ? colonnes * 2 : (large >= 480 ? colonnes + 1 : colonnes);
+      if (fixe) {
+        // Hauteur réservée : deux lignes de libellé, texte agrandi compris.
+        final echelle = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final hauteur = (colonnes == 2 ? 132.0 : 112.0) + 34 * (echelle - 1);
+        final largeur = (large - 10 * parLigne) / (parLigne + 0.35);
+        return SizedBox(
+          height: hauteur,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: enfants.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) => SizedBox(width: largeur, child: enfants[i]),
+          ),
+        );
+      }
+      final largeur = (large - 10 * (parLigne - 1)) / parLigne;
       return Wrap(
         spacing: 10,
         runSpacing: 10,

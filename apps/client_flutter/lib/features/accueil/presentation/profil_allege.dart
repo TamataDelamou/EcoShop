@@ -18,6 +18,7 @@ import '../../invitations/presentation/ecran_invitations.dart';
 import '../../pointage/presentation/interrupteur_avis_portail.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import 'pastille.dart';
+import 'reglages_affichage_accueil.dart';
 
 /// « Mon profil » allégé (REG-21) : seulement ce qui est personnel. Tout le
 /// travail quotidien est sur l'accueil, en pastilles.
@@ -153,6 +154,13 @@ class VueProfilAllegee extends ConsumerWidget {
           ),
           // Avis du portail (REG-09) : le parent ou l'élève choisit.
           if (p.roleRacine == RoleRacine.parent || p.roleRacine == RoleRacine.eleve) const InterrupteurAvisPortail(),
+          _Ligne(
+            cle: 'menu_affichage_accueil',
+            icone: Icons.dashboard_customize_outlined,
+            titre: 'Affichage de l’accueil',
+            sousTitre: 'Défilant ou fixe, 2 ou 3 pastilles par ligne',
+            onTap: () => afficherReglagesAccueil(context),
+          ),
           _Ligne(
             cle: 'menu_langue_affichage',
             icone: Icons.translate_outlined,

@@ -121,7 +121,10 @@ final List<Fonction> catalogueFonctions = [
     ancienne: 'Annonces de l’école',
     visible: (c) => c.role != RoleRacine.adminGsg && c.role != RoleRacine.adminContenu,
     ouvrir: (context, ref, c) => _aller(context,
-        c.direction && c.ecole ? EcranAnnoncesDirection(etablissementId: c.etablissement!.id) : const EcranAnnonces()),
+        // Direction, ou poste qui publie les annonces (REG-26).
+        c.ecole && c.peut(['communication.annonce.publier'])
+            ? EcranAnnoncesDirection(etablissementId: c.etablissement!.id)
+            : const EcranAnnonces()),
   ),
   Fonction(
     id: 'cahier_liaison', libelle: 'Cahier de liaison', icone: Icons.menu_book_outlined, teinte: Teinte.violet,
@@ -311,7 +314,7 @@ final List<Fonction> catalogueFonctions = [
   Fonction(
     id: 'orange_money', libelle: 'Orange Money', icone: Icons.phone_iphone_rounded, teinte: Teinte.orange,
     groupe: _finances, motsCles: ['paiement en ligne', 'mobile money'], ancienne: 'Paiement Orange Money',
-    visible: (c) => c.ecole && c.direction,
+    visible: (c) => c.ecole && c.peut(['paiement.mobile.gerer']),
     ouvrir: (context, ref, c) => _aller(context,
         EcranOrangeMoneyEtablissement(etablissementId: c.etablissement!.id, devise: c.etablissement!.deviseCode)),
   ),
@@ -325,14 +328,14 @@ final List<Fonction> catalogueFonctions = [
   Fonction(
     id: 'credits_sms', libelle: 'Crédits SMS', icone: Icons.sms_outlined, teinte: Teinte.jaune, groupe: _finances,
     motsCles: ['sms', 'pack', 'acheter'], ancienne: '(depuis Présence au portail)',
-    visible: (c) => c.ecole && c.direction,
+    visible: (c) => c.ecole && c.peut(['sms.credits.acheter']),
     ouvrir: (context, ref, c) => _aller(context,
         EcranCreditsSms(etablissementId: c.etablissement!.id, devise: c.etablissement!.deviseCode)),
   ),
   Fonction(
     id: 'vendeurs_ecole', libelle: 'Vendeurs', icone: Icons.storefront_outlined, teinte: Teinte.sarcelle,
     groupe: _finances, motsCles: ['marketplace', 'agrément', 'boutique'], ancienne: 'Vendeurs marketplace',
-    visible: (c) => c.ecole && c.direction,
+    visible: (c) => c.ecole && c.peut(['boutique.vendeur.agreer']),
     ouvrir: (context, ref, c) =>
         _aller(context, EcranAgrementVendeursEtablissement(etablissementId: c.etablissement!.id)),
   ),
@@ -371,7 +374,7 @@ final List<Fonction> catalogueFonctions = [
   Fonction(
     id: 'debloquer_code', libelle: 'Débloquer un code', icone: Icons.lock_open_outlined, teinte: Teinte.rose,
     groupe: _personnel, motsCles: ['code oublié', 'bloqué', 'déblocage'], ancienne: 'Débloquer le code d’une personne',
-    visible: (c) => c.ecole && c.direction,
+    visible: (c) => c.ecole && c.peut(['securite.code.debloquer']),
     ouvrir: (context, ref, c) => _aller(context, EcranDebloquerCode(etablissementId: c.etablissement!.id)),
   ),
   Fonction(
