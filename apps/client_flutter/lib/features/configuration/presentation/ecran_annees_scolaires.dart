@@ -30,7 +30,7 @@ class EcranAnneesScolaires extends ConsumerWidget {
       ),
       body: structure.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(structureEtablissementProvider)),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(structureEtablissementProvider)),
         data: (_) => annees.isEmpty
             ? EtatVide(
                 icone: Icons.event_note_outlined,

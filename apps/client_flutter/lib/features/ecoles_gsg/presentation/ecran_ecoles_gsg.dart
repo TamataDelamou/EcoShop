@@ -64,7 +64,7 @@ class _EcranEcolesGsgState extends ConsumerState<EcranEcolesGsg> {
         onRefresh: () async => ref.invalidate(ecolesGsgProvider),
         child: ecoles.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => ListView(
+          error: (_, _) => ListView(
             children: const [
               Padding(
                 padding: EdgeInsets.all(32),
@@ -287,7 +287,7 @@ class EcranTableauEcoleGsg extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(tableauEcoleGsgProvider(ecole.id)),
         child: tableau.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => ListView(children: const [
+          error: (_, _) => ListView(children: const [
             Padding(padding: EdgeInsets.all(32), child: Text('Tableau de bord indisponible. Tirez pour réessayer.')),
           ]),
           data: (t) {

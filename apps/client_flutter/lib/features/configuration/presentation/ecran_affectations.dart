@@ -53,7 +53,7 @@ class _ListeClasses extends ConsumerWidget {
       appBar: AppBar(title: const Text('Cours et enseignants')),
       body: affectations.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(affectationsAnneeProvider(anneeId))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(affectationsAnneeProvider(anneeId))),
         data: (_) => classes.isEmpty
             ? const EtatVide(
                 icone: Icons.class_outlined,
@@ -121,7 +121,7 @@ class _CoursDeClasse extends ConsumerWidget {
       appBar: AppBar(title: Text('Cours — ${classe.nom}')),
       body: affectations.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(affectationsAnneeProvider(anneeId))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(affectationsAnneeProvider(anneeId))),
         data: (_) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [

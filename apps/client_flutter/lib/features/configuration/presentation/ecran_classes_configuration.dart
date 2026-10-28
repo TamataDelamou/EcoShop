@@ -46,7 +46,7 @@ class EcranClassesConfiguration extends ConsumerWidget {
       ),
       body: structure.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(structureEtablissementProvider(anneeId))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(structureEtablissementProvider(anneeId))),
         data: (_) => classes.isEmpty
             ? EtatVide(
                 icone: Icons.class_outlined,

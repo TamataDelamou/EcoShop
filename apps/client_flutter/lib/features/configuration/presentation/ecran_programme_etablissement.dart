@@ -36,7 +36,7 @@ class EcranProgrammeEtablissement extends ConsumerWidget {
     final pays = ref.watch(paysPedagogiquesProvider);
     return pays.when(
       loading: () => Scaffold(appBar: AppBar(title: const Text('Programme officiel')), body: const Center(child: CircularProgressIndicator())),
-      error: (_, __) => Scaffold(
+      error: (_, _) => Scaffold(
         appBar: AppBar(title: const Text('Programme officiel')),
         body: ErreurChargement(onReessayer: () => ref.invalidate(paysPedagogiquesProvider)),
       ),

@@ -40,7 +40,7 @@ class EcranGroupes extends ConsumerWidget {
       ),
       body: groupes.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(groupesProvider(anneeId))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(groupesProvider(anneeId))),
         data: (_) => liste.isEmpty
             ? EtatVide(
                 icone: Icons.groups_2_outlined,
@@ -230,7 +230,7 @@ class _EcranMembresState extends ConsumerState<_EcranMembres> {
                         ),
                     succes: '${choisis.length} élève(s) dans le groupe.',
                   );
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   setState(() => _enCours = false);
                   if (ok) {
                     ref.invalidate(membresGroupeProvider(widget.groupe.id));
@@ -244,7 +244,7 @@ class _EcranMembresState extends ConsumerState<_EcranMembres> {
       ),
       body: inscriptions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(inscriptionsDeClasseProvider(widget.groupe.classeId!))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(inscriptionsDeClasseProvider(widget.groupe.classeId!))),
         data: (_) => eleves.isEmpty
             ? const EtatVide(
                 icone: Icons.person_off_outlined,

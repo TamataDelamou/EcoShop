@@ -823,7 +823,7 @@ class _OngletIndisponibilites extends ConsumerWidget {
       ),
       body: liste.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(indisponibilitesProvider(anneeId))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(indisponibilitesProvider(anneeId))),
         data: (_) => items.isEmpty
             ? const EtatVide(
                 icone: Icons.event_busy_outlined,

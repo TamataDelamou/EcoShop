@@ -125,7 +125,7 @@ class GrillePastilles extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: enfants.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (_, i) => SizedBox(width: largeur, child: enfants[i]),
           ),
         );

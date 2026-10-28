@@ -29,7 +29,7 @@ class EcranSallesConfiguration extends ConsumerWidget {
       ),
       body: salles.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(sallesEtablissementProvider(etablissement.id))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(sallesEtablissementProvider(etablissement.id))),
         data: (_) => liste.isEmpty
             ? EtatVide(
                 icone: Icons.meeting_room_outlined,

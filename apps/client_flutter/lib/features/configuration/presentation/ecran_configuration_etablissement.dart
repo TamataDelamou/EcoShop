@@ -191,7 +191,7 @@ class EcranConfigurationEtablissement extends ConsumerWidget {
       appBar: AppBar(title: const Text('Configurer mon établissement')),
       body: etat.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => ErreurChargement(onReessayer: () => ref.invalidate(etatConfigurationProvider(etablissement.id))),
+        error: (_, _) => ErreurChargement(onReessayer: () => ref.invalidate(etatConfigurationProvider(etablissement.id))),
         data: (e) {
           final etapes = etapesConfiguration(etablissement, e);
           final essentielles = etapes.where((x) => !x.facultative).toList();
