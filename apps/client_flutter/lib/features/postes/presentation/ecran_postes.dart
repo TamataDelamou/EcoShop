@@ -160,6 +160,7 @@ class _EcranEditionPosteState extends ConsumerState<EcranEditionPoste> {
     for (final d in catalogue) {
       parDomaine.putIfAbsent(d.domaine, () => []).add(d);
     }
+    final sensibles = catalogue.where((d) => d.sensible && _codes.contains(d.code)).length;
     final cumul = _codes.contains('scolarite.encaissement.gerer') &&
         (_codes.contains('comptabilite.ecrire') || _codes.contains('comptabilite.valider'));
     return Scaffold(
@@ -186,14 +187,53 @@ class _EcranEditionPosteState extends ConsumerState<EcranEditionPoste> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
+          if (catalogue.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '${_codes.length} droit${_codes.length > 1 ? 's' : ''} sur ${catalogue.length}'
+              '${sensibles == 0 ? '' : ', dont $sensibles sensible${sensibles > 1 ? 's' : ''}'}',
+              key: const Key('resume_droits_poste'),
+            ),
+          ],
           for (final entree in parDomaine.entries) ...[
             const SizedBox(height: 16),
-            Text(libelleDomaine(entree.key), style: Theme.of(context).textTheme.titleSmall),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${libelleDomaine(entree.key)} '
+                    '(${entree.value.where((d) => _codes.contains(d.code)).length}/${entree.value.length})',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                TextButton(
+                  key: Key('tout_domaine_${entree.key}'),
+                  onPressed: () => setState(() {
+                    final tous = entree.value.every((d) => _codes.contains(d.code));
+                    for (final d in entree.value) {
+                      tous ? _codes.remove(d.code) : _codes.add(d.code);
+                    }
+                  }),
+                  child: Text(entree.value.every((d) => _codes.contains(d.code)) ? 'Tout retirer' : 'Tout cocher'),
+                ),
+              ],
+            ),
             for (final d in entree.value)
               CheckboxListTile(
                 key: Key('droit_${d.code}'),
                 value: _codes.contains(d.code),
-                title: Text(d.libelle),
+                title: Row(
+                  children: [
+                    Flexible(child: Text(d.libelle)),
+                    if (d.sensible) ...[
+                      const SizedBox(width: 6),
+                      Tooltip(
+                        message: 'Droit sensible : argent, comptes ou résultats. À confier avec soin.',
+                        child: Icon(Icons.shield_outlined, size: 16, color: Theme.of(context).colorScheme.error),
+                      ),
+                    ],
+                  ],
+                ),
                 subtitle: d.description == null ? null : Text(d.description!),
                 onChanged: (v) => setState(() => v == true ? _codes.add(d.code) : _codes.remove(d.code)),
               ),

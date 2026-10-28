@@ -52,18 +52,23 @@ class ModelePoste {
 }
 
 class DroitCatalogue {
-  const DroitCatalogue({required this.code, required this.domaine, required this.libelle, this.description});
+  const DroitCatalogue({required this.code, required this.domaine, required this.libelle, this.description, this.sensible = false});
 
   final String code;
   final String domaine;
   final String libelle;
   final String? description;
 
+  /// Touche à l'argent, aux comptes ou aux résultats (REG-26) : à confier
+  /// avec soin.
+  final bool sensible;
+
   factory DroitCatalogue.depuisJson(Map<String, dynamic> j) => DroitCatalogue(
     code: j['code'] as String,
     domaine: j['domaine'] as String,
     libelle: j['libelle'] as String,
     description: j['description'] as String?,
+    sensible: j['sensible'] as bool? ?? false,
   );
 }
 

@@ -51,6 +51,9 @@ String libelleDomaine(String domaine) => switch (domaine) {
   'bibliotheque' => 'Bibliothèque',
   'transport' => 'Transport',
   'communication' || 'comm' => 'Communication',
+  'finances' => 'Finances et paiements',
+  'boutique' => 'Boutique de l’école',
+  'securite' => 'Sécurité des comptes',
   'audit' => 'Journal d’audit',
   _ => domaine,
 };

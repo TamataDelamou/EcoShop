@@ -41,6 +41,8 @@ attendue), `clos`.
 | REG-22 | Code du compte vérifié sur tout nouvel appareil, appareils connectés, postes du personnel et lecture par permission | **P0** | **livré** (2026-10-26) — à redéployer sur Supabase (migrations 1561 à 1568, fonctions `pas_moi` et `envoyer_notifications`) et à vérifier sur un téléphone Android |
 | REG-23 | Retours du test sur téléphone (2026-10-28) : accueil qui remonte, ouverture hors connexion, mise en route de l'école, écoles confirmées (GSG), programme officiel, photo de profil, slogan, calendriers en français, APK | P1 | **livré** (2026-10-28) — migrations 1570 à 1572 et 1574 à appliquer ; à vérifier sur un téléphone Android |
 | REG-24 | Emploi du temps dynamique et automatisé (modèles EDT/Pronote, Horarium) | P1 | **livré** (2026-10-28) — migration 1573 à appliquer ; à vérifier sur le poste avec les classes et cours d'une école pilote |
+| REG-25 | Accueil : affichage défilant ou fixe, 2 ou 3 pastilles par ligne | P2 | **livré** (2026-10-28) — à vérifier sur un téléphone Android |
+| REG-26 | Autorisations des postes approfondies (délégation des actions réservées à la Direction) | P1 | **livré** (2026-10-28) — migration 1575 à appliquer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1533,7 +1535,63 @@ et par enseignant ; autre proposition ; publication en une transaction
 (`enregistrer_emploi_genere`, migration `20260906001573`). Tests :
 `test/features/planification/moteur_emploi_du_temps_test.dart`.
 
-**Choix faits, à confirmer** : 32 semaines de cours par an pour proposer
-les heures par semaine ; matière principale à partir du coefficient 3 ;
-matin = avant 12 h 30 ; groupes d'une même classe disjoints.
+**Choix validés par le porteur de projet (2026-10-28)** : 32 semaines de
+cours par an pour proposer les heures par semaine ; matière principale à
+partir du coefficient 3 ; matin = avant 12 h 30 ; groupes d'une même classe
+disjoints ; grille par défaut du lundi au samedi matin.
+
+## REG-25 — Affichage de l'accueil
+
+**Reçue le** : 2026-10-28. **Priorité** : P2. **Statut** : livré le
+2026-10-28.
+
+Réglage « Affichage de l'accueil » (bouton de la barre du haut sur
+l'accueil, et Mon profil › Préférences), gardé sur le téléphone pour
+chaque compte :
+- **Défilante** (par défaut) : toutes les pastilles, de haut en bas ;
+- **Fixe** : une ligne par thème, qu'on fait glisser de côté (la pastille
+  suivante dépasse pour le montrer) ; la page reste courte ;
+- **2 par ligne** (grandes pastilles : icône 56, libellé 15) ou **3 par
+  ligne** (par défaut). Tablette et ordinateur : une ou deux colonnes de
+  plus.
+La recherche et « Mes raccourcis » restent en grille.
+
+## REG-26 — Autorisations des postes approfondies
+
+**Reçue le** : 2026-10-28. **Priorité** : P1. **Statut** : livré le
+2026-10-28 (migration `20260906001575_autorisations_postes`).
+
+Modèle : les profils d'autorisations de Pronote — chaque action sensible a
+son droit, coché poste par poste. Huit droits nouveaux, chacun vérifié par
+le serveur (les fonctions réservées à la Direction acceptent désormais la
+Direction **ou** le droit) :
+
+| Droit | Fonctions du serveur |
+|---|---|
+| Publier des annonces | `publier_annonce`, `annonces_etablissement`, `portees_annonce` |
+| Masquer une annonce | `masquer_annonce` |
+| Modérer le cahier de liaison | `masquer_message_liaison` |
+| Proclamer les résultats | `proclamer_classe`, `definir_mention_finale` |
+| Régler Orange Money | `enregistrer_identifiants_orange_money` |
+| Acheter des crédits SMS | `initier_achat_credits_sms` |
+| Agréer les vendeurs | `decider_agrement_vendeur_etablissement` |
+| Débloquer le code d'une personne | `personnes_debloquables`, `debloquer_code_membre` (jamais celui de la Direction) |
+
+Repère « sensible » (argent, comptes, résultats) affiché dans l'écran des
+postes ; compteur des droits et des droits sensibles ; « Tout cocher » par
+domaine. Les droits techniques de la plateforme (observabilité, comptes
+marchands) ne sont plus proposés aux postes d'une école.
+
+Modèles enrichis (censeur : proclamation, annonces ; surveillant général :
+cahier de liaison ; comptable : Orange Money, crédits SMS, export ;
+secrétaire : annonces, notifications) et trois nouveaux : **Responsable de
+la communication**, **Coordinateur pédagogique**, **Gestionnaire des
+comptes**. Les postes créés depuis un modèle reçoivent ses nouveaux droits
+(ajout seulement ; séparation encaissement / comptabilité respectée).
+
+**Invitations (question du porteur, 2026-10-28)** : il n'existe pas de
+code d'invitation à saisir. L'identifiant de l'invitation est l'adresse
+e-mail (ou le numéro) que la Direction a saisi ; l'invité se connecte
+avec cette adresse et accepte l'invitation qui s'affiche. Code à saisir :
+proposé, en attente de décision (voir la réponse du 2026-10-28).
 
