@@ -67,8 +67,15 @@ void main() {
       ),
     ));
     expect(tester.takeException(), isNull);
-    await tester.drag(find.byKey(const Key('barre_actions')), const Offset(-600, 0));
-    await tester.pumpAndSettle();
+    expect(find.text('Réglages'), findsNothing, reason: 'hors écran au départ');
+    // Fait défiler la rangée jusqu'à la dernière action, quelle que soit la
+    // largeur réelle des boutons.
+    await tester.scrollUntilVisible(
+      find.text('Réglages'),
+      200,
+      scrollable: find.descendant(of: find.byKey(const Key('barre_actions')), matching: find.byType(Scrollable)),
+    );
     expect(find.text('Réglages'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
