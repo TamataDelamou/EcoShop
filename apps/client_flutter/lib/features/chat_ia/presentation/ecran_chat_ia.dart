@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -286,14 +287,16 @@ class _EcranChatIaState extends ConsumerState<EcranChatIa> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.persona.libelle),
-        actions: [
-          if (estDirection)
-            IconButton(
-              icon: const Icon(Icons.query_stats_outlined),
-              tooltip: "Analyser le risque d'échec",
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            if (estDirection) ActionEcran(
+              icone: Icons.query_stats_outlined,
+              libelle: "Analyser le risque d'échec",
               onPressed: _envoiEnCours ? null : _ouvrirDialogueAnalyse,
             ),
-        ],
+          ],
+        ),
       ),
       body: Column(
         children: [

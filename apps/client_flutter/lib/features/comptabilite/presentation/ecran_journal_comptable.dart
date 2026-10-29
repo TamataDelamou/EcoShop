@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../application/comptabilite_providers.dart';
 import '../domain/journal.dart';
@@ -30,26 +31,29 @@ class _EcranJournalComptableState extends ConsumerState<EcranJournalComptable> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Journal comptable'),
-        actions: [
-          IconButton(
-            tooltip: 'Modifier la période',
-            icon: const Icon(Icons.date_range_outlined),
-            onPressed: () async {
-              final choisie = await showDateRangePicker(
-                context: context,
-                initialDateRange: DateTimeRange(start: _debut, end: _fin),
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              );
-              if (choisie != null) {
-                setState(() {
-                  _debut = choisie.start;
-                  _fin = choisie.end;
-                });
-              }
-            },
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.date_range_outlined,
+              libelle: 'Période : ${formaterDate(_debut)} → ${formaterDate(_fin)}',
+              onPressed: () async {
+                final choisie = await showDateRangePicker(
+                  context: context,
+                  initialDateRange: DateTimeRange(start: _debut, end: _fin),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (choisie != null) {
+                  setState(() {
+                    _debut = choisie.start;
+                    _fin = choisie.end;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../application/postes_providers.dart';
 import '../data/postes_repository.dart';
@@ -276,16 +277,17 @@ class EcranPersonnel extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Personnel'),
-        actions: [
-          TextButton.icon(
-            key: const Key('bouton_ouvrir_postes'),
+        // Action visible, avec son libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
+          ActionEcran(
+            cle: const Key('bouton_ouvrir_postes'),
+            icone: Icons.badge_outlined,
+            libelle: 'Postes et autorisations',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => EcranPostes(etablissementId: etablissementId)),
             ),
-            icon: const Icon(Icons.badge_outlined),
-            label: const Text('Postes'),
           ),
-        ],
+        ]),
       ),
       body: membres.when(
         loading: () => const Center(child: CircularProgressIndicator()),

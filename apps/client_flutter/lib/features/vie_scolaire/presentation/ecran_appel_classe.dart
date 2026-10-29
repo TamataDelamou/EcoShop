@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/sync/device_id_provider.dart';
@@ -39,13 +40,16 @@ class _EcranAppelClasseState extends ConsumerState<EcranAppelClasse> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Appel — ${widget.classe.nom}"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.event_outlined),
-            tooltip: 'Changer de date',
-            onPressed: _choisirDate,
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.event_outlined,
+              libelle: 'Changer de date',
+              onPressed: _choisirDate,
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

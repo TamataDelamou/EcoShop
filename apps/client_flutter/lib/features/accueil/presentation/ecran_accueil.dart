@@ -6,6 +6,7 @@ import '../application/accueil_providers.dart';
 import '../domain/catalogue_fonctions.dart';
 import '../domain/fonction.dart';
 import 'pastille.dart';
+import 'reglages_affichage_accueil.dart';
 
 /// Une ligne « À faire » : compteur du résumé serveur → fonction à ouvrir.
 class LigneAFaire {
@@ -181,6 +182,20 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
           ],
           if (avecOutils && _texte.trim().isEmpty) ..._raccourcis(fonctions, pastille, affichage.colonnes),
           ...sections,
+          // Disposition des pastilles (REG-25), visible en bas de l'accueil
+          // plutôt que cachée dans la barre du haut (REG-28).
+          if (_texte.trim().isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Center(
+                child: TextButton.icon(
+                  key: const Key('bouton_affichage_accueil'),
+                  onPressed: () => afficherReglagesAccueil(context),
+                  icon: const Icon(Icons.dashboard_customize_outlined),
+                  label: const Text('Personnaliser l’accueil'),
+                ),
+              ),
+            ),
         ],
       ),
       ),

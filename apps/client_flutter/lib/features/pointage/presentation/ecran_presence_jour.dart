@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/theme/app_palette.dart';
 import '../../../core/widgets/bandeau_synchronisation.dart';
@@ -157,42 +158,45 @@ class _EcranPresenceJourState extends ConsumerState<EcranPresenceJour> {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final presence = ref.watch(presenceDuJourProvider(_etab));
+    void ouvrir(Widget ecran) =>
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ecran)).then((_) => _actualiser());
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Présence du jour'),
-        actions: [
-          IconButton(
-            tooltip: 'Ouvrir le portail',
-            icon: const Icon(Icons.qr_code_scanner),
+        // Actions du pointage, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
+          ActionEcran(
+            cle: const Key('presence_portail'),
+            icone: Icons.qr_code_scanner,
+            libelle: 'Ouvrir le portail',
+            principale: true,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => EcranPortail(etablissementId: _etab)),
             ),
           ),
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              final route = switch (v) {
-                'cartes' => null,
-                'parametres' => MaterialPageRoute<void>(builder: (_) => EcranParametresPointage(etablissementId: _etab)),
-                'sms' => MaterialPageRoute<void>(
-                    builder: (_) => EcranCreditsSms(etablissementId: _etab, devise: widget.etablissement.deviseCode)),
-                _ => MaterialPageRoute<void>(
-                    builder: (_) => EcranRelancesImpayes(etablissementId: _etab, devise: widget.etablissement.deviseCode)),
-              };
-              if (route == null) {
-                _imprimerCartes();
-              } else {
-                Navigator.of(context).push(route).then((_) => _actualiser());
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'cartes', child: Text('Imprimer les cartes élèves')),
-              PopupMenuItem(value: 'parametres', child: Text('Réglages du pointage')),
-              PopupMenuItem(value: 'sms', child: Text('Crédits SMS')),
-              PopupMenuItem(value: 'relances', child: Text('Relancer les impayés')),
-            ],
+          ActionEcran(
+            icone: Icons.badge_outlined,
+            libelle: 'Cartes élèves',
+            onPressed: _imprimerCartes,
           ),
-        ],
+          ActionEcran(
+            icone: Icons.notification_important_outlined,
+            libelle: 'Relancer les impayés',
+            onPressed: () => ouvrir(
+                EcranRelancesImpayes(etablissementId: _etab, devise: widget.etablissement.deviseCode)),
+          ),
+          ActionEcran(
+            icone: Icons.sms_outlined,
+            libelle: 'Crédits SMS',
+            onPressed: () => ouvrir(EcranCreditsSms(etablissementId: _etab, devise: widget.etablissement.deviseCode)),
+          ),
+          ActionEcran(
+            icone: Icons.tune,
+            libelle: 'Réglages',
+            onPressed: () => ouvrir(EcranParametresPointage(etablissementId: _etab)),
+          ),
+        ]),
       ),
       body: Column(
         children: [

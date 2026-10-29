@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
@@ -31,16 +32,19 @@ class EcranAnomalies extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Anomalies statistiques'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Détecter les anomalies',
-            onPressed: () async {
-              await ref.read(rapportsRepositoryProvider).detecterAnomalies(etablissementId, anneeId);
-              ref.invalidate(anomaliesEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
-            },
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.search,
+              libelle: 'Détecter les anomalies',
+              onPressed: () async {
+                await ref.read(rapportsRepositoryProvider).detecterAnomalies(etablissementId, anneeId);
+                ref.invalidate(anomaliesEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../application/comptabilite_providers.dart';
 import 'widgets/montant.dart';
@@ -37,21 +38,24 @@ class _EcranBalanceState extends ConsumerState<EcranBalance> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Balance'),
-        actions: [
-          IconButton(
-            tooltip: 'Choisir la date',
-            icon: const Icon(Icons.calendar_today_outlined),
-            onPressed: () async {
-              final choisie = await choisirDate(
-                context: context,
-                initialDate: _date,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              );
-              if (choisie != null) setState(() => _date = choisie);
-            },
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.calendar_today_outlined,
+              libelle: 'Date : ${formaterDate(_date)}',
+              onPressed: () async {
+                final choisie = await choisirDate(
+                  context: context,
+                  initialDate: _date,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (choisie != null) setState(() => _date = choisie);
+              },
+            ),
+          ],
+        ),
       ),
       body: balance.when(
         loading: () => const Center(child: CircularProgressIndicator()),

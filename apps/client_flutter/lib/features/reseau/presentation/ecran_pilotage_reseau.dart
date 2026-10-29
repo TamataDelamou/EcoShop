@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/theme/app_palette.dart';
 import '../../../core/widgets/bandeau_synchronisation.dart';
@@ -28,46 +29,49 @@ class EcranPilotageReseau extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(reseau?.nom ?? nom),
-          actions: [
-            if (reseau != null) ...[
-              IconButton(
-                key: const Key('reseau_regles'),
-                tooltip: 'Règles : frais et transferts',
-                icon: const Icon(Icons.rule_outlined),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => EcranReglesReseau(
-                    reseauId: reseau.id,
-                    nom: reseau.nom,
-                    peutRegler: reseau.estDirectionGenerale,
-                    peutComposerGrille: reseau.peutPiloter,
-                  ),
-                )),
-              ),
-              IconButton(
-                key: const Key('reseau_transferts'),
-                tooltip: 'Transferts d’élèves',
-                icon: const Icon(Icons.swap_horiz),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => EcranTransfertsReseau(
-                    reseauId: reseau.id,
-                    titre: 'Transferts — ${reseau.nom}',
-                    peutValider: reseau.peutPiloter,
-                    devise: reseau.deviseCode,
-                  ),
-                )),
-              ),
+          // Actions du réseau, avec leur libellé, sous le titre (REG-28).
+          bottom: BarreActions(
+            actions: [
+              if (reseau != null) ...[
+                ActionEcran(
+                  cle: const Key('reseau_regles'),
+                  icone: Icons.rule_outlined,
+                  libelle: 'Règles : frais et transferts',
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => EcranReglesReseau(
+                      reseauId: reseau.id,
+                      nom: reseau.nom,
+                      peutRegler: reseau.estDirectionGenerale,
+                      peutComposerGrille: reseau.peutPiloter,
+                    ),
+                  )),
+                ),
+                ActionEcran(
+                  cle: const Key('reseau_transferts'),
+                  icone: Icons.swap_horiz,
+                  libelle: 'Transferts d’élèves',
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => EcranTransfertsReseau(
+                      reseauId: reseau.id,
+                      titre: 'Transferts — ${reseau.nom}',
+                      peutValider: reseau.peutPiloter,
+                      devise: reseau.deviseCode,
+                    ),
+                  )),
+                ),
+              ],
             ],
-          ],
-          bottom: const TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              Tab(icon: Icon(Icons.insights_outlined), text: 'Tableau de bord'),
-              Tab(icon: Icon(Icons.apartment_outlined), text: 'Écoles'),
-              Tab(icon: Icon(Icons.campaign_outlined), text: 'Circulaires'),
-              Tab(icon: Icon(Icons.event_outlined), text: 'Calendrier'),
-              Tab(icon: Icon(Icons.groups_outlined), text: 'Équipe'),
-            ],
+            sousBarre: const TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: [
+                Tab(icon: Icon(Icons.insights_outlined), text: 'Tableau de bord'),
+                Tab(icon: Icon(Icons.apartment_outlined), text: 'Écoles'),
+                Tab(icon: Icon(Icons.campaign_outlined), text: 'Circulaires'),
+                Tab(icon: Icon(Icons.event_outlined), text: 'Calendrier'),
+                Tab(icon: Icon(Icons.groups_outlined), text: 'Équipe'),
+              ],
+            ),
           ),
         ),
         body: Column(

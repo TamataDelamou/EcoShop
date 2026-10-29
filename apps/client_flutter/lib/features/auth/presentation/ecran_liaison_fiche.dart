@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../coquille/application/session_logout.dart';
 import '../application/auth_providers.dart';
@@ -76,13 +77,16 @@ class _EcranLiaisonFicheState extends ConsumerState<EcranLiaisonFiche> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rattacher ma scolarité'),
-        actions: [
-          IconButton(
-            tooltip: 'Se déconnecter',
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.deconnecterEtPurgerDonneesLocales(),
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.logout,
+              libelle: 'Se déconnecter',
+              onPressed: () => ref.deconnecterEtPurgerDonneesLocales(),
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(

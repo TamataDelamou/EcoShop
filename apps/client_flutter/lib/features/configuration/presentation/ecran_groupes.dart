@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../etablissement/domain/etablissement.dart';
@@ -202,17 +203,18 @@ class _EcranMembresState extends ConsumerState<_EcranMembres> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.groupe.nom),
-        actions: [
-          IconButton(
-            tooltip: 'Première moitié de la classe (ordre alphabétique)',
-            icon: const Icon(Icons.vertical_split_outlined),
+        // Action visible, avec son libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
+          ActionEcran(
+            icone: Icons.vertical_split_outlined,
+            libelle: 'Première moitié (ordre alphabétique)',
             onPressed: eleves.isEmpty
                 ? null
                 : () => setState(() => _choisis = {
                       for (final i in eleves.take((eleves.length + 1) ~/ 2)) i.ficheEleveId,
                     }),
           ),
-        ],
+        ]),
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),

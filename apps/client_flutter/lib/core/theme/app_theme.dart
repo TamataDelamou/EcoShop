@@ -55,6 +55,9 @@ ThemeData construireThemeData(
       backgroundColor: palette.surface,
       foregroundColor: palette.encre,
       elevation: 0,
+      // Icônes restantes de la barre du haut (notifications, panier…) dans
+      // la couleur de l'école : repérables d'un coup d'œil (REG-28).
+      actionsIconTheme: IconThemeData(color: palette.primaire, size: 26),
     ),
     cardTheme: base.cardTheme.copyWith(
       color: palette.surface,

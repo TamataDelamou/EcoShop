@@ -101,8 +101,10 @@ void main() {
     await tester.tap(find.byKey(const Key('raccourci_profil')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    // Le profil s'ouvre par-dessus (REG-21) : retour par la flèche.
-    await tester.pageBack();
+    // Le profil s'ouvre par-dessus (REG-21) : retour par la flèche. Elle
+    // s'appelle « Retour » depuis le passage en français (REG-23) :
+    // `pageBack()` cherche l'infobulle anglaise « Back ».
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

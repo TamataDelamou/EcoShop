@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/auth/role_racine.dart';
@@ -27,66 +28,67 @@ class EcranDetailClasse extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estDirection = ref.watch(roleUtiliseProvider) == RoleRacine.direction;
+    final role = ref.watch(roleUtiliseProvider);
+    final estDirection = role == RoleRacine.direction;
+    final personnel = role != null && role != RoleRacine.parent && role != RoleRacine.eleve;
+    void ouvrir(Widget ecran) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ecran));
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: Text(classe.nom),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.fact_check_outlined),
-              tooltip: 'Appel',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => EcranAppelClasse(classe: classe)),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.assignment_outlined),
-              tooltip: 'Évaluations',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => EcranEvaluationsClasse(classe: classe)),
-              ),
-            ),
-            // D5 (cahier §12.4) : composition + export groupé des bulletins
-            // de la classe, réservé à la direction (même garde que le reste
-            // de l'administration scolaire, cf. EcranSanctions).
-            if (estDirection)
-              IconButton(
-                icon: const Icon(Icons.receipt_long_outlined),
-                tooltip: 'Bulletins de la classe',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => EcranGenerationBulletinsClasse(classe: classe)),
+          // Actions de la classe, avec leur libellé, sous le titre (REG-28).
+          bottom: BarreActions(
+            actions: [
+              // L'appel et les évaluations concernent le personnel ; un
+              // parent ou un élève consulte seulement la classe.
+              if (personnel) ...[
+                ActionEcran(
+                  cle: const Key('classe_appel'),
+                  icone: Icons.fact_check_outlined,
+                  libelle: 'Appel',
+                  principale: true,
+                  onPressed: () => ouvrir(EcranAppelClasse(classe: classe)),
                 ),
-              ),
-            // D6 : perception des frais par classe (consultation + navigation
-            // vers l'encaissement individuel existant, même garde que les
-            // bulletins de D5 — pas de saisie groupée dans cette passe).
-            if (estDirection)
-              IconButton(
-                icon: const Icon(Icons.payments_outlined),
-                tooltip: 'Frais de la classe',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => EcranPerceptionClasse(classe: classe)),
+                ActionEcran(
+                  cle: const Key('classe_evaluations'),
+                  icone: Icons.assignment_outlined,
+                  libelle: 'Évaluations',
+                  onPressed: () => ouvrir(EcranEvaluationsClasse(classe: classe)),
                 ),
-              ),
-            // Verrou définitif des notes + mention finale (cahier §12.3,
-            // §12.4) — même garde que les actions ci-dessus.
-            if (estDirection)
-              IconButton(
-                icon: const Icon(Icons.gavel_outlined),
-                tooltip: 'Proclamation',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => EcranProclamationClasse(classe: classe)),
+              ],
+              // D5 (cahier §12.4) : composition + export groupé des bulletins
+              // de la classe, réservé à la direction.
+              // D6 : perception des frais par classe. Proclamation : verrou
+              // définitif des notes + mention finale (§12.3, §12.4).
+              if (estDirection) ...[
+                ActionEcran(
+                  cle: const Key('classe_bulletins'),
+                  icone: Icons.receipt_long_outlined,
+                  libelle: 'Bulletins',
+                  onPressed: () => ouvrir(EcranGenerationBulletinsClasse(classe: classe)),
                 ),
-              ),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Élèves', icon: Icon(Icons.groups_outlined)),
-              Tab(text: 'Enseignants', icon: Icon(Icons.person_outline)),
+                ActionEcran(
+                  cle: const Key('classe_frais'),
+                  icone: Icons.payments_outlined,
+                  libelle: 'Frais',
+                  onPressed: () => ouvrir(EcranPerceptionClasse(classe: classe)),
+                ),
+                ActionEcran(
+                  cle: const Key('classe_proclamation'),
+                  icone: Icons.gavel_outlined,
+                  libelle: 'Proclamation',
+                  onPressed: () => ouvrir(EcranProclamationClasse(classe: classe)),
+                ),
+              ],
             ],
+            sousBarre: const TabBar(
+              tabs: [
+                Tab(text: 'Élèves', icon: Icon(Icons.groups_outlined)),
+                Tab(text: 'Enseignants', icon: Icon(Icons.person_outline)),
+              ],
+            ),
           ),
         ),
         body: TabBarView(

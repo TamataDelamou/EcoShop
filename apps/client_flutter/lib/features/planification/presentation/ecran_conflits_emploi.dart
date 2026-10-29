@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 
@@ -27,13 +28,14 @@ class EcranConflitsEmploi extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conflits d\'occupation'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Rafraîchir la détection',
+        // Action visible, avec son libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
+          ActionEcran(
+            icone: Icons.refresh,
+            libelle: 'Relancer la détection',
             onPressed: () => ref.invalidate(conflitsEmploiProvider(args)),
           ),
-        ],
+        ]),
       ),
       body: Column(
         children: [

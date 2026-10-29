@@ -1546,8 +1546,8 @@ disjoints ; grille par défaut du lundi au samedi matin.
 **Reçue le** : 2026-10-28. **Priorité** : P2. **Statut** : livré le
 2026-10-28.
 
-Réglage « Affichage de l'accueil » (bouton de la barre du haut sur
-l'accueil, et Mon profil › Préférences), gardé sur le téléphone pour
+Réglage « Affichage de l'accueil » (bouton « Personnaliser l'accueil »
+en bas de l'accueil depuis REG-28, et Mon profil › Préférences), gardé sur le téléphone pour
 chaque compte :
 - **Défilante** (par défaut) : toutes les pastilles, de haut en bas ;
 - **Fixe** : une ligne par thème, qu'on fait glisser de côté (la pastille
@@ -1624,3 +1624,36 @@ rôle, sous le nom, permet de changer d'espace (« Espace enseignant »,
 gardé sur le téléphone. Les droits restent jugés par le serveur sur
 l'appartenance à l'école.
 
+## REG-28 — Actions des écrans visibles
+
+**Reçue le** : 2026-10-29. **Priorité** : P1. **Statut** : livré le
+2026-10-29.
+
+Retour du test : « certaines actions sont difficiles à voir, cachées à côté
+de la barre de titre ». Une icône seule dans la barre de titre ne dit ni
+qu'elle existe ni ce qu'elle fait sans appui long.
+
+Règle désormais : la barre de titre ne garde que le retour, le titre et les
+icônes universelles (notifications, apparence, profil, panier). Les actions
+d'un écran sont posées juste sous le titre (`BarreActions`,
+`lib/core/widgets/barre_actions.dart`), chacune avec son icône **et son
+libellé** ; l'action la plus utilisée est en bouton plein ; la rangée
+défile de côté sur un petit téléphone ; les onglets de l'écran restent
+dessous. Les sélecteurs de date affichent la valeur choisie
+(« Période : 01/10/2026 → 30/06/2027 »).
+
+Écrans repris (25) : détail d'une classe (Appel, Évaluations, Bulletins,
+Frais, Proclamation — l'appel et les évaluations réservés au personnel),
+fiche élève, marketplace (Mes commandes, Sous-comptes, Orange Money,
+Anomalies — les trois derniers étaient dans un menu « ⋮ »), présence du
+jour (Portail, Cartes, Relances, Crédits SMS, Réglages — menu « ⋮ »
+supprimé), portail, pilotage du réseau, communication, balance, grand
+livre, journal, pièces comptables, carnet de notes, conflits et
+progression de l'emploi du temps, écoles GSG, campagne d'inscription,
+personnel, assistant IA, transport (chauffeur, circuit), rattachement de
+la scolarité, programme officiel, anomalies, recommandations, appel,
+vie scolaire, groupes pédagogiques.
+
+Accueil : le bouton d'affichage quitte la barre du haut (3 icônes au plus)
+pour un bouton « Personnaliser l'accueil » en bas des pastilles. Les icônes
+restantes de la barre du haut prennent la couleur de l'école (taille 26).

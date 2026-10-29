@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/providers.dart';
@@ -157,15 +158,17 @@ class _EcranPortailState extends ConsumerState<EcranPortail> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portail'),
-        actions: [
-          IconButton(tooltip: 'Recharger les cartes', onPressed: _charger, icon: const Icon(Icons.sync)),
+        // Actions visibles, avec leur libellé (REG-28).
+        bottom: BarreActions(actions: [
           if (_cameraDisponible)
-            IconButton(
-              tooltip: _camera ? 'Utiliser une douchette' : 'Utiliser la caméra',
+            ActionEcran(
+              cle: const Key('portail_mode'),
+              icone: _camera ? Icons.keyboard_alt_outlined : Icons.photo_camera_outlined,
+              libelle: _camera ? 'Utiliser une douchette' : 'Utiliser la caméra',
               onPressed: () => setState(() => _camera = !_camera),
-              icon: Icon(_camera ? Icons.keyboard_alt_outlined : Icons.photo_camera_outlined),
             ),
-        ],
+          ActionEcran(icone: Icons.sync, libelle: 'Recharger les cartes', onPressed: _charger),
+        ]),
       ),
       body: Column(
         children: [

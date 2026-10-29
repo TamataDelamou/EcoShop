@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 
@@ -30,16 +31,19 @@ class EcranProgressionPedagogique extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Progression pédagogique'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.auto_fix_high_outlined),
-            tooltip: 'Proposer des séances de rattrapage',
-            onPressed: () async {
-              await ref.read(planificationRepositoryProvider).recommanderSeances(etablissementId, anneeId);
-              ref.invalidate(progressionDeClasseProvider(args));
-            },
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.auto_fix_high_outlined,
+              libelle: 'Proposer des séances de rattrapage',
+              onPressed: () async {
+                await ref.read(planificationRepositoryProvider).recommanderSeances(etablissementId, anneeId);
+                ref.invalidate(progressionDeClasseProvider(args));
+              },
+            ),
+          ],
+        ),
       ),
       body: progression.when(
         loading: () => ListView(

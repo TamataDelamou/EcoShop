@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/widgets/bandeau_synchronisation.dart';
 import '../../../core/theme/app_palette.dart';
@@ -59,15 +60,18 @@ class _EcranPiecesComptablesState extends ConsumerState<EcranPiecesComptables> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pièces comptables'),
-        actions: [
-          IconButton(
-            tooltip: 'Exercices et clôtures',
-            icon: const Icon(Icons.event_available_outlined),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => EcranExercicesComptables(etablissementId: widget.etablissementId),
-            )),
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.event_available_outlined,
+              libelle: 'Exercices et clôtures',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => EcranExercicesComptables(etablissementId: widget.etablissementId),
+              )),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('nouvelle_piece'),

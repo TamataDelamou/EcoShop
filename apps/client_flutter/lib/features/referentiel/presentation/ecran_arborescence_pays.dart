@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
@@ -29,13 +30,16 @@ class EcranArborescencePays extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(pays.nom),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download_for_offline_outlined),
-            tooltip: 'Télécharger pour usage hors-ligne',
-            onPressed: () => afficherFeuilleTelechargement(context, pays),
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.download_for_offline_outlined,
+              libelle: 'Télécharger pour le hors-ligne',
+              onPressed: () => afficherFeuilleTelechargement(context, pays),
+            ),
+          ],
+        ),
       ),
       body: arbo.when(
         loading: () => ListView(

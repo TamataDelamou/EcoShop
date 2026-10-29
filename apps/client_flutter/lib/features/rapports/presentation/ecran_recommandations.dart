@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/theme/app_palette.dart';
@@ -31,16 +32,19 @@ class EcranRecommandations extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recommandations stratégiques'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.auto_fix_high_outlined),
-            tooltip: 'Générer les recommandations',
-            onPressed: () async {
-              await ref.read(rapportsRepositoryProvider).genererRecommandations(etablissementId, anneeId);
-              ref.invalidate(recommandationsEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
-            },
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.auto_fix_high_outlined,
+              libelle: 'Générer les recommandations',
+              onPressed: () async {
+                await ref.read(rapportsRepositoryProvider).genererRecommandations(etablissementId, anneeId);
+                ref.invalidate(recommandationsEtablissementProvider((etablissementId: etablissementId, anneeId: anneeId)));
+              },
+            ),
+          ],
+        ),
       ),
       body: recommandations.when(
         loading: () => ListView(

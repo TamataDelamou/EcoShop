@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
@@ -49,16 +50,19 @@ class _EcranEcolesGsgState extends ConsumerState<EcranEcolesGsg> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Écoles'),
-        actions: [
-          TextButton.icon(
-            key: const Key('bouton_demandes_gsg'),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const EcranValidationEtablissementsGsg()))
-                .then((_) => ref.invalidate(ecolesGsgProvider)),
-            icon: const Icon(Icons.inbox_outlined),
-            label: const Text('Demandes'),
-          ),
-        ],
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              cle: const Key('bouton_demandes_gsg'),
+              icone: Icons.inbox_outlined,
+              libelle: 'Demandes d’inscription',
+              onPressed: () => Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => const EcranValidationEtablissementsGsg()))
+                  .then((_) => ref.invalidate(ecolesGsgProvider)),
+            ),
+          ],
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(ecolesGsgProvider),

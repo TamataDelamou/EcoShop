@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
@@ -35,14 +36,16 @@ class EcranFicheEleve extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(fiche.nomComplet),
-        actions: [
+        // Action visible sous le titre, avec son libellé (REG-28).
+        bottom: BarreActions(actions: [
           if (estDirection)
-            IconButton(
-              tooltip: 'Modifier les informations administratives',
-              icon: const Icon(Icons.edit_outlined),
+            ActionEcran(
+              cle: const Key('fiche_modifier'),
+              icone: Icons.edit_outlined,
+              libelle: 'Modifier la fiche',
               onPressed: () => _ouvrirEditionAdmin(context, ref, fiche),
             ),
-        ],
+        ]),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

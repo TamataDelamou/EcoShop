@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -304,13 +305,15 @@ class _EcranTrajetEnCoursState extends ConsumerState<EcranTrajetEnCours> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.circuit.nom} — ${_trajet.sens == SensTrajet.aller ? 'aller' : 'retour'}'),
-        actions: [
-          IconButton(
-            tooltip: _camera ? 'Douchette ou saisie' : 'Caméra',
-            icon: Icon(_camera ? Icons.keyboard_alt_outlined : Icons.photo_camera_outlined),
+        // Action visible, avec son libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
+          ActionEcran(
+            cle: const Key('chauffeur_mode'),
+            icone: _camera ? Icons.keyboard_alt_outlined : Icons.photo_camera_outlined,
+            libelle: _camera ? 'Douchette ou saisie' : 'Utiliser la caméra',
             onPressed: () => setState(() => _camera = !_camera),
           ),
-        ],
+        ]),
       ),
       body: Column(
         children: [

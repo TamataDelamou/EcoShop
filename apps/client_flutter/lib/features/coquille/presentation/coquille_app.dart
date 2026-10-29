@@ -2,7 +2,6 @@ import '../../accueil/presentation/profil_allege.dart';
 import '../../accueil/application/accueil_providers.dart';
 import '../../accueil/presentation/ecran_accueil.dart';
 import '../../accueil/presentation/ecrans_destinations.dart';
-import '../../accueil/presentation/reglages_affichage_accueil.dart';
 import '../../appareil/presentation/surveillance_appareils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,13 +144,9 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
                       MaterialPageRoute(builder: (_) => EcranNotifications(profileId: profil.id)),
                     ),
                   ),
-                // Disposition des pastilles (REG-25).
-                IconButton(
-                  key: const Key('bouton_affichage_accueil'),
-                  tooltip: 'Affichage de l’accueil',
-                  icon: const Icon(Icons.dashboard_customize_outlined),
-                  onPressed: () => afficherReglagesAccueil(context),
-                ),
+                // Disposition des pastilles (REG-25) : bouton « Personnaliser
+                // l'accueil » sous les pastilles et dans Profil > Préférences —
+                // 3 icônes au plus ici (REG-28).
                 // Convention Google : le profil tout à droite.
                 const BoutonApparence(),
                 if (profil != null)

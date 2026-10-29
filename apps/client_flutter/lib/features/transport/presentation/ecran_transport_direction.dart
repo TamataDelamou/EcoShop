@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -284,20 +285,24 @@ class _EcranCircuit extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(circuit.nom),
-          actions: [
-            IconButton(
-              tooltip: 'Modifier',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (_) => _FormulaireCircuit(etablissementId: etablissementId, circuit: circuit),
+          // Action visible, avec son libellé, sous le titre (REG-28).
+          bottom: BarreActions(
+            actions: [
+              ActionEcran(
+                cle: const Key('circuit_modifier'),
+                icone: Icons.edit_outlined,
+                libelle: 'Modifier le circuit',
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => _FormulaireCircuit(etablissementId: etablissementId, circuit: circuit),
+                ),
               ),
-            ),
-          ],
-          bottom: TabBar(tabs: [
-            Tab(text: 'Arrêts (${circuit.arrets.length})'),
-            Tab(text: 'Élèves (${circuit.eleves.length})'),
-          ]),
+            ],
+            sousBarre: TabBar(tabs: [
+              Tab(text: 'Arrêts (${circuit.arrets.length})'),
+              Tab(text: 'Élèves (${circuit.eleves.length})'),
+            ]),
+          ),
         ),
         body: TabBarView(
           children: [

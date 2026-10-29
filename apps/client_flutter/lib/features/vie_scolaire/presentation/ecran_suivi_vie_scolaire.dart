@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../../core/widgets/entree_animee.dart';
@@ -30,24 +31,27 @@ class EcranSuiviVieScolaire extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Vie scolaire — ${fiche.prenom}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.gavel_outlined),
-            tooltip: 'Sanctions',
-            onPressed: () async {
-              final inscriptions = await ref.read(inscriptionsDeFicheProvider(fiche.id).future);
-              if (!context.mounted) return;
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => EcranSanctions(
-                    fiche: fiche,
-                    anneeScolaireId: inscriptions.isEmpty ? null : inscriptions.first.anneeScolaireId,
+        // Actions visibles, avec leur libellé, sous le titre (REG-28).
+        bottom: BarreActions(
+          actions: [
+            ActionEcran(
+              icone: Icons.gavel_outlined,
+              libelle: 'Sanctions',
+              onPressed: () async {
+                final inscriptions = await ref.read(inscriptionsDeFicheProvider(fiche.id).future);
+                if (!context.mounted) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcranSanctions(
+                      fiche: fiche,
+                      anneeScolaireId: inscriptions.isEmpty ? null : inscriptions.first.anneeScolaireId,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: inscriptions.when(
         loading: () => const Center(child: CircularProgressIndicator()),

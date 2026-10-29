@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/barre_actions.dart';
 
 import '../../../core/theme/app_palette.dart';
 import '../../../core/widgets/bandeau_synchronisation.dart';
@@ -256,10 +257,14 @@ class _EcranCampagneInscriptionState extends ConsumerState<EcranCampagneInscript
     return Scaffold(
       appBar: AppBar(
         title: const Text("Campagne d'inscription"),
-        actions: [
+        // Action visible, avec son libellé, sous le titre (REG-28).
+        bottom: BarreActions(actions: [
           if (_campagneId != null)
-            TextButton.icon(
-              key: const Key('voir_dossiers'),
+            ActionEcran(
+              cle: const Key('voir_dossiers'),
+              icone: Icons.folder_shared_outlined,
+              libelle: 'Dossiers reçus',
+              principale: true,
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => EcranDossiersInscription(
                   campagneId: _campagneId!,
@@ -267,10 +272,8 @@ class _EcranCampagneInscriptionState extends ConsumerState<EcranCampagneInscript
                   devise: widget.devise,
                 ),
               )),
-              icon: const Icon(Icons.folder_shared_outlined),
-              label: const Text('Dossiers'),
             ),
-        ],
+        ]),
       ),
       body: Column(
         children: [
