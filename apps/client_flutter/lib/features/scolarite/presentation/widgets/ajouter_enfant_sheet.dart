@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/auth/role_racine.dart';
+import '../../../auth/application/espace_providers.dart';
+
 import 'package:ecoshop_client/core/theme/app_palette.dart';
 import '../../application/scolarite_providers.dart';
 import '../../domain/enums_scolarite.dart';
@@ -20,7 +23,7 @@ Future<void> afficherAjouterEnfant(BuildContext context, WidgetRef ref) {
 }
 
 String _messageErreur(String code) => switch (code) {
-      'ROLE_PARENT_REQUIS' => 'Seul un compte parent peut lier un enfant.',
+      'ROLE_PARENT_REQUIS' => 'Un compte élève ne peut pas lier d’enfant.',
       'TROP_DE_TENTATIVES' =>
         'Trop de tentatives : réessayez dans une heure.',
       'LIAISON_IMPOSSIBLE' =>
@@ -81,6 +84,9 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
             type: _type,
           );
       if (!mounted) return;
+      // Hors espace parent (enseignant qui relie son enfant, REG-32) : dire
+      // où le retrouver.
+      final horsEspaceParent = ref.read(roleUtiliseProvider) != RoleRacine.parent;
       ref.invalidate(mesEnfantsProvider);
       Navigator.of(context).pop();
       // REG-18 : au-delà du plafond de comptes parents (ou après une
@@ -89,7 +95,9 @@ class _FeuilleAjouterEnfantState extends ConsumerState<_FeuilleAjouterEnfant> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(confirmee
-              ? 'Enfant lié avec succès.'
+              ? horsEspaceParent
+                  ? 'Enfant lié. Retrouvez-le dans l’espace parent : touchez votre rôle, en haut de l’accueil.'
+                  : 'Enfant lié avec succès.'
               : 'Demande envoyée à l’école. La scolarité de votre enfant s’affichera dès que la direction l’aura acceptée.'),
           backgroundColor: confirmee ? context.palette.succes : null,
           duration: Duration(seconds: confirmee ? 4 : 8),

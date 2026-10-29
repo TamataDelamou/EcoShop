@@ -32,8 +32,10 @@ class SelecteurEnfant extends ConsumerWidget {
     return enfants.when(
       loading: () => const _RubanChargement(),
       error: (_, _) => const SizedBox.shrink(),
-      data: (relations) {
-        final fiches = relations
+      // Enfants de l'école de l'espace parent utilisé (REG-32).
+      data: (_) {
+        final fiches = ref
+            .watch(enfantsEspaceProvider)
             .where((r) => r.estActive)
             .map((r) => r.fiche)
             .whereType<FicheEleve>()

@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/device_id_provider.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/espace_providers.dart';
 import '../data/cached_scolarite_repository.dart';
 import '../data/supabase_scolarite_repository.dart';
 import '../domain/affectation_enseignant.dart';
@@ -84,12 +85,25 @@ final mesAffectationsProvider = FutureProvider<List<AffectationEnseignant>>((ref
   return ref.watch(scolariteRepositoryProvider).mesAffectations();
 });
 
-/// Enfants liés au parent connecté (support du sélecteur d'enfant).
+/// Enfants liés au compte connecté (support du sélecteur d'enfant).
+///
+/// REG-32 : tout compte adulte peut être parent — un enseignant de l'école A
+/// peut avoir son enfant à l'école B. Seuls les comptes élèves (et ceux sans
+/// rôle choisi) n'ont jamais d'enfant.
 final mesEnfantsProvider = FutureProvider<List<RelationParentEleve>>((ref) {
-  if (ref.watch(profilProvider).valueOrNull?.roleRacine != RoleRacine.parent) {
+  final role = ref.watch(profilProvider).valueOrNull?.roleRacine;
+  if (role == null || role == RoleRacine.eleve) {
     return Future.value(const []);
   }
   return ref.watch(scolariteRepositoryProvider).mesEnfants();
+});
+
+/// Enfants de l'espace parent utilisé (REG-32) : seulement ceux de son
+/// école ; tous, quand l'espace n'a pas d'école connue.
+final enfantsEspaceProvider = Provider<List<RelationParentEleve>>((ref) {
+  final enfants = ref.watch(mesEnfantsProvider).valueOrNull ?? const <RelationParentEleve>[];
+  final ecole = ref.watch(ecoleEspaceParentProvider);
+  return ecole == null ? enfants : enfants.where((r) => r.etablissementId == ecole).toList(growable: false);
 });
 
 /// Fiche actuellement choisie par le sélecteur d'enfant (aiguille le reste de
@@ -100,7 +114,7 @@ final enfantSelectionneProvider = StateProvider<FicheEleve?>((ref) => null);
 /// Résout automatiquement l'enfant actif : le choix explicite s'il est
 /// toujours valide, sinon le premier enfant confirmé de la liste.
 final enfantActifProvider = Provider<FicheEleve?>((ref) {
-  final enfants = ref.watch(mesEnfantsProvider).valueOrNull ?? const [];
+  final enfants = ref.watch(enfantsEspaceProvider);
   final actifs = enfants.where((r) => r.estActive).map((r) => r.fiche).whereType<FicheEleve>();
   if (actifs.isEmpty) return null;
 

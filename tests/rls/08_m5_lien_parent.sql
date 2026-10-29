@@ -4,7 +4,8 @@
 -- Vérifie que :
 --   • un compte « parent » lie une fiche par matricule + date de naissance ;
 --   • il ne voit ensuite que son enfant (pas les autres fiches) ;
---   • un compte non-parent est refusé (ROLE_PARENT_REQUIS).
+--   • un compte élève est refusé (ROLE_PARENT_REQUIS) ; un enseignant peut
+--     être parent (REG-32).
 -- ============================================================================
 \set ON_ERROR_STOP on
 
@@ -65,16 +66,17 @@ SELECT is(
 );
 
 -- ---------------------------------------------------------------------------
--- 3. Un enseignant (non-parent) est refusé.
+-- 3. Un compte élève est refusé (REG-32 : un enseignant peut être parent,
+--    voir le test 96).
 -- ---------------------------------------------------------------------------
 SELECT set_config('request.jwt.claims',
-       json_build_object('sub', :'prof_id', 'role', 'authenticated')::text, true);
+       json_build_object('sub', :'eleve_id', 'role', 'authenticated')::text, true);
 
 SELECT throws_ok(
-  $$ SELECT public.lier_parent_a_fiche('MAT-PAR-001', '2009-05-12') $$,
+  $$ SELECT public.lier_parent_a_fiche('MAT-PAR-002', '2008-01-10') $$,
   '42501',
   'ROLE_PARENT_REQUIS',
-  'lien parent : rôle non-parent refusé'
+  'lien parent : compte élève refusé'
 );
 
 RESET ROLE;

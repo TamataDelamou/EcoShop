@@ -3,6 +3,7 @@ import 'package:ecoshop_client/core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/db/app_database.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
+import 'package:ecoshop_client/features/auth/application/espace_providers.dart';
 import 'package:ecoshop_client/features/auth/domain/profil.dart';
 import 'package:ecoshop_client/features/cgu/application/cgu_providers.dart';
 import 'package:ecoshop_client/features/cgu/domain/cgu_statut.dart';
@@ -90,6 +91,66 @@ void main() {
     expect(texte(tester, const Key('entete_role')), 'Enseignant');
     expect(find.descendant(of: find.byKey(const Key('entete_etablissement')), matching: find.text('École Bambino')),
         findsOneWidget);
+  });
+
+  testWidgets('REG-32 : enseignant dans une école, parent dans une autre — chaque espace avec son école',
+      (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(FauxAuthRepository(
+          profil: _profil(RoleRacine.enseignant),
+          etablissements: const [
+            Etablissement(id: 'e1', nom: 'École Bambino', slug: 'bambino', roleDansEtablissement: 'enseignant'),
+          ],
+        )),
+        sessionOuverteProvider.overrideWithValue(true),
+        databaseProvider.overrideWithValue(db),
+        onboardingRegionalisationVuProvider.overrideWith(_RegionalisationVue.new),
+        cguStatutProvider.overrideWith(_CguRienAAccepter.new),
+        mesEspacesProvider.overrideWith((ref) async => const [
+              EspaceEcole(role: RoleRacine.enseignant, etablissementId: 'e1', etablissementNom: 'École Bambino'),
+              EspaceEcole(role: RoleRacine.parent, etablissementId: 'e2', etablissementNom: 'Lycée Donka', enfants: 2),
+            ]),
+      ],
+      child: const MaterialApp(home: RacineApp()),
+    ));
+    await tester.pumpAndSettle();
+
+    // Le travail d'abord : espace enseignant dans l'école active.
+    expect(texte(tester, const Key('entete_role')), 'Enseignant');
+    expect(find.descendant(of: find.byKey(const Key('entete_etablissement')), matching: find.text('École Bambino')),
+        findsOneWidget);
+    expect(find.byKey(const Key('entete_ajouter_enfant')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('entete_changer_espace')));
+    await tester.pumpAndSettle();
+    expect(find.text('Lycée Donka · 2 enfants'), findsOneWidget);
+    expect(find.byKey(const Key('espace_parent_e1')), findsNothing, reason: 'pas parent dans l’école de son travail');
+
+    await tester.tap(find.byKey(const Key('espace_parent_e2')));
+    await tester.pumpAndSettle();
+    expect(texte(tester, const Key('entete_role')), 'Parent');
+    expect(find.descendant(of: find.byKey(const Key('entete_etablissement')), matching: find.text('Lycée Donka')),
+        findsOneWidget, reason: 'l’école de l’espace parent, pas l’école active');
+    expect(find.byKey(const Key('entete_ajouter_enfant')), findsOneWidget);
+  });
+
+  test('REG-32 : espaces calculés sur le téléphone', () {
+    final espaces = espacesDepuis(
+      const [
+        Etablissement(id: 'a', nom: 'École A', slug: 'a', roleDansEtablissement: 'enseignant'),
+        Etablissement(id: 'p', nom: 'École P', slug: 'p', roleDansEtablissement: 'parent'),
+      ],
+      const [
+        (etablissementId: 'b', actif: true),
+        (etablissementId: 'b', actif: true),
+        (etablissementId: 'c', actif: false),
+      ],
+    );
+    expect([for (final e in espaces) e.cle], ['enseignant@a', 'parent@b'],
+        reason: 'parent seulement là où un enfant est lié et confirmé');
+    expect(espaces.last.enfants, 2);
+    expect(espaces.first.libelle, 'Enseignant · École A');
   });
 
   test('libellés des rôles', () {

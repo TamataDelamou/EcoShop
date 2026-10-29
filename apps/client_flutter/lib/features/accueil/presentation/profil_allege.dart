@@ -18,6 +18,7 @@ import '../../coquille/application/verrou_controller.dart';
 import '../../invitations/application/invitations_providers.dart';
 import '../../invitations/presentation/ecran_invitations.dart';
 import '../../pointage/presentation/interrupteur_avis_portail.dart';
+import '../../scolarite/presentation/widgets/ajouter_enfant_sheet.dart';
 import '../../suppression_compte/application/suppression_compte_providers.dart';
 import '../../suppression_compte/presentation/ecran_suppression_compte.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
@@ -104,6 +105,16 @@ class VueProfilAllegee extends ConsumerWidget {
             badge: invitations,
             onTap: () => _aller(context, const EcranInvitations(depuisProfil: true)),
           ),
+          // REG-32 : tout adulte peut être parent, dans son école ou une
+          // autre — l'espace parent de cette école apparaît une fois l'enfant lié.
+          if (p.roleRacine != null && p.roleRacine != RoleRacine.eleve)
+            _Ligne(
+              cle: 'profil_relier_enfant',
+              icone: Icons.family_restroom_outlined,
+              titre: 'Relier mon enfant',
+              sousTitre: 'Avec son matricule et sa date de naissance',
+              onTap: () => afficherAjouterEnfant(context, ref),
+            ),
         ]),
         const TitreSection('Sécurité'),
         _Groupe(children: [

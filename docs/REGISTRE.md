@@ -48,6 +48,7 @@ attendue), `clos`.
 | REG-29 | Connexion Google : un seul sélecteur de comptes | P1 | **livré** (2026-10-29) — à vérifier sur un téléphone Android |
 | REG-30 | **Feuille de route** : ce qui reste à faire, par priorité (état des lieux du 2026-10-28) | P1 | **ouvert** — voir juste sous ce tableau |
 | REG-31 | Pages de confidentialité, conditions d'utilisation et suppression de compte (site GSG) ; suppression du compte dans l'application | **P0** | **livré** (2026-10-29) — champs ⟦siège, RCCM⟧ à compléter, relecture de l'avocat, mise en ligne (`site_gsg/README.md`), migration 1577 |
+| REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1826,3 +1827,44 @@ sombre) et ordinateur, sans débordement, ancres vérifiées.
 déclarations à l'autorité guinéenne ; mise en ligne ; liens dans la Play
 Console. Photo de profil : si Supabase refuse l'effacement direct du
 fichier, la demande le note (`reste_a_faire`) pour reprise.
+
+## REG-32 — Les espaces partent de l'établissement
+
+**Reçue le** : 2026-10-29. **Priorité** : P0 (contrôle d'accès). **Statut** :
+livré le 2026-10-29.
+
+Retour du test : le changement d'espace dans la barre de titre est apprécié,
+mais « un enseignant peut être parent dans un établissement et pas dans
+l'autre » ; les rôles doivent partir de l'établissement.
+
+**Constat (contrôle).**
+1. L'espace « parent » était proposé dans **toute** école dès que le rôle
+   principal du compte était « parent », même sans enfant dans cette école.
+2. Le sélecteur d'enfant mélangeait les enfants de **toutes** les écoles.
+3. Un enseignant (rôle principal enseignant) **ne pouvait pas relier son
+   enfant** : `lier_parent_a_fiche` exigeait le rôle principal « parent ».
+   L'accès aux données des enfants, lui, était déjà correct côté serveur :
+   il passe par les liens confirmés, école par école (`est_parent_confirme`,
+   `fiche_visible`).
+
+**Recherche.** Pronote et VSware : un espace par établissement, mais un
+compte de connexion par espace. ClassDojo : deux comptes et deux adresses
+e-mail obligatoires. Bloomz : bascule de rôle sans école. McGraw-Hill :
+bascule de rôle et bascule d'organisation séparées. Retenu : **une seule
+connexion, et chaque espace = (rôle, école)**.
+
+**Livré.**
+- Serveur (migration `…1578`, test pgTAP `96`, 9/9 ; test `08` mis à jour) :
+  `mes_espaces()` — rattachements actifs (personnel, élève) et écoles où le
+  compte a un enfant lié **confirmé et autorisé** ; liaison d'un enfant
+  ouverte à tout compte adulte, refusée aux comptes élèves.
+- Application : espaces « Enseignant · École A », « Parent · École B
+  (2 enfants) » dans la barre de titre ; choisir un espace de personnel
+  d'une autre école en fait l'école active (vérifié par le serveur) ;
+  l'espace parent ne montre que les enfants de son école ; l'en-tête
+  affiche l'école de l'espace ; « Relier mon enfant » dans Mon profil pour
+  tout adulte ; copie hors connexion des espaces, purgée à la déconnexion.
+
+**Effet pour un parent seul** dont les enfants sont dans deux écoles : deux
+espaces parent, un par école (comme deux espaces Pronote), au lieu d'une
+liste mélangée.

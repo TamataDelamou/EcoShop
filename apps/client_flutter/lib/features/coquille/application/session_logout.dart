@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/espace_providers.dart';
 import '../../annonces/application/annonces_providers.dart';
 import '../../cahier_liaison/application/cahier_liaison_providers.dart';
 import '../../auth/application/session_locale.dart';
@@ -118,6 +119,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // proposition d'emploi du temps calculée sur l'appareil.
   try {
     await lire(lectureConfigurationProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Espaces (rôle, école) du compte (REG-32).
+  try {
+    await lire(lectureEspacesProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

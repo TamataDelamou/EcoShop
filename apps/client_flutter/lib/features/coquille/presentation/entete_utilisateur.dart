@@ -34,9 +34,15 @@ class EnteteUtilisateur extends ConsumerWidget {
     final profil = ref.watch(profilAfficheProvider);
     if (profil == null) return const SizedBox.shrink();
     final espaces = ref.watch(espacesDisponiblesProvider);
+    final espace = ref.watch(espaceUtiliseProvider);
     final role = ref.watch(roleUtiliseProvider);
     final actif = ref.watch(etablissementActifProvider);
-    final logoUrl = actif == null ? null : ref.watch(identiteEtablissementProvider).logoUrl;
+    // École affichée : celle de l'espace utilisé (REG-32). L'espace parent
+    // d'une autre école n'en change pas l'école active (le parent n'en est
+    // pas membre) : son nom vient de l'espace, sans le logo de l'école active.
+    final memeEcole = espace?.etablissementId == null || espace?.etablissementId == actif?.id;
+    final nomEcole = memeEcole ? actif?.nom : espace?.etablissementNom;
+    final logoUrl = actif == null || !memeEcole ? null : ref.watch(identiteEtablissementProvider).logoUrl;
     final parent = profil.roleRacine == RoleRacine.parent;
     final slogan = actif?.slogan;
     final theme = Theme.of(context);
@@ -72,17 +78,30 @@ class EnteteUtilisateur extends ConsumerWidget {
                         children: [
                           if (espaces.length > 1)
                             // Plusieurs espaces : toucher l'étiquette pour changer.
-                            PopupMenuButton<RoleRacine>(
+                            // REG-32 : chaque espace est un rôle dans une école.
+                            PopupMenuButton<EspaceEcole>(
                               key: const Key('entete_changer_espace'),
                               tooltip: 'Changer d’espace',
-                              initialValue: role,
-                              onSelected: (r) => ref.read(espaceChoisiProvider.notifier).choisir(r),
+                              initialValue: espace,
+                              onSelected: (e) => _choisirEspace(context, ref, e),
                               itemBuilder: (_) => [
                                 for (final e in espaces)
-                                  PopupMenuItem<RoleRacine>(
-                                    key: Key('espace_${e.code}'),
+                                  PopupMenuItem<EspaceEcole>(
+                                    key: Key('espace_${e.role.code}_${e.etablissementId ?? '-'}'),
                                     value: e,
-                                    child: Text('Espace ${e.libelle.toLowerCase()}'),
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      dense: true,
+                                      leading: Icon(e.role == RoleRacine.parent
+                                          ? Icons.family_restroom_outlined
+                                          : Icons.work_outline),
+                                      title: Text('Espace ${e.role.libelle.toLowerCase()}'),
+                                      subtitle: e.etablissementNom == null
+                                          ? null
+                                          : Text(e.role == RoleRacine.parent && e.enfants > 0
+                                              ? '${e.etablissementNom} · ${e.enfants} enfant${e.enfants > 1 ? 's' : ''}'
+                                              : e.etablissementNom!),
+                                    ),
                                   ),
                               ],
                               child: Container(
@@ -113,11 +132,11 @@ class EnteteUtilisateur extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                libelleRoleUtilise(profil, actif),
+                                role?.libelle ?? libelleRoleUtilise(profil, actif),
                                 style: theme.textTheme.labelMedium?.copyWith(color: schema.onSecondaryContainer),
                               ),
                             ),
-                          if (actif != null)
+                          if (nomEcole != null)
                             Row(
                               key: const Key('entete_etablissement'),
                               mainAxisSize: MainAxisSize.min,
@@ -133,7 +152,7 @@ class EnteteUtilisateur extends ConsumerWidget {
                                 ConstrainedBox(
                                   constraints: const BoxConstraints(maxWidth: 220),
                                   child: Text(
-                                    actif.nom,
+                                    nomEcole,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodyMedium?.copyWith(color: schema.onSurfaceVariant),
@@ -173,5 +192,18 @@ class EnteteUtilisateur extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Change d'espace (REG-32). Un espace de personnel dans une autre école en
+/// fait l'école active : il faut le réseau pour que le serveur l'accepte.
+Future<void> _choisirEspace(BuildContext context, WidgetRef ref, EspaceEcole espace) async {
+  final messager = ScaffoldMessenger.maybeOf(context);
+  try {
+    await ref.read(espaceChoisiProvider.notifier).choisir(espace);
+  } catch (_) {
+    messager?.showSnackBar(const SnackBar(
+      content: Text('Changement d’école impossible pour le moment. Vérifiez la connexion et réessayez.'),
+    ));
   }
 }

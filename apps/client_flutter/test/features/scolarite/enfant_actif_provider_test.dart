@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:ecoshop_client/features/auth/application/espace_providers.dart';
 import 'package:ecoshop_client/features/scolarite/application/scolarite_providers.dart';
 import 'package:ecoshop_client/features/scolarite/domain/enums_scolarite.dart';
 import 'package:ecoshop_client/features/scolarite/domain/fiche_eleve.dart';
@@ -91,5 +92,37 @@ void main() {
     await container.read(mesEnfantsProvider.future);
 
     expect(container.read(enfantActifProvider), isNull);
+  });
+
+  test('REG-32 : espace parent d’une école — seuls ses enfants dans cette école', () async {
+    final ici = _fiche('f1', 'Alpha');
+    final ailleurs = FicheEleve(
+      id: 'f2',
+      etablissementId: 'e2',
+      matricule: 'MAT-f2',
+      nom: 'Doe',
+      prenom: 'Beta',
+      dateNaissance: DateTime(2014, 1, 1),
+    );
+    final container = ProviderContainer(overrides: [
+      mesEnfantsProvider.overrideWith((ref) async => [
+            _relation(ici),
+            RelationParentEleve(
+              id: 'r-f2',
+              etablissementId: 'e2',
+              parentProfileId: 'p1',
+              ficheEleveId: 'f2',
+              statut: StatutRelation.confirmee,
+              fiche: ailleurs,
+            ),
+          ]),
+      ecoleEspaceParentProvider.overrideWithValue('e2'),
+    ]);
+    addTearDown(container.dispose);
+
+    await container.read(mesEnfantsProvider.future);
+
+    expect([for (final r in container.read(enfantsEspaceProvider)) r.ficheEleveId], ['f2']);
+    expect(container.read(enfantActifProvider)?.id, 'f2');
   });
 }
