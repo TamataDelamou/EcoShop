@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/role_racine.dart';
+import '../../../core/liens_legaux.dart';
+import '../../../core/widgets/choisir_date.dart';
 import '../../appareil/presentation/ecran_mes_appareils.dart';
 import '../../appareil/presentation/ecran_securite.dart';
 import '../../auth/application/telephone_profil_providers.dart';
@@ -16,6 +18,8 @@ import '../../coquille/application/verrou_controller.dart';
 import '../../invitations/application/invitations_providers.dart';
 import '../../invitations/presentation/ecran_invitations.dart';
 import '../../pointage/presentation/interrupteur_avis_portail.dart';
+import '../../suppression_compte/application/suppression_compte_providers.dart';
+import '../../suppression_compte/presentation/ecran_suppression_compte.dart';
 import '../../themes/presentation/ecran_preferences_apparence.dart';
 import 'pastille.dart';
 import 'reglages_affichage_accueil.dart';
@@ -44,6 +48,8 @@ class VueProfilAllegee extends ConsumerWidget {
     final invitations = ref.watch(mesInvitationsProvider).valueOrNull?.length ?? 0;
     final verrou = ref.watch(verrouControllerProvider);
     final verrouActif = verrou.phase != PhaseVerrou.inactif;
+    final suppression = ref.watch(etatSuppressionCompteProvider).valueOrNull;
+    final dateSuppression = suppression != null && suppression.demandee ? suppression.effectiveLe : null;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
@@ -168,12 +174,23 @@ class VueProfilAllegee extends ConsumerWidget {
             sousTitre: 'Langue, taille du texte, accessibilité',
             onTap: () => _aller(context, const EcranPreferencesApparence()),
           ),
+        ]),
+        // Vos données (REG-31) : conditions, confidentialité, suppression.
+        const TitreSection('Vos données'),
+        _Groupe(children: [
           _Ligne(
             cle: 'menu_cgu',
             icone: Icons.gavel_outlined,
             titre: 'Conditions d’utilisation',
             sousTitre: 'Relire les conditions acceptées',
             onTap: () => _aller(context, const EcranCgu()),
+          ),
+          _Ligne(
+            cle: 'menu_confidentialite',
+            icone: Icons.privacy_tip_outlined,
+            titre: 'Confidentialité',
+            sousTitre: 'Ce que nous savons de vous, et vos droits',
+            onTap: () => ouvrirLienLegal(context, LiensLegaux.confidentialite),
           ),
         ]),
         const SizedBox(height: 24),
@@ -183,6 +200,19 @@ class VueProfilAllegee extends ConsumerWidget {
           onPressed: () => ref.deconnecterEtPurgerDonneesLocales(),
           icon: const Icon(Icons.logout),
           label: const Text('Se déconnecter'),
+        ),
+        const SizedBox(height: 12),
+        // Exigé par Google Play : facile à trouver, tout en bas du profil.
+        Center(
+          child: TextButton.icon(
+            key: const Key('bouton_supprimer_compte'),
+            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+            onPressed: () => _aller(context, const EcranSuppressionCompte()),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(dateSuppression != null
+                ? 'Suppression prévue le ${formaterDate(dateSuppression)}'
+                : 'Supprimer mon compte'),
+          ),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
+import '../../../core/liens_legaux.dart';
 import '../application/cgu_providers.dart';
 
 /// Écran CGU (cahier §34.10) — deux usages distincts partagent le même
@@ -50,7 +51,25 @@ class EcranCgu extends ConsumerWidget {
                       child: Text(statut.contenu, style: Theme.of(context).textTheme.bodyMedium),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  // Textes complets sur le site de GSG (REG-31).
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton.icon(
+                        key: const Key('cgu_texte_complet'),
+                        onPressed: () => ouvrirLienLegal(context, LiensLegaux.conditions),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: const Text('Conditions complètes'),
+                      ),
+                      TextButton.icon(
+                        key: const Key('cgu_confidentialite'),
+                        onPressed: () => ouvrirLienLegal(context, LiensLegaux.confidentialite),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: const Text('Confidentialité'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   if (statut.acceptee)
                     Text(
                       'Acceptées.',

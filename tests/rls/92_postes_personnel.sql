@@ -62,11 +62,12 @@ INSERT INTO public.classes (id, etablissement_id, annee_scolaire_id, code, nom) 
 -- 1. Modèles et postes par défaut
 -- ---------------------------------------------------------------------------
 SELECT is((SELECT count(*)::int FROM public.postes WHERE etablissement_id = '92000000-0000-0000-0000-00000000000a'
-             AND modele_code IS NOT NULL), 12, 'nouvelle école : un poste par modèle (12)');
+             AND modele_code IS NOT NULL), 15, 'nouvelle école : un poste par modèle (15, dont les 3 de REG-26)');
 SELECT is(public.creer_postes_par_defaut('92000000-0000-0000-0000-00000000000a'), 0, 'rattrapage : aucun doublon');
 SELECT is(pg_temp.codes('caissier'), 'scolarite.encaissement.gerer,scolarite.encaissement.lire', 'caissier : encaisser, lire les reçus');
-SELECT is(pg_temp.codes('comptable'), 'comptabilite.ecrire,comptabilite.lire,comptabilite.valider,scolarite.encaissement.lire',
-  'comptable : comptabilité, lecture des encaissements, pas d''encaissement');
+SELECT is(pg_temp.codes('comptable'),
+  'comptabilite.ecrire,comptabilite.lire,comptabilite.valider,paiement.mobile.gerer,scolarite.encaissement.lire,sms.credits.acheter',
+  'comptable : comptabilité, lecture des encaissements, Orange Money et crédits SMS (REG-26), pas d''encaissement');
 SELECT is(pg_temp.codes('agent_portail'), 'portail.scanner', 'agent du portail : scanner, rien d''autre');
 SELECT is(pg_temp.codes('chauffeur'), '', 'chauffeur : aucun code (son circuit, par affectation)');
 SELECT is(pg_temp.codes('bibliothecaire'), 'bibliotheque.gerer', 'bibliothécaire : la bibliothèque');

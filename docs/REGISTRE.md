@@ -47,6 +47,7 @@ attendue), `clos`.
 | REG-28 | Actions des écrans visibles, avec leur libellé, sous la barre de titre (25 écrans) | P1 | **livré** (2026-10-29) — à vérifier sur un téléphone Android |
 | REG-29 | Connexion Google : un seul sélecteur de comptes | P1 | **livré** (2026-10-29) — à vérifier sur un téléphone Android |
 | REG-30 | **Feuille de route** : ce qui reste à faire, par priorité (état des lieux du 2026-10-28) | P1 | **ouvert** — voir juste sous ce tableau |
+| REG-31 | Pages de confidentialité, conditions d'utilisation et suppression de compte (site GSG) ; suppression du compte dans l'application | **P0** | **livré** (2026-10-29) — champs ⟦siège, RCCM⟧ à compléter, relecture de l'avocat, mise en ligne (`site_gsg/README.md`), migration 1577 |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -74,10 +75,11 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
    complet sur téléphone : création de l'école, mise en route (année,
    classes, groupes, cours, emploi du temps), invitations par code,
    inscription d'un élève, encaissement, hors connexion.
-4. **[code]** Pages publiques **Politique de confidentialité** et
-   **Conditions d'utilisation** (`globalservicegroupe.com/confidentialite`
-   et `/conditions`), exigées par le Play Store et liées depuis
-   l'application ; relecture par l'avocat (point 10).
+4. ~~**[code]** Pages publiques **Politique de confidentialité** et
+   **Conditions d'utilisation**~~ — **livré par REG-31** (avec la page et la
+   fonction de suppression de compte exigées par le Play Store). Reste
+   **[GSG]** : compléter siège et RCCM, faire relire (point 10), mettre en
+   ligne sur Cloudflare Pages (`site_gsg/README.md`).
 5. **[GSG]** Empreinte **SHA-1** de la clé GSG dans Firebase et dans la
    console Google (connexion Google, notifications) — MISE_EN_SERVICE §5.
 6. **[GSG]** Réglages de la connexion Google dans Supabase
@@ -1749,3 +1751,78 @@ Correction : plus de tentative d'office ; un seul sélecteur, à l'appui du
 bouton. Une seule demande Google à la fois dans le contrôleur de connexion
 (double appui, écran reconstruit). La session déjà ouverte sur le téléphone
 reste reprise sans écran de connexion.
+
+## REG-31 — Confidentialité, conditions, suppression de compte
+
+**Reçue le** : 2026-10-29. **Priorité** : P0 (bloque la publication sur le
+Play Store et le logo de l'écran de consentement Google). **Statut** :
+livré le 2026-10-29.
+
+Demande : pages de confidentialité et de conditions d'utilisation « beaucoup
+plus humaines que possible », pour le futur site de Global Service Groupe
+qui hébergera toutes ses applications.
+
+**Recherche préalable.**
+- Google Play, *Données utilisateur* et *Suppression de compte* : une
+  application où l'on crée un compte doit offrir la suppression **dans
+  l'application** et par **une page web** (lien déclaré dans *Sécurité des
+  données*), qui nomme l'application et l'éditeur, permet la demande sans
+  réinstaller, et dit ce qui est gardé et pourquoi. EcoShop n'avait pas
+  cette fonction : elle est ajoutée ici.
+- Guinée, loi L/2016/037/AN du 26 juillet 2016 (cybersécurité et données
+  personnelles) : déclaration préalable des traitements à l'autorité de
+  protection ; **autorisation préalable** pour les transferts hors de
+  Guinée (serveurs à Paris, prestataires étrangers) et pour certains
+  identifiants (numéros de téléphone). Décret d'avril 2025 : mise en
+  conformité sous 12 mois. Points remis à l'avocat.
+
+**Site** (`site_gsg/`, HTML et CSS seuls, sans script ni traceur, thème
+sombre automatique, lisible sur un petit téléphone) :
+- `/confidentialite/` : une politique pour tout GSG — nos promesses, puis une
+  section par application (`#ecoshop`) : l'école décide, GSG protège
+  (responsable / sous-traitant), ce que nous savons selon le rôle, ce que le
+  téléphone utilise (caméra, position du seul chauffeur, notifications,
+  empreinte), élèves et enfants, IA (Anthropic, minimisation, « l'IA
+  propose, une personne décide »), paiements (GSG ne détient jamais
+  l'argent), prestataires, lieu d'hébergement, durées, sécurité, droits
+  (réponse sous 30 jours), suppression ;
+- `/conditions/` : compte, respect, rôle de l'école, parents et élèves,
+  personnel, paiements et remboursements, boutique, IA, tarifs, limites,
+  propriété, suspension, changements (préavis de 15 jours), litiges (droit
+  guinéen, Conakry) ;
+- `/suppression-compte/` : depuis l'application, ou par e-mail prérempli ;
+  ce qui est effacé, ce qui est gardé ; cas de la direction, de l'élève
+  mineur, du vendeur ;
+- `README.md` : champs à compléter, relecture, mise en ligne sur
+  Cloudflare Pages, déclarations Google.
+
+**Application.**
+- Mon profil : rubrique « Vos données » (conditions, confidentialité) et
+  « Supprimer mon compte » tout en bas ; écran qui dit ce qui est effacé et
+  gardé, case « J'ai compris », motif facultatif, code secret demandé
+  (action sensible) ; refus expliqué si l'on est la seule direction d'une
+  école ; bandeau « Votre compte sera supprimé le … — Garder mon compte »
+  pendant les 7 jours.
+- Écran de connexion : « En continuant, vous acceptez… » avec les deux
+  liens. Écran des conditions : boutons vers les textes complets.
+
+**Serveur** (migration `…1577`, test pgTAP `95`, 29 assertions) :
+`demandes_suppression_compte`, `demander_` / `annuler_` /
+`etat_suppression_compte`, `enregistrer_demande_suppression_web` (équipe
+GSG, demandes reçues par e-mail), `anonymiser_compte`, tâche nocturne
+`effectuer-suppressions-comptes` (comptes échus ; traces de sécurité de
+plus d'un an). **Anonymisation, pas effacement de la ligne** : plus de
+cinquante tables renvoient au profil sans cascade (notes, reçus, écritures
+comptables) — ces pièces appartiennent à l'école ou doivent être gardées.
+Conditions **v1.0** publiées pour les deux parcours (adulte, élève).
+
+**Vérifié** : toutes les migrations passent sur un PostgreSQL 16 local
+(imitation des schémas Supabase) ; test `95` 29/29, tests `54`, `75` et
+`92` verts (75 et 92 mis à jour : 10 tâches planifiées, 15 modèles de poste
+et droits du comptable de REG-26) ; pages rendues sur téléphone (clair et
+sombre) et ordinateur, sans débordement, ancres vérifiées.
+
+**Reste** : compléter ⟦siège⟧ et ⟦RCCM⟧ ; relecture de l'avocat ;
+déclarations à l'autorité guinéenne ; mise en ligne ; liens dans la Play
+Console. Photo de profil : si Supabase refuse l'effacement direct du
+fichier, la demande le note (`reste_a_faire`) pour reprise.

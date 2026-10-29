@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/env.dart';
+import '../../../core/liens_legaux.dart';
 import '../application/auth_providers.dart';
 import '../application/connexion_controller.dart';
 import '../domain/canal_otp.dart';
@@ -13,8 +14,8 @@ import 'bouton_google.dart';
 /// Écran de connexion (REG-16).
 ///
 /// 1. **Continuer avec Google** : le téléphone propose ses comptes Google,
-///    on touche le sien, aucune saisie. À l'ouverture de l'écran, un compte
-///    qui a déjà autorisé EcoShop est proposé d'office (feuille du système).
+///    on touche le sien, aucune saisie (un seul sélecteur, à l'appui du
+///    bouton : REG-29).
 /// 2. **Code par e-mail** : l'adresse est suggérée par le clavier (comptes
 ///    du téléphone), un code à 6 chiffres arrive par courriel.
 ///
@@ -124,6 +125,12 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                     if (etat.codeErreur != null) ...[
                       const SizedBox(height: 16),
                       _Erreur(code: etat.codeErreur!),
+                    ],
+                    // Pages légales du site de GSG (REG-31), visibles avant
+                    // la création du compte (Play Store, écran Google).
+                    if (etat.etape == EtapeConnexion.identifiant) ...[
+                      const SizedBox(height: 28),
+                      const _MentionsLegales(),
                     ],
                   ],
                 ),
@@ -445,6 +452,36 @@ class _Patienter extends StatelessWidget {
       height: 20,
       width: 20,
       child: CircularProgressIndicator(strokeWidth: 2),
+    );
+  }
+}
+
+/// « En continuant, vous acceptez… » avec les deux liens (REG-31).
+class _MentionsLegales extends StatelessWidget {
+  const _MentionsLegales();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall;
+    return Column(
+      key: const Key('mentions_legales_connexion'),
+      children: [
+        Text('En continuant, vous acceptez nos conditions d’utilisation et notre politique de confidentialité.',
+            style: style, textAlign: TextAlign.center),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () => ouvrirLienLegal(context, LiensLegaux.conditions),
+              child: const Text('Conditions'),
+            ),
+            TextButton(
+              onPressed: () => ouvrirLienLegal(context, LiensLegaux.confidentialite),
+              child: const Text('Confidentialité'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

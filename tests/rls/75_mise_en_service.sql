@@ -78,8 +78,8 @@ SELECT throws_ok($$ SELECT public.etat_mise_en_service() $$, '42501', NULL,
 
 SELECT pg_temp.en_tant_que(:'admin');
 SELECT public.etat_mise_en_service() AS etat \gset
-SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 9 + 4 + 2 + 3,
-  'extensions, 9 tâches, 4 secrets (dont le poivre du code du compte, REG-22), administrateur, packs SMS, référentiel (2) et paramètres globaux');
+SELECT is(jsonb_array_length(:'etat'::jsonb -> 'controles'), 2 + 10 + 4 + 2 + 3,
+  'extensions, 10 tâches, 4 secrets (dont le poivre du code du compte, REG-22), administrateur, packs SMS, référentiel (2) et paramètres globaux');
 SELECT is(pg_temp.controle(:'etat', 'Coffre : poivre_code_compte'), true, 'poivre du code du compte rangé dans le coffre (créé par la migration)');
 SELECT is(pg_temp.controle(:'etat', 'Administrateur GSG'), true, 'administrateur GSG désigné');
 SELECT is(pg_temp.controle(:'etat', 'Packs SMS en vente'), false, 'packs SMS encore sans prix');
@@ -93,8 +93,8 @@ SELECT pg_temp.en_tant_que(:'admin');
 SELECT is(pg_temp.controle(public.etat_mise_en_service(), 'Packs SMS en vente'), true, 'pack au prix fixé : contrôle vert');
 RESET ROLE;
 
-SELECT is((SELECT count(*)::int FROM public.taches_planifiees_attendues()), 9,
-  'neuf tâches planifiées attendues (dont la purge des inscriptions abandonnées, REG-18)');
+SELECT is((SELECT count(*)::int FROM public.taches_planifiees_attendues()), 10,
+  'dix tâches planifiées attendues (dont la purge des inscriptions abandonnées, REG-18, et les suppressions de comptes, REG-31)');
 
 SELECT * FROM finish();
 ROLLBACK;

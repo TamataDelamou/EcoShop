@@ -5,6 +5,9 @@ import '../../accueil/presentation/ecrans_destinations.dart';
 import '../../appareil/presentation/surveillance_appareils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/choisir_date.dart';
+import '../../suppression_compte/application/suppression_compte_providers.dart';
+import '../../suppression_compte/presentation/ecran_suppression_compte.dart';
 
 import '../../../core/auth/role_racine.dart';
 import '../../../core/config/env.dart';
@@ -123,6 +126,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     // Toujours montés, quelle que soit la destination.
     final veilleurs = <Widget>[
       const _BandeauHorsLigne(),
+      // Suppression du compte programmée (REG-31) : rappel et annulation.
+      if (profil != null) const _BandeauSuppression(),
       // Code du compte (REG-22) : autorisations d'appareils, récupération en cours.
       if (Env.estConfigure && profil != null) SurveillanceAppareils(key: ValueKey('appareils_${profil.id}')),
       // Notifications push : rattachement du téléphone, bandeau, ouverture.
@@ -323,5 +328,45 @@ class _CorpsOnglet extends ConsumerWidget {
       OngletCoquille.referentiel => const EcranPaysPedagogiques(),
       OngletCoquille.notifications => EcranNotifications(profileId: p.id),
     };
+  }
+}
+
+/// Rappel tant qu'une suppression du compte est programmée (REG-31) : la
+/// personne qui revient dans les 7 jours voit tout de suite qu'elle peut
+/// encore garder son compte.
+class _BandeauSuppression extends ConsumerWidget {
+  const _BandeauSuppression();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final etat = ref.watch(etatSuppressionCompteProvider).valueOrNull;
+    final date = etat != null && etat.demandee ? etat.effectiveLe : null;
+    if (date == null) return const SizedBox.shrink();
+    final schema = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('bandeau_suppression_compte'),
+      color: schema.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+        child: Row(
+          children: [
+            Icon(Icons.schedule, size: 18, color: schema.onErrorContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Votre compte sera supprimé le ${formaterDate(date)}.',
+                style: TextStyle(color: schema.onErrorContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EcranSuppressionCompte()),
+              ),
+              child: const Text('Garder mon compte'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

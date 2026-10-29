@@ -89,6 +89,7 @@ Relancer la même commande. Le script, sans jamais afficher de secret :
    | Comptes jamais vérifiés depuis plus de 24 h, inscriptions abandonnées (`purger-comptes-non-verifies`, REG-18) | chaque heure |
    | Décrochage et risque de réussite, toutes les écoles | chaque nuit, 2 h 30 |
    | Ménage des notifications (90 jours) et de l'historique des tâches (7 jours) | chaque nuit |
+   | Comptes supprimés à l'échéance du délai de 7 jours, traces de sécurité de plus d'un an (`effectuer-suppressions-comptes`, REG-31) | chaque nuit, 3 h 35 |
    | Export vers le Kernel GSG | chaque heure, seulement si son secret est fourni |
 
 6. désigne l'administrateur GSG (si le compte existe déjà) ;

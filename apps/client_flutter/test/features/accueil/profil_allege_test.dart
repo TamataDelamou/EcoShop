@@ -37,7 +37,7 @@ void main() {
     await monter(tester, RoleRacine.direction);
     expect(find.text('Mariama Sow'), findsOneWidget);
     expect(find.text('Identifiant EC-7K4M-2Q9'), findsOneWidget);
-    for (final section in ['MON COMPTE', 'SÉCURITÉ', 'PRÉFÉRENCES']) {
+    for (final section in ['MON COMPTE', 'SÉCURITÉ', 'PRÉFÉRENCES', 'VOS DONNÉES']) {
       expect(find.text(section), findsOneWidget, reason: section);
     }
     expect(find.byKey(const Key('profil_mes_informations')), findsOneWidget);
@@ -55,6 +55,14 @@ void main() {
     final bas = tester.getTopLeft(find.text('Se déconnecter')).dy;
     expect(bas, greaterThan(tester.getTopLeft(find.byKey(const Key('menu_cgu'))).dy));
     expect(find.text('Se déconnecter'), findsOneWidget);
+
+    // REG-31 : confidentialité dans « Vos données », suppression du compte
+    // tout en bas (règle Google Play : facile à trouver).
+    expect(find.byKey(const Key('menu_confidentialite')), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('bouton_supprimer_compte')), 300,
+        scrollable: find.byType(Scrollable).first);
+    expect(tester.getTopLeft(find.byKey(const Key('bouton_supprimer_compte'))).dy, greaterThan(bas));
+    expect(find.text('Supprimer mon compte'), findsOneWidget);
   });
 
   testWidgets('parent : l’avis du portail reste dans les préférences', (tester) async {
