@@ -53,7 +53,7 @@ class BarreActions extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
     if (sousBarre == null) return rangee ?? const SizedBox.shrink();
-    return Column(mainAxisSize: MainAxisSize.min, children: [if (rangee != null) rangee, sousBarre!]);
+    return Column(mainAxisSize: MainAxisSize.min, children: [?rangee, sousBarre!]);
   }
 }
 
