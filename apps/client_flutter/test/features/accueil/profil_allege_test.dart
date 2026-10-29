@@ -37,7 +37,7 @@ void main() {
     await monter(tester, RoleRacine.direction);
     expect(find.text('Mariama Sow'), findsOneWidget);
     expect(find.text('Identifiant EC-7K4M-2Q9'), findsOneWidget);
-    for (final section in ['MON COMPTE', 'SÉCURITÉ', 'PRÉFÉRENCES', 'VOS DONNÉES']) {
+    for (final section in ['MON COMPTE', 'SÉCURITÉ', 'PRÉFÉRENCES']) {
       expect(find.text(section), findsOneWidget, reason: section);
     }
     expect(find.byKey(const Key('profil_mes_informations')), findsOneWidget);
@@ -58,10 +58,16 @@ void main() {
 
     // REG-31 : confidentialité dans « Vos données », suppression du compte
     // tout en bas (règle Google Play : facile à trouver).
-    expect(find.byKey(const Key('menu_confidentialite')), findsOneWidget);
-    await tester.scrollUntilVisible(find.byKey(const Key('bouton_supprimer_compte')), 300,
+    await tester.scrollUntilVisible(find.byKey(const Key('menu_confidentialite')), 200,
         scrollable: find.byType(Scrollable).first);
-    expect(tester.getTopLeft(find.byKey(const Key('bouton_supprimer_compte'))).dy, greaterThan(bas));
+    expect(find.text('VOS DONNÉES'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('bouton_supprimer_compte')), 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('bouton_supprimer_compte')));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byKey(const Key('bouton_supprimer_compte'))).dy,
+        greaterThan(tester.getTopLeft(find.text('Se déconnecter')).dy),
+        reason: 'sous « Se déconnecter », tout en bas');
     expect(find.text('Supprimer mon compte'), findsOneWidget);
   });
 

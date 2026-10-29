@@ -80,22 +80,32 @@ void main() {
     return depot;
   }
 
-  Future<void> descendreJusqua(WidgetTester tester, Finder cible) =>
-      tester.scrollUntilVisible(cible, 300, scrollable: find.byType(Scrollable).first);
+  // La liste ne construit que ce qui est près de l'écran : on fait défiler
+  // jusqu'à l'élément, puis on l'amène entièrement dans l'écran avant d'y toucher.
+  Future<void> descendreJusqua(WidgetTester tester, Finder cible) async {
+    await tester.scrollUntilVisible(cible, 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(cible);
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('dit ce qui est effacé et gardé ; confirmation obligatoire ; puis « Garder mon compte »', (tester) async {
     final depot = await monter(tester);
     expect(find.text('Ce qui sera effacé'), findsOneWidget);
-    expect(find.text('Ce qui sera gardé, et pourquoi'), findsOneWidget);
-    expect(find.text('7 jours pour changer d’avis'), findsOneWidget);
+    for (final titre in ['Ce qui sera gardé, et pourquoi', '7 jours pour changer d’avis']) {
+      await descendreJusqua(tester, find.text(titre));
+      expect(find.text(titre), findsOneWidget);
+    }
 
-    await descendreJusqua(tester, find.byKey(const Key('bouton_confirmer_suppression')));
     final bouton = find.byKey(const Key('bouton_confirmer_suppression'));
+    await descendreJusqua(tester, bouton);
     expect(tester.widget<FilledButton>(bouton).onPressed, isNull, reason: 'case « J’ai compris » non cochée');
 
+    await descendreJusqua(tester, find.byKey(const Key('champ_motif_suppression')));
     await tester.enterText(find.byKey(const Key('champ_motif_suppression')), 'Mon enfant a changé d’école');
+    await descendreJusqua(tester, find.byKey(const Key('case_compris_suppression')));
     await tester.tap(find.byKey(const Key('case_compris_suppression')));
     await tester.pump();
+    await descendreJusqua(tester, bouton);
     await tester.tap(bouton);
     await tester.pumpAndSettle();
 
@@ -115,6 +125,7 @@ void main() {
     await descendreJusqua(tester, find.byKey(const Key('case_compris_suppression')));
     await tester.tap(find.byKey(const Key('case_compris_suppression')));
     await tester.pump();
+    await descendreJusqua(tester, find.byKey(const Key('bouton_confirmer_suppression')));
     await tester.tap(find.byKey(const Key('bouton_confirmer_suppression')));
     await tester.pumpAndSettle();
     await descendreJusqua(tester, find.byKey(const Key('erreur_suppression')));
@@ -125,6 +136,7 @@ void main() {
   testWidgets('sans connexion : bouton grisé, explication', (tester) async {
     await monter(tester, enLigne: false);
     await descendreJusqua(tester, find.textContaining('Connectez-vous à Internet'));
+    await descendreJusqua(tester, find.byKey(const Key('case_compris_suppression')));
     await tester.tap(find.byKey(const Key('case_compris_suppression')));
     await tester.pump();
     expect(tester.widget<FilledButton>(find.byKey(const Key('bouton_confirmer_suppression'))).onPressed, isNull);
