@@ -40,19 +40,10 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
   final _identifiantCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    // Compte Google déjà autorisé sur ce téléphone : proposé tout de suite.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final etat = ref.read(connexionControllerProvider);
-      // Création d'un compte : pas d'ouverture d'office d'un compte existant.
-      if (etat.etape == EtapeConnexion.identifiant && !widget.creationCompte) {
-        ref.read(connexionControllerProvider.notifier).connecterAvecGoogle(silencieux: true);
-      }
-    });
-  }
+  // Plus de tentative Google d'office à l'ouverture (REG-29) : sur Android,
+  // sa feuille « comptes déjà autorisés » s'ajoutait au sélecteur du bouton
+  // « Continuer avec Google » et restait ouverte derrière, sans que
+  // l'application puisse la fermer. Un seul sélecteur, à l'appui du bouton.
 
   @override
   void dispose() {

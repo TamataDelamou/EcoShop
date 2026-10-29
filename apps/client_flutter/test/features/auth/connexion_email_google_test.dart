@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:ecoshop_client/core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/db/app_database.dart';
@@ -41,8 +43,11 @@ class _FauxGoogle implements ConnexionGoogle {
     return jeton;
   }
 
+  /// Feuille du système encore ouverte : réponse différée.
+  Completer<String?>? feuilleOuverte;
+
   @override
-  Future<String?> jetonSilencieux() async => jetonAutorise;
+  Future<String?> jetonSilencieux() async => feuilleOuverte != null ? feuilleOuverte!.future : jetonAutorise;
 
   @override
   Future<void> oublier() async => oublie = true;
@@ -119,6 +124,23 @@ void main() {
       final c = conteneur();
       await c.read(connexionControllerProvider.notifier).connecterAvecGoogle(silencieux: true);
       expect(faux.appels, contains('connecterAvecGoogle:jeton-connu'));
+    });
+
+    test('REG-29 : une seule feuille Google à la fois, pas de second sélecteur derrière', () async {
+      google.feuilleOuverte = Completer<String?>();
+      final c = conteneur();
+      final ctrl = c.read(connexionControllerProvider.notifier);
+      final premiere = ctrl.connecterAvecGoogle(silencieux: true);
+      final seconde = ctrl.connecterAvecGoogle();
+      expect(google.interactifs, 0, reason: 'la feuille ouverte n’est pas doublée par le sélecteur');
+      google.feuilleOuverte!.complete('jeton-connu');
+      await Future.wait([premiere, seconde]);
+      expect(faux.appels.where((a) => a.startsWith('connecterAvecGoogle')), ['connecterAvecGoogle:jeton-connu']);
+
+      // Demande terminée : le bouton fonctionne de nouveau.
+      google.feuilleOuverte = null;
+      await c.read(connexionControllerProvider.notifier).connecterAvecGoogle();
+      expect(google.interactifs, 0, reason: 'déjà connecté : rien à redemander');
     });
 
     test('renvoyer le code réutilise l’adresse normalisée', () async {

@@ -1019,7 +1019,7 @@ connexion par SMS, un SMS payé par connexion). **Statut** : livré le
   et un bouton permanent (feuille fermée, réglages Google, aucun compte).
   Supabase accepte le jeton d'identité Google (`signInWithIdToken`).
 - **Connexion** : bouton « Continuer avec Google » (`google_sign_in` 7),
-  tentative d'office à l'ouverture pour un compte déjà autorisé ; sinon code
+  (tentative d'office à l'ouverture retirée par REG-29) ; sinon code
   à 6 chiffres par e-mail (adresse suggérée par le clavier, code collé ou
   lu automatiquement, renvoi après 60 s). Le choix SMS reste dans le code,
   masqué (`CONNEXION_TELEPHONE=true` le réaffiche ; `config.toml` :
@@ -1657,3 +1657,24 @@ vie scolaire, groupes pédagogiques.
 Accueil : le bouton d'affichage quitte la barre du haut (3 icônes au plus)
 pour un bouton « Personnaliser l'accueil » en bas des pastilles. Les icônes
 restantes de la barre du haut prennent la couleur de l'école (taille 26).
+
+## REG-29 — Connexion Google : un seul sélecteur de comptes
+
+**Reçue le** : 2026-10-29. **Priorité** : P1. **Statut** : livré le
+2026-10-29.
+
+Retour du test : à la connexion, le sélecteur des comptes du téléphone
+s'ouvrait, puis une seconde feuille « comptes déjà connectés » apparaissait
+derrière et ne se fermait pas après le choix.
+
+Cause : à l'ouverture de l'écran de connexion, l'application tentait d'office
+une connexion Google discrète (REG-16) ; sur Android, elle affiche sa propre
+feuille. Rien n'empêchait le bouton « Continuer avec Google » d'ouvrir le
+sélecteur en même temps, et un écran reconstruit relançait la tentative —
+avec le compte qu'on venait d'autoriser. L'application ne peut pas fermer
+une feuille du système une fois ouverte.
+
+Correction : plus de tentative d'office ; un seul sélecteur, à l'appui du
+bouton. Une seule demande Google à la fois dans le contrôleur de connexion
+(double appui, écran reconstruit). La session déjà ouverte sur le téléphone
+reste reprise sans écran de connexion.

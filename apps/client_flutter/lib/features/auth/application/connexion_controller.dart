@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/e164_validator.dart';
 import '../../coquille/application/verrou_controller.dart';
+import '../data/connexion_google.dart';
 import '../domain/auth_repository.dart';
 import '../domain/canal_otp.dart';
 import '../domain/identifiant_ecoshop.dart';
@@ -218,9 +219,19 @@ class ConnexionController extends Notifier<EtatConnexion> {
   /// [silencieux] : tentative à l'ouverture de l'écran, pour un compte qui a
   /// déjà autorisé EcoShop ; aucune erreur n'est affichée si elle échoue,
   /// le bouton reste là.
-  Future<void> connecterAvecGoogle({bool silencieux = false}) async {
+  ///
+  /// Une seule demande Google à la fois (REG-29) : un deuxième appel pendant
+  /// qu'une feuille du système est ouverte (double appui, écran reconstruit)
+  /// n'en ouvre pas une autre, qui resterait affichée derrière.
+  Future<void> connecterAvecGoogle({bool silencieux = false}) {
     final google = ref.read(connexionGoogleProvider);
-    if (!google.disponible || state.enCours || state.connecte) return;
+    if (!google.disponible || state.enCours || state.connecte) return Future.value();
+    return _demandeGoogle ??= _connecterAvecGoogle(google, silencieux).whenComplete(() => _demandeGoogle = null);
+  }
+
+  Future<void>? _demandeGoogle;
+
+  Future<void> _connecterAvecGoogle(ConnexionGoogle google, bool silencieux) async {
     if (!silencieux) state = state.copierAvec(enCours: true, effacerErreur: true);
 
     try {
