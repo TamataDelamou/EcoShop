@@ -111,9 +111,15 @@ void main() {
 
     expect(depot.demandes, 1);
     expect(depot.motifRecu, 'Mon enfant a changé d’école');
+    // Le cadre « Suppression prévue » s'affiche en haut de la liste.
+    await tester.scrollUntilVisible(find.byKey(const Key('suppression_programmee')), -200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('suppression_programmee')), findsOneWidget);
     expect(find.textContaining('Suppression prévue le'), findsOneWidget);
 
+    await tester.ensureVisible(find.byKey(const Key('bouton_garder_compte')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('bouton_garder_compte')));
     await tester.pumpAndSettle();
     expect(depot.annulations, 1);
