@@ -15,6 +15,7 @@ import 'ecran_annees_scolaires.dart';
 import 'ecran_classes_configuration.dart';
 import 'ecran_emploi_du_temps_automatique.dart';
 import 'ecran_groupes.dart';
+import 'ecran_matieres_programme.dart';
 import 'ecran_programme_etablissement.dart';
 import 'ecran_salles_configuration.dart';
 import 'elements_configuration.dart';
@@ -78,6 +79,20 @@ List<EtapeConfiguration> etapesConfiguration(Etablissement etab, EtatConfigurati
               '${e.classesSansNiveau > 0 ? ' · ${e.classesSansNiveau} sans niveau' : ''}',
       faite: e.classes > 0 && e.classesSansNiveau == 0,
       ouvrir: annee == null ? null : () => EcranClassesConfiguration(etablissement: etab, anneeId: annee),
+      bloquee: sansAnnee,
+    ),
+    // REG-33 : matières et coefficients de chaque niveau (et série) des classes.
+    EtapeConfiguration(
+      cle: 'matieres',
+      titre: 'Matières et coefficients',
+      icone: Icons.functions,
+      etat: e.niveauxClasses == 0
+          ? 'après les classes'
+          : e.niveauxSansMatieres == 0
+              ? '${e.niveauxClasses} niveau${e.niveauxClasses > 1 ? 'x' : ''} prêt${e.niveauxClasses > 1 ? 's' : ''}'
+              : '${e.niveauxSansMatieres} niveau${e.niveauxSansMatieres > 1 ? 'x' : ''} sans matières',
+      faite: e.niveauxClasses > 0 && e.niveauxSansMatieres == 0,
+      ouvrir: annee == null ? null : () => EcranProgrammesEcole(etablissement: etab, anneeId: annee),
       bloquee: sansAnnee,
     ),
     EtapeConfiguration(

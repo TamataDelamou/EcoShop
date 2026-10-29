@@ -1,4 +1,6 @@
 import '../../planification/domain/moteur_emploi_du_temps.dart';
+import '../../../core/format/coefficient.dart';
+import '../../referentiel/domain/programme_matiere.dart';
 
 /// Où en est la mise en route d'un établissement (REG-23) — réponse de
 /// `etat_configuration_etablissement`.
@@ -24,6 +26,8 @@ class EtatConfiguration {
     this.identiteVisuelle = false,
     this.slogan = false,
     this.paiementMobile = false,
+    this.niveauxClasses = 0,
+    this.niveauxSansMatieres = 0,
   });
 
   factory EtatConfiguration.depuisJson(Map<String, dynamic> j) {
@@ -51,6 +55,8 @@ class EtatConfiguration {
       identiteVisuelle: b('identite_visuelle'),
       slogan: b('slogan'),
       paiementMobile: b('paiement_mobile'),
+      niveauxClasses: n('niveaux_classes'),
+      niveauxSansMatieres: n('niveaux_sans_matieres'),
     );
   }
 
@@ -74,6 +80,13 @@ class EtatConfiguration {
   final bool identiteVisuelle;
   final bool slogan;
   final bool paiementMobile;
+
+  /// Couples niveau-série des classes de l'année (REG-33).
+  final int niveauxClasses;
+
+  /// Couples niveau-série sans aucune matière (ni programme de l'école, ni
+  /// programme national) : pas de cours ni de notes possibles.
+  final int niveauxSansMatieres;
 }
 
 /// Groupe pédagogique : partie de classe (demi-classe, langue, option,
@@ -185,7 +198,7 @@ class AffectationCours {
           ? j['nom_enseignant'] as String?
           : [p['prenom'], p['nom']].where((v) => v != null && (v as String).isNotEmpty).join(' '),
       nomMatiere: m?['nom'] as String? ?? j['nom_matiere'] as String?,
-      coefficient: (m?['coefficient'] ?? j['coefficient']) as int?,
+      coefficient: lireCoefficient(m?['coefficient'] ?? j['coefficient']),
     );
   }
 
@@ -231,7 +244,7 @@ class AffectationCours {
   final String? salleId;
   final String? nomEnseignant;
   final String? nomMatiere;
-  final int? coefficient;
+  final double? coefficient;
 }
 
 /// Membre du personnel (liste `membres_personnel`).
@@ -417,3 +430,66 @@ class Indisponibilite {
 
 const nomsJours = {1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi', 7: 'Dimanche'};
 const nomsJoursCourts = {1: 'Lun', 2: 'Mar', 3: 'Mer', 4: 'Jeu', 5: 'Ven', 6: 'Sam', 7: 'Dim'};
+
+/// Programme d'une école pour un niveau et une série (REG-33) : copie
+/// ajustable du programme national, ou matières créées par l'école quand le
+/// programme national n'est pas encore publié.
+class ProgrammeEcole {
+  const ProgrammeEcole({
+    required this.id,
+    required this.niveauId,
+    this.filiereId,
+    required this.nom,
+    this.sourceId,
+    this.matieres = const [],
+  });
+
+  final String id;
+  final String niveauId;
+  final String? filiereId;
+  final String nom;
+
+  /// Programme national d'origine, quand l'école l'a repris.
+  final String? sourceId;
+  final List<ProgrammeMatiere> matieres;
+
+  /// Somme des coefficients (affichée pour repérer un oubli).
+  double get totalCoefficients => matieres.fold(0, (s, m) => s + (m.coefficient ?? 1));
+
+  factory ProgrammeEcole.depuisJson(Map<String, dynamic> j) {
+    final matieres = [
+      for (final m in (j['programmes_matieres'] as List? ?? const []))
+        ProgrammeMatiere.depuisJson((m as Map).cast<String, dynamic>()),
+    ]..sort((a, b) => a.ordre.compareTo(b.ordre));
+    return ProgrammeEcole(
+      id: j['id'] as String,
+      niveauId: j['niveau_id'] as String,
+      filiereId: j['filiere_id'] as String?,
+      nom: j['nom'] as String? ?? '',
+      sourceId: j['source_id'] as String?,
+      matieres: matieres,
+    );
+  }
+
+  Map<String, dynamic> versJson() => {
+        'id': id,
+        'niveau_id': niveauId,
+        'filiere_id': filiereId,
+        'nom': nom,
+        'source_id': sourceId,
+        'programmes_matieres': [for (final m in matieres) m.versJson()],
+      };
+}
+
+/// Programme de l'école pour une classe : celui de sa série, sinon celui de
+/// son niveau (tronc commun).
+ProgrammeEcole? programmeEcolePour(List<ProgrammeEcole> programmes, String? niveauId, String? filiereId) {
+  if (niveauId == null) return null;
+  ProgrammeEcole? niveauSeul;
+  for (final p in programmes) {
+    if (p.niveauId != niveauId) continue;
+    if (p.filiereId == filiereId) return p;
+    if (p.filiereId == null) niveauSeul = p;
+  }
+  return niveauSeul;
+}

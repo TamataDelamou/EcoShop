@@ -11,7 +11,9 @@ import '../../scolarite/application/scolarite_providers.dart';
 import '../../scolarite/domain/classe.dart';
 import '../application/configuration_providers.dart';
 import '../domain/configuration.dart';
+import 'ecran_matieres_programme.dart';
 import 'elements_configuration.dart';
+import '../../../core/format/coefficient.dart';
 
 /// Nombre de semaines de cours retenu pour passer du volume annuel du
 /// programme officiel à un volume par semaine.
@@ -105,8 +107,17 @@ class _CoursDeClasse extends ConsumerWidget {
     final cours = (affectations.valueOrNull ?? const <AffectationCours>[]).where((a) => a.classeId == classe.id).toList();
     final niveauId = classe.niveauId;
     final arbo = niveauId == null ? null : ref.watch(arborescenceNiveauProvider(niveauId)).valueOrNull;
+    // REG-33 : programme de l'école d'abord (ajusté, ou créé tant que le
+    // programme national n'est pas publié), sinon programme national.
+    final programmesEcole = ref.watch(programmesEcoleProvider(etablissement.id)).valueOrNull ?? const <ProgrammeEcole>[];
+    final programmeEcole = programmeEcolePour(programmesEcole, niveauId, classe.filiereId);
     final programme = arbo?.programmePrincipal(filiereId: classe.filiereId) ?? arbo?.programmePrincipal();
-    final matieres = programme == null ? const <ProgrammeMatiere>[] : arbo!.matieresDuProgramme(programme.id);
+    final matieres = programmeEcole != null
+        ? programmeEcole.matieres
+        : programme == null
+            ? const <ProgrammeMatiere>[]
+            : arbo!.matieresDuProgramme(programme.id);
+    final nomProgramme = programmeEcole != null ? 'Programme de l’école' : programme == null ? null : 'Programme officiel : ${programme.nom}';
     final groupes = (ref.watch(groupesProvider(anneeId)).valueOrNull ?? const <GroupePedagogique>[])
         .where((g) => g.classeId == classe.id)
         .toList();
@@ -129,14 +140,45 @@ class _CoursDeClasse extends ConsumerWidget {
               child: ListTile(
                 leading: const Icon(Icons.schedule),
                 title: Text('$heures h de cours par semaine'),
-                subtitle: Text(programme == null
-                    ? 'Rattachez la classe à un niveau pour voir son programme officiel.'
-                    : 'Programme officiel : ${programme.nom}'),
+                subtitle: Text(niveauId == null
+                    ? 'Rattachez la classe à un niveau pour voir ses matières.'
+                    : nomProgramme ?? 'Aucune matière pour ce niveau'),
+                trailing: niveauId == null
+                    ? null
+                    : TextButton(
+                        key: const Key('cours_matieres_coefficients'),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => EcranMatieresProgramme(
+                            etablissement: etablissement,
+                            niveauId: niveauId,
+                            filiereId: classe.filiereId,
+                            titre: classe.nom,
+                          ),
+                        )),
+                        child: const Text('Matières'),
+                      ),
               ),
             ),
             const SizedBox(height: 8),
-            if (matieres.isEmpty && cours.isEmpty)
-              const Explication('Aucune matière : le programme officiel de ce niveau n’est pas encore publié pour le pays.'),
+            if (matieres.isEmpty && cours.isEmpty && niveauId != null)
+              EtatVide(
+                icone: Icons.menu_book_outlined,
+                titre: 'Aucune matière pour ce niveau',
+                texte: 'Le programme officiel n’est pas encore publié pour le pays. '
+                    'Créez les matières de l’école et leurs coefficients : vous pourrez ensuite attribuer les cours.',
+                action: FilledButton.icon(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => EcranMatieresProgramme(
+                      etablissement: etablissement,
+                      niveauId: niveauId,
+                      filiereId: classe.filiereId,
+                      titre: classe.nom,
+                    ),
+                  )),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Créer les matières'),
+                ),
+              ),
             for (final m in matieres) ...[
               _LigneMatiere(
                 matiere: m,
@@ -208,7 +250,7 @@ class _LigneMatiere extends StatelessWidget {
                   child: Text(matiere.nom, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 ),
                 if (matiere.coefficient != null)
-                  Chip(label: Text('coef. ${matiere.coefficient}'), visualDensity: VisualDensity.compact),
+                  Chip(label: Text('coef. ${formaterCoefficient(matiere.coefficient!)}'), visualDensity: VisualDensity.compact),
               ],
             ),
             if (officiel != null) Text(officiel, style: TextStyle(color: schema.onSurfaceVariant, fontSize: 12)),

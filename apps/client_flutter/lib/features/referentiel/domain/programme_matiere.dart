@@ -1,3 +1,5 @@
+import '../../../core/format/coefficient.dart';
+
 /// Projection cliente de `public.programmes_matieres` (M4).
 class ProgrammeMatiere {
   const ProgrammeMatiere({
@@ -8,6 +10,7 @@ class ProgrammeMatiere {
     required this.ordre,
     this.coefficient,
     this.volumeHoraireAnnuel,
+    this.nature = 'tronc_commun',
   });
 
   factory ProgrammeMatiere.depuisJson(Map<String, dynamic> json) {
@@ -17,8 +20,9 @@ class ProgrammeMatiere {
       code: json['code'] as String,
       nom: json['nom'] as String,
       ordre: json['ordre'] as int? ?? 0,
-      coefficient: json['coefficient'] as int?,
+      coefficient: lireCoefficient(json['coefficient']),
       volumeHoraireAnnuel: json['volume_horaire_annuel'] as int?,
+      nature: json['nature'] as String? ?? 'tronc_commun',
     );
   }
 
@@ -30,6 +34,7 @@ class ProgrammeMatiere {
         'ordre': ordre,
         'coefficient': coefficient,
         'volume_horaire_annuel': volumeHoraireAnnuel,
+        'nature': nature,
       };
 
   final String id;
@@ -37,6 +42,11 @@ class ProgrammeMatiere {
   final String code;
   final String nom;
   final int ordre;
-  final int? coefficient;
+  final double? coefficient;
   final int? volumeHoraireAnnuel;
+
+  /// REG-33 : `tronc_commun`, `specialite` (propre à la série) ou `option`.
+  final String nature;
+
+  static const natures = {'tronc_commun': 'Tronc commun', 'specialite': 'Spécialité de la série', 'option': 'Option'};
 }

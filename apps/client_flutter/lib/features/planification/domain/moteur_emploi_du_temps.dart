@@ -1111,7 +1111,8 @@ class CoursAPlacer {
   final String? salleId;
   final int minutesParSemaine;
   final int dureeSeance;
-  final int coefficient;
+  /// Coefficient de la matière (décimal depuis REG-33).
+  final double coefficient;
 
   String get libelle =>
       '${nomMatiere ?? 'Cours'} — $nomClasse${nomGroupe == null ? '' : ' ($nomGroupe)'}';

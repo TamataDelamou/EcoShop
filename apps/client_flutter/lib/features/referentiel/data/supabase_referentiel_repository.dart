@@ -86,21 +86,26 @@ class SupabaseReferentielRepository implements ReferentielRepository {
   @override
   Future<ArborescenceNiveau> arborescenceNiveau(String niveauId) {
     return _executer(() async {
+      // REG-33 : une série couvre plusieurs niveaux (`filieres_niveaux`).
       final filieresFut = _client
-          .from('filieres_educatives')
-          .select()
-          .eq('niveau_id', niveauId)
-          .order('nom');
+          .from('filieres_niveaux')
+          .select('filieres_educatives(*)')
+          .eq('niveau_id', niveauId);
+      // Programme national seulement : celui d'une école n'entre jamais dans
+      // le référentiel gardé sur le téléphone (configuration de l'école).
       final programmesFut = _client
           .from('programmes_officiels')
           .select()
           .eq('niveau_id', niveauId)
+          .isFilter('etablissement_id', null)
           .order('nom');
 
       final resultats = await Future.wait([filieresFut, programmesFut]);
-      final filieres = (resultats[0])
-          .map((l) => FiliereEducative.depuisJson(l))
-          .toList(growable: false);
+      final filieres = [
+        for (final l in resultats[0])
+          if (l['filieres_educatives'] is Map)
+            FiliereEducative.depuisJson((l['filieres_educatives'] as Map).cast<String, dynamic>()),
+      ]..sort((a, b) => a.ordre != b.ordre ? a.ordre.compareTo(b.ordre) : a.nom.compareTo(b.nom));
       final programmes = (resultats[1])
           .map((l) => ProgrammeOfficiel.depuisJson(l))
           .toList(growable: false);

@@ -1,3 +1,5 @@
+import '../../../core/format/coefficient.dart';
+
 /// Ligne du tableau par matière d'un bulletin (D5, secondaire uniquement) —
 /// RPC serveur `detail_bulletin_matieres` : moyenne déléguée à
 /// `calculer_moyenne_eleve` (aucun nouveau calcul côté client), nom et email
@@ -15,7 +17,7 @@ class DetailMatiereBulletin {
   factory DetailMatiereBulletin.depuisJson(Map<String, dynamic> json) {
     return DetailMatiereBulletin(
       matiere: json['matiere'] as String,
-      coefficient: json['coefficient'] as int?,
+      coefficient: lireCoefficient(json['coefficient']),
       moyenne: (json['moyenne'] as num?)?.toDouble(),
       enseignantNom: json['enseignant_nom'] as String?,
       enseignantEmail: json['enseignant_email'] as String?,
@@ -23,7 +25,7 @@ class DetailMatiereBulletin {
   }
 
   final String matiere;
-  final int? coefficient;
+  final double? coefficient;
   final double? moyenne;
   final String? enseignantNom;
   final String? enseignantEmail;

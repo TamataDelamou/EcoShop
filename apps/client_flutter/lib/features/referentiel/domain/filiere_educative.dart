@@ -7,6 +7,7 @@ class FiliereEducative {
     required this.nom,
     this.niveauId,
     this.description,
+    this.ordre = 0,
   });
 
   factory FiliereEducative.depuisJson(Map<String, dynamic> json) {
@@ -17,6 +18,7 @@ class FiliereEducative {
       nom: json['nom'] as String,
       niveauId: json['niveau_id'] as String?,
       description: json['description'] as String?,
+      ordre: (json['ordre'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -27,6 +29,7 @@ class FiliereEducative {
         'nom': nom,
         'niveau_id': niveauId,
         'description': description,
+        'ordre': ordre,
       };
 
   final String id;
@@ -35,4 +38,5 @@ class FiliereEducative {
   final String nom;
   final String? niveauId;
   final String? description;
+  final int ordre;
 }

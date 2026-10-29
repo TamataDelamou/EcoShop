@@ -11,6 +11,7 @@ import '../../referentiel/domain/pays_pedagogique.dart';
 import '../../scolarite/domain/fiche_eleve.dart';
 import '../application/pdf_palette.dart';
 import 'entete_pdf.dart';
+import '../../../core/format/coefficient.dart';
 
 /// Construit le PDF d'un bulletin publié (M6) — résout l'écart signalé par
 /// l'audit (`docs/AUDIT_ECOSHOP_FLUTTER.md` §0.2) : `ecoshop_flutter`
@@ -153,7 +154,7 @@ pw.Widget _tableauMatieres({required List<DetailMatiereBulletin> details, requir
           for (final d in details)
             [
               d.matiere,
-              d.coefficient?.toString() ?? '-',
+              d.coefficient == null ? '-' : formaterCoefficient(d.coefficient!),
               d.moyenne == null ? '-' : '${d.moyenne!.toStringAsFixed(2)}/20',
               [d.enseignantNom, d.enseignantEmail]
                   .where((s) => s != null && s.isNotEmpty)

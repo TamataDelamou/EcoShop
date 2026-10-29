@@ -27,7 +27,7 @@ CoursAPlacer _cours(String id, String classe, String prof, int heures,
       salleId: salle,
       minutesParSemaine: heures * 60,
       dureeSeance: duree,
-      coefficient: coef,
+      coefficient: coef.toDouble(),
     );
 
 bool _chevauche(SeancePlacee a, SeancePlacee b) =>

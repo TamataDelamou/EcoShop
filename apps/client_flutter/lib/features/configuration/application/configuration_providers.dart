@@ -45,6 +45,11 @@ final affectationsAnneeProvider = FutureProvider.autoDispose.family<List<Affecta
   return ref.watch(configurationRepositoryProvider).affectations(anneeId);
 });
 
+/// Programmes de l'école (REG-33) : matières et coefficients par niveau et série.
+final programmesEcoleProvider = FutureProvider.autoDispose.family<List<ProgrammeEcole>, String>((ref, etablissementId) {
+  return ref.watch(configurationRepositoryProvider).programmesEcole(etablissementId);
+});
+
 final grilleHoraireProvider = FutureProvider.autoDispose.family<GrilleHoraire?, String>((ref, anneeId) {
   return ref.watch(configurationRepositoryProvider).grille(anneeId);
 });
@@ -64,7 +69,10 @@ void rafraichirConfiguration(
   String? etablissementId,
   String? anneeId,
 }) {
-  if (etablissementId != null) invalider(etatConfigurationProvider(etablissementId));
+  if (etablissementId != null) {
+    invalider(etatConfigurationProvider(etablissementId));
+    invalider(programmesEcoleProvider(etablissementId));
+  }
   if (anneeId != null) {
     invalider(groupesProvider(anneeId));
     invalider(affectationsAnneeProvider(anneeId));
@@ -119,7 +127,7 @@ class EntreesCalcul {
               salleId: a.salleId,
               minutesParSemaine: (a.heuresParSemaine ?? 0) * 60,
               dureeSeance: a.dureeSeance,
-              coefficient: a.coefficient ?? 1,
+              coefficient: a.coefficient ?? 1.0,
             ),
       ],
       seancesFixes: [

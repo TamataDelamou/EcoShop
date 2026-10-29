@@ -49,6 +49,7 @@ attendue), `clos`.
 | REG-30 | **Feuille de route** : ce qui reste à faire, par priorité (état des lieux du 2026-10-28) | P1 | **ouvert** — voir juste sous ce tableau |
 | REG-31 | Pages de confidentialité, conditions d'utilisation et suppression de compte (site GSG) ; suppression du compte dans l'application | **P0** | **livré** (2026-10-29) — champs ⟦siège, RCCM⟧ à compléter, relecture de l'avocat, mise en ligne (`site_gsg/README.md`), migration 1577 |
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
+| REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 ; grille officielle guinéenne des coefficients à obtenir |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -88,8 +89,10 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
 
 ### P1 — prochains chantiers
 
-7. **[code]** **Séries du lycée guinéen** (SM, SE, SS) et coefficients
-   officiels, avant le premier lycée (REG-20, tâche ouverte).
+7. ~~**[code]** **Séries du lycée guinéen** (SM, SE, SS)~~ — **livré par
+   REG-33** (séries, programme de l'école, moyenne pondérée). Reste
+   **[GSG]** : obtenir la grille officielle des coefficients (lycée pilote ou
+   DGECS) pour la publier au référentiel.
 8. **[code]** **Messagerie privée** parent ↔ enseignant et **groupes de
    classe** (REG-19, lot en attente) : serveur existant à compléter (les
    parents en sont exclus aujourd'hui), écrans, hors connexion,
@@ -1868,3 +1871,55 @@ connexion, et chaque espace = (rôle, école)**.
 **Effet pour un parent seul** dont les enfants sont dans deux écoles : deux
 espaces parent, un par école (comme deux espaces Pronote), au lieu d'une
 liste mélangée.
+
+## REG-33 — Séries du lycée, programme de l'école, moyenne pondérée
+
+**Reçue le** : 2026-10-29. **Priorité** : P0 (bloquait toute école
+guinéenne). **Statut** : livré le 2026-10-29.
+
+Demande : séries du lycée, pour une plateforme multi-systèmes et
+multi-pays, après recherche approfondie et comparaison des meilleures
+applications.
+
+**Recherche.**
+- **Guinée** : Baccalauréat unique en séries SM, SE, SS ; lycée en 11e,
+  12e, Terminale ; session de rattrapage de 8,50 à 9,99 de moyenne (2026).
+  **Aucune grille officielle des coefficients n'est publiée en ligne**
+  (site du ministère, presse, annales consultés) : rien n'est inventé.
+- **Sénégal** : L1, L1a, L2, L'1, L'2, S1 à S5, T1, T2, G. **Côte
+  d'Ivoire** : A, C, D… avec programmes par série. **Ghana** (nouveau
+  programme 2024) : tronc commun, matières remplacées selon le programme
+  (Science : Additional Mathematics au lieu de Core Mathematics).
+- **Pronote** : l'établissement tient ses matières (services) et leurs
+  coefficients ; moyenne générale = moyennes de matières pondérées.
+
+**Constats en cours de route (plus urgents que les séries).**
+1. **Aucun programme officiel n'est publié pour la Guinée en production** :
+   une école ne pouvait créer **aucun cours**, donc ni notes ni bulletins.
+2. **La moyenne générale ignorait les coefficients des matières** : elle
+   mêlait toutes les évaluations (un devoir de dessin pesait autant qu'un
+   devoir de mathématiques).
+
+**Livré** (migration `…1579`, test pgTAP `97` 17/17 ; test `46` adapté) :
+- une série couvre plusieurs niveaux (`filieres_niveaux`) ; SM, SE, SS
+  publiées pour la Guinée en 11e, 12e et Terminale, **sans coefficients** ;
+  chaque lycée choisit la série de chacune de ses classes ;
+- **programme de l'école** (`programmes_officiels.etablissement_id`) :
+  reprise du programme national (copie ajustable) ou matières créées par
+  l'école ; lecture réservée à l'école, aux parents de ses élèves et à GSG ;
+  ajusté par la direction ou le poste « paramètres de la scolarité » ;
+- coefficients **décimaux** (0,5 ; 2,5) et nature de la matière (tronc
+  commun, spécialité, option) ;
+- **moyenne générale** = moyennes de matières pondérées par leurs
+  coefficients (1 s'il manque) ; moyenne d'une matière inchangée ;
+- application : étape de mise en route « Matières et coefficients » (par
+  niveau et série des classes), écran des matières avec suggestions de
+  noms, « Cours et enseignants » sur le programme de l'école, état de la
+  mise en route (niveaux sans matières), copie hors connexion purgée à la
+  déconnexion ; le référentiel gardé sur le téléphone ne contient que le
+  national.
+
+**Reste.** [GSG] Obtenir la grille officielle des coefficients guinéens
+(lycée pilote, DGECS) et la publier au référentiel ; [code] notation
+anglophone (pourcentages, lettres A1–F9 de la WAEC) le jour d'une école
+ghanéenne.

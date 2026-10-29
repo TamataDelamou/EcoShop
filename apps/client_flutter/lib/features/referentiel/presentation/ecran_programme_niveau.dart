@@ -10,6 +10,7 @@ import '../domain/filiere_educative.dart';
 import '../domain/niveau_educatif.dart';
 import '../domain/programme_matiere.dart';
 import 'widgets/pastille.dart';
+import '../../../core/format/coefficient.dart';
 
 /// Filières, programme officiel et matières d'un niveau (M4).
 class EcranProgrammeNiveau extends ConsumerStatefulWidget {
@@ -193,7 +194,7 @@ class _CarteMatiere extends StatelessWidget {
             : null,
         trailing: matiere.coefficient != null
             ? Pastille(
-                texte: 'Coef. ${matiere.coefficient}',
+                texte: 'Coef. ${formaterCoefficient(matiere.coefficient!)}',
                 couleur: context.palette.accent,
               )
             : null,

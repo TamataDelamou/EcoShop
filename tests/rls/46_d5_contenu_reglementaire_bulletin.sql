@@ -170,7 +170,7 @@ SELECT is(
   'detail_bulletin_matieres : collège -> une ligne (une matière affectée)'
 );
 SELECT is((SELECT matiere FROM public.detail_bulletin_matieres(:'fiche_id'::uuid, :'classe_college_id'::uuid, NULL)), 'Mathématiques', 'detail_bulletin_matieres : nom de la matière conforme');
-SELECT is((SELECT coefficient FROM public.detail_bulletin_matieres(:'fiche_id'::uuid, :'classe_college_id'::uuid, NULL)), 4, 'detail_bulletin_matieres : coefficient officiel du programme conforme');
+SELECT is((SELECT coefficient FROM public.detail_bulletin_matieres(:'fiche_id'::uuid, :'classe_college_id'::uuid, NULL)), 4::numeric, 'detail_bulletin_matieres : coefficient officiel du programme conforme');
 SELECT is((SELECT moyenne FROM public.detail_bulletin_matieres(:'fiche_id'::uuid, :'classe_college_id'::uuid, NULL)), 16.00, 'detail_bulletin_matieres : moyenne de la matière déléguée à calculer_moyenne_eleve');
 SELECT is((SELECT enseignant_email FROM public.detail_bulletin_matieres(:'fiche_id'::uuid, :'classe_college_id'::uuid, NULL)), 'mory.camara@ecole-test.gn', 'detail_bulletin_matieres : email de l''enseignant (jamais le téléphone)');
 

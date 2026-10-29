@@ -50,6 +50,9 @@ class ConfigurationRepository {
       'LIBELLE_REQUIS' => 'Donnez un nom à l’année (ex. 2026-2027).',
       'CRENEAU_DEJA_OCCUPE' => 'Un créneau est déjà occupé par une séance verrouillée. Relancez le calcul.',
       'GROUPE_CLASSE_HORS_ANNEE' => 'Ce groupe doit appartenir à une classe de la même année.',
+      'NOM_REQUIS' => 'Donnez un nom à la matière.',
+      'COEFFICIENT_INVALIDE' => 'Le coefficient doit être supérieur à 0 (0,5 ; 1 ; 2…).',
+      'NIVEAU_INCONNU' => 'Niveau inconnu : rattachez d’abord la classe à son niveau.',
       _ when code == '23505' => 'Cet élément existe déjà (même nom ou même code).',
       _ when code == '42501' => 'Action réservée à la Direction de l’établissement.',
       _ => 'Enregistrement impossible : $brut',
@@ -199,6 +202,54 @@ class ConfigurationRepository {
           for (final x in (j as List)) MembrePersonnel.depuisJson((x as Map).cast<String, dynamic>()),
         ],
       );
+
+  // ----------------------------------------------------------- programmes de l'école (REG-33)
+
+  /// Programmes de l'école, avec leurs matières (RLS : membres de l'école).
+  Future<List<ProgrammeEcole>> programmesEcole(String etablissementId) => _lecture.lire(
+        type: 'programmes_ecole',
+        cle: etablissementId,
+        source: () async {
+          final lignes = await _client
+              .from('programmes_officiels')
+              .select('*, programmes_matieres(*)')
+              .eq('etablissement_id', etablissementId)
+              .neq('statut', 'archive');
+          return [for (final l in lignes) ProgrammeEcole.depuisJson(l).versJson()];
+        },
+        decoder: (j) => [
+          for (final x in (j as List)) ProgrammeEcole.depuisJson((x as Map).cast<String, dynamic>()),
+        ],
+      );
+
+  /// Programme de l'école pour un niveau et une série : créé à la demande,
+  /// copie du programme national s'il existe.
+  Future<String> adopterProgramme({required String etablissementId, required String niveauId, String? filiereId}) =>
+      _ecrire(() async => (await _client.rpc('adopter_programme_ecole', params: {
+            'p_etablissement': etablissementId,
+            'p_niveau': niveauId,
+            'p_filiere': filiereId,
+          })) as String);
+
+  Future<void> enregistrerMatiere({
+    required String programmeId,
+    required String nom,
+    double? coefficient,
+    int? volumeAnnuel,
+    String nature = 'tronc_commun',
+    String? matiereId,
+  }) =>
+      _ecrire(() => _client.rpc('enregistrer_matiere_ecole', params: {
+            'p_programme': programmeId,
+            'p_nom': nom,
+            'p_coefficient': coefficient,
+            'p_volume_annuel': volumeAnnuel,
+            'p_nature': nature,
+            'p_matiere': matiereId,
+          }));
+
+  Future<void> retirerMatiere(String matiereId) =>
+      _ecrire(() => _client.rpc('retirer_matiere_ecole', params: {'p_matiere': matiereId}));
 
   // ----------------------------------------------------------- affectations
 
