@@ -44,8 +44,79 @@ attendue), `clos`.
 | REG-25 | Accueil : affichage défilant ou fixe, 2 ou 3 pastilles par ligne | P2 | **livré** (2026-10-28) — à vérifier sur un téléphone Android |
 | REG-26 | Autorisations des postes approfondies (délégation des actions réservées à la Direction) | P1 | **livré** (2026-10-28) — migration 1575 à appliquer |
 | REG-27 | Code d'invitation à saisir ; espaces d'un même compte (parent et enseignant) | P1 | **livré** (2026-10-28) — migration 1576 à appliquer |
+| REG-28 | Actions des écrans visibles, avec leur libellé, sous la barre de titre (25 écrans) | P1 | **livré** (2026-10-29) — à vérifier sur un téléphone Android |
+| REG-29 | Connexion Google : un seul sélecteur de comptes | P1 | **livré** (2026-10-29) — à vérifier sur un téléphone Android |
+| REG-30 | **Feuille de route** : ce qui reste à faire, par priorité (état des lieux du 2026-10-28) | P1 | **ouvert** — voir juste sous ce tableau |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
+
+---
+
+## REG-30 — Feuille de route : ce qui reste à faire
+
+**Établie le** : 2026-10-28 (état des lieux), rangée au registre le
+2026-10-29. **Priorité** : P1. **Statut** : ouvert — tenue à jour à chaque
+livraison (une ligne close renvoie vers son REG ou son commit).
+
+Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
+**[GSG]** une décision, un compte ou un paiement du porteur de projet ;
+**[test]** une vérification sur un téléphone ou avec une école pilote.
+
+### P0 — avant d'ouvrir l'application à une vraie école
+
+1. **[GSG]** Projet Supabase de production, passé en **Pro** (un projet
+   gratuit est mis en pause après une semaine sans activité) —
+   `docs/MISE_EN_SERVICE.md`.
+2. **[GSG]** Déployer sur ce projet les migrations 1561 à 1576, les
+   fonctions `pas_moi` et `envoyer_notifications`, puis les autres
+   fonctions listées au README (`scripts\deployer_supabase.ps1`).
+3. **[test]** `flutter test` au vert, APK `armeabi-v7a` installé, parcours
+   complet sur téléphone : création de l'école, mise en route (année,
+   classes, groupes, cours, emploi du temps), invitations par code,
+   inscription d'un élève, encaissement, hors connexion.
+4. **[code]** Pages publiques **Politique de confidentialité** et
+   **Conditions d'utilisation** (`globalservicegroupe.com/confidentialite`
+   et `/conditions`), exigées par le Play Store et liées depuis
+   l'application ; relecture par l'avocat (point 10).
+5. **[GSG]** Empreinte **SHA-1** de la clé GSG dans Firebase et dans la
+   console Google (connexion Google, notifications) — MISE_EN_SERVICE §5.
+6. **[GSG]** Réglages de la connexion Google dans Supabase
+   (MISE_EN_SERVICE §5.1).
+
+### P1 — prochains chantiers
+
+7. **[code]** **Séries du lycée guinéen** (SM, SE, SS) et coefficients
+   officiels, avant le premier lycée (REG-20, tâche ouverte).
+8. **[code]** **Messagerie privée** parent ↔ enseignant et **groupes de
+   classe** (REG-19, lot en attente) : serveur existant à compléter (les
+   parents en sont exclus aujourd'hui), écrans, hors connexion,
+   protection des mineurs.
+9. **[test]** **Pilote Bambino Emmaüs** : validation de l'école et premier
+   **paiement Orange Money réel** (REG-02).
+10. **[GSG]** **Avocat** : conditions d'utilisation, confidentialité,
+    données des mineurs, contrats écoles et vendeurs.
+11. **[GSG]** **Expert-comptable** : relecture du référentiel comptable
+    avant production (REG-03).
+12. **[GSG]** Compte **Orange SMS** (codes de connexion de secours,
+    alertes de pointage, relances d'impayés) — REG-09, REG-12.
+13. **[GSG]** Confirmation du **contrat Kernel** (reporting, jetons
+    inter-services) — REG-01.2 et REG-01.3.
+14. **[test]** Vérifications sur téléphone Android encore dues : entrées
+    marquées « à vérifier » dans le tableau ci-dessus (REG-07 à REG-29).
+
+### P2 — ensuite
+
+15. **[code]** Emploi du temps, suites de REG-24 : remplacement d'un
+    enseignant absent, semaines A/B, export PDF par classe et par
+    enseignant.
+16. **[code]** **M17 — bibliothèque numérique** (cahier ch. 26), après la
+    bibliothèque physique (REG-15).
+17. **[code]** **M19** et **M20** : parties restantes du cahier (pages
+    publiques des écoles et des réseaux, fonctions partielles listées au
+    README).
+18. **[code]** **iOS** : notifications, connexion Google, publication
+    (compte Apple développeur à ouvrir côté GSG).
+19. **[code]** **README** à resynchroniser avec REG-13 à REG-29.
 
 ---
 
