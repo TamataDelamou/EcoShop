@@ -149,7 +149,7 @@ confirmé par l'école au passage de la personne, gratuitement.
    (`docs/DEPLOIEMENT_COURRIEL.md`, étape 5). Indispensable : sans SMTP à
    soi, Supabase n'envoie que quelques courriels par heure.
 4. **Authentication → Emails → Templates → Magic Link** : l'application
-   attend un **code**. Objet : `Votre code EcoShop : {{ .Token }}` ; corps :
+   attend un **code**. Objet : `Votre code de connexion EcoShop` (le code n'est que dans le corps : il ne s'affiche pas sur l'écran verrouillé) ; corps :
    `<p>Votre code de connexion EcoShop : <strong>{{ .Token }}</strong></p><p>Il est valable 10 minutes. Si vous n'avez rien demandé, ignorez ce message.</p>`.
    Faire de même pour **Confirm signup** (premier compte).
 5. **Authentication → Rate Limits** : courriels envoyés par heure, par
