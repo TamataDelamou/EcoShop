@@ -34,6 +34,7 @@ import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
 import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
+import '../../parametres_gsg/presentation/ecran_admins_contenu.dart';
 import '../../parametres_gsg/presentation/ecran_parametres_gsg.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
@@ -623,6 +624,12 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, motsCles: ['signalement', 'erreur', 'suspendue'],
     visible: (c) => c.role == RoleRacine.adminContenu,
     ouvrir: (context, ref, c) => _aller(context, const EcranQuestionsSignalees()),
+  ),
+  Fonction(
+    id: 'gsg_admins_contenu', libelle: 'Administrateurs de contenu', icone: Icons.manage_accounts_outlined,
+    teinte: Teinte.violet, groupe: _plateforme, motsCles: ['contenu pédagogique', 'questions', 'désigner', 'rôle'],
+    visible: (c) => c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranAdminsContenu()),
   ),
   // REG-36 : paramètres de la plateforme (tarifs, quotas IA, seuils), historisés.
   Fonction(
