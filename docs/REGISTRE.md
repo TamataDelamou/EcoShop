@@ -51,7 +51,7 @@ attendue), `clos`.
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
-| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1, 2 et 3 livrés (2026-10-30) ; migration 1581 à appliquer |
+| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1, 2 et 3 livrés (2026-10-30) ; migrations 1581 et 1582 à appliquer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2037,4 +2037,18 @@ portées des tâches (`amorcage.dart`, `plan_amorcage.dart`), vérification
 au début de l'amorçage (`amorcage_controller.dart`). Sans la migration, le
 téléphone relit tout, comme au lot 2. Références : WatermelonDB
 (`lastPulledAt`), PowerSync (buckets, reprise au dernier point).
+
+Intégration continue remise au vert (2026-10-30, demande de fusion n°1) :
+la vérification « Base » échouait depuis REG-27 et l'analyse Flutter depuis
+le lot 2, sans que les journaux soient lisibles. Les erreurs remontent
+désormais en annotations ; les tests Flutter tournent même si l'analyse a
+des remarques. Corrigés : test 95 (identifiant de session du schéma auth),
+test 38 (règle REG-23 : la Direction a tous les droits de son école),
+quatre seeds (`on conflict` sans cible, index de REG-24 et REG-33).
+**Régression de droits corrigée** (migration 1582, révélée par le test 56) :
+REG-26 avait ouvert à l'Administrateur GSG douze actions de l'école
+(annonces, proclamation, mentions finales, identifiants Orange Money,
+crédits SMS, agrément des vendeurs, déblocage des codes) ;
+`a_permission_ecole` les réserve de nouveau à la Direction et aux postes de
+l'école.
 
