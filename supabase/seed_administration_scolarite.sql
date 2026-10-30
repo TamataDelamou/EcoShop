@@ -198,7 +198,7 @@ select (select val from seed_m5 where cle = 'etab'),
 from public.classes c
 where c.code = '7A'
   and c.annee_scolaire_id = (select val from seed_m5 where cle = 'annee')
-on conflict (annee_scolaire_id, enseignant_profile_id, classe_id, programme_matiere_id) do nothing;
+on conflict do nothing;
 
 -- ============================================================================
 -- Fin de la maquette M5.

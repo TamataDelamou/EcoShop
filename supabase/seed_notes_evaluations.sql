@@ -117,7 +117,7 @@ select (select val from seed_m6 where cle = 'etab'),
        (select val from seed_m6 where cle = 'classe_10a'),
        (select val from seed_m6 where cle = 'matiere_math'),
        'enseignant'
-on conflict (annee_scolaire_id, enseignant_profile_id, classe_id, programme_matiere_id) do nothing;
+on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
 -- Évaluations
