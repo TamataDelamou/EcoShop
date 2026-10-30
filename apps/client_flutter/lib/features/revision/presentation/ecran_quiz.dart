@@ -1,13 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/audio/lecteur_vocal.dart';
 import '../application/revision_providers.dart';
 import '../domain/question.dart';
 import '../domain/quiz.dart';
+import 'champ_reponse.dart';
 
 enum _Phase { repondre, corrige, fin }
 
@@ -40,82 +41,17 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
   bool _enregistre = false;
   bool? _recu;
 
-  // Ordre d'affichage de la question courante.
-  List<ItemQuestion> _ordreChoix = const [];
-  List<ItemQuestion> _ordreDroite = const [];
-  final _texte = TextEditingController();
-  final Map<String, TextEditingController> _trous = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _preparer();
-  }
-
-  @override
-  void dispose() {
-    _texte.dispose();
-    for (final c in _trous.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
+  bool _complete = false;
 
   void _preparer() {
-    final q = _s.courante;
     _donnee = null;
-    _texte.clear();
-    for (final c in _trous.values) {
-      c.dispose();
-    }
-    _trous.clear();
+    _complete = false;
     _debutQuestion = DateTime.now();
-    if (q == null) return;
-    final c = q.contenu;
-    switch (c.type) {
-      case TypeQuestion.qcmSimple:
-      case TypeQuestion.qcmMultiple:
-        _ordreChoix = melanger(c.choix, _hasard);
-        _donnee = <String>{};
-      case TypeQuestion.association:
-        _ordreDroite = melanger(c.droite, _hasard);
-        _donnee = <String, String>{};
-      case TypeQuestion.classement:
-        _donnee = [for (final e in melanger(c.elements, _hasard, eviterIdentite: true)) e.id];
-      case TypeQuestion.texteATrous:
-        for (final t in c.trous) {
-          _trous[t] = TextEditingController();
-        }
-      default:
-        break;
-    }
-  }
-
-  Object? _reponseSaisie() {
-    final c = _s.courante!.contenu;
-    return switch (c.type) {
-      TypeQuestion.reponseCourte || TypeQuestion.calcul => _texte.text,
-      TypeQuestion.texteATrous => {for (final e in _trous.entries) e.key: e.value.text},
-      _ => _donnee,
-    };
-  }
-
-  bool get _peutValider {
-    final c = _s.courante?.contenu;
-    if (c == null) return false;
-    return switch (c.type) {
-      TypeQuestion.qcmSimple || TypeQuestion.qcmMultiple => (_donnee as Set).isNotEmpty,
-      TypeQuestion.vraiFaux => _donnee is bool,
-      TypeQuestion.reponseCourte || TypeQuestion.calcul => _texte.text.trim().isNotEmpty,
-      TypeQuestion.texteATrous => _trous.values.any((t) => t.text.trim().isNotEmpty),
-      TypeQuestion.association => (_donnee as Map).length == c.gauche.length,
-      TypeQuestion.classement => true,
-    };
   }
 
   void _valider() {
     final duree = DateTime.now().difference(_debutQuestion).inSeconds;
-    final r = _s.repondre(_reponseSaisie(), dureeS: duree);
+    final r = _s.repondre(_donnee, dureeS: duree);
     _serie = r.correction.juste ? _serie + 1 : 0;
     setState(() {
       _derniere = r;
@@ -125,6 +61,7 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
   }
 
   Future<void> _suivant() async {
+    ref.read(lecteurVocalProvider).arreter();
     if (_s.fini) {
       setState(() => _phase = _Phase.fin);
       await _enregistrer(termine: true);
@@ -134,6 +71,15 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
       _preparer();
       _phase = _Phase.repondre;
     });
+  }
+
+  Future<void> _lireAVoixHaute(String texte) async {
+    final ok = await ref.read(lecteurVocalProvider).lire(texte);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Lecture à voix haute indisponible : installez une voix française dans les réglages du téléphone.'),
+      ));
+    }
   }
 
   Future<void> _enregistrer({required bool termine}) async {
@@ -256,15 +202,35 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text('Avec ${widget.prenom}', style: TextStyle(color: schema.onSurfaceVariant)),
           ),
-        Text(enonce, key: const Key('quiz_enonce'), style: Theme.of(context).textTheme.titleMedium),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Text(enonce, key: const Key('quiz_enonce'), style: Theme.of(context).textTheme.titleMedium)),
+          // Petites classes : lire la question à voix haute (enfant qui lit
+          // encore peu) ; disponible pour tous.
+          IconButton(
+            key: const Key('quiz_ecouter'),
+            tooltip: 'Écouter la question',
+            iconSize: widget.petitesClasses ? 36 : 24,
+            onPressed: () => _lireAVoixHaute(texteQuestionALire(c)),
+            icon: const Icon(Icons.volume_up_outlined),
+          ),
+        ]),
         if (c.mediaChemin != null) _ImageQuestion(chemin: c.mediaChemin!),
         const SizedBox(height: 16),
         if (_phase == _Phase.repondre) ...[
-          _saisie(c),
+          ChampReponse(
+            key: ValueKey('reponse_${q.id}_${_s.index}'),
+            question: q,
+            petitesClasses: widget.petitesClasses,
+            hasard: _hasard,
+            onChanged: (d, complete) => setState(() {
+              _donnee = d;
+              _complete = complete;
+            }),
+          ),
           const SizedBox(height: 20),
           FilledButton(
             key: const Key('quiz_valider'),
-            onPressed: _peutValider ? _valider : null,
+            onPressed: _complete ? _valider : null,
             child: const Text('Valider'),
           ),
         ] else
@@ -300,6 +266,16 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
             ],
             const SizedBox(height: 8),
             Text(q.contenu.explication, key: const Key('quiz_explication')),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('quiz_ecouter_explication'),
+                onPressed: () => _lireAVoixHaute(
+                    '$_message. ${juste ? '' : 'La bonne réponse est : ${q.contenu.bonneReponseLisible()}. '}${q.contenu.explication}'),
+                icon: const Icon(Icons.volume_up_outlined, size: 18),
+                label: const Text('Écouter'),
+              ),
+            ),
           ]),
         ),
       ),
@@ -316,134 +292,6 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
         label: const Text('Signaler une erreur dans la question'),
       ),
     ]);
-  }
-
-  Widget _saisie(ContenuQuestion c) {
-    switch (c.type) {
-      case TypeQuestion.qcmSimple:
-      case TypeQuestion.qcmMultiple:
-        final choisis = _donnee as Set<String>;
-        final multiple = c.type == TypeQuestion.qcmMultiple;
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (multiple) const Padding(padding: EdgeInsets.only(bottom: 8), child: Text('Plusieurs réponses possibles.')),
-          for (final x in _ordreChoix)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _Choix(
-                cle: 'choix_${x.id}',
-                texte: x.texte,
-                choisi: choisis.contains(x.id),
-                multiple: multiple,
-                grand: widget.petitesClasses,
-                onTap: () => setState(() {
-                  if (multiple) {
-                    choisis.contains(x.id) ? choisis.remove(x.id) : choisis.add(x.id);
-                  } else {
-                    choisis
-                      ..clear()
-                      ..add(x.id);
-                  }
-                }),
-              ),
-            ),
-        ]);
-      case TypeQuestion.vraiFaux:
-        return Row(children: [
-          for (final v in [true, false]) ...[
-            Expanded(
-              child: _Choix(
-                cle: 'vf_$v',
-                texte: v ? 'Vrai' : 'Faux',
-                choisi: _donnee == v,
-                grand: true,
-                onTap: () => setState(() => _donnee = v),
-              ),
-            ),
-            if (v) const SizedBox(width: 12),
-          ],
-        ]);
-      case TypeQuestion.reponseCourte:
-        return TextField(
-          key: const Key('quiz_texte'),
-          controller: _texte,
-          autofocus: true,
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _peutValider ? _valider() : null,
-          decoration: const InputDecoration(labelText: 'Ta réponse', border: OutlineInputBorder()),
-        );
-      case TypeQuestion.calcul:
-        final unite = c.reponse['unite'];
-        return TextField(
-          key: const Key('quiz_texte'),
-          controller: _texte,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9,.\- ]'))],
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            labelText: 'Ton résultat',
-            suffixText: unite == null || '$unite'.isEmpty ? null : '$unite',
-            border: const OutlineInputBorder(),
-          ),
-        );
-      case TypeQuestion.texteATrous:
-        return Column(children: [
-          for (final e in _trous.entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: TextField(
-                key: ValueKey('quiz_trou_${e.key}'),
-                controller: e.value,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(labelText: 'Trou (${e.key})', border: const OutlineInputBorder()),
-              ),
-            ),
-        ]);
-      case TypeQuestion.association:
-        final paires = _donnee as Map<String, String>;
-        return Column(children: [
-          for (final g in c.gauche)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(children: [
-                Expanded(child: Text(g.texte, style: const TextStyle(fontWeight: FontWeight.w600))),
-                const Icon(Icons.arrow_forward, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButton<String>(
-                    key: ValueKey('quiz_paire_${g.id}'),
-                    isExpanded: true,
-                    hint: const Text('Choisir'),
-                    value: paires[g.id],
-                    items: [for (final d in _ordreDroite) DropdownMenuItem(value: d.id, child: Text(d.texte))],
-                    onChanged: (v) => setState(() {
-                      if (v != null) paires[g.id] = v;
-                    }),
-                  ),
-                ),
-              ]),
-            ),
-        ]);
-      case TypeQuestion.classement:
-        final ordre = _donnee as List<String>;
-        final textes = {for (final e in c.elements) e.id: e.texte};
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Fais glisser pour mettre dans le bon ordre.'),
-          const SizedBox(height: 8),
-          ReorderableListView(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            onReorderItem: (a, b) => setState(() => ordre.insert(b, ordre.removeAt(a))),
-            children: [
-              for (final (i, id) in ordre.indexed)
-                Card(
-                  key: ValueKey('quiz_element_$id'),
-                  child: ListTile(leading: Text('${i + 1}'), title: Text(textes[id] ?? ''), trailing: const Icon(Icons.drag_handle)),
-                ),
-            ],
-          ),
-        ]);
-    }
   }
 
   Widget _resultat(BuildContext context) {
@@ -492,51 +340,6 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
         const SizedBox(height: 8),
         FilledButton(key: const Key('quiz_terminer'), onPressed: () => Navigator.of(context).pop(), child: const Text('Terminer')),
       ],
-    );
-  }
-}
-
-class _Choix extends StatelessWidget {
-  const _Choix({
-    required this.cle,
-    required this.texte,
-    required this.choisi,
-    required this.onTap,
-    this.multiple = false,
-    this.grand = false,
-  });
-
-  final String cle;
-  final String texte;
-  final bool choisi;
-  final bool multiple;
-  final bool grand;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final schema = Theme.of(context).colorScheme;
-    return Material(
-      color: choisi ? schema.primaryContainer : schema.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        key: Key(cle),
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: grand ? 20 : 14),
-          child: Row(children: [
-            Icon(
-              multiple
-                  ? (choisi ? Icons.check_box : Icons.check_box_outline_blank)
-                  : (choisi ? Icons.radio_button_checked : Icons.radio_button_unchecked),
-              color: choisi ? schema.primary : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(texte, style: TextStyle(fontSize: grand ? 20 : 16))),
-          ]),
-        ),
-      ),
     );
   }
 }

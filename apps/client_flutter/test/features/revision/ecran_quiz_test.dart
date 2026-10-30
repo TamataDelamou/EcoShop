@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:ecoshop_client/core/audio/lecteur_vocal.dart';
 import 'package:ecoshop_client/features/revision/application/revision_providers.dart';
 import 'package:ecoshop_client/features/revision/data/revision_repository.dart';
 import 'package:ecoshop_client/features/revision/domain/quiz.dart';
@@ -8,6 +9,21 @@ import 'package:ecoshop_client/features/revision/presentation/ecran_revision.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _FauxLecteur implements LecteurVocal {
+  final lus = <String>[];
+
+  @override
+  Future<bool> lire(String texte) async {
+    lus.add(texte);
+    return true;
+  }
+
+  @override
+  Future<void> arreter() async {}
+}
+
+final _lecteur = _FauxLecteur();
 
 class _FauxDepot extends Fake implements RevisionRepository {
   final enregistrees = <({String id, bool termine, int reponses})>[];
@@ -62,6 +78,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         revisionRepositoryProvider.overrideWithValue(depot),
+        lecteurVocalProvider.overrideWithValue(_lecteur),
         espaceRevisionProvider('f1').overrideWith((ref) async => throw UnimplementedError()),
       ],
       child: MaterialApp(
@@ -97,6 +114,9 @@ void main() {
   testWidgets('un quiz complet : correction immédiate, explication, résultat, envoi', (tester) async {
     final depot = await monter(tester);
     expect(find.text('Avec Awa'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('quiz_ecouter')));
+    await tester.pump();
+    expect(_lecteur.lus.last, '2 + 2 = 4. Vrai, ou faux ?');
     expect(find.text('Question 1 sur 3'), findsOneWidget);
 
     // Q1 : juste.

@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/audio/lecteur_vocal.dart';
 import '../application/revision_providers.dart';
 import '../data/revision_repository.dart';
+import '../domain/classement.dart';
 import '../domain/conseils.dart';
+import '../domain/examen.dart';
 import '../domain/question.dart';
 import '../domain/quiz.dart';
+import 'ecran_examen.dart';
 import 'ecran_quiz.dart';
 
 /// Révisions d'un élève (REG-37 lot R2). Pour l'élève : « Mes révisions ».
@@ -101,6 +105,37 @@ class EcranRevision extends ConsumerWidget {
     if (config != null && context.mounted) _lancer(context, ref, e, config);
   }
 
+  Future<void> _preparerExamen(BuildContext context, WidgetRef ref, EspaceRevision e) async {
+    final reglage = await showDialog<({String? matiereId, int nombre, int? minutes})>(
+      context: context,
+      builder: (_) => _DialogueExamen(espace: e),
+    );
+    if (reglage == null || !context.mounted) return;
+    final questions = choisirQuestions(
+      e.paquet,
+      ConfigQuiz(mode: ModeQuiz.examen, matiereId: reglage.matiereId, nombre: reglage.nombre),
+      traces: e.traces,
+    )..shuffle();
+    if (questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pas encore assez de questions ici. L’équipe pédagogique en prépare.')),
+      );
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => EcranExamen(
+        examen: SessionExamen(
+          id: const Uuid().v4(),
+          ficheId: ficheId,
+          matiereId: reglage.matiereId,
+          questions: questions,
+          dureeLimiteS: reglage.minutes == null ? dureeConseilleeS(questions) : reglage.minutes! * 60,
+        ),
+        competences: {for (final k in e.paquet.competences) k.id: k.libelle},
+      ),
+    ));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final espace = ref.watch(espaceRevisionProvider(ficheId));
@@ -178,6 +213,7 @@ class EcranRevision extends ConsumerWidget {
           ),
         const SizedBox(height: 12),
         _CarteResume(resume: r, paquet: e.paquet),
+        if (parent) _CarteBilan(ficheId: ficheId),
         for (final c in conseils)
           Card(
             color: schema.secondaryContainer,
@@ -185,7 +221,11 @@ class EcranRevision extends ConsumerWidget {
               key: const Key('conseil_parent'),
               leading: const Icon(Icons.tips_and_updates_outlined),
               title: Text(c.texte),
-              trailing: c.matiereId == null ? null : const Icon(Icons.play_arrow),
+              trailing: IconButton(
+                tooltip: 'Écouter',
+                onPressed: () => ref.read(lecteurVocalProvider).lire(c.texte),
+                icon: const Icon(Icons.volume_up_outlined),
+              ),
               onTap: c.matiereId == null
                   ? null
                   : () => _lancer(context, ref, e, ConfigQuiz(mode: ModeQuiz.matiere, matiereId: c.matiereId, petitesClasses: petites)),
@@ -223,6 +263,16 @@ class EcranRevision extends ConsumerWidget {
                 label: const Text('Quiz personnalisé'),
               ),
             ),
+          if (!petites) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('examen_blanc'),
+              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16), alignment: Alignment.centerLeft),
+              onPressed: () => _preparerExamen(context, ref, e),
+              icon: const Icon(Icons.timer_outlined),
+              label: const Text('Examen blanc : chronométré, corrigé à la fin'),
+            ),
+          ],
           if (aRevoir.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text('À revoir', style: Theme.of(context).textTheme.titleMedium),
@@ -237,6 +287,7 @@ class EcranRevision extends ConsumerWidget {
                 onTap: () => _lancer(context, ref, e, ConfigQuiz(mode: ModeQuiz.matiere, matiereId: k.matiereId, petitesClasses: petites)),
               ),
           ],
+          if (!petites) _SectionClassement(ficheId: ficheId, parent: parent, prenom: prenom),
           const SizedBox(height: 12),
           Text('Par matière', style: Theme.of(context).textTheme.titleMedium),
           for (final m in e.paquet.matieres)
@@ -396,6 +447,197 @@ class _DialoguePersonnaliseState extends State<_DialoguePersonnalise> {
             difficultes: {..._difficultes},
             nombre: max(5, _nombre.round()),
           )),
+          child: const Text('Commencer'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bilan de la semaine pour le parent, à lire ou à écouter (le même que la
+/// notification du dimanche soir).
+class _CarteBilan extends ConsumerWidget {
+  const _CarteBilan({required this.ficheId});
+
+  final String ficheId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bilan = ref.watch(bilanRevisionProvider(ficheId)).valueOrNull;
+    if (bilan == null || bilan.isEmpty) return const SizedBox.shrink();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Bilan de la semaine', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 4),
+              Text(bilan, key: const Key('bilan_semaine')),
+            ]),
+          ),
+          IconButton.filledTonal(
+            key: const Key('bilan_ecouter'),
+            tooltip: 'Écouter le bilan',
+            onPressed: () async {
+              final ok = await ref.read(lecteurVocalProvider).lire(bilan);
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Lecture à voix haute indisponible : installez une voix française dans les réglages du téléphone.'),
+                ));
+              }
+            },
+            icon: const Icon(Icons.volume_up_outlined),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Classement de la semaine (classe ou école), sur les points d'effort.
+class _SectionClassement extends ConsumerStatefulWidget {
+  const _SectionClassement({required this.ficheId, required this.parent, required this.prenom});
+
+  final String ficheId;
+  final bool parent;
+  final String prenom;
+
+  @override
+  ConsumerState<_SectionClassement> createState() => _SectionClassementState();
+}
+
+class _SectionClassementState extends ConsumerState<_SectionClassement> {
+  String _echelle = 'classe';
+
+  Future<void> _basculer(bool visible) async {
+    try {
+      await ref.read(revisionRepositoryProvider).definirClassementVisible(widget.ficheId, visible);
+      ref
+        ..invalidate(classementRevisionProvider((fiche: widget.ficheId, echelle: 'classe')))
+        ..invalidate(classementRevisionProvider((fiche: widget.ficheId, echelle: 'etablissement')));
+    } on ErreurRevision catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = ref.watch(classementRevisionProvider((fiche: widget.ficheId, echelle: _echelle))).valueOrNull;
+    if (c == null || !c.actif) return const SizedBox.shrink();
+    final schema = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text('Classement de la semaine', style: Theme.of(context).textTheme.titleMedium)),
+          SegmentedButton<String>(
+            key: const Key('classement_echelle'),
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: 'classe', label: Text('Classe')),
+              ButtonSegment(value: 'etablissement', label: Text('École')),
+            ],
+            selected: {_echelle},
+            onSelectionChanged: (s) => setState(() => _echelle = s.first),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        Text('Points d’effort : $baremeEffort Nouveau classement chaque lundi.',
+            style: TextStyle(color: schema.onSurfaceVariant, fontSize: 12)),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(children: [
+            if (c.lignes.isEmpty)
+              const Padding(padding: EdgeInsets.all(16), child: Text('Personne n’a encore de points cette semaine : à toi de commencer !')),
+            for (final (i, l) in c.lignes.indexed) ...[
+              if (i > 0 && l.rang > c.lignes[i - 1].rang + 1) const Divider(height: 1),
+              ListTile(
+                key: ValueKey('classement_${l.rang}_${l.nom}'),
+                dense: true,
+                tileColor: l.moi ? schema.primaryContainer : null,
+                leading: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: l.rang <= 3 ? schema.tertiaryContainer : schema.surfaceContainerHighest,
+                  child: Text('${l.rang}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+                title: Text(l.moi ? '${l.nom} (${widget.parent ? widget.prenom : 'toi'})' : l.nom,
+                    style: TextStyle(fontWeight: l.moi ? FontWeight.w800 : FontWeight.w500)),
+                trailing: Text('${l.points} pts'),
+              ),
+            ],
+          ]),
+        ),
+        Text(c.encouragement(), key: const Key('classement_encouragement')),
+        SwitchListTile(
+          key: const Key('classement_visible'),
+          contentPadding: EdgeInsets.zero,
+          value: c.visible,
+          onChanged: _basculer,
+          title: Text(widget.parent ? 'Montrer ${widget.prenom} dans le classement' : 'Apparaître dans le classement'),
+          subtitle: const Text('Seuls le prénom et l’initiale du nom sont montrés.'),
+        ),
+      ]),
+    );
+  }
+}
+
+class _DialogueExamen extends StatefulWidget {
+  const _DialogueExamen({required this.espace});
+
+  final EspaceRevision espace;
+
+  @override
+  State<_DialogueExamen> createState() => _DialogueExamenState();
+}
+
+class _DialogueExamenState extends State<_DialogueExamen> {
+  String? _matiere;
+  int _nombre = 20;
+  int? _minutes;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.espace.paquet;
+    return AlertDialog(
+      title: const Text('Examen blanc'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Comme le jour de l’examen : un temps limité, tu peux revenir en arrière, '
+              'la correction arrive à la fin.'),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String?>(
+            key: const Key('examen_matiere'),
+            initialValue: _matiere,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Matière'),
+            items: [
+              const DropdownMenuItem<String?>(value: null, child: Text('Toutes les matières')),
+              for (final m in p.matieres)
+                if (p.questionsDe(m.id) > 0) DropdownMenuItem<String?>(value: m.id, child: Text(m.nom)),
+            ],
+            onChanged: (v) => setState(() => _matiere = v),
+          ),
+          const SizedBox(height: 12),
+          const Text('Nombre de questions'),
+          Wrap(spacing: 6, children: [
+            for (final n in [10, 20, 30])
+              ChoiceChip(label: Text('$n'), selected: _nombre == n, onSelected: (_) => setState(() => _nombre = n)),
+          ]),
+          const SizedBox(height: 12),
+          const Text('Durée'),
+          Wrap(spacing: 6, children: [
+            ChoiceChip(label: const Text('Conseillée'), selected: _minutes == null, onSelected: (_) => setState(() => _minutes = null)),
+            for (final m in [15, 30, 60])
+              ChoiceChip(label: Text('$m min'), selected: _minutes == m, onSelected: (_) => setState(() => _minutes = m)),
+          ]),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annuler')),
+        FilledButton(
+          key: const Key('examen_commencer'),
+          onPressed: () => Navigator.of(context).pop((matiereId: _matiere, nombre: _nombre, minutes: _minutes)),
           child: const Text('Commencer'),
         ),
       ],
