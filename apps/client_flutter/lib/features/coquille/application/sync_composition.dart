@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../justificatifs/data/justificatifs_repository.dart';
+import '../../revision/data/banque_questions_repository.dart';
 import 'rejeu_actions_differees.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
@@ -111,6 +112,10 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   }
   // Lot 4 (REG-35) : évaluations, sanctions, décisions de congé, statut
   // boursier, progression, panier — faits sans réseau.
+  // Brouillons de la banque de questions (REG-37) gardés sans réseau.
+  for (final entite in BanqueQuestionsRepository.entites) {
+    gestionnaires[entite] = (entree) => BanqueQuestionsRepository.rejouer(client, entree);
+  }
   // Justificatifs d'absence (REG-36) : dépôts et décisions faits sans réseau.
   for (final entite in JustificatifsRepository.entites) {
     gestionnaires[entite] = (entree) => JustificatifsRepository.rejouer(client, entree);
@@ -143,6 +148,7 @@ String libelleOperation(SyncEntree entree) {
   final simple = _libellesSimples[entree.entite];
   if (simple != null) return simple;
   if (JustificatifsRepository.entites.contains(entree.entite)) return JustificatifsRepository.libelle(entree);
+  if (BanqueQuestionsRepository.entites.contains(entree.entite)) return BanqueQuestionsRepository.libelle(entree);
   try {
     return entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)

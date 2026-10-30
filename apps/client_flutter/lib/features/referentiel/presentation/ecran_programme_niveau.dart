@@ -10,7 +10,10 @@ import '../domain/filiere_educative.dart';
 import '../domain/niveau_educatif.dart';
 import '../domain/programme_matiere.dart';
 import 'widgets/pastille.dart';
+import '../../../core/auth/role_racine.dart';
 import '../../../core/format/coefficient.dart';
+import '../../auth/application/auth_providers.dart';
+import '../../revision/presentation/ecran_banque_questions.dart';
 
 /// Filières, programme officiel et matières d'un niveau (M4).
 class EcranProgrammeNiveau extends ConsumerStatefulWidget {
@@ -64,6 +67,17 @@ class _EcranProgrammeNiveauState extends ConsumerState<EcranProgrammeNiveau> {
           ),
         ),
         data: (arborescence) => _Contenu(
+          // Administrateur de contenu : la matière ouvre sa banque de
+          // questions (REG-37).
+          ouvrirMatiere: ref.watch(profilProvider).valueOrNull?.roleRacine == RoleRacine.adminContenu
+              ? (m) => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => EcranQuestionsMatiere(
+                      matiereId: m.id,
+                      titre: '${widget.paysNom} · ${widget.niveau.nom} · ${m.nom}',
+                      petitesClasses: widget.niveau.gradeLevelNormalise <= 4,
+                    ),
+                  ))
+              : null,
           paysNom: widget.paysNom,
           arborescence: arborescence,
           filiereSelectionneeId: _filiereSelectionneeId,
@@ -76,12 +90,14 @@ class _EcranProgrammeNiveauState extends ConsumerState<EcranProgrammeNiveau> {
 
 class _Contenu extends StatelessWidget {
   const _Contenu({
+    this.ouvrirMatiere,
     required this.paysNom,
     required this.arborescence,
     required this.filiereSelectionneeId,
     required this.onFiliereSelectionnee,
   });
 
+  final ValueChanged<ProgrammeMatiere>? ouvrirMatiere;
   final String paysNom;
   final ArborescenceNiveau arborescence;
   final String? filiereSelectionneeId;
@@ -143,7 +159,13 @@ class _Contenu extends StatelessWidget {
           )
         else
           for (var i = 0; i < matieres.length; i++)
-            EntreeAnimee(index: i, enfant: _CarteMatiere(matiere: matieres[i])),
+            EntreeAnimee(
+              index: i,
+              enfant: _CarteMatiere(
+                matiere: matieres[i],
+                onTap: ouvrirMatiere == null ? null : () => ouvrirMatiere!(matieres[i]),
+              ),
+            ),
       ],
     );
   }
@@ -178,15 +200,17 @@ class _SelecteurFilieres extends StatelessWidget {
 }
 
 class _CarteMatiere extends StatelessWidget {
-  const _CarteMatiere({required this.matiere});
+  const _CarteMatiere({required this.matiere, this.onTap});
 
   final ProgrammeMatiere matiere;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
+        onTap: onTap,
         leading: Icon(Icons.menu_book_outlined, color: context.palette.primaire),
         title: Text(matiere.nom),
         subtitle: matiere.volumeHoraireAnnuel != null
