@@ -51,7 +51,10 @@ class DriftSyncRepository implements SyncRepository {
   Future<List<SyncEntree>> entreesEnAttente() async {
     final lignes = await (_db.select(_db.syncQueueEntries)
           ..where((t) => t.statut.isIn([SyncStatut.termine.code, SyncStatut.rejete.code]).not())
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+          // Ordre de saisie : l'heure d'abord, puis l'ordre d'insertion (deux
+          // saisies de la même seconde — un devoir et sa première note —
+          // partent dans l'ordre où elles ont été faites).
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt), (t) => OrderingTerm.asc(t.rowId)]))
         .get();
     return _lisibles(lignes);
   }

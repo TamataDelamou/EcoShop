@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
@@ -212,7 +213,7 @@ class CachedRapportsRepository implements RapportsRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurRapports,
+      estPanne: (e) => e is ErreurRapports || estErreurReseau(e),
     );
   }
 }

@@ -93,7 +93,9 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
         'lignes': liste.map((s) => s.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurVieScolaire {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurVieScolaire && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeSanctionsFiche, ficheEleveId);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -106,7 +108,9 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
   Future<List<AlerteDecrochage>> alertesDeFiche(String ficheEleveId) async {
     try {
       return await _distant.alertesDeFiche(ficheEleveId);
-    } on ErreurVieScolaire {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurVieScolaire && !estErreurReseau(erreur)) rethrow;
       // Les alertes sont un signal ponctuel, jamais un état bloquant : pas de
       // repli cache dédié, une liste vide hors ligne est acceptable.
       return const [];
@@ -117,7 +121,9 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
   Future<List<AlerteDecrochage>> alertesEtablissement(String etablissementId) async {
     try {
       return await _distant.alertesEtablissement(etablissementId);
-    } on ErreurVieScolaire {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurVieScolaire && !estErreurReseau(erreur)) rethrow;
       return const [];
     }
   }
@@ -140,7 +146,9 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
       final resultat = await _distant.analyseComportement(ficheEleveId, anneeScolaireId);
       await _cache.ecrireDocument(_typeAnalyse, cle, resultat);
       return resultat;
-    } on ErreurVieScolaire {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurVieScolaire && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeAnalyse, cle);
       if (document == null) rethrow;
       return document;
@@ -154,7 +162,9 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
       final score = await _distant.scoreDecrochage(ficheEleveId, anneeScolaireId);
       await _cache.ecrireDocument(_typeScore, cle, {'valeur': score});
       return score;
-    } on ErreurVieScolaire {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurVieScolaire && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeScore, cle);
       if (document == null) rethrow;
       return (document['valeur'] as num).toDouble();
@@ -304,7 +314,7 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurVieScolaire,
+      estPanne: (e) => e is ErreurVieScolaire || estErreurReseau(e),
     );
   }
 }

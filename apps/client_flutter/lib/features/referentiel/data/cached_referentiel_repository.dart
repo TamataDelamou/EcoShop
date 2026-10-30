@@ -1,3 +1,4 @@
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../domain/arborescence_niveau.dart';
 import '../domain/arborescence_pays.dart';
 import '../domain/paquet_referentiel.dart';
@@ -59,7 +60,9 @@ class CachedReferentielRepository implements ReferentielRepository {
       }
       await _cache.ecrireListe(type, liste.map(versJson).toList(growable: false));
       return liste;
-    } on ErreurReferentiel {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurReferentiel && !estErreurReseau(erreur)) rethrow;
       final lignes = await _cache.lireListe(type);
       if (lignes == null) rethrow;
       return lignes.map(depuisJson).toList(growable: false);
@@ -76,7 +79,9 @@ class CachedReferentielRepository implements ReferentielRepository {
         arbo.versJson(),
       );
       return arbo;
-    } on ErreurReferentiel {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurReferentiel && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(
         ReferentielCacheStore.typePaysDetail,
         paysCode,
@@ -96,7 +101,9 @@ class CachedReferentielRepository implements ReferentielRepository {
         arbo.versJson(),
       );
       return arbo;
-    } on ErreurReferentiel {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurReferentiel && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(
         ReferentielCacheStore.typeNiveauDetail,
         niveauId,
@@ -116,3 +123,4 @@ class CachedReferentielRepository implements ReferentielRepository {
     return _distant.paquetsDisponibles(paysCode: paysCode, niveauId: niveauId);
   }
 }
+
