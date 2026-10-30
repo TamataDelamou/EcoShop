@@ -49,7 +49,7 @@ attendue), `clos`.
 | REG-30 | **Feuille de route** : ce qui reste à faire, par priorité (état des lieux du 2026-10-28) | P1 | **ouvert** — voir juste sous ce tableau |
 | REG-31 | Pages de confidentialité, conditions d'utilisation et suppression de compte (site GSG) ; suppression du compte dans l'application | **P0** | **livré** (2026-10-29) — champs ⟦siège, RCCM⟧ à compléter, relecture de l'avocat, mise en ligne (`site_gsg/README.md`), migration 1577 |
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
-| REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 ; grille officielle guinéenne des coefficients à obtenir |
+| REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -90,9 +90,8 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
 ### P1 — prochains chantiers
 
 7. ~~**[code]** **Séries du lycée guinéen** (SM, SE, SS)~~ — **livré par
-   REG-33** (séries, programme de l'école, moyenne pondérée). Reste
-   **[GSG]** : obtenir la grille officielle des coefficients (lycée pilote ou
-   DGECS) pour la publier au référentiel.
+   REG-33** (séries, programme de l'école, moyenne pondérée). Coefficients :
+   **fixés par chaque établissement** (décision du 2026-10-30).
 8. **[code]** **Messagerie privée** parent ↔ enseignant et **groupes de
    classe** (REG-19, lot en attente) : serveur existant à compléter (les
    parents en sont exclus aujourd'hui), écrans, hors connexion,
@@ -1919,7 +1918,15 @@ applications.
   déconnexion ; le référentiel gardé sur le téléphone ne contient que le
   national.
 
-**Reste.** [GSG] Obtenir la grille officielle des coefficients guinéens
-(lycée pilote, DGECS) et la publier au référentiel ; [code] notation
-anglophone (pourcentages, lettres A1–F9 de la WAEC) le jour d'une école
-ghanéenne.
+**Décision du porteur de projet (2026-10-30).** Chaque établissement
+fixe ses coefficients (programme de l'école) : GSG ne publie pas de grille
+nationale ; un programme national, s'il est publié un jour, ne sert que de
+modèle à reprendre.
+
+**Vérifié chez le porteur de projet (2026-10-30)** : 766 tests Flutter au
+vert (test du profil adapté, commit `006dd4c`) ; migrations 1578 et 1579
+appliquées sur Supabase, 17 fonctions redéployées, contrôle de préparation
+au vert sauf le prix des packs SMS.
+
+**Reste.** [code] Notation anglophone (pourcentages, lettres A1–F9 de la
+WAEC) le jour d'une école ghanéenne.
