@@ -53,7 +53,7 @@ attendue), `clos`.
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
 | REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **livré** (2026-10-30) — lots 1 à 6, migrations 1581 et 1582 appliquées ; à vérifier sur téléphone (APK de test) |
 | REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
-| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **lot R1 livré** (2026-10-30) — migration 1585 à appliquer ; lots R2 à R4 à venir |
+| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **lots R1 et R2 livrés** (2026-10-30) — migrations 1585 à 1587 à appliquer ; lots R3 et R4 à venir |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2106,7 +2106,7 @@ de l'école (`a_permission_ecole`) : jamais ouvert à l'Administrateur GSG.
 ## REG-37 — Moteur de révision
 
 **Reçu le** : 2026-10-30 (choix du porteur de projet). **Priorité** : P1.
-**Statut** : lot R1 livré (demande de fusion n°6) ; R2 à R4 à venir.
+**Statut** : lots R1 (demande de fusion n°6) et R2 (n°8) livrés ; R3 et R4 à venir.
 
 Troisième pilier du produit (cahier ch. 10 à 15), presque absent du code
 jusqu'ici. Recherche préalable : Moodle (une version par modification, la
@@ -2117,7 +2117,7 @@ réseau), interactions de la norme QTI (types corrigés automatiquement).
 | Lot | Contenu | Statut |
 |---|---|---|
 | R1 | Banque de questions : chapitres, leçons, compétences par matière du programme officiel ; 8 types (QCM à une et à plusieurs réponses, vrai ou faux, réponse courte, texte à trous, association, classement, calcul), image possible ; versions ; circuit brouillon → à valider → validée → publiée (validation par une autre personne sauf si l'auteur est Administrateur de contenu) ; pas d'enregistrement sans compétence, difficulté ni explication ; CP1 à CE2 : types adaptés, trois choix au plus ; trois signalements de personnes distinctes suspendent la question (seuil réglable dans les paramètres de la plateforme). Écrans de l'Administrateur de contenu : banque par matière (depuis les programmes officiels), chapitres et compétences, éditeur, file de validation, questions signalées ; brouillons enregistrés sans réseau. | **livré** (2026-10-30) |
-| R2 | Quiz et entraînement hors connexion : questions publiées téléchargées par niveau, quiz rapide, standard, intensif, par chapitre et personnalisé, correction immédiate avec explication, tentatives gardées sur l'appareil puis envoyées, règles du CP1 au CE2 (5 questions, encouragement), signalement par l'élève. | à venir |
+| R2 | Quiz et entraînement hors connexion : questions publiées téléchargées par niveau, quiz rapide, standard, intensif, par chapitre et personnalisé, correction immédiate avec explication, tentatives gardées sur l'appareil puis envoyées, règles du CP1 au CE2 (5 questions, encouragement), signalement par l'élève. Parent : révisions de l'enfant, conseil concret, « Réviser avec » sur son propre téléphone (crédité à l'enfant). | **livré** (2026-10-30) |
 | R3 | Mode examen : chronomètre, navigation libre, remise automatique à la fin du temps, correction après la clôture seulement, note sur 20, points forts et à renforcer. | à venir |
 | R4 | Profil de maîtrise par compétence (ch. 14) et répétition espacée (ch. 15). | à venir |
 
@@ -2132,3 +2132,23 @@ correction, dépôt, écrans), lien depuis `ecran_programme_niveau.dart`,
 pastilles `contenu_banque`, `contenu_a_valider`, `contenu_signalements`.
 Choix assumé : la bonne réponse est lisible avec la question (correction
 sans réseau) ; ces résultats restent formatifs.
+
+Lot R2 — recherche (document repère, « Moteur de révision — synthèse de
+recherche pour le lot R2 ») : pratique de récupération et révisions
+réparties (Dunlosky et al. 2013), pratique entrelacée en mathématiques
+(Rohrer et al. 2020), Eneza Education en Côte d'Ivoire (quiz courts,
+parents maîtres du téléphone), J-PAL (conseils concrets aux parents),
+niveaux de maîtrise de Khan Academy et Kolibri, félicitations du travail
+plutôt que de l'intelligence (Mueller et Dweck 1998, effet débattu).
+Fichiers : `supabase/migrations/20260906001587_quiz_revision.sql`
+(`paquet_revision`, `enregistrer_tentative_revision`, `resume_revision`,
+`niveau_revision_fiche`), `tests/rls/103_quiz_revision.sql` ;
+`lib/features/revision/domain/quiz.dart`, `conseils.dart`,
+`data/revision_repository.dart`, `presentation/ecran_revision.dart`,
+`ecran_quiz.dart` ; pastille `revision` (élève et parent). Suite prévue
+(R2b) : message hebdomadaire au parent, puis version audio.
+
+Correctifs du 2026-10-30 (demande de fusion n°7, migration 1586) : écran
+des paramètres de la plateforme (valeurs nues `true`/`false` de REG-22) ;
+désignation de l'Administrateur de contenu par l'Administrateur GSG
+(pastille « Administrateurs de contenu », compte dédié exigé).
