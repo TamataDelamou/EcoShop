@@ -127,7 +127,18 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     surRejet: (entree, rejet) => journalRejets.enregistrer(
       entree,
       rejet,
-      entree.entite == RejeuTelephone.entite
+      libelleOperation(entree),
+    ),
+  );
+});
+
+/// Libellé d'une opération de la file, en mots simples (journal des refus,
+/// écran « État de la synchronisation »).
+String libelleOperation(SyncEntree entree) {
+  final simple = _libellesSimples[entree.entite];
+  if (simple != null) return simple;
+  try {
+    return entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)
           : RejeuActionsDifferees.entites.contains(entree.entite)
           ? RejeuActionsDifferees.libelle(entree)
@@ -149,7 +160,26 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
                       ? RejeuTransport.libelle(entree)
                       : SupabaseBibliothequeRepository.entites.contains(entree.entite)
                           ? RejeuBibliotheque.libelle(entree)
-                          : RejeuComptabilite.libelle(entree),
-    ),
-  );
-});
+                          : RejeuComptabilite.libelle(entree);
+  } catch (_) {
+    return 'Opération';
+  }
+}
+
+/// Opérations des premiers modules (M6 à M14), sans libellé propre.
+const _libellesSimples = {
+  'notes': 'Note saisie',
+  'presences': 'Appel (présence ou absence)',
+  'retards': 'Retard',
+  'conges': 'Demande de congé',
+  'absences_personnel': 'Absence du personnel',
+  'notifications_lecture': 'Notification lue',
+  'preferences_canaux': 'Préférences de notification',
+  'rapports': 'Demande de rapport',
+  'emplois_du_temps': 'Séance d’emploi du temps',
+  'evenements_agenda': 'Événement d’agenda',
+  'progression_pedagogique': 'Progression pédagogique',
+  'paniers': 'Panier',
+  'lignes_paniers': 'Article du panier',
+};
+

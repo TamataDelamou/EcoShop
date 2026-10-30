@@ -14,6 +14,7 @@ import '../../auth/presentation/ecran_telephone_profil.dart';
 import '../../cgu/presentation/ecran_cgu.dart';
 import '../../communication/presentation/ecran_preferences_canaux.dart';
 import '../../coquille/application/session_logout.dart';
+import '../../coquille/presentation/ecran_etat_synchronisation.dart';
 import '../../coquille/application/verrou_controller.dart';
 import '../../invitations/application/invitations_providers.dart';
 import '../../invitations/presentation/ecran_invitations.dart';
@@ -189,6 +190,14 @@ class VueProfilAllegee extends ConsumerWidget {
         // Vos données (REG-31) : conditions, confidentialité, suppression.
         const TitreSection('Vos données'),
         _Groupe(children: [
+          // REG-35 lot 5 : ce qui est sur l'appareil, ce qui attend d'être envoyé.
+          _Ligne(
+            cle: 'menu_synchronisation',
+            icone: Icons.sync_outlined,
+            titre: 'Synchronisation hors connexion',
+            sousTitre: 'Envois en attente, données sur l’appareil, Wi-Fi',
+            onTap: () => _aller(context, const EcranEtatSynchronisation()),
+          ),
           _Ligne(
             cle: 'menu_cgu',
             icone: Icons.gavel_outlined,

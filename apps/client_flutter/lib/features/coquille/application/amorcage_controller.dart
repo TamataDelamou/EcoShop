@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
@@ -101,7 +102,10 @@ class AmorcageController extends Notifier<EtatAmorcage> {
   @override
   EtatAmorcage build() => const EtatAmorcage();
 
-  Future<void> lancerSiNecessaire() async {
+  /// [force] (bouton « Synchroniser maintenant », lot 5) : ni le délai de
+  /// [delaiReamorcage], ni la préférence « Wi-Fi seulement » ne s'appliquent
+  /// — l'utilisateur le demande explicitement.
+  Future<void> lancerSiNecessaire({bool force = false}) async {
     if (!ref.read(estEnLigneProvider)) return;
     final espace = ref.read(espaceUtiliseProvider);
     final profil = ref.read(profilProvider).valueOrNull;
@@ -112,11 +116,16 @@ class AmorcageController extends Notifier<EtatAmorcage> {
     if (_enCoursPour == cle) return;
 
     final suivi = ref.read(_suiviAmorcageProvider);
-    try {
-      final dernier = await suivi.lireDocumentDate('termine', cle);
-      if (dernier != null && DateTime.now().difference(dernier.misAJourLe) < delaiReamorcage) return;
-    } catch (_) {
-      // Suivi illisible : on amorce.
+    if (!force) {
+      final wifiSeulement = await ref.read(wifiSeulementProvider.future).catchError((_) => false);
+      final connexions = ref.read(connectivityProvider).valueOrNull;
+      if (!peutAmorcerSur(connexions, wifiSeulement: wifiSeulement)) return;
+      try {
+        final dernier = await suivi.lireDocumentDate('termine', cle);
+        if (dernier != null && DateTime.now().difference(dernier.misAJourLe) < delaiReamorcage) return;
+      } catch (_) {
+        // Suivi illisible : on amorce.
+      }
     }
 
     final generation = ++_generation;
@@ -174,6 +183,7 @@ class AmorcageController extends Notifier<EtatAmorcage> {
         },
       );
       if (fin.issue == IssueAmorcage.termine) {
+        ref.invalidate(derniereAmorcageProvider);
         try {
           await suivi.ecrireDocument('termine', cle, {'refusees': fin.refusees, 'inchangees': fin.inchangees});
           // Une portée n'est notée lue que si toutes ses lectures ont réussi.
@@ -199,3 +209,56 @@ class AmorcageController extends Notifier<EtatAmorcage> {
 }
 
 final amorcageProvider = NotifierProvider<AmorcageController, EtatAmorcage>(AmorcageController.new);
+
+/// Lot 5 : l'amorçage automatique attend-il le Wi-Fi ? Une connexion
+/// inconnue (module réseau muet) ne bloque jamais : on ne sait pas, on
+/// amorce. Le Wi-Fi seul est accepté, l'Ethernet aussi (tablette sur socle).
+bool peutAmorcerSur(List<ConnectivityResult>? connexions, {required bool wifiSeulement}) {
+  if (!wifiSeulement || connexions == null) return true;
+  return connexions.contains(ConnectivityResult.wifi) || connexions.contains(ConnectivityResult.ethernet);
+}
+
+final _preferencesAppareilProvider = Provider<CacheDocumentStore>(
+  (ref) => CacheDocumentStore(ref.watch(databaseProvider), 'preferences'),
+);
+
+/// Préférence de l'appareil « Préparer le hors connexion en Wi-Fi
+/// seulement » (lot 5) — par défaut non : en Guinée, beaucoup d'écoles n'ont
+/// que les données mobiles, et le lot 3 rend une mise à jour très légère.
+class WifiSeulementController extends AsyncNotifier<bool> {
+  static const _type = 'amorcage_wifi_seulement';
+
+  @override
+  Future<bool> build() async {
+    try {
+      final doc = await ref.read(_preferencesAppareilProvider).lireDocument(_type, 'appareil');
+      return doc?['actif'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> definir(bool actif) async {
+    state = AsyncData(actif);
+    try {
+      await ref.read(_preferencesAppareilProvider).ecrireDocument(_type, 'appareil', {'actif': actif});
+    } catch (_) {
+      // Préférence non gardée : elle vaut pour cette ouverture.
+    }
+  }
+}
+
+final wifiSeulementProvider = AsyncNotifierProvider<WifiSeulementController, bool>(WifiSeulementController.new);
+
+/// Date de la dernière préparation complète de l'espace utilisé (lot 5).
+final derniereAmorcageProvider = FutureProvider<DateTime?>((ref) async {
+  final espace = ref.watch(espaceUtiliseProvider);
+  final profil = ref.watch(profilProvider).valueOrNull;
+  if (espace == null || profil == null) return null;
+  try {
+    final doc = await ref.read(_suiviAmorcageProvider).lireDocumentDate('termine', '${profil.id}|${espace.cle}');
+    return doc?.misAJourLe;
+  } catch (_) {
+    return null;
+  }
+});
