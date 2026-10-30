@@ -109,8 +109,13 @@ void main() {
       await ouvrir(tester);
       await allerA(tester, find.byKey(const Key('interrupteur_wifi_seulement')));
       await tester.tap(find.byKey(const Key('interrupteur_wifi_seulement')));
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
+      expect(tester.widget<SwitchListTile>(find.byKey(const Key('interrupteur_wifi_seulement'))).value, isTrue);
+      // Écriture dans la base (vraie, hors horloge simulée).
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+        await tester.pump();
+      }
       final doc = await tester.runAsync(
           () => CacheDocumentStore(db, 'preferences').lireDocument('amorcage_wifi_seulement', 'appareil'));
       expect(doc, {'actif': true});
