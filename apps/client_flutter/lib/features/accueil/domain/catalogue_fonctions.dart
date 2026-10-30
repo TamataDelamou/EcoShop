@@ -34,6 +34,7 @@ import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
 import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
+import '../../parametres_gsg/presentation/ecran_parametres_gsg.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
@@ -49,6 +50,7 @@ import '../../pointage/presentation/ecran_portail.dart';
 import '../../pointage/presentation/ecran_presence_jour.dart';
 import '../../pointage/presentation/ecran_relances_impayes.dart';
 import '../../postes/presentation/ecran_postes.dart';
+import '../../premium_eleve/presentation/ecran_premium_eleve.dart';
 import '../../rapports/presentation/ecran_rapports.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
@@ -215,6 +217,14 @@ final List<Fonction> catalogueFonctions = [
     motsCles: ['bulletin', 'relevé', 'télécharger', 'pdf'], ancienne: 'Rapports de mon enfant / Mes rapports',
     visible: _familleAvecFiche,
     ouvrir: (context, ref, c) => _aller(context, EcranMesRapports(ficheEleveId: c.fiche!.id)),
+  ),
+  // REG-36 : abonnement Premium de l'élève, payé par lui ou un parent relié.
+  Fonction(
+    id: 'premium_eleve', libelle: 'Premium', icone: Icons.workspace_premium_outlined, teinte: Teinte.jaune, groupe: _tout,
+    motsCles: ['abonnement', 'tuteur', 'ia', 'payer', 'mobile money', 'orange money'],
+    visible: _familleAvecFiche,
+    ouvrir: (context, ref, c) => _aller(
+        context, EcranPremiumEleve(ficheEleveId: c.fiche!.id, prenom: c.fiche!.prenom, parent: c.parent)),
   ),
   // ---------------------------------------------------------------- enseignants
   Fonction(
@@ -592,6 +602,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, ancienne: 'Validation des vendeurs',
     visible: (c) => c.role == RoleRacine.adminGsg,
     ouvrir: (context, ref, c) => _aller(context, const EcranValidationVendeursGsg()),
+  ),
+  // REG-36 : paramètres de la plateforme (tarifs, quotas IA, seuils), historisés.
+  Fonction(
+    id: 'gsg_parametres', libelle: 'Paramètres de la plateforme', icone: Icons.tune, teinte: Teinte.gris,
+    groupe: _plateforme, motsCles: ['tarif', 'premium', 'quota', 'ia', 'seuil', 'commission', 'devise'],
+    visible: (c) => c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranParametresGsg()),
   ),
   Fonction(
     id: 'gsg_debloquer', libelle: 'Débloquer un code', icone: Icons.lock_open_outlined, teinte: Teinte.rose,
