@@ -16,7 +16,6 @@ import '../../auth/application/session_locale.dart';
 import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
 import '../../cgu/application/cgu_providers.dart';
-import '../../communication/prototype/application/communication_locale_providers.dart';
 import '../../inscription_en_ligne/application/inscription_en_ligne_providers.dart';
 import '../../pointage/application/pointage_providers.dart';
 import '../../push/application/push_providers.dart';
@@ -70,7 +69,13 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Google (REG-16) : la prochaine connexion repropose le choix du compte.
   _enArrierePlan(google?.oublier());
 
-  await lire(communicationLocaleRepositoryProvider).purgerTout();
+  // Messages de l'ancien prototype local (M9, retiré en REG-36) : ils
+  // peuvent encore se trouver sur des téléphones mis à jour.
+  try {
+    await CacheDocumentStore(lire(databaseProvider), 'communication_locale').purgerTout();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
   // Comptabilité gardée pour le hors connexion (REG-03 C7) : données des
   // donateurs, états, pièces — jamais visibles du compte suivant.
   try {
@@ -151,7 +156,6 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }
-  invalider(entreesLocalesProvider);
   invalider(profilProvider);
   invalider(ficheLieeProvider);
   invalider(mesEtablissementsProvider);

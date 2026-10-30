@@ -20,9 +20,8 @@ class ErreurComm implements Exception {
 /// Périmètre strictement aligné sur le DDL réel
 /// (`20260906000900_m9_communication_notifications.sql`) : un système de
 /// notifications multicanal (SMS/WhatsApp/Email/Push), pas une messagerie.
-/// Aucune table `conversations`/`messages`/`annonces`/`cahier_liaison`
-/// n'existe côté serveur — voir `features/communication/prototype` pour
-/// l'IHM correspondante, explicitement non persistée côté serveur.
+/// Annonces, cahier de liaison, messagerie et groupes de classe ont leurs
+/// propres modules branchés sur le serveur (REG-19, REG-34).
 abstract interface class CommRepository {
   /// Notifications du destinataire connecté (son fil personnel).
   Future<List<Notif>> mesNotifications(String profileId);
