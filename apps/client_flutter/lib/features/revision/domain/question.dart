@@ -182,8 +182,9 @@ class ContenuQuestion {
   /// Corrige une réponse d'élève. Formes attendues :
   /// QCM : `Set<String>` ou `List<String>` d'identifiants ; vrai/faux :
   /// `bool` ; réponse courte et calcul : `String` ; texte à trous :
-  /// `Map<String, String>` (trou → texte) ; association : `Map<String,
-  /// String>` (gauche → droite) ; classement : `List<String>` d'identifiants.
+  /// `Map<String, String>` (trou → texte) ; association :
+  /// `Map<String, String>` (gauche → droite) ; classement : `List<String>`
+  /// d'identifiants.
   Correction corriger(Object? donnee) {
     switch (type) {
       case TypeQuestion.qcmSimple:

@@ -725,10 +725,7 @@ class _EcranEditeurQuestionState extends ConsumerState<EcranEditeurQuestion> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
-            onReorder: (a, b) => setState(() {
-              if (b > a) b--;
-              _lignes.insert(b, _lignes.removeAt(a));
-            }),
+            onReorderItem: (a, b) => setState(() => _lignes.insert(b, _lignes.removeAt(a))),
             children: [
               for (final (i, l) in _lignes.indexed)
                 Row(key: ValueKey('ligne_${l.id}'), children: [
