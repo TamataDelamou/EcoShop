@@ -2,15 +2,31 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import 'db/app_database.dart';
+import 'securite/chiffrement_file.dart';
+import 'securite/scelleur_par_compte.dart';
 
 /// Base locale Drift, ouverte à la première utilisation.
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
+  // Copies d'écran chiffrées par compte (REG-35, décision du 2026-10-30) :
+  // le compte est relu à chaque accès, jamais figé.
+  final chiffreur = ref.watch(chiffreurFileProvider);
+  if (chiffreur != null) db.scelleur = ScelleurParCompte(chiffreur, _compteConnecte);
   ref.onDispose(db.close);
   return db;
 });
+
+String? _compteConnecte() {
+  try {
+    return Supabase.instance.client.auth.currentUser?.id;
+  } catch (_) {
+    // Supabase non initialisé (mode diagnostic) : aucun compte.
+    return null;
+  }
+}
 
 /// Flux de connectivité réseau (déclenche la resynchronisation proactive).
 /// État lu tout de suite au lancement, puis chaque changement. Une panne du
