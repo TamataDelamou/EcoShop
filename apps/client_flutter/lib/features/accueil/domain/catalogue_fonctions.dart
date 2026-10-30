@@ -58,6 +58,7 @@ import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../revision/presentation/ecran_banque_questions.dart';
+import '../../revision/presentation/ecran_revision.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
@@ -219,6 +220,15 @@ final List<Fonction> catalogueFonctions = [
     motsCles: ['bulletin', 'relevé', 'télécharger', 'pdf'], ancienne: 'Rapports de mon enfant / Mes rapports',
     visible: _familleAvecFiche,
     ouvrir: (context, ref, c) => _aller(context, EcranMesRapports(ficheEleveId: c.fiche!.id)),
+  ),
+  // REG-37 lot R2 : quiz et entraînement, hors connexion ; le parent révise
+  // avec son enfant sur son propre téléphone.
+  Fonction(
+    id: 'revision', libelle: 'Réviser', icone: Icons.psychology_alt_outlined, teinte: Teinte.violet, groupe: _tout,
+    motsCles: ['quiz', 'révision', 'exercices', 'entraînement', 'examen', 'apprendre'],
+    visible: _familleAvecFiche,
+    ouvrir: (context, ref, c) =>
+        _aller(context, EcranRevision(ficheId: c.fiche!.id, prenom: c.fiche!.prenom, parent: c.parent)),
   ),
   // REG-36 : abonnement Premium de l'élève, payé par lui ou un parent relié.
   Fonction(
@@ -649,9 +659,9 @@ final List<Fonction> catalogueFonctions = [
 /// Ordre d'affichage pour un rôle (maquettes) ; les autres fonctions
 /// visibles suivent.
 const ordreParRole = <RoleRacine, List<String>>{
-  RoleRacine.parent: ['annonces', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'scolarite', 'bus',
+  RoleRacine.parent: ['annonces', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'revision', 'scolarite', 'bus',
     'parent_ia', 'inscriptions_famille', 'boutique'],
-  RoleRacine.eleve: ['emploi_du_temps', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice', 'bibliotheque_famille', 'bus',
+  RoleRacine.eleve: ['emploi_du_temps', 'revision', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice', 'bibliotheque_famille', 'bus',
     'mes_rapports', 'boutique'],
   RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces',
     'progression', 'dossier_rh', 'emploi_du_temps'],
