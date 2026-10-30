@@ -133,9 +133,11 @@ class SupabaseNotesRepository implements NotesRepository {
   @override
   Future<Evaluation> creerEvaluation(Evaluation evaluation) {
     return _executer(() async {
-      final payload = evaluation.versJsonCache()
-        ..remove('id') // laisser gen_random_uuid() attribuer l'identifiant
-        ..remove('nom_matiere');
+      final payload = evaluation.versJsonCache()..remove('nom_matiere');
+      // Identifiant tiré sur le téléphone (REG-35 lot 4) : une réponse perdue
+      // puis un rejeu ne créent jamais deux évaluations. Vide : le serveur
+      // l'attribue.
+      if (evaluation.id.isEmpty) payload.remove('id');
       final ligne = await _client.from('evaluations').insert(payload).select().single();
       return Evaluation.depuisJson(ligne);
     });

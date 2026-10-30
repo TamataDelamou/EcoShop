@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
@@ -191,8 +193,19 @@ class CachedPlanificationRepository implements PlanificationRepository {
   }
 
   @override
-  Future<void> changerStatutProgression(String progressionId, String statut) =>
-      _distant.changerStatutProgression(progressionId, statut);
+  Future<void> changerStatutProgression(String progressionId, String statut) async {
+    try {
+      await _distant.changerStatutProgression(progressionId, statut);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.progressionStatut, progressionId),
+        entite: EntitesDifferees.progressionStatut,
+        operation: 'update',
+        payload: jsonEncode({'id': progressionId, 'statut': statut}),
+      ));
+    }
+  }
 
   @override
   Future<int> recommanderSeances(String etablissementId, String anneeScolaireId) =>

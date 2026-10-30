@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:uuid/uuid.dart';
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
@@ -208,15 +211,59 @@ class CachedVieScolaireRepository implements VieScolaireRepository {
   }
 
   @override
-  Future<Sanction> proposerSanction(Sanction sanction) => _distant.proposerSanction(sanction);
+  Future<Sanction> proposerSanction(Sanction sanction) async {
+    // Lot 4 (REG-35) : proposée sans réseau, identifiant tiré sur le
+    // téléphone (jamais créée deux fois).
+    final avecId = sanction.id.isEmpty ? Sanction.depuisJson({...sanction.versJsonCache(), 'id': const Uuid().v4()}) : sanction;
+    try {
+      return await _distant.proposerSanction(avecId);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.sanctionProposition, avecId.id),
+        entite: EntitesDifferees.sanctionProposition,
+        operation: 'insert',
+        payload: jsonEncode(avecId.versJsonCache()),
+      ));
+      return avecId;
+    }
+  }
 
   @override
-  Future<void> validerSanction(String sanctionId, {required String valideePar}) =>
-      _distant.validerSanction(sanctionId, valideePar: valideePar);
+  Future<void> validerSanction(String sanctionId, {required String valideePar}) async {
+    try {
+      await _distant.validerSanction(sanctionId, valideePar: valideePar);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.sanctionValidation, sanctionId),
+        entite: EntitesDifferees.sanctionValidation,
+        operation: 'update',
+        payload: jsonEncode({
+          'id': sanctionId,
+          'validee_par': valideePar,
+          'validee_le': DateTime.now().toUtc().toIso8601String(),
+        }),
+      ));
+    }
+  }
 
+  /// Décision : appliquée au retour du réseau seulement si la sanction est
+  /// encore dans l'état d'où ce statut est permis (voir RejeuActionsDifferees).
   @override
-  Future<void> changerStatutSanction(String sanctionId, String statut) =>
-      _distant.changerStatutSanction(sanctionId, statut);
+  Future<void> changerStatutSanction(String sanctionId, String statut) async {
+    try {
+      await _distant.changerStatutSanction(sanctionId, statut);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.sanctionStatut, sanctionId),
+        entite: EntitesDifferees.sanctionStatut,
+        operation: 'update',
+        payload: jsonEncode({'id': sanctionId, 'statut': statut}),
+      ));
+    }
+  }
 
   /// Superpose à [base] les entrées `sync_queue` de [entite] encore en
   /// attente, pour un affichage immédiat des pointages hors-ligne (même

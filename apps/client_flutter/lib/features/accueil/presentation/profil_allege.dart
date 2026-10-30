@@ -212,6 +212,14 @@ class VueProfilAllegee extends ConsumerWidget {
           icon: const Icon(Icons.logout),
           label: const Text('Se déconnecter'),
         ),
+        // Appareil partagé ou prêté (REG-35) : efface aussi les données de ce
+        // compte. Sans cela, elles restent sur l'appareil, chiffrées pour ce
+        // seul compte.
+        TextButton(
+          key: const Key('bouton_deconnexion_effacer'),
+          onPressed: () => _deconnecterEtEffacer(context, ref),
+          child: const Text('Appareil partagé ? Se déconnecter et effacer mes données'),
+        ),
         const SizedBox(height: 12),
         // Exigé par Google Play : facile à trouver, tout en bas du profil.
         Center(
@@ -324,5 +332,36 @@ class EcranMesInformations extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Confirmation, puis déconnexion avec effacement (REG-35).
+Future<void> _deconnecterEtEffacer(BuildContext context, WidgetRef ref) async {
+  final confirme = await showDialog<bool>(
+    context: context,
+    builder: (contexte) => AlertDialog(
+      title: const Text('Effacer mes données de cet appareil ?'),
+      content: const Text(
+        'À choisir sur un téléphone prêté ou partagé. Vos données gardées pour le hors connexion '
+        'seront effacées de cet appareil ; elles restent sur le serveur et reviendront à votre '
+        'prochaine connexion. Sans cela, elles restent ici, chiffrées : aucun autre compte ne peut les lire.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(contexte).pop(false), child: const Text('Annuler')),
+        FilledButton(
+          key: const Key('confirmer_deconnexion_effacer'),
+          onPressed: () => Navigator.of(contexte).pop(true),
+          child: const Text('Effacer et se déconnecter'),
+        ),
+      ],
+    ),
+  );
+  if (confirme != true) return;
+  final enAttente = await ref.deconnecterEtEffacerMesDonnees();
+  if (enAttente > 0 && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('$enAttente saisie(s) attendent encore d\'être envoyées : reconnectez-vous au réseau, '
+          'puis recommencez. Rien n\'a été effacé.'),
+    ));
   }
 }

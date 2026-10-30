@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/supabase_auth_provider.dart';
+import '../../../core/db/cache_document_store.dart';
+import '../../../core/providers.dart';
+import '../../../core/securite/chiffrement_file.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/espace_providers.dart';
@@ -173,12 +177,51 @@ void _enArrierePlan(Future<void>? tache) {
   unawaited(tache.timeout(delaiArrierePlanDeconnexion).then((_) {}, onError: (Object _) {}));
 }
 
+/// Déconnexion sur un appareil partagé ou prêté (REG-35, décision du
+/// 2026-10-30) : en plus de la déconnexion ordinaire, efface les copies de
+/// ce compte et sa clé — tout ce qui avait été chiffré pour lui devient
+/// illisible (effacement par destruction de clé).
+///
+/// Refusée tant que des saisies attendent d'être envoyées : elles seraient
+/// perdues. Renvoie le nombre de saisies en attente (0 : déconnecté).
+Future<int> _deconnecterEtEffacerMesDonnees({
+  required T Function<T>(ProviderListenable<T> provider) lire,
+  required void Function(ProviderOrFamily provider) invalider,
+}) async {
+  try {
+    final enAttente = (await lire(syncRepositoryProvider).entreesEnAttente()).length;
+    if (enAttente > 0) return enAttente;
+  } catch (_) {
+    // File illisible : rien qui puisse partir de ce compte.
+  }
+  final compte = _lireSansEchec(() => lire(sessionProvider))?.user.id;
+  try {
+    await CacheDocumentStore.effacerCopiesDuCompte(lire(databaseProvider));
+  } catch (_) {
+    // Base locale indisponible : la destruction de la clé suffit.
+  }
+  final chiffreur = _lireSansEchec(() => lire(chiffreurFileProvider));
+  if (compte != null && chiffreur != null) {
+    try {
+      await chiffreur.oublierCle(compte);
+    } catch (_) {
+      // Coffre indisponible : les copies, déjà effacées, ne reviennent pas.
+    }
+  }
+  await _deconnecterEtPurgerDonneesLocales(lire: lire, invalider: invalider);
+  return 0;
+}
+
 extension DeconnexionRef on Ref {
   Future<void> deconnecterEtPurgerDonneesLocales() =>
       _deconnecterEtPurgerDonneesLocales(lire: read, invalider: invalidate);
+
+  Future<int> deconnecterEtEffacerMesDonnees() => _deconnecterEtEffacerMesDonnees(lire: read, invalider: invalidate);
 }
 
 extension DeconnexionWidgetRef on WidgetRef {
   Future<void> deconnecterEtPurgerDonneesLocales() =>
       _deconnecterEtPurgerDonneesLocales(lire: read, invalider: invalidate);
+
+  Future<int> deconnecterEtEffacerMesDonnees() => _deconnecterEtEffacerMesDonnees(lire: read, invalider: invalidate);
 }

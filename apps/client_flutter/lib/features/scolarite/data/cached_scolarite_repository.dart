@@ -1,4 +1,6 @@
 import 'dart:convert';
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/securite/gardien_actions_sensibles.dart';
 
@@ -239,8 +241,19 @@ class CachedScolariteRepository implements ScolariteRepository {
   }
 
   @override
-  Future<void> definirStatutBoursier({required String inscriptionId, required bool boursier}) {
-    return _distant.definirStatutBoursier(inscriptionId: inscriptionId, boursier: boursier);
+  Future<void> definirStatutBoursier({required String inscriptionId, required bool boursier}) async {
+    try {
+      await _distant.definirStatutBoursier(inscriptionId: inscriptionId, boursier: boursier);
+    } catch (e) {
+      final file = _file;
+      if (!estErreurReseau(e) || file == null) rethrow;
+      await file.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.inscriptionBoursier, inscriptionId),
+        entite: EntitesDifferees.inscriptionBoursier,
+        operation: 'update',
+        payload: jsonEncode({'id': inscriptionId, 'boursier': boursier}),
+      ));
+    }
   }
 
   @override

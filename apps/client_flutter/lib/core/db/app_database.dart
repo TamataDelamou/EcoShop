@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'scelleur_copies.dart';
+
 part 'app_database.g.dart';
 
 /// Table de la file de synchronisation hors-ligne (outbox, ch. 34-35).
@@ -63,6 +65,10 @@ class AppDatabase extends _$AppDatabase {
 
   /// Constructeur de test : injecte un exécuteur (ex. `NativeDatabase.memory()`).
   AppDatabase.pourTests(super.e);
+
+  /// Chiffrement par compte des copies d'écran ([CacheEntries]) ; null :
+  /// copies en clair (tests, mode diagnostic sans Supabase).
+  ScelleurCopies? scelleur;
 
   @override
   int get schemaVersion => 3;

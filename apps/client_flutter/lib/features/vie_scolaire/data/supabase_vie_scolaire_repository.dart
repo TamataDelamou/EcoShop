@@ -176,7 +176,9 @@ class SupabaseVieScolaireRepository implements VieScolaireRepository {
   @override
   Future<Sanction> proposerSanction(Sanction sanction) {
     return _executer(() async {
-      final payload = sanction.versJsonCache()..remove('id');
+      // Identifiant tiré sur le téléphone (REG-35 lot 4) : jamais deux fois.
+      final payload = sanction.versJsonCache();
+      if (sanction.id.isEmpty) payload.remove('id');
       final ligne = await _client.from('sanctions').insert(payload).select().single();
       return Sanction.depuisJson(ligne);
     });

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
@@ -235,8 +237,27 @@ class CachedRhRepository implements RhRepository {
   }
 
   @override
-  Future<void> validerConge(String congeId, {required String statut, required String valideePar}) =>
-      _distant.validerConge(congeId, statut: statut, valideePar: valideePar);
+  Future<void> validerConge(String congeId, {required String statut, required String valideePar}) async {
+    // Lot 4 (REG-35) : décidée sans réseau, appliquée au retour seulement si
+    // le congé est encore « demandé » (jamais d'écrasement d'une décision
+    // prise entre-temps par quelqu'un d'autre).
+    try {
+      await _distant.validerConge(congeId, statut: statut, valideePar: valideePar);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.congeDecision, congeId),
+        entite: EntitesDifferees.congeDecision,
+        operation: 'update',
+        payload: jsonEncode({
+          'id': congeId,
+          'statut': statut,
+          'valide_par': valideePar,
+          'date_validation': DateTime.now().toUtc().toIso8601String(),
+        }),
+      ));
+    }
+  }
 
   @override
   Future<bool> pointerAbsence(AbsencePersonnel absence) async {

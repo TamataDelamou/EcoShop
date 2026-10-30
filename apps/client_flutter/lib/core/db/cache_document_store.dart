@@ -32,16 +32,33 @@ class CacheDocumentStore {
     String type,
     String cle,
     Map<String, dynamic> document,
-  ) {
-    return _db.into(_db.cacheEntries).insertOnConflictUpdate(
+  ) async {
+    final clair = jsonEncode(document);
+    final scelleur = _db.scelleur;
+    final payload = scelleur == null ? clair : await scelleur.sceller(domaine, clair);
+    if (payload == null) return; // chiffrement impossible : pas de copie
+    await _db.into(_db.cacheEntries).insertOnConflictUpdate(
           CacheEntriesCompanion.insert(
             domaine: domaine,
             type: type,
             cle: cle,
-            payload: jsonEncode(document),
+            payload: payload,
             misAJourLe: Value(DateTime.now()),
           ),
         );
+  }
+
+  /// Contenu lisible d'une ligne pour le compte connecté (null : copie d'un
+  /// autre compte, ou illisible — traitée comme absente).
+  Future<Map<String, dynamic>?> _ouvrir(String payload) async {
+    final scelleur = _db.scelleur;
+    final clair = scelleur == null ? payload : await scelleur.ouvrir(domaine, payload);
+    if (clair == null) return null;
+    try {
+      return jsonDecode(clair) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>?> lireDocument(String type, String cle) async {
@@ -57,7 +74,9 @@ class CacheDocumentStore {
               t.domaine.equals(domaine) & t.type.equals(type) & t.cle.equals(cle)))
         .getSingleOrNull();
     if (ligne == null) return null;
-    return (document: jsonDecode(ligne.payload) as Map<String, dynamic>, misAJourLe: ligne.misAJourLe);
+    final document = await _ouvrir(ligne.payload);
+    if (document == null) return null;
+    return (document: document, misAJourLe: ligne.misAJourLe);
   }
 
   Future<void> supprimerDocument(String type, String cle) {
@@ -72,10 +91,12 @@ class CacheDocumentStore {
           ..where((t) => t.domaine.equals(domaine) & t.type.equals(type))
           ..orderBy([(t) => OrderingTerm.desc(t.misAJourLe)]))
         .get();
-    return [
-      for (final l in lignes)
-        (cle: l.cle, document: jsonDecode(l.payload) as Map<String, dynamic>, misAJourLe: l.misAJourLe),
-    ];
+    final resultat = <({String cle, Map<String, dynamic> document, DateTime misAJourLe})>[];
+    for (final l in lignes) {
+      final document = await _ouvrir(l.payload);
+      if (document != null) resultat.add((cle: l.cle, document: document, misAJourLe: l.misAJourLe));
+    }
+    return resultat;
   }
 
   /// Supprime toutes les lignes de ce domaine — patch de sécurité M9 : un
@@ -85,5 +106,23 @@ class CacheDocumentStore {
   /// même appareil.
   Future<void> purgerTout() {
     return (_db.delete(_db.cacheEntries)..where((t) => t.domaine.equals(domaine))).go();
+  }
+
+  /// Efface, tous domaines confondus, les copies lisibles par le compte
+  /// connecté (« appareil partagé » à la déconnexion). Les copies des autres
+  /// comptes ne sont pas touchées. Renvoie le nombre de copies effacées.
+  static Future<int> effacerCopiesDuCompte(AppDatabase db) async {
+    final scelleur = db.scelleur;
+    if (scelleur == null) return 0;
+    final lignes = await db.select(db.cacheEntries).get();
+    var effacees = 0;
+    for (final l in lignes) {
+      if (!l.payload.startsWith('chiffre:')) continue;
+      if (await scelleur.ouvrir(l.domaine, l.payload) == null) continue;
+      effacees += await (db.delete(db.cacheEntries)
+            ..where((t) => t.domaine.equals(l.domaine) & t.type.equals(l.type) & t.cle.equals(l.cle)))
+          .go();
+    }
+    return effacees;
   }
 }
