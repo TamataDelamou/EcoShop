@@ -60,9 +60,13 @@ jobs:
                    supabase/seed_planification_agenda.sql \
                    supabase/seed_marketplace_assoshop.sql \
                    supabase/seed_comptabilite.sql; do
-            if ! psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"; then
+            if ! psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f" > seed.txt 2>&1; then
+              cat seed.txt
               echo "SEED_ECHEC: $f"
+              grep -E "ERROR|DETAIL|CONTEXT|HINT" seed.txt | head -4 | sed "s|^|::error title=$f::|"
               FAILED=1
+            else
+              cat seed.txt
             fi
           done
           if [ "$FAILED" = "1" ]; then exit 1; fi
