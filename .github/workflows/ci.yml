@@ -37,7 +37,15 @@ jobs:
         run: supabase db reset
 
       - name: Tests pgTAP (tous les scripts de tests/rls)
-        run: supabase test db --local tests/rls
+        # Les échecs remontent aussi en annotations (lisibles sans le journal).
+        run: |
+          set +e
+          supabase test db --local tests/rls 2>&1 | tee pgtap.txt
+          statut=${PIPESTATUS[0]}
+          # GitHub garde 10 annotations par étape : d'abord les erreurs SQL et
+          # les scripts en échec, puis le détail des tests.
+          { grep -E "ERROR:|Bad plan" pgtap.txt; grep -E "# +(Failed test|got|expected|caught|wanted|have|want)" pgtap.txt; grep -E "Wstat" pgtap.txt; } | grep -vE "NOTICE:|WARNING:" | head -10 | sed 's/^/::error title=pgTAP::/'
+          exit $statut
 
       - name: Appliquer les seeds complémentaires (M4→M14)
         run: |
@@ -52,9 +60,13 @@ jobs:
                    supabase/seed_planification_agenda.sql \
                    supabase/seed_marketplace_assoshop.sql \
                    supabase/seed_comptabilite.sql; do
-            if ! psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f"; then
+            if ! psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$f" > seed.txt 2>&1; then
+              cat seed.txt
               echo "SEED_ECHEC: $f"
+              grep -E "ERROR|DETAIL|CONTEXT|HINT" seed.txt | head -4 | sed "s|^|::error title=$f::|"
               FAILED=1
+            else
+              cat seed.txt
             fi
           done
           if [ "$FAILED" = "1" ]; then exit 1; fi
@@ -82,10 +94,18 @@ jobs:
         run: flutter pub get
 
       - name: Analyse statique
-        run: flutter analyze
+        # Chaque remarque devient une annotation sur le fichier concerné.
+        run: |
+          set +e
+          flutter analyze 2>&1 | tee analyse.txt
+          statut=${PIPESTATUS[0]}
+          sed -nE 's/^ *(info|warning|error) • (.*) • ([^:]+):([0-9]+):([0-9]+) • (.*)$/::error file=apps\/client_flutter\/\3,line=\4,col=\5,title=\6::\2/p' analyse.txt
+          exit $statut
 
       - name: Tests unitaires
-        run: flutter test
+        # Lancés même si l'analyse a des remarques : un échec n'en cache pas un autre.
+        if: success() || failure()
+        run: flutter test --reporter github
 
   edge_functions:
     name: Edge Functions (vérification de types + tests Deno)

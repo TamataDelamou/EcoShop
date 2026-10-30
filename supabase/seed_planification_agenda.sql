@@ -77,7 +77,7 @@ select (select val from seed_m11 where cle = 'etab'),
        s.id, 1, '08:00', '09:00', 'cours'
 from public.salles s
 where s.etablissement_id = (select val from seed_m11 where cle = 'etab') and s.code = 'SALLE-A'
-on conflict (etablissement_id, annee_scolaire_id, classe_id, jour_semaine, heure_debut, heure_fin) do nothing;
+on conflict do nothing;
 
 insert into public.emplois_du_temps
   (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, salle_id,
@@ -89,7 +89,7 @@ select (select val from seed_m11 where cle = 'etab'),
        s.id, 2, '10:00', '11:00', 'cours'
 from public.salles s
 where s.etablissement_id = (select val from seed_m11 where cle = 'etab') and s.code = 'SALLE-B'
-on conflict (etablissement_id, annee_scolaire_id, classe_id, jour_semaine, heure_debut, heure_fin) do nothing;
+on conflict do nothing;
 
 insert into public.emplois_du_temps
   (etablissement_id, annee_scolaire_id, classe_id, enseignant_profile_id, salle_id,
@@ -101,7 +101,7 @@ select (select val from seed_m11 where cle = 'etab'),
        s.id, 3, '08:00', '09:00', 'cours'
 from public.salles s
 where s.etablissement_id = (select val from seed_m11 where cle = 'etab') and s.code = 'SALLE-A'
-on conflict (etablissement_id, annee_scolaire_id, classe_id, jour_semaine, heure_debut, heure_fin) do nothing;
+on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
 -- 3. Événements d'agenda

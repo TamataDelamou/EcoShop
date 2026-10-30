@@ -167,10 +167,12 @@ SELECT public.creer_inscription_nouvel_eleve(
 ) AS fiche2_id \gset
 SELECT id AS inscription2_id FROM public.inscriptions WHERE fiche_eleve_id = :'fiche2_id'::uuid \gset
 
+-- REG-23 (migration 1570) : la Direction détient toutes les permissions de
+-- son école — `a_permission` lui répond vrai même sans poste dédié.
 SELECT is(
   public.a_permission('42000000-0000-0000-0000-000000000001'::uuid, 'scolarite.inscription.gerer'),
-  false,
-  'précondition du scénario de non-régression : dir_id n''a aucun poste RH/permission dédiée (seul est_direction() doit permettre la suite)'
+  true,
+  'REG-23 : dir_id, sans poste dédié, a la permission d''inscription par sa seule qualité de Direction'
 );
 
 UPDATE public.inscriptions SET boursier = true WHERE id = :'inscription2_id'::uuid;
@@ -252,8 +254,8 @@ SELECT set_config('request.jwt.claims',
        json_build_object('sub', :'dir_id', 'role', 'authenticated')::text, true);
 SELECT is(
   public.a_permission('42000000-0000-0000-0000-000000000001'::uuid, 'scolarite.encaissement.gerer'),
-  false,
-  'précondition du scénario de non-régression : dir_id n''a pas non plus la permission encaissement dédiée'
+  true,
+  'REG-23 : dir_id, sans poste dédié, a aussi la permission d''encaissement'
 );
 INSERT INTO public.encaissements_scolarite
   (etablissement_id, fiche_eleve_id, inscription_id, type_frais, montant, saisi_par)

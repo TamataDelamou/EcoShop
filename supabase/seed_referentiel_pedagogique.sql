@@ -42,7 +42,7 @@ from (values
   ('GH','JHS3','BECE-CURR','BECE Curriculum (Ghana)')
 ) as v(pays, niveau, code, nom)
 join public.niveaux_educatifs n on n.pays_code = v.pays and n.code = v.niveau
-on conflict (pays_code, code, version) do nothing;
+on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
 -- 3. Matières par programme

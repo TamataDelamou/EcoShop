@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:collection';
 
 import 'lecture_hors_ligne.dart' show estErreurReseau;
@@ -18,21 +17,27 @@ import 'lecture_hors_ligne.dart' show estErreurReseau;
 /// pas saturer un réseau mobile ; après [pannesMax] pannes de réseau de
 /// suite, l'amorçage s'arrête et sera repris à la prochaine connexion.
 class TacheAmorcage {
-  const TacheAmorcage(this.libelle, this.executer);
+  const TacheAmorcage(this.libelle, this.executer, {this.portee});
 
   /// Ce qui est lu, pour le journal (« Élèves de 6e A »).
   final String libelle;
+
+  /// Portée de la donnée lue (lot 3), sous la forme `classe:<id>`,
+  /// `fiche:<id>` ou `etablissement:<id>` : une tâche dont la portée n'a pas
+  /// changé depuis la dernière lecture est sautée. Null : toujours lue (les
+  /// tâches qui en produisent d'autres, ou les données sans portée).
+  final String? portee;
 
   /// Lit la donnée (et la garde, via le dépôt) ; renvoie les tâches qui en
   /// découlent.
   final Future<List<TacheAmorcage>> Function() executer;
 
   /// Tâche simple, sans suite.
-  static TacheAmorcage lire(String libelle, Future<Object?> Function() lecture) =>
+  static TacheAmorcage lire(String libelle, Future<Object?> Function() lecture, {String? portee}) =>
       TacheAmorcage(libelle, () async {
         await lecture();
         return const [];
-      });
+      }, portee: portee);
 }
 
 /// Fin d'un amorçage.
@@ -54,6 +59,7 @@ class EtatAmorcage {
     this.faites = 0,
     this.total = 0,
     this.refusees = 0,
+    this.inchangees = 0,
     this.issue,
   });
 
@@ -69,16 +75,28 @@ class EtatAmorcage {
   /// Tâches refusées par le serveur (droits, donnée absente) : ignorées.
   final int refusees;
 
+  /// Tâches sautées parce que leur portée n'a pas changé (lot 3) ; comptées
+  /// dans [faites].
+  final int inchangees;
+
   final IssueAmorcage? issue;
 
   double? get progression => total == 0 ? null : faites / total;
 
-  EtatAmorcage copierAvec({bool? enCours, int? faites, int? total, int? refusees, IssueAmorcage? issue}) =>
+  EtatAmorcage copierAvec({
+    bool? enCours,
+    int? faites,
+    int? total,
+    int? refusees,
+    int? inchangees,
+    IssueAmorcage? issue,
+  }) =>
       EtatAmorcage(
         enCours: enCours ?? this.enCours,
         faites: faites ?? this.faites,
         total: total ?? this.total,
         refusees: refusees ?? this.refusees,
+        inchangees: inchangees ?? this.inchangees,
         issue: issue ?? this.issue,
       );
 }
@@ -88,6 +106,10 @@ class EtatAmorcage {
 /// [continuer] est consulté avant chaque tâche : faux (déconnexion,
 /// changement d'espace) → arrêt [IssueAmorcage.annule]. [progres] reçoit
 /// l'état après chaque tâche.
+///
+/// Lot 3 : [ignorer] dit si une tâche peut être sautée (portée inchangée) ;
+/// [apres] reçoit chaque tâche exécutée et si elle a réussi — pour noter la
+/// date de lecture des portées entièrement relues.
 Future<EtatAmorcage> executerAmorcage(
   List<TacheAmorcage> taches, {
   int parallele = 4,
@@ -95,6 +117,8 @@ Future<EtatAmorcage> executerAmorcage(
   bool Function()? continuer,
   void Function(EtatAmorcage etat)? progres,
   bool Function(Object erreur) estPanne = estErreurReseau,
+  bool Function(TacheAmorcage tache)? ignorer,
+  void Function(TacheAmorcage tache, bool reussie)? apres,
 }) async {
   final file = Queue<({TacheAmorcage tache, int pannes})>.of([for (final t in taches) (tache: t, pannes: 0)]);
   var etat = EtatAmorcage(enCours: true, total: taches.length);
@@ -115,8 +139,13 @@ Future<EtatAmorcage> executerAmorcage(
         return;
       }
       final (:tache, :pannes) = file.removeFirst();
+      if (ignorer != null && ignorer(tache)) {
+        publier(etat.copierAvec(faites: etat.faites + 1, inchangees: etat.inchangees + 1));
+        continue;
+      }
       try {
         final suites = await tache.executer();
+        apres?.call(tache, true);
         pannesDeSuite = 0;
         file.addAll([for (final t in suites) (tache: t, pannes: 0)]);
         publier(etat.copierAvec(faites: etat.faites + 1, total: etat.total + suites.length));
@@ -132,6 +161,7 @@ Future<EtatAmorcage> executerAmorcage(
         } else if (estPanne(e)) {
           // Toujours en panne après [pannesMax] essais : abandonnée pour
           // cette fois (lue à la demande plus tard), comptée à part.
+          apres?.call(tache, false);
           pannesDeSuite++;
           publier(etat.copierAvec(faites: etat.faites + 1, refusees: etat.refusees + 1));
           if (pannesDeSuite >= pannesMax) {
@@ -139,6 +169,7 @@ Future<EtatAmorcage> executerAmorcage(
             return;
           }
         } else {
+          apres?.call(tache, false);
           publier(etat.copierAvec(faites: etat.faites + 1, refusees: etat.refusees + 1));
         }
       }

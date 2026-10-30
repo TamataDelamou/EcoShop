@@ -81,28 +81,36 @@ List<TacheAmorcage> planAmorcage({
   required SourcesAmorcage sources,
 }) {
   final s = sources;
+  // Portées (lot 3) : une lecture dont la portée n'a pas changé depuis la
+  // dernière fois est sautée. Les tâches qui produisent d'autres tâches n'en
+  // ont pas : elles tournent toujours, pour découvrir classes et enfants.
+  final ecole = 'etablissement:$etablissementId';
+  String pClasse(String id) => 'classe:$id';
+  String pFiche(String id) => 'fiche:$id';
+
   final taches = <TacheAmorcage>[
-    TacheAmorcage.lire('Annonces', s.annonces),
+    TacheAmorcage.lire('Annonces', s.annonces, portee: ecole),
   ];
 
   List<TacheAmorcage> classe(String id, String nom, {required bool gestion}) => [
-        TacheAmorcage.lire('Élèves de $nom', () => s.inscriptionsDeClasse(id)),
-        TacheAmorcage.lire('Emploi du temps de $nom', () => s.emploisDeClasse(id)),
-        TacheAmorcage.lire('Évaluations de $nom', () => s.evaluationsDeClasse(id)),
-        if (gestion) TacheAmorcage.lire('Enseignants de $nom', () => s.affectationsDeClasse(id)),
+        TacheAmorcage.lire('Élèves de $nom', () => s.inscriptionsDeClasse(id), portee: pClasse(id)),
+        TacheAmorcage.lire('Emploi du temps de $nom', () => s.emploisDeClasse(id), portee: pClasse(id)),
+        TacheAmorcage.lire('Évaluations de $nom', () => s.evaluationsDeClasse(id), portee: pClasse(id)),
+        if (gestion)
+          TacheAmorcage.lire('Enseignants de $nom', () => s.affectationsDeClasse(id), portee: pClasse(id)),
       ];
 
   List<TacheAmorcage> fiche(String ficheId) => [
-        TacheAmorcage.lire('Notes', () => s.notesDeFiche(ficheId)),
-        TacheAmorcage.lire('Bulletins', () => s.bulletinsDeFiche(ficheId)),
-        TacheAmorcage.lire('Absences', () => s.presencesDeFiche(ficheId)),
-        TacheAmorcage.lire('Retards', () => s.retardsDeFiche(ficheId)),
-        TacheAmorcage.lire('Sanctions', () => s.sanctionsDeFiche(ficheId)),
-        TacheAmorcage.lire('Cahier de liaison', () => s.cahierDeFiche(ficheId)),
+        TacheAmorcage.lire('Notes', () => s.notesDeFiche(ficheId), portee: pFiche(ficheId)),
+        TacheAmorcage.lire('Bulletins', () => s.bulletinsDeFiche(ficheId), portee: pFiche(ficheId)),
+        TacheAmorcage.lire('Absences', () => s.presencesDeFiche(ficheId), portee: pFiche(ficheId)),
+        TacheAmorcage.lire('Retards', () => s.retardsDeFiche(ficheId), portee: pFiche(ficheId)),
+        TacheAmorcage.lire('Sanctions', () => s.sanctionsDeFiche(ficheId), portee: pFiche(ficheId)),
+        TacheAmorcage.lire('Cahier de liaison', () => s.cahierDeFiche(ficheId), portee: pFiche(ficheId)),
         TacheAmorcage('Classe de l\'élève', () async {
           final classeId = await s.classeActuelleDeFiche(ficheId);
           if (classeId == null) return const [];
-          return [TacheAmorcage.lire('Emploi du temps', () => s.emploisDeClasse(classeId))];
+          return [TacheAmorcage.lire('Emploi du temps', () => s.emploisDeClasse(classeId), portee: pClasse(classeId))];
         }),
       ];
 
@@ -116,13 +124,13 @@ List<TacheAmorcage> planAmorcage({
           return [
             for (final c in st.classes) ...classe(c.id, c.nom, gestion: true),
             if (annee != null) ...[
-              TacheAmorcage.lire('Tarifs', () => s.fraisScolarite(etablissementId, annee)),
-              TacheAmorcage.lire('Agenda', () => s.agendaEtablissement(etablissementId, annee)),
+              TacheAmorcage.lire('Tarifs', () => s.fraisScolarite(etablissementId, annee), portee: ecole),
+              TacheAmorcage.lire('Agenda', () => s.agendaEtablissement(etablissementId, annee), portee: ecole),
             ],
           ];
         }),
-        TacheAmorcage.lire('Personnel', () => s.personnel(etablissementId)),
-        TacheAmorcage.lire('Derniers encaissements', () => s.encaissementsRecents(etablissementId)),
+        TacheAmorcage.lire('Personnel', () => s.personnel(etablissementId), portee: ecole),
+        TacheAmorcage.lire('Derniers encaissements', () => s.encaissementsRecents(etablissementId), portee: ecole),
       ]);
     case RoleRacine.enseignant:
       taches.add(TacheAmorcage('Mes classes', () async {

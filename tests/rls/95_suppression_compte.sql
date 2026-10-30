@@ -21,7 +21,7 @@ BEGIN
   INSERT INTO auth.users (id, email, email_confirmed_at) VALUES (v_id, p_email, now());
   INSERT INTO auth.identities (user_id, provider, provider_id, identity_data)
   VALUES (v_id, 'email', v_id::text, jsonb_build_object('email', p_email));
-  INSERT INTO auth.sessions (user_id) VALUES (v_id);
+  INSERT INTO auth.sessions (id, user_id) VALUES (gen_random_uuid(), v_id);
   UPDATE public.profiles SET role_racine = p_role::public.role_racine,
          prenom = initcap(split_part(p_email, '@', 1)), nom = 'Test' WHERE id = v_id;
   RETURN v_id;

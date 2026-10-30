@@ -37,6 +37,7 @@ void main() {
           if (enCours > maximum) maximum = enCours;
           await Future<void>.delayed(const Duration(milliseconds: 2));
           enCours--;
+          return null;
         }),
     ];
     final fin = await executerAmorcage(taches, parallele: 4);
@@ -95,6 +96,7 @@ void main() {
           TacheAmorcage.lire('t$i', () async {
             lues++;
             if (lues == 2) continuer = false;
+            return null;
           }),
       ],
       parallele: 1,
@@ -113,5 +115,28 @@ void main() {
     expect(etats.first.enCours, isTrue);
     expect(etats.last.enCours, isFalse);
     expect(etats.last.progression, 1.0);
+  });
+
+  test('lot 3 : une portée inchangée est sautée, les autres lues et signalées', () async {
+    final lues = <String>[];
+    final signalees = <String, bool>{};
+    final fin = await executerAmorcage(
+      [
+        TacheAmorcage.lire('6e A', () async => lues.add('6e A'), portee: 'classe:a'),
+        TacheAmorcage.lire('6e B', () async => lues.add('6e B'), portee: 'classe:b'),
+        TacheAmorcage.lire('refus', () => Future.error(StateError('DROITS')), portee: 'classe:c'),
+        TacheAmorcage('Classes', () async {
+          lues.add('Classes');
+          return const [];
+        }),
+      ],
+      ignorer: (t) => t.portee == 'classe:a',
+      apres: (t, ok) => signalees[t.libelle] = ok,
+    );
+    expect(lues, isNot(contains('6e A')));
+    expect(lues, containsAll(['6e B', 'Classes']));
+    expect(fin.inchangees, 1);
+    expect(fin.faites, 4);
+    expect(signalees, {'6e B': true, 'refus': false, 'Classes': true});
   });
 }
