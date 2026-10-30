@@ -83,23 +83,31 @@ void main() {
         ],
         child: const MaterialApp(home: EcranEtatSynchronisation()),
       ));
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await tester.pump();
+      // Lectures de la base (vraies, hors horloge simulée) puis affichage.
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+        await tester.pump();
+      }
     }
+
+    /// La liste ne construit que ce qui est à l'écran : on y va d'abord.
+    Future<void> allerA(WidgetTester tester, Finder cible) =>
+        tester.scrollUntilVisible(cible, 150, scrollable: find.byType(Scrollable).first);
 
     testWidgets('hors connexion : saisies gardées, envoi listé en clair, bouton indisponible', (tester) async {
       await ouvrir(tester);
       expect(find.textContaining('Hors connexion'), findsOneWidget);
-      expect(find.text('Décision sur un congé'), findsOneWidget);
-      expect(find.textContaining('part au retour du réseau'), findsOneWidget);
       final bouton = tester.widget<FilledButton>(find.byKey(const Key('bouton_synchroniser')));
       expect(bouton.onPressed, isNull);
+      await allerA(tester, find.text('Décision sur un congé'));
+      expect(find.textContaining('part au retour du réseau'), findsOneWidget);
+      await allerA(tester, find.byKey(const Key('refus_vides')));
       expect(find.byKey(const Key('refus_vides')), findsOneWidget);
     });
 
     testWidgets('l\'option Wi-Fi seulement se garde', (tester) async {
       await ouvrir(tester);
-      await tester.scrollUntilVisible(find.byKey(const Key('interrupteur_wifi_seulement')), 200);
+      await allerA(tester, find.byKey(const Key('interrupteur_wifi_seulement')));
       await tester.tap(find.byKey(const Key('interrupteur_wifi_seulement')));
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
       await tester.pump();
