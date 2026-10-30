@@ -28,6 +28,7 @@ import '../../scolarite/presentation/ecran_scolarite.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../themes/presentation/bouton_apparence.dart';
+import '../application/amorcage_controller.dart';
 import '../application/sync_composition.dart';
 import 'entete_utilisateur.dart';
 import '../../auth/application/espace_providers.dart';
@@ -101,6 +102,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     // diagnostic sans --dart-define).
     if (Env.estConfigure) {
       Future.microtask(() => ref.read(syncEngineProvider).synchroniser());
+      // REG-35 lot 2 : lecture d'avance de l'espace utilisé.
+      Future.microtask(() => ref.read(amorcageProvider.notifier).lancerSiNecessaire());
     }
   }
 
@@ -110,6 +113,13 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
       ref.listen<bool>(estEnLigneProvider, (etaitEnLigne, estEnLigne) {
         if (estEnLigne && etaitEnLigne == false) {
           ref.read(syncEngineProvider).synchroniser();
+          ref.read(amorcageProvider.notifier).lancerSiNecessaire();
+        }
+      });
+      // Changement d'espace (rôle ou école) ou fin du chargement du profil.
+      ref.listen<String?>(espaceUtiliseProvider.select((e) => e?.cle), (avant, apres) {
+        if (apres != null && apres != avant) {
+          ref.read(amorcageProvider.notifier).lancerSiNecessaire();
         }
       });
     }
@@ -126,6 +136,8 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     // Toujours montés, quelle que soit la destination.
     final veilleurs = <Widget>[
       const _BandeauHorsLigne(),
+      // Préparation hors connexion de l'espace (REG-35 lot 2).
+      if (Env.estConfigure) const _BandeauAmorcage(),
       // Suppression du compte programmée (REG-31) : rappel et annulation.
       if (profil != null) const _BandeauSuppression(),
       // Code du compte (REG-22) : autorisations d'appareils, récupération en cours.
@@ -241,6 +253,38 @@ class EcranMonProfil extends StatelessWidget {
 /// Les écritures continuent d'être acceptées et journalisées dans la file
 /// outbox ; le bandeau signale simplement que la synchronisation est différée
 /// (ch. 34-35).
+/// Barre fine pendant l'amorçage : l'utilisateur sait que l'application se
+/// prépare pour le hors connexion. Rien n'est bloqué pendant ce temps.
+class _BandeauAmorcage extends ConsumerWidget {
+  const _BandeauAmorcage();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final etat = ref.watch(amorcageProvider);
+    if (!etat.enCours || etat.total == 0) return const SizedBox.shrink();
+    final schema = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('bandeau_amorcage'),
+      color: schema.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Préparation hors connexion : ${etat.faites} / ${etat.total}',
+              style: TextStyle(fontSize: 12, color: schema.onSurfaceVariant),
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(value: etat.progression),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BandeauHorsLigne extends ConsumerWidget {
   const _BandeauHorsLigne();
 
