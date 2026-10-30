@@ -50,6 +50,7 @@ attendue), `clos`.
 | REG-31 | Pages de confidentialité, conditions d'utilisation et suppression de compte (site GSG) ; suppression du compte dans l'application | **P0** | **livré** (2026-10-29) — champs ⟦siège, RCCM⟧ à compléter, relecture de l'avocat, mise en ligne (`site_gsg/README.md`), migration 1577 |
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
+| REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -92,10 +93,8 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
 7. ~~**[code]** **Séries du lycée guinéen** (SM, SE, SS)~~ — **livré par
    REG-33** (séries, programme de l'école, moyenne pondérée). Coefficients :
    **fixés par chaque établissement** (décision du 2026-10-30).
-8. **[code]** **Messagerie privée** parent ↔ enseignant et **groupes de
-   classe** (REG-19, lot en attente) : serveur existant à compléter (les
-   parents en sont exclus aujourd'hui), écrans, hors connexion,
-   protection des mineurs.
+8. ~~**[code]** **Messagerie privée** parent ↔ enseignant et **groupes de
+   classe**~~ — **livré par REG-34** (migration 1580 à appliquer).
 9. **[test]** **Pilote Bambino Emmaüs** : validation de l'école et premier
    **paiement Orange Money réel** (REG-02).
 10. **[GSG]** **Avocat** : conditions d'utilisation, confidentialité,
@@ -1930,3 +1929,67 @@ au vert sauf le prix des packs SMS.
 
 **Reste.** [code] Notation anglophone (pourcentages, lettres A1–F9 de la
 WAEC) le jour d'une école ghanéenne.
+
+---
+
+## REG-34 — Messagerie famille ↔ école, heures de messagerie, groupes de classe
+
+**Reçue le** : 2026-10-30 (feuille de route, point 8). **Priorité** : P1.
+**Statut** : livré le 2026-10-30 — migration `…1580` à appliquer, à
+vérifier sur téléphone.
+
+**Recherche.**
+- **ClassDojo** : « heures calmes » de l'enseignant (les messages arrivent,
+  la notification attend) ; numéros personnels jamais montrés ; la
+  direction peut voir les échanges.
+- **Remind** : historique ineffaçable, signalement ; l'enseignant peut
+  couper les réponses (« annonce ») ; heures de bureau.
+- **Seesaw** : l'administration peut lire tous les messages ; pas de
+  message privé entre élèves.
+- **Pronote / ParentSquare** : la famille écrit à un enseignant de
+  l'enfant ou à la vie scolaire, choisis dans une liste.
+- **Directive du Manitoba (23 oct. 2026)** : pas d'échange personnel
+  adulte ↔ élève sur une plateforme non supervisée. **Projet sud-africain
+  (sept. 2026)** : déconseille les discussions privées enseignant ↔
+  élève, privilégie les heures de classe.
+
+**Règles retenues.** Jamais d'échange privé adulte ↔ élève : les élèves
+n'échangent que dans le groupe de leur classe, sous les yeux de leurs
+enseignants (règles M9, inchangées : groupe créé par un adulte, aucun
+parent, texte seul, rien n'est effacé). Le parent écrit au sujet de **son
+enfant**, à un **enseignant de la classe** ou à la **direction** ; la
+direction voit tout ; aucun numéro personnel n'est exposé.
+
+**Livré** (migration `…1580`, test pgTAP `98` 55/55 ; tests `86` 41/41 et
+`94` 22/22 adaptés, aucun autre écart sur la suite locale) :
+- **heures de messagerie de l'école** (par défaut du lundi au samedi, de
+  7 h à 19 h, fuseau de l'école), réglées par la direction. En dehors : la
+  notification au personnel est **reportée à l'ouverture**
+  (`notifications.envoyer_apres`, respecté par le service d'envoi) et les
+  élèves n'écrivent pas dans les groupes ;
+- **le parent écrit à l'école** (cahier de liaison étendu,
+  `ecrire_mot_parent`) : choix du destinataire, heures affichées avant
+  d'écrire, « Lu par l'école » ; le fil n'est lu que par ce destinataire,
+  la direction et les parents confirmés — pas par les autres
+  enseignants ; le personnel qui ouvre le fil le marque lu ;
+- **groupes de classe** : ouverts à la demande par un enseignant de la
+  classe ou la direction ; messages avec la clé de l'appareil (renvoi sans
+  doublon) ; groupe « annonces seulement » ou suspendu ; signalement par
+  tout membre ; retrait motivé (l'élève voit « message retiré », les
+  adultes gardent le texte), journal d'audit ; non lus par compte ; un
+  message d'adulte prévient la classe (à l'ouverture), un message d'élève
+  ne réveille personne ;
+- accueil : `groupes_non_lus` dans le résumé ; le cahier du personnel ne
+  compte que les fils qu'il voit ;
+- application : « Écrire à l'école » dans le cahier (parent, seulement les
+  enfants de l'école de l'espace choisi) ; pastille et entrée « Groupes de
+  classe » (« Ma classe » pour l'élève) ; fil avec appui long (signaler,
+  retirer), réglages, signalements ; écran des heures pour la direction ;
+  lecture et envoi hors connexion (rejeu enregistré, copies purgées à la
+  déconnexion).
+
+**Reste.** [GSG] appliquer la migration 1580. [test] parcours sur
+téléphone : parent → enseignant, réponse, « Lu par l'école » ; groupe de
+classe, élève hors des heures ; notification reportée le soir.
+[code] pièces jointes (photos de devoirs) si les écoles le demandent —
+volontairement absentes (texte seul, règle M9).

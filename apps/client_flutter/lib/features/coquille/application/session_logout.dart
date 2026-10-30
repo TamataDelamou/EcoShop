@@ -7,6 +7,7 @@ import '../../auth/application/auth_providers.dart';
 import '../../auth/application/espace_providers.dart';
 import '../../annonces/application/annonces_providers.dart';
 import '../../cahier_liaison/application/cahier_liaison_providers.dart';
+import '../../groupes_classe/application/groupes_classe_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/auth_repository.dart';
 import '../../bibliotheque/application/bibliotheque_providers.dart';
@@ -88,6 +89,12 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   // Cahier de liaison (REG-19) : fils gardés pour la lecture sans réseau.
   try {
     await lire(lectureCahierLiaisonProvider).purger();
+  } catch (_) {
+    // Base locale indisponible : rien à purger.
+  }
+  // Groupes de classe (REG-34) : groupes et fils gardés pour la lecture.
+  try {
+    await lire(lectureGroupesClasseProvider).purger();
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }

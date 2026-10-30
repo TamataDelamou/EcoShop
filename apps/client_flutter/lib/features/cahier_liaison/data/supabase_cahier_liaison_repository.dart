@@ -26,7 +26,8 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
   static const entiteMot = 'liaison_mot';
   static const entiteReponse = 'liaison_reponse';
   static const entiteLecture = 'liaison_lecture';
-  static const entites = [entiteMot, entiteReponse, entiteLecture];
+  static const entiteMotParent = 'liaison_mot_parent';
+  static const entites = [entiteMot, entiteReponse, entiteLecture, entiteMotParent];
 
   static const _delai = Duration(seconds: 10);
 
@@ -56,7 +57,8 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
   }
 
   /// Vrai si le serveur a reçu ; faux si l'action attend le réseau.
-  Future<bool> _envoyerOuGarder(String id, String entite, String rpc, Map<String, dynamic> params) async {
+  Future<bool> _envoyerOuGarder(String id, String entite, String rpc, Map<String, dynamic> params,
+      {Map<String, dynamic>? affichage}) async {
     try {
       await _rpc(rpc, params);
       return true;
@@ -68,14 +70,20 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
       id: id,
       entite: entite,
       operation: 'rpc',
-      payload: jsonEncode({'rpc': rpc, 'params': params}),
+      payload: jsonEncode({'rpc': rpc, 'params': params, 'affichage': ?affichage}),
     ));
     return false;
   }
 
+  /// Paramètres des actions gardées ; les indications d'affichage (nom du
+  /// destinataire…) sous la clé `_affichage`.
   Future<List<Map<String, dynamic>>> _enAttente(String entite) async => [
         for (final e in await _file.entreesEnAttente())
-          if (e.entite == entite) ((jsonDecode(e.payload) as Map)['params'] as Map).cast<String, dynamic>(),
+          if (e.entite == entite)
+            {
+              ...((jsonDecode(e.payload) as Map)['params'] as Map).cast<String, dynamic>(),
+              '_affichage': (jsonDecode(e.payload) as Map)['affichage'],
+            },
       ];
 
   @override
@@ -96,7 +104,10 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
       if (e.code != 'HORS_CONNEXION') rethrow;
       serveur = const [];
     }
-    final motsGardes = [for (final p in await _enAttente(entiteMot)) if (p['p_fiche'] == ficheEleveId) p];
+    final motsGardes = [
+      for (final p in [...await _enAttente(entiteMot), ...await _enAttente(entiteMotParent)])
+        if (p['p_fiche'] == ficheEleveId) p,
+    ];
     final reponsesGardees = await _enAttente(entiteReponse);
     final lus = {for (final p in await _enAttente(entiteLecture)) p['p_message'] as String};
 
@@ -124,6 +135,8 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
             corps: p['p_corps'] as String? ?? '',
             creeLe: DateTime.now(),
             deMoi: true,
+            auteurParent: p['p_destinataire'] != null,
+            destinataire: (p['_affichage'] as Map?)?['destinataire'] as String?,
             enAttenteEnvoi: true,
           )),
       for (final m in serveur) completer(m),
@@ -145,6 +158,40 @@ class SupabaseCahierLiaisonRepository implements CahierLiaisonRepository {
   @override
   Future<void> confirmerLecture(String motId) async {
     await _envoyerOuGarder('lecture:$motId', entiteLecture, 'confirmer_lecture_liaison', {'p_message': motId});
+  }
+
+  @override
+  Future<ContactsEcole> contacts(String ficheEleveId) => _lire(
+        'contacts_ecole',
+        ficheEleveId,
+        () => _rpc('destinataires_liaison', {'p_fiche': ficheEleveId}),
+        (json) {
+          final j = (json as Map?)?.cast<String, dynamic>() ?? const {};
+          final heures = j['heures'];
+          return ContactsEcole(
+            destinataires: [
+              for (final d in (j['destinataires'] as List?) ?? const [])
+                DestinataireLiaison.depuisJson((d as Map).cast<String, dynamic>()),
+            ],
+            heures: heures is Map ? HeuresMessagerie.depuisJson(heures.cast<String, dynamic>()) : null,
+          );
+        },
+      );
+
+  @override
+  Future<bool> ecrireAEcole({required String ficheEleveId, required String destinataireId, required String corps}) async {
+    final id = _uuid.v4();
+    String? nom;
+    try {
+      nom = (await contacts(ficheEleveId)).destinataires.where((d) => d.id == destinataireId).firstOrNull?.nom;
+    } catch (_) {}
+    return _envoyerOuGarder(
+      id,
+      entiteMotParent,
+      'ecrire_mot_parent',
+      {'p_id': id, 'p_fiche': ficheEleveId, 'p_destinataire': destinataireId, 'p_corps': corps.trim()},
+      affichage: {'destinataire': ?nom},
+    );
   }
 
   @override
@@ -182,6 +229,7 @@ class RejeuCahierLiaison {
   static String libelle(SyncEntree entree) => switch (entree.entite) {
         SupabaseCahierLiaisonRepository.entiteMot => 'Mot du cahier de liaison',
         SupabaseCahierLiaisonRepository.entiteReponse => 'Réponse dans le cahier de liaison',
+        SupabaseCahierLiaisonRepository.entiteMotParent => 'Message à l’école',
         _ => 'Lecture d’un mot du cahier de liaison',
       };
 }

@@ -1,3 +1,4 @@
+import 'package:ecoshop_client/features/auth/application/espace_providers.dart';
 import 'package:ecoshop_client/features/cahier_liaison/application/cahier_liaison_providers.dart';
 import 'package:ecoshop_client/features/cahier_liaison/domain/cahier_liaison.dart';
 import 'package:ecoshop_client/features/cahier_liaison/presentation/ecran_cahier_liaison.dart';
@@ -37,6 +38,23 @@ class _FauxCahier implements CahierLiaisonRepository {
 
   @override
   Future<void> masquer(String messageId, String motif) async => appels.add('masquer:$messageId:$motif');
+
+  HeuresMessagerie heures = const HeuresMessagerie(debut: '07:00', fin: '19:00', jours: [1, 2, 3, 4, 5, 6]);
+
+  @override
+  Future<ContactsEcole> contacts(String ficheEleveId) async => ContactsEcole(
+        heures: heures,
+        destinataires: const [
+          DestinataireLiaison(id: 'dir', nom: 'Mme Diallo', role: 'Direction'),
+          DestinataireLiaison(id: 'prof', nom: 'M. Camara', role: 'Mathématiques'),
+        ],
+      );
+
+  @override
+  Future<bool> ecrireAEcole({required String ficheEleveId, required String destinataireId, required String corps}) async {
+    appels.add('ecole:$destinataireId:$corps');
+    return !horsLigne;
+  }
 }
 
 MotLiaison _mot({bool lu = false, int? lectures, int? parents, List<MessageLiaison> reponses = const []}) => MotLiaison(
@@ -54,7 +72,10 @@ MotLiaison _mot({bool lu = false, int? lectures, int? parents, List<MessageLiais
 void main() {
   Future<void> monter(WidgetTester tester, _FauxCahier faux, Widget ecran) async {
     await tester.pumpWidget(ProviderScope(
-      overrides: [cahierLiaisonRepositoryProvider.overrideWithValue(faux)],
+      overrides: [
+        cahierLiaisonRepositoryProvider.overrideWithValue(faux),
+        ecoleEspaceParentProvider.overrideWithValue(null),
+      ],
       child: MaterialApp(home: ecran),
     ));
     await tester.pumpAndSettle();
@@ -125,5 +146,78 @@ void main() {
     );
     expect(find.text('Awa Bah'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
+  });
+
+  testWidgets('parent (REG-34) : écrit à l’enseignant de son enfant, voit les heures de l’école', (tester) async {
+    final faux = _FauxCahier();
+    await monter(tester, faux, ecranParent);
+
+    await tester.tap(find.byKey(const Key('bouton_ecrire_ecole')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('du lundi au samedi, de 7 h à 19 h'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('champ_message_ecole')), 'Awa sera absente vendredi.');
+    await tester.ensureVisible(find.byKey(const Key('bouton_envoyer_ecole')));
+    await tester.tap(find.byKey(const Key('bouton_envoyer_ecole')));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisissez à qui écrire.'), findsOneWidget, reason: 'destinataire obligatoire');
+
+    await tester.ensureVisible(find.byKey(const Key('destinataire_prof')));
+    await tester.tap(find.byKey(const Key('destinataire_prof')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('bouton_envoyer_ecole')));
+    await tester.tap(find.byKey(const Key('bouton_envoyer_ecole')));
+    await tester.pumpAndSettle();
+
+    expect(faux.appels, ['ecole:prof:Awa sera absente vendredi.']);
+    expect(find.text('Message envoyé.'), findsOneWidget);
+  });
+
+  testWidgets('parent : hors des heures, prévenu que le message sera remis à l’ouverture', (tester) async {
+    final faux = _FauxCahier()
+      ..heures = const HeuresMessagerie(debut: '07:00', fin: '19:00', jours: [1, 2, 3, 4, 5], ouverte: false);
+    await monter(tester, faux, ecranParent);
+    await tester.tap(find.byKey(const Key('bouton_ecrire_ecole')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('remis à l’ouverture'), findsOneWidget);
+    expect(find.textContaining('du lundi au vendredi'), findsOneWidget);
+  });
+
+  testWidgets('parent : son message montre à qui il écrit et « Lu par l’école »', (tester) async {
+    final faux = _FauxCahier(mots: [
+      MotLiaison(
+        id: 'p1', ficheEleveId: 'f1', corps: 'Awa sera absente vendredi.', creeLe: DateTime(2026, 10, 23, 8),
+        deMoi: true, auteurParent: true, destinataire: 'M. Camara', luParEcole: true,
+      ),
+    ]);
+    await monter(tester, faux, ecranParent);
+    expect(find.textContaining('Vous → M. Camara'), findsOneWidget);
+    expect(find.text('Lu par l’école'), findsOneWidget);
+    expect(find.byKey(const Key('confirmer_p1')), findsNothing, reason: 'pas de « J’ai lu » sur son propre message');
+  });
+
+  testWidgets('enseignant : un message de parent ouvert est marqué lu', (tester) async {
+    final faux = _FauxCahier(mots: [
+      MotLiaison(
+        id: 'p1', ficheEleveId: 'f1', corps: 'Awa sera absente vendredi.', creeLe: DateTime(2026, 10, 23, 8),
+        auteur: 'Mme Bah', auteurParent: true, destinataire: 'M. Camara',
+        reponses: [MessageLiaison(id: 'r1', corps: 'Merci', creeLe: DateTime(2026, 10, 23, 9), auteurParent: true)],
+      ),
+    ]);
+    await monter(tester, faux, ecranProf);
+    expect(find.textContaining('Mme Bah (parent) → M. Camara'), findsOneWidget);
+    expect(find.byKey(const Key('bouton_ecrire_ecole')), findsNothing);
+    expect(faux.appels, ['lu:p1', 'lu:r1']);
+
+    await tester.pump();
+    expect(faux.appels, hasLength(2), reason: 'une seule confirmation par message');
+  });
+
+  test('heures de messagerie : libellés', () {
+    expect(const HeuresMessagerie(debut: '07:30', fin: '18:00', jours: [1, 2, 3, 4, 5]).libelle,
+        'du lundi au vendredi, de 7 h 30 à 18 h');
+    expect(const HeuresMessagerie(debut: '08:00', fin: '12:00', jours: [1, 3, 5]).libelleJours, 'lundi, mercredi et vendredi');
+    expect(const HeuresMessagerie(debut: '08:00', fin: '12:00', jours: [6]).libelleJours, 'le samedi');
+    expect(const HeuresMessagerie(debut: '00:00', fin: '23:59', jours: [1, 2, 3, 4, 5, 6, 7]).libelleJours, 'tous les jours');
   });
 }

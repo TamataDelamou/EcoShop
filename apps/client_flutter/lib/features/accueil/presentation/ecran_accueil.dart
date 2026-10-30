@@ -33,6 +33,8 @@ final lignesAFaire = <LigneAFaire>[
   LigneAFaire('appels_a_faire', 'faire_appel', (n) => n == 1 ? 'Un appel à faire aujourd’hui' : '$n appels à faire aujourd’hui',
       icone: Icons.fact_check_outlined),
   LigneAFaire('cahier_non_lu', 'cahier_liaison', (n) => '$n mot${_s(n)} du cahier à lire', icone: Icons.menu_book_outlined),
+  LigneAFaire('groupes_non_lus', 'groupes_classe', (n) => '$n message${_s(n)} dans les groupes de classe',
+      icone: Icons.forum_outlined),
   LigneAFaire('notes_a_saisir', 'notes_enseignant', (n) => '$n évaluation${_s(n)} à compléter', icone: Icons.grade_outlined),
   LigneAFaire('tranches_a_payer', 'scolarite', (n) => 'Tranche de scolarité à payer', icone: Icons.payments_outlined),
   LigneAFaire('nouvelles_notes', 'notes_bulletins', (n) => n == 1 ? 'Nouvelle note' : '$n nouvelles notes',

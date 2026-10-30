@@ -39,18 +39,20 @@ void main() {
         'parent_ia', 'inscriptions_famille', 'boutique']);
       expect(ids, isNot(contains('encaissements')));
       expect(ids, isNot(contains('comptes_lies')));
+      expect(ids, isNot(contains('groupes_classe')), reason: 'aucun parent dans les groupes de classe (REG-34)');
     });
 
     test('élève : emploi du temps, notes, Scan-Exercice, bibliothèque', () {
       final ids = _ids(_ctx(RoleRacine.eleve));
-      expect(ids.take(4), ['emploi_du_temps', 'notes_bulletins', 'annonces', 'scan_exercice']);
+      expect(ids.take(5), ['emploi_du_temps', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice']);
       expect(ids, containsAll(['bibliotheque_famille', 'mes_rapports', 'bus']));
       expect(ids, isNot(contains('cahier_liaison')));
     });
 
     test('enseignant : appel, notes, cahier, classes, progression, dossier RH', () {
       final ids = _ids(_ctx(RoleRacine.enseignant));
-      expect(ids.take(6), ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'mes_classes', 'annonces', 'progression']);
+      expect(ids.take(7),
+          ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces', 'progression']);
       expect(ids, isNot(contains('encaissements')));
       expect(ids, isNot(contains('postes')));
     });
@@ -61,7 +63,7 @@ void main() {
       for (final f in fonctionsVisibles(c)) {
         parGroupe.putIfAbsent(f.groupe, () => []).add(f.id);
       }
-      expect(parGroupe['Vie de l’école'], containsAll(['annonces', 'cahier_liaison', 'presence_portail', 'alertes_decrochage']));
+      expect(parGroupe['Vie de l’école'], containsAll(['annonces', 'cahier_liaison', 'groupes_classe', 'presence_portail', 'alertes_decrochage']));
       expect(parGroupe['Élèves'], ['inscriptions_en_ligne', 'nouvelle_inscription', 'reinscription', 'comptes_lies']);
       expect(parGroupe['Finances'], containsAll(['encaissements', 'relances', 'comptabilite', 'orange_money',
         'parametres_financiers', 'credits_sms']));

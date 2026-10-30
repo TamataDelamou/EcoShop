@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/dialogue_masquage.dart';
 import '../application/cahier_liaison_providers.dart';
 import '../domain/cahier_liaison.dart';
+import 'ecrire_ecole_sheet.dart';
 
 String _date(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')} '
@@ -11,8 +12,10 @@ String _date(DateTime d) =>
 
 /// Cahier de liaison d'un élève : mots du personnel et réponses.
 ///
-/// - Parent : confirme la lecture (« J'ai lu ») et répond.
-/// - Personnel autorisé : écrit un nouveau mot, répond, voit qui a lu.
+/// - Parent : confirme la lecture (« J'ai lu »), répond, et écrit à l'école
+///   (un enseignant de l'enfant ou la direction, REG-34).
+/// - Personnel autorisé : écrit un nouveau mot, répond, voit qui a lu. Les
+///   messages de parents qu'il ouvre sont marqués lus (« Lu par l'école »).
 /// - Direction : masque un message (raison, journal d'audit).
 /// Tout ce qui est écrit sans réseau part au retour de la connexion.
 class EcranCahierLiaison extends ConsumerStatefulWidget {
@@ -37,6 +40,9 @@ class _EcranCahierLiaisonState extends ConsumerState<EcranCahierLiaison> {
   final _nouveau = TextEditingController();
   bool _enCours = false;
 
+  /// Messages de parents déjà marqués lus depuis cet écran.
+  final _confirmes = <String>{};
+
   @override
   void dispose() {
     _nouveau.dispose();
@@ -51,6 +57,37 @@ class _EcranCahierLiaisonState extends ConsumerState<EcranCahierLiaison> {
         const SnackBar(content: Text('Sans réseau : votre message partira dès le retour de la connexion.')),
       );
     }
+  }
+
+  /// Personnel : les messages de parents affichés sont marqués lus (comme
+  /// l'accusé de lecture d'une messagerie), sans recharger l'écran.
+  void _marquerLus(List<MotLiaison> mots) {
+    if (!widget.personnel) return;
+    final aLire = <String>[
+      for (final m in mots) ...[
+        if (m.auteurParent && !m.deMoi && !m.lu && !m.enAttenteEnvoi) m.id,
+        for (final r in m.reponses)
+          if (r.auteurParent && !r.deMoi && !r.lu && !r.enAttenteEnvoi) r.id,
+      ],
+    ].where(_confirmes.add).toList();
+    if (aLire.isEmpty) return;
+    final depot = ref.read(cahierLiaisonRepositoryProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      for (final id in aLire) {
+        try {
+          await depot.confirmerLecture(id);
+        } catch (_) {}
+      }
+    });
+  }
+
+  Future<void> _ecrireAEcole() async {
+    final recu = await ouvrirEcrireEcole(context, ficheEleveId: widget.ficheEleveId, nomEleve: widget.nomEleve);
+    if (recu == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(recu ? 'Message envoyé.' : 'Sans réseau : votre message partira dès le retour de la connexion.'),
+    ));
+    _rafraichir();
   }
 
   Future<void> _ecrire() async {
@@ -72,8 +109,18 @@ class _EcranCahierLiaisonState extends ConsumerState<EcranCahierLiaison> {
   @override
   Widget build(BuildContext context) {
     final fil = ref.watch(cahierLiaisonProvider(widget.ficheEleveId));
+    final affiches = fil.valueOrNull;
+    if (affiches != null) _marquerLus(affiches);
     return Scaffold(
       appBar: AppBar(title: Text('Cahier de ${widget.nomEleve}')),
+      floatingActionButton: widget.personnel
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('bouton_ecrire_ecole'),
+              onPressed: _ecrireAEcole,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Écrire à l’école'),
+            ),
       body: Column(
         children: [
           Expanded(
@@ -89,12 +136,13 @@ class _EcranCahierLiaisonState extends ConsumerState<EcranCahierLiaison> {
                         Text(
                           widget.personnel
                               ? 'Écrivez le premier mot : les parents de ${widget.nomEleve} seront prévenus.'
-                              : 'Aucun mot pour le moment. Vous serez prévenu(e) dès que l’école écrira.',
+                              : 'Aucun mot pour le moment. Vous serez prévenu(e) dès que l’école écrira. '
+                                  'Pour écrire à un enseignant ou à la direction : « Écrire à l’école ».',
                           textAlign: TextAlign.center,
                         ),
                       ])
                     : ListView(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.fromLTRB(12, 12, 12, widget.personnel ? 12 : 88),
                         children: [
                           for (final m in mots)
                             _CarteMot(
@@ -234,6 +282,11 @@ class _CarteMotState extends ConsumerState<_CarteMot> {
           if (masque) 'masqué',
         ].join(' · ');
 
+    // Fil ouvert par un parent : « Vous → M. Camara » ou « Mme Bah (parent) → vous ».
+    final titre = m.auteurParent
+        ? '${m.deMoi ? 'Vous' : '${m.auteur ?? 'Un parent'} (parent)'} → ${m.destinataire ?? 'l’école'}'
+        : m.auteur;
+
     return Card(
       key: ValueKey('mot_${m.id}'),
       margin: const EdgeInsets.only(bottom: 12),
@@ -244,7 +297,7 @@ class _CarteMotState extends ConsumerState<_CarteMot> {
           children: [
             Row(
               children: [
-                Expanded(child: Text(entete(m.auteur, m.creeLe, m.enAttenteEnvoi, m.masque), style: petit)),
+                Expanded(child: Text(entete(titre, m.creeLe, m.enAttenteEnvoi, m.masque), style: petit)),
                 _boutonMasquer(m.id, m.masque),
               ],
             ),
@@ -258,9 +311,19 @@ class _CarteMotState extends ConsumerState<_CarteMot> {
             if (m.masque && m.motifMasquage != null)
               Text('Masqué : ${m.motifMasquage}', style: petit?.copyWith(color: schema.error)),
             const SizedBox(height: 6),
-            if (widget.personnel && m.parents != null)
+            if (m.auteurParent && m.deMoi)
+              Row(key: Key('lu_ecole_${m.id}'), mainAxisSize: MainAxisSize.min, children: [
+                Icon(m.luParEcole ? Icons.done_all : Icons.done, size: 18,
+                    color: m.luParEcole ? schema.primary : schema.outline),
+                const SizedBox(width: 6),
+                Text(
+                  m.enAttenteEnvoi ? 'Pas encore envoyé' : (m.luParEcole ? 'Lu par l’école' : 'Envoyé, pas encore lu'),
+                  style: petit,
+                ),
+              ])
+            else if (widget.personnel && m.parents != null && !m.auteurParent)
               Text('Lu par ${m.lectures ?? 0}/${m.parents} parent(s)', key: Key('lectures_${m.id}'), style: petit)
-            else if (!widget.personnel)
+            else if (!widget.personnel && !m.auteurParent)
               Align(
                 alignment: Alignment.centerLeft,
                 child: m.lu

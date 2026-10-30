@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/application/espace_providers.dart';
 import '../application/cahier_liaison_providers.dart';
 import '../domain/cahier_liaison.dart';
 import 'ecran_cahier_liaison.dart';
@@ -19,11 +20,18 @@ class EcranElevesLiaison extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eleves = ref.watch(elevesLiaisonProvider(etablissementId));
     final parent = etablissementId == null;
+    // Parent : seulement ses enfants de l'école de l'espace choisi (REG-32).
+    final ecole = parent ? ref.watch(ecoleEspaceParentProvider) : null;
     return Scaffold(
       appBar: AppBar(title: const Text('Cahier de liaison')),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(elevesLiaisonProvider(etablissementId)),
-        child: eleves.when(
+        child: eleves
+            .whenData((tous) => [
+                  for (final e in tous)
+                    if (ecole == null || e.etablissementId == null || e.etablissementId == ecole) e,
+                ])
+            .when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(padding: const EdgeInsets.all(24), children: [
             Text(e is ErreurCahier ? e.message : 'Cahier indisponible. Tirez pour réessayer.', textAlign: TextAlign.center),

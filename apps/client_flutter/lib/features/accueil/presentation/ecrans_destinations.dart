@@ -7,6 +7,7 @@ import '../../annonces/presentation/ecran_annonces_direction.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../cahier_liaison/presentation/ecran_eleves_liaison.dart';
+import '../../groupes_classe/presentation/ecran_groupes_classe.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
 import '../../planification/presentation/ecran_emploi_du_temps.dart';
 import '../../planification/presentation/ecran_planification_classe.dart';
@@ -57,7 +58,8 @@ class LigneEntree extends StatelessWidget {
   }
 }
 
-/// Destination « Messages » : annonces et cahier de liaison.
+/// Destination « Messages » : annonces, cahier de liaison (parents ↔ école)
+/// et groupes de classe (élèves et enseignants, REG-34 ; jamais les parents).
 class EcranMessages extends ConsumerWidget {
   const EcranMessages({super.key, required this.profil, this.badges = const {}});
 
@@ -73,6 +75,8 @@ class EcranMessages extends ConsumerWidget {
     final role = profil.roleRacine;
     final direction = role == RoleRacine.direction;
     final ecritCahier = role == RoleRacine.enseignant || direction || droits.contains('scolarite.liaison.ecrire');
+    final groupes = role == RoleRacine.eleve || role == RoleRacine.enseignant || direction ||
+        droits.contains('communication.groupe.moderer');
     return Scaffold(
       appBar: AppBar(title: const Text('Messages')),
       body: ListView(
@@ -97,7 +101,7 @@ class EcranMessages extends ConsumerWidget {
               icone: Icons.menu_book_outlined,
               titre: 'Cahier de liaison',
               sousTitre: role == RoleRacine.parent
-                  ? 'Les mots de l’école, vos réponses'
+                  ? 'Les mots de l’école ; écrire à un enseignant'
                   : 'Écrivez aux parents au sujet d’un élève',
               badge: badges['cahier_non_lu'] ?? 0,
               libelleBadge: 'nouveau mot',
@@ -105,6 +109,24 @@ class EcranMessages extends ConsumerWidget {
                 builder: (_) => role == RoleRacine.parent
                     ? const EcranElevesLiaison()
                     : EcranElevesLiaison(etablissementId: etablissement!.id, direction: direction),
+              )),
+            ),
+          if (groupes && etablissement != null)
+            LigneEntree(
+              key: const Key('messages_groupes'),
+              icone: Icons.forum_outlined,
+              titre: role == RoleRacine.eleve ? 'Ma classe' : 'Groupes de classe',
+              sousTitre: role == RoleRacine.eleve
+                  ? 'Échanger avec ta classe et tes enseignants'
+                  : 'Les élèves et enseignants de vos classes',
+              badge: badges['groupes_non_lus'] ?? 0,
+              libelleBadge: 'nouveau message',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => EcranGroupesClasse(
+                  etablissementId: etablissement.id,
+                  eleve: role == RoleRacine.eleve,
+                  direction: direction,
+                ),
               )),
             ),
         ],

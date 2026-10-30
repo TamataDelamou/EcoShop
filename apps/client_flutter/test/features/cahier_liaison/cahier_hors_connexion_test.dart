@@ -42,6 +42,13 @@ class _Serveur {
                   'reponses': <Object>[],
                 },
               ],
+            'destinataires_liaison' => {
+                'heures': {'debut': '07:00', 'fin': '19:00', 'jours': [1, 2, 3, 4, 5, 6], 'ouverte': true},
+                'destinataires': [
+                  {'id': 'dir', 'nom': 'Mme Diallo', 'role': 'Direction'},
+                  {'id': 'prof', 'nom': 'M. Camara', 'role': 'Mathématiques'},
+                ],
+              },
             _ => {'deja_recu': false},
           };
           return http.Response(jsonEncode(reponse), 200, headers: {'content-type': 'application/json'}, request: requete);
@@ -106,5 +113,32 @@ void main() {
     final fil = await depot.cahier('f1');
     expect(fil.first.enAttenteEnvoi, isTrue);
     expect(fil.first.corps, 'Sortie scolaire vendredi.');
+  });
+
+  test('message à l’école sans réseau (REG-34) : destinataire affiché, envoyé au retour avec sa clé', () async {
+    final contacts = await depot.contacts('f1');
+    expect(contacts.heures!.libelle, 'du lundi au samedi, de 7 h à 19 h');
+    expect([for (final d in contacts.destinataires) d.nom], ['Mme Diallo', 'M. Camara']);
+
+    serveur.enLigne = false;
+    expect((await depot.contacts('f1')).destinataires, hasLength(2), reason: 'contacts lisibles sans réseau');
+    final recu = await depot.ecrireAEcole(ficheEleveId: 'f1', destinataireId: 'prof', corps: ' Awa sera absente vendredi. ');
+    expect(recu, isFalse);
+
+    final mot = (await depot.cahier('f1')).first;
+    expect(mot.enAttenteEnvoi, isTrue);
+    expect(mot.auteurParent, isTrue);
+    expect(mot.destinataire, 'M. Camara');
+
+    serveur.enLigne = true;
+    for (final e in await file.entreesEnAttente()) {
+      await RejeuCahierLiaison(client).rejouer(e);
+    }
+    expect(serveur.corps['ecrire_mot_parent'], {
+      'p_id': mot.id,
+      'p_fiche': 'f1',
+      'p_destinataire': 'prof',
+      'p_corps': 'Awa sera absente vendredi.',
+    }, reason: 'seuls les paramètres de la fonction partent, pas les indications d’affichage');
   });
 }

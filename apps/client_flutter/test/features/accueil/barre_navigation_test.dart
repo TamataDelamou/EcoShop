@@ -34,6 +34,7 @@ void main() {
     expect(find.byKey(const Key('messages_annonces')), findsOneWidget);
     expect(find.byKey(const Key('messages_cahier')), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
+    expect(find.byKey(const Key('messages_groupes')), findsNothing, reason: 'aucun parent dans les groupes (REG-34)');
   });
 
   testWidgets('Messages : le badge est lu par TalkBack (« Annonces, 3 nouvelles »)', (tester) async {
@@ -52,5 +53,13 @@ void main() {
   testWidgets('Messages, enseignant : écrire aux parents', (tester) async {
     await _monter(tester, EcranMessages(profil: _profil(RoleRacine.enseignant)));
     expect(find.text('Écrivez aux parents au sujet d’un élève'), findsOneWidget);
+    expect(find.byKey(const Key('messages_groupes')), findsOneWidget);
+  });
+
+  testWidgets('Messages, élève : sa classe, pas de cahier', (tester) async {
+    await _monter(tester, EcranMessages(profil: _profil(RoleRacine.eleve), badges: const {'groupes_non_lus': 2}));
+    expect(find.text('Ma classe'), findsOneWidget);
+    expect(find.byKey(const Key('messages_cahier')), findsNothing);
+    expect(find.text('2'), findsOneWidget);
   });
 }

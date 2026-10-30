@@ -22,6 +22,7 @@ import '../../configuration/presentation/ecran_programme_etablissement.dart';
 import '../../configuration/presentation/ecran_salles_configuration.dart';
 import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
+import '../../groupes_classe/presentation/ecran_groupes_classe.dart';
 import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
 import '../../ecoles_gsg/presentation/ecran_ecoles_gsg.dart';
 import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
@@ -133,6 +134,16 @@ final List<Fonction> catalogueFonctions = [
     visible: (c) => c.parent || (c.ecole && (c.enseignant || c.peut(['scolarite.liaison.ecrire']))),
     ouvrir: (context, ref, c) => _aller(context,
         c.parent ? const EcranElevesLiaison() : EcranElevesLiaison(etablissementId: c.etablissement!.id, direction: c.direction)),
+  ),
+  // REG-34 : groupe de la classe. Élèves et enseignants de la classe ;
+  // direction et postes de modération. Jamais les parents (règles M9).
+  Fonction(
+    id: 'groupes_classe', libelle: 'Groupes de classe', icone: Icons.forum_outlined, teinte: Teinte.bleu,
+    groupe: _vie, motsCles: ['classe', 'discussion', 'message', 'élèves', 'groupe'], badge: 'groupes_non_lus',
+    libelleBadge: 'nouveau message', ancienne: 'Groupes de classe',
+    visible: (c) => c.ecole && (c.eleve || c.enseignant || c.peut(['communication.groupe.moderer'])),
+    ouvrir: (context, ref, c) => _aller(context,
+        EcranGroupesClasse(etablissementId: c.etablissement!.id, eleve: c.eleve, direction: c.direction)),
   ),
   Fonction(
     id: 'emploi_du_temps', libelle: 'Emploi du temps', icone: Icons.calendar_view_week_outlined, teinte: Teinte.bleu,
@@ -587,9 +598,9 @@ final List<Fonction> catalogueFonctions = [
 const ordreParRole = <RoleRacine, List<String>>{
   RoleRacine.parent: ['annonces', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'scolarite', 'bus',
     'parent_ia', 'inscriptions_famille', 'boutique'],
-  RoleRacine.eleve: ['emploi_du_temps', 'notes_bulletins', 'annonces', 'scan_exercice', 'bibliotheque_famille', 'bus',
+  RoleRacine.eleve: ['emploi_du_temps', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice', 'bibliotheque_famille', 'bus',
     'mes_rapports', 'boutique'],
-  RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'mes_classes', 'annonces',
+  RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces',
     'progression', 'dossier_rh', 'emploi_du_temps'],
   // Administration GSG (REG-23) : les écoles d'abord.
   RoleRacine.adminGsg: ['gsg_ecoles', 'gsg_etablissements', 'gsg_referentiel', 'gsg_reseaux', 'gsg_sms',

@@ -96,15 +96,15 @@ SET LOCAL ROLE authenticated;
 
 -- Direction : tous ses compteurs.
 SELECT pg_temp.en_tant_que(:'dir_a');
-SELECT is(pg_temp.cles(), 'alertes_ouvertes,annonces_non_lues,cahier_non_lu,dossiers_inscription,familles_en_retard,liaisons_a_valider,numeros_a_confirmer',
+SELECT is(pg_temp.cles(), 'alertes_ouvertes,annonces_non_lues,cahier_non_lu,dossiers_inscription,familles_en_retard,groupes_non_lus,liaisons_a_valider,numeros_a_confirmer',
   'direction : liaisons, numéros, dossiers, retards de paiement, alertes, annonces, cahier');
 SELECT is(pg_temp.n('liaisons_a_valider'), 1, 'direction : une demande de liaison à valider');
 
 -- Personnel : selon le poste.
 SELECT pg_temp.en_tant_que(:'portail');
-SELECT is(pg_temp.cles(), 'annonces_non_lues,cahier_non_lu', 'agent du portail : ni liaisons, ni paiements, ni alertes');
+SELECT is(pg_temp.cles(), 'annonces_non_lues,cahier_non_lu,groupes_non_lus', 'agent du portail : ni liaisons, ni paiements, ni alertes');
 SELECT pg_temp.en_tant_que(:'caissier');
-SELECT is(pg_temp.cles(), 'annonces_non_lues,cahier_non_lu,familles_en_retard', 'caissier : les familles en retard de paiement, rien d''autre');
+SELECT is(pg_temp.cles(), 'annonces_non_lues,cahier_non_lu,familles_en_retard,groupes_non_lus', 'caissier : les familles en retard de paiement, rien d''autre');
 
 -- Enseignant : appel à faire, notes à saisir ; plus d'appel après la saisie.
 SELECT pg_temp.en_tant_que(:'prof');

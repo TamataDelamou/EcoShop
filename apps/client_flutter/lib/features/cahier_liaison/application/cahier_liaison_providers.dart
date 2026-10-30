@@ -34,3 +34,8 @@ final elevesLiaisonProvider = FutureProvider.autoDispose.family<List<EleveLiaiso
 final cahierLiaisonProvider = FutureProvider.autoDispose.family<List<MotLiaison>, String>((ref, ficheEleveId) {
   return ref.watch(cahierLiaisonRepositoryProvider).cahier(ficheEleveId);
 });
+
+/// Parent : à qui écrire au sujet de cet enfant, et heures de l'école.
+final contactsEcoleProvider = FutureProvider.autoDispose.family<ContactsEcole, String>((ref, ficheEleveId) {
+  return ref.watch(cahierLiaisonRepositoryProvider).contacts(ficheEleveId);
+});

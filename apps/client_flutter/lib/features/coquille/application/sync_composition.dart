@@ -7,6 +7,7 @@ import '../../communication/application/comm_providers.dart';
 import '../../../core/auth/supabase_auth_provider.dart';
 import '../../annonces/data/supabase_annonces_repository.dart';
 import '../../cahier_liaison/data/supabase_cahier_liaison_repository.dart';
+import '../../groupes_classe/data/supabase_groupes_classe_repository.dart';
 import '../../comptabilite/application/comptabilite_providers.dart';
 import '../../comptabilite/data/rejeu_comptabilite.dart';
 import '../../auth/data/rejeu_telephone.dart';
@@ -101,6 +102,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseCahierLiaisonRepository.entites) {
     gestionnaires[entite] = rejeuCahier.rejouer;
   }
+  // Groupes de classe (REG-34) : messages écrits sans réseau.
+  final rejeuGroupes = RejeuGroupesClasse(client);
+  for (final entite in SupabaseGroupesClasseRepository.entites) {
+    gestionnaires[entite] = rejeuGroupes.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -120,6 +126,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
           ? RejeuAnnonces.libelle(entree)
           : SupabaseCahierLiaisonRepository.entites.contains(entree.entite)
           ? RejeuCahierLiaison.libelle(entree)
+          : SupabaseGroupesClasseRepository.entites.contains(entree.entite)
+          ? RejeuGroupesClasse.libelle(entree)
           : SupabaseTransfertsReseauRepository.entites.contains(entree.entite)
           ? SupabaseTransfertsReseauRepository.libelle(entree)
           : InscriptionHorsLigneRepository.entites.contains(entree.entite)
