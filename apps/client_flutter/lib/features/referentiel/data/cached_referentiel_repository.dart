@@ -1,3 +1,4 @@
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../domain/arborescence_niveau.dart';
 import '../domain/arborescence_pays.dart';
 import '../domain/paquet_referentiel.dart';
@@ -121,5 +122,5 @@ class CachedReferentielRepository implements ReferentielRepository {
     // une liste de paquets en cache que l'on ne pourrait pas récupérer.
     return _distant.paquetsDisponibles(paysCode: paysCode, niveauId: niveauId);
   }
-}import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
+}
 

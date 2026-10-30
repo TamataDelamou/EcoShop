@@ -16,7 +16,7 @@ import 'package:ecoshop_client/features/rh_personnel/application/rh_providers.da
 import 'package:ecoshop_client/features/scolarite/application/scolarite_providers.dart';
 import 'package:ecoshop_client/features/vie_scolaire/application/vie_scolaire_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart' hide Evaluation;
 
 import '../support/serveur_simule.dart';
 
