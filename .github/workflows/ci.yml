@@ -44,7 +44,7 @@ jobs:
           statut=${PIPESTATUS[0]}
           # GitHub garde 10 annotations par étape : d'abord les erreurs SQL et
           # les scripts en échec, puis le détail des tests.
-          { grep -E "ERROR|psql:|Parse errors|Dubious|Wstat" pgtap.txt; grep -E "not ok|# +(Failed|got|expected|caught|wanted)" pgtap.txt; } | head -10 | sed 's/^/::error title=pgTAP::/'
+          { grep -E "ERROR:|Parse errors|Dubious|Wstat|Failed [0-9]+/[0-9]+|No plan found|Bad plan" pgtap.txt; grep -E "not ok|# +(Failed|got|expected|caught|wanted|have|want)" pgtap.txt; } | grep -vE "NOTICE:|WARNING:" | head -10 | sed 's/^/::error title=pgTAP::/'
           exit $statut
 
       - name: Appliquer les seeds complémentaires (M4→M14)

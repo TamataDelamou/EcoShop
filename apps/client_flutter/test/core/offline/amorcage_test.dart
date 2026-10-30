@@ -37,6 +37,7 @@ void main() {
           if (enCours > maximum) maximum = enCours;
           await Future<void>.delayed(const Duration(milliseconds: 2));
           enCours--;
+          return null;
         }),
     ];
     final fin = await executerAmorcage(taches, parallele: 4);
@@ -95,6 +96,7 @@ void main() {
           TacheAmorcage.lire('t$i', () async {
             lues++;
             if (lues == 2) continuer = false;
+            return null;
           }),
       ],
       parallele: 1,
