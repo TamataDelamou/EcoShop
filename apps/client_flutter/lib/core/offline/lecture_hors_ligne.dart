@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthRetryableFetchException;
 
 import '../db/cache_document_store.dart';
+import 'lecture_patiente.dart';
+
+export 'lecture_patiente.dart' show delaiPatienceLecture;
 
 /// Vrai pour une panne de réseau (pas de connexion, serveur injoignable,
 /// délai dépassé) — par opposition à un refus du serveur, qui reste une
@@ -46,10 +49,12 @@ class HorsConnexion implements Exception {
   String toString() => 'HorsConnexion';
 }
 
-/// Lecture « réseau d'abord, appareil ensuite » des écrans de consultation.
+/// Lecture des écrans de consultation : serveur s'il répond vite, appareil
+/// sinon (lot 1 hors connexion).
 ///
 /// Chaque réponse du serveur est gardée telle quelle (JSON) sur l'appareil ;
-/// sans réseau, la dernière réponse est servie et [fraicheur] dit de quand
+/// sans réseau ou sur un réseau trop lent, la dernière réponse est servie et
+/// [fraicheur] dit de quand
 /// elle date (affiché par le bandeau de synchronisation). Aucune conversion
 /// spécifique à écrire : on garde la réponse brute et on la relit avec le
 /// même décodeur qu'en ligne.
@@ -62,30 +67,36 @@ class LectureHorsLigne {
   /// quand elles viennent du serveur.
   final ValueNotifier<DateTime?> fraicheur;
 
+  /// Lit [source] et garde sa réponse ; sans réseau, ou si le serveur met
+  /// plus de [patience] à répondre alors qu'une copie existe, sert la copie
+  /// de l'appareil (lot 1 hors connexion, « appareil d'abord » — voir
+  /// [lireAvecPatience]). La réponse tardive du serveur est gardée en
+  /// arrière-plan pour la prochaine ouverture.
   Future<T> lire<T>({
     required String type,
     required String cle,
     required Future<Object?> Function() source,
     required T Function(Object? json) decoder,
+    Duration patience = delaiPatienceLecture,
   }) async {
-    Object? json;
-    try {
-      json = await source();
-    } catch (e) {
-      if (!estErreurReseau(e)) rethrow;
-      final lu = await _lireCache(type, cle);
-      if (lu == null) rethrow;
+    final resultat = await lireAvecPatience<Object?>(
+      serveur: source,
+      appareil: () async {
+        final lu = await _lireCache(type, cle);
+        return lu == null ? null : (valeur: lu.document['json'], date: lu.misAJourLe);
+      },
+      garder: (json) => _store.ecrireDocument(type, cle, {'json': json}),
+      estPanne: estErreurReseau,
+      patience: patience,
+    );
+    final date = resultat.depuisAppareil;
+    if (date == null) {
+      fraicheur.value = null;
+    } else {
       final actuelle = fraicheur.value;
-      fraicheur.value = actuelle == null || lu.misAJourLe.isBefore(actuelle) ? lu.misAJourLe : actuelle;
-      return decoder(lu.document['json']);
+      fraicheur.value = actuelle == null || date.isBefore(actuelle) ? date : actuelle;
     }
-    try {
-      await _store.ecrireDocument(type, cle, {'json': json});
-    } catch (_) {
-      // Le cache est un plus : son échec ne doit jamais bloquer l'écran.
-    }
-    fraicheur.value = null;
-    return decoder(json);
+    return decoder(resultat.valeur);
   }
 
   Future<({Map<String, dynamic> document, DateTime misAJourLe})?> _lireCache(String type, String cle) async {

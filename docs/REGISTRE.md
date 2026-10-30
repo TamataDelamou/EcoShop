@@ -51,6 +51,7 @@ attendue), `clos`.
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
+| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lot 1 livré (2026-10-30), à vérifier par `flutter test` |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -1993,3 +1994,32 @@ téléphone : parent → enseignant, réponse, « Lu par l'école » ; groupe de
 classe, élève hors des heures ; notification reportée le soir.
 [code] pièces jointes (photos de devoirs) si les écoles le demandent —
 volontairement absentes (texte seul, règle M9).
+
+---
+
+## REG-35 — Hors connexion complet
+
+**Reçu le** : 2026-10-30 (validation par le porteur de projet de la voie B :
+faire évoluer le moteur actuel plutôt qu'adopter PowerSync). **Priorité** :
+P0. **Statut** : en cours.
+
+Recherche préalable (Linear, PowerSync, CommCare, Kolibri) et constat
+détaillé : document repère « EcoShop — État des lieux du code et feuille de
+route ». Dimensionnement : écoles de 980 à 1 400 élèves, jusqu'à environ
+2 000.
+
+| Lot | Contenu | Statut |
+|---|---|---|
+| 1 | Lecture « appareil d'abord » : si une copie existe, le serveur est attendu 3 s au plus (`delaiPatienceLecture`), puis la copie est affichée et la réponse tardive gardée en arrière-plan. Commun à `LectureHorsLigne` et aux dépôts M5–M11 (`lireListeAvecCache`) | livré (2026-10-30) |
+| 2 | Amorçage par rôle et par école à la connexion (progression, reprise, Wi-Fi seulement) | ouvert |
+| 3 | Synchronisation par différences (curseur par type de donnée, journal des suppressions) — migration Supabase | ouvert |
+| 4 | Écritures restantes en file d'attente, clé unique par envoi | ouvert |
+| 5 | Écran « État de la synchronisation » | ouvert |
+| 6 | Tests mode avion et réseau 2G simulé, par rôle | ouvert |
+
+Lot 1 — fichiers : `lib/core/offline/lecture_patiente.dart`,
+`lib/core/offline/liste_avec_cache.dart`, `lecture_hors_ligne.dart`, bandeau
+de synchronisation, sept `cached_*_repository.dart` ; tests
+`test/core/offline/lecture_patiente_test.dart`. Format des copies inchangé :
+celles déjà présentes sur les téléphones restent lisibles.
+

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
@@ -212,19 +213,17 @@ class CachedCommRepository implements CommRepository {
     required Future<List<T>> Function() lire,
     required Map<String, dynamic> Function(T) versJson,
     required T Function(Map<String, dynamic>) depuisJson,
-  }) async {
-    try {
-      final liste = await lire();
-      await _cache.ecrireDocument(type, cle, {
-        'lignes': liste.map(versJson).toList(growable: false),
-      });
-      return liste;
-    } on ErreurComm {
-      final document = await _cache.lireDocument(type, cle);
-      if (document == null) rethrow;
-      return (document['lignes'] as List<dynamic>)
-          .map((l) => depuisJson(l as Map<String, dynamic>))
-          .toList(growable: false);
-    }
+  }) {
+    // Lot 1 hors connexion : copie de l'appareil si le serveur est en panne
+    // ou trop lent ; réponse tardive gardée en arrière-plan.
+    return lireListeAvecCache<T>(
+      cache: _cache,
+      type: type,
+      cle: cle,
+      lire: lire,
+      versJson: versJson,
+      depuisJson: depuisJson,
+      estPanne: (e) => e is ErreurComm,
+    );
   }
 }

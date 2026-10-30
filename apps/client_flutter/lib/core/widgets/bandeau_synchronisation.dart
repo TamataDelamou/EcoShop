@@ -29,7 +29,10 @@ class BandeauSynchronisation extends ConsumerWidget {
           lignes.add(_Ligne(
             cle: const Key('bandeau_donnees_appareil'),
             icone: Icons.cloud_off_outlined,
-            texte: 'Pas de réseau : données enregistrées sur cet appareil le ${_dateHeure(date)}.',
+            // Lot 1 : la copie s'affiche aussi quand le réseau est trop lent ;
+            // la réponse du serveur est alors gardée en arrière-plan.
+            texte: 'Réseau absent ou lent : données enregistrées sur cet appareil le ${_dateHeure(date)}. '
+                'Les nouvelles données s\'afficheront à la prochaine ouverture.',
           ));
         }
         if (suivi != null && suivi.enAttente > 0) {
