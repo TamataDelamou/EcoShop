@@ -86,7 +86,9 @@ class ServeurSimule {
         headers: {'content-type': 'application/json; charset=utf-8'}, request: requete);
 
     if (estRpc) {
-      final corps = requete.body.isEmpty ? <String, dynamic>{} : (jsonDecode(requete.body) as Map).cast<String, dynamic>();
+      // Une fonction appelée sans paramètres envoie `null` ou rien.
+      final brut = requete.body.isEmpty ? null : jsonDecode(requete.body);
+      final corps = brut is Map ? brut.cast<String, dynamic>() : <String, dynamic>{};
       final f = fonctions[nom];
       return json(f == null ? <Object>[] : f(corps));
     }
