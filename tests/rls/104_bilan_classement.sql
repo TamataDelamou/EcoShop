@@ -26,9 +26,9 @@ BEGIN
   INSERT INTO public.tentatives_revision (id, fiche_eleve_id, mode, nb_questions, nb_repondues, points, duree_s, termine, commence_le)
   VALUES (p_id, p_fiche, p_mode, p_n, p_n, p_justes, p_duree, true, now());
   INSERT INTO public.reponses_revision (tentative_id, question_id, version, ordre, score)
-  SELECT p_id, 'd5000000-0000-0000-0000-000000000001', 1, g, CASE WHEN g < p_justes THEN 1 ELSE 0 END
-    FROM generate_series(0, p_n - 1) g
-  ON CONFLICT DO NOTHING;
+  SELECT p_id, ('d5000000-0000-0000-0000-0000000000' || lpad((g + 1)::text, 2, '0'))::uuid, 1, g,
+         CASE WHEN g < p_justes THEN 1 ELSE 0 END
+    FROM generate_series(0, p_n - 1) g;
 END $$;
 
 SELECT plan(13);
@@ -45,11 +45,15 @@ INSERT INTO public.programmes_matieres (id, programme_id, code, nom, statut)
 VALUES ('d2000000-0000-0000-0000-000000000001', 'd1000000-0000-0000-0000-000000000001', 'MATH104', 'Maths 104', 'publie');
 INSERT INTO public.competences_matiere (id, matiere_id, code, libelle)
 VALUES ('d4000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000001', 'FRAC', 'Fractions');
+-- Dix questions publiées de la même compétence.
 INSERT INTO public.questions (id, matiere_id, statut, version_travail, version_publiee)
-VALUES ('d5000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000001', 'publiee', 1, 1);
+SELECT ('d5000000-0000-0000-0000-0000000000' || lpad(g::text, 2, '0'))::uuid,
+       'd2000000-0000-0000-0000-000000000001', 'publiee', 1, 1
+  FROM generate_series(1, 10) g;
 INSERT INTO public.questions_versions (question_id, version, type, difficulte, competence_id, enonce, reponse, explication)
-VALUES ('d5000000-0000-0000-0000-000000000001', 1, 'vrai_faux', 'facile', 'd4000000-0000-0000-0000-000000000001',
-        'Q', '{"valeur": true}', 'E');
+SELECT ('d5000000-0000-0000-0000-0000000000' || lpad(g::text, 2, '0'))::uuid, 1, 'vrai_faux', 'facile',
+       'd4000000-0000-0000-0000-000000000001', 'Q' || g, '{"valeur": true}', 'E'
+  FROM generate_series(1, 10) g;
 
 INSERT INTO public.etablissements (id, nom, slug, devise_code)
 VALUES ('d0000000-0000-0000-0000-00000000000a', 'École 104', 'ecole-104', 'GNF');
