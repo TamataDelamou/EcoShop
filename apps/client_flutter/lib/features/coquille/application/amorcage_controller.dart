@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/supabase_auth_provider.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/offline/amorcage.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
+import '../../../core/offline/suivi_portees.dart';
 import '../../../core/providers.dart';
 import '../../annonces/application/annonces_providers.dart';
 import '../../auth/application/auth_providers.dart';
@@ -15,9 +18,17 @@ import '../../vie_scolaire/application/vie_scolaire_providers.dart';
 import 'plan_amorcage.dart';
 
 /// Délai au-delà duquel un espace déjà amorcé l'est de nouveau (à
-/// l'ouverture ou au retour du réseau). En attendant la synchronisation par
-/// différences (lot 3), un nouvel amorçage relit tout : on l'espace donc.
-const delaiReamorcage = Duration(hours: 6);
+/// l'ouverture ou au retour du réseau). Depuis le lot 3, un nouvel amorçage
+/// ne relit que les portées modifiées : il coûte quelques requêtes.
+const delaiReamorcage = Duration(minutes: 30);
+
+/// Portées modifiées depuis leur dernière lecture (fonction serveur
+/// `portees_modifiees`, lot 3). Remplaçable dans les tests.
+typedef VerifierPortees = Future<Object?> Function(List<Map<String, String>> demandes);
+
+final verifierPorteesProvider = Provider<VerifierPortees>((ref) {
+  return (demandes) => ref.read(supabaseClientProvider).rpc('portees_modifiees', params: {'p_portees': demandes});
+});
 
 /// Branche les lectures de l'amorçage sur les dépôts existants (chacun
 /// garde sa réponse sur l'appareil).
@@ -111,6 +122,31 @@ class AmorcageController extends Notifier<EtatAmorcage> {
     final generation = ++_generation;
     _enCoursPour = cle;
     try {
+      // Lot 3 : ce qui a changé depuis la dernière lecture.
+      var suiviPortees = SuiviPortees.vide;
+      try {
+        suiviPortees = SuiviPortees.depuisJson(await suivi.lireDocument('portees', cle));
+      } catch (_) {
+        // Suivi illisible : tout sera relu.
+      }
+      final maintenantLocal = DateTime.now();
+      DateTime? luLe;
+      var inchangees = const <String>{};
+      try {
+        final reponse = lireReponsePortees(await ref.read(verifierPorteesProvider)(suiviPortees.demandes(maintenantLocal)));
+        luLe = reponse.maintenant;
+        if (luLe != null) {
+          inchangees = suiviPortees.inchangees(modifiees: reponse.modifiees, maintenant: maintenantLocal);
+        }
+      } catch (e) {
+        // Sans réseau : inutile d'aller plus loin. Fonction absente du
+        // serveur (pas encore déployée) : tout est relu, comme au lot 2.
+        if (estErreurReseau(e)) return;
+      }
+
+      final vues = <String>{};
+      final echouees = <String>{};
+      final relues = <String>{};
       final fin = await executerAmorcage(
         planAmorcage(
           role: espace.role,
@@ -125,10 +161,26 @@ class AmorcageController extends Notifier<EtatAmorcage> {
         progres: (etat) {
           if (generation == _generation) state = etat;
         },
+        ignorer: (tache) {
+          final p = tache.portee;
+          if (p == null) return false;
+          vues.add(p);
+          return inchangees.contains(p);
+        },
+        apres: (tache, reussie) {
+          final p = tache.portee;
+          if (p == null) return;
+          (reussie ? relues : echouees).add(p);
+        },
       );
       if (fin.issue == IssueAmorcage.termine) {
         try {
-          await suivi.ecrireDocument('termine', cle, {'refusees': fin.refusees});
+          await suivi.ecrireDocument('termine', cle, {'refusees': fin.refusees, 'inchangees': fin.inchangees});
+          // Une portée n'est notée lue que si toutes ses lectures ont réussi.
+          if (luLe != null) {
+            final nouveau = suiviPortees.apres(relues: relues.difference(echouees), vues: vues, luLe: luLe);
+            await suivi.ecrireDocument('portees', cle, nouveau.versJson());
+          }
         } catch (_) {
           // Le suivi est un plus : il évite seulement de relire trop souvent.
         }

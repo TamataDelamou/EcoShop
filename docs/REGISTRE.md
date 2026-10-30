@@ -51,7 +51,7 @@ attendue), `clos`.
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
-| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1 (poussé, `1127097`) et 2 livrés (2026-10-30) |
+| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1, 2 et 3 livrés (2026-10-30) ; migration 1581 à appliquer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2012,7 +2012,7 @@ route ». Dimensionnement : écoles de 980 à 1 400 élèves, jusqu'à environ
 |---|---|---|
 | 1 | Lecture « appareil d'abord » : si une copie existe, le serveur est attendu 3 s au plus (`delaiPatienceLecture`), puis la copie est affichée et la réponse tardive gardée en arrière-plan. Commun à `LectureHorsLigne` et aux dépôts M5–M11 (`lireListeAvecCache`) | livré (2026-10-30) |
 | 2 | Amorçage par rôle et par école : à l'ouverture, au changement d'espace et au retour du réseau, lecture d'avance par classe (Direction, personnel : élèves, emploi du temps, évaluations, enseignants ; personnel, tarifs, agenda, encaissements), par classe de l'enseignant, par enfant (parent) ou pour l'élève lui-même. 4 lectures à la fois, arrêt après 3 pannes de réseau, relancé au plus toutes les 6 h. Environ 200 lectures pour une école de 2 000 élèves (50 classes). Option « Wi-Fi seulement » reportée au lot 5 | livré (2026-10-30) |
-| 3 | Synchronisation par différences (curseur par type de donnée, journal des suppressions) — migration Supabase | ouvert |
+| 3 | Synchronisation par différences : journal des portées côté serveur (école, classe, élève ; déclencheurs sur 20 tables, suppressions comprises), fonction `portees_modifiees` (marge de 10 min contre les transactions validées en retard), suivi des dates de lecture à l'heure du serveur sur le téléphone ; l'amorçage saute les portées inchangées, relit tout au-delà de 7 jours, relancé au plus toutes les 30 min. Migration 1581, test pgTAP 99 | livré (2026-10-30) — migration 1581 à appliquer |
 | 4 | Écritures restantes en file d'attente, clé unique par envoi | ouvert |
 | 5 | Écran « État de la synchronisation » | ouvert |
 | 6 | Tests mode avion et réseau 2G simulé, par rôle | ouvert |
@@ -2030,4 +2030,11 @@ progression dans la coquille ; tests `test/core/offline/amorcage_test.dart`,
 `test/features/coquille/plan_amorcage_test.dart`. Point de vigilance : les
 copies des modules M5–M11 ne sont pas purgées à la déconnexion (choix de
 M9) ; l'amorçage en met davantage sur un appareil partagé — à trancher.
+
+Lot 3 — fichiers : `supabase/migrations/20260906001581_journal_portees.sql`,
+`tests/rls/99_journal_portees.sql`, `lib/core/offline/suivi_portees.dart`,
+portées des tâches (`amorcage.dart`, `plan_amorcage.dart`), vérification
+au début de l'amorçage (`amorcage_controller.dart`). Sans la migration, le
+téléphone relit tout, comme au lot 2. Références : WatermelonDB
+(`lastPulledAt`), PowerSync (buckets, reprise au dernier point).
 
