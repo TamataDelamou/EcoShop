@@ -105,7 +105,13 @@ jobs:
       - name: Tests unitaires
         # Lancés même si l'analyse a des remarques : un échec n'en cache pas un autre.
         if: success() || failure()
-        run: flutter test --reporter github
+        run: |
+          set +e
+          flutter test --reporter expanded 2>&1 | tee tests.txt
+          statut=${PIPESTATUS[0]}
+          # Tests en échec et leur message, lisibles sans le journal.
+          grep -E "\[E\]$|Expected:|  Actual:|   Which:|EXCEPTION CAUGHT|^The following|^No tests ran" tests.txt | head -10 | sed 's/^/::error title=flutter test::/'
+          exit $statut
 
   edge_functions:
     name: Edge Functions (vérification de types + tests Deno)

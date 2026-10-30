@@ -125,4 +125,14 @@ class CacheDocumentStore {
     }
     return effacees;
   }
+
+  /// Nombre de copies et place occupée sur l'appareil (écran « État de la
+  /// synchronisation », lot 5), tous comptes confondus.
+  static Future<({int copies, int octets})> statistiques(AppDatabase db) async {
+    final ligne = await db
+        .customSelect('SELECT COUNT(*) AS n, COALESCE(SUM(LENGTH(payload)), 0) AS o FROM cache_entries')
+        .getSingle();
+    return (copies: ligne.read<int>('n'), octets: ligne.read<int>('o'));
+  }
 }
+
