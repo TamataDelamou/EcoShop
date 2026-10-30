@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import 'rejeu_actions_differees.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../../communication/application/comm_providers.dart';
@@ -107,6 +108,12 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in SupabaseGroupesClasseRepository.entites) {
     gestionnaires[entite] = rejeuGroupes.rejouer;
   }
+  // Lot 4 (REG-35) : évaluations, sanctions, décisions de congé, statut
+  // boursier, progression, panier — faits sans réseau.
+  final rejeuDifferees = RejeuActionsDifferees(client);
+  for (final entite in RejeuActionsDifferees.entites) {
+    gestionnaires[entite] = rejeuDifferees.rejouer;
+  }
   final journalRejets = ref.watch(journalRejetsProvider);
 
   return SyncEngine(
@@ -122,6 +129,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       rejet,
       entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)
+          : RejeuActionsDifferees.entites.contains(entree.entite)
+          ? RejeuActionsDifferees.libelle(entree)
           : SupabaseAnnoncesRepository.entites.contains(entree.entite)
           ? RejeuAnnonces.libelle(entree)
           : SupabaseCahierLiaisonRepository.entites.contains(entree.entite)

@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:uuid/uuid.dart';
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/offline/liste_avec_cache.dart';
 import '../../../core/securite/gardien_actions_sensibles.dart';
 
@@ -173,10 +176,41 @@ class CachedNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<Evaluation> creerEvaluation(Evaluation evaluation) => _distant.creerEvaluation(evaluation);
+  Future<Evaluation> creerEvaluation(Evaluation evaluation) async {
+    // Lot 4 (REG-35) : identifiant tiré sur le téléphone — l'évaluation
+    // existe tout de suite, les notes saisies hors connexion la rejoignent,
+    // et un rejeu ne la crée jamais deux fois.
+    final avecId = evaluation.id.isEmpty
+        ? Evaluation.depuisJsonCache({...evaluation.versJsonCache(), 'id': const Uuid().v4()})
+        : evaluation;
+    try {
+      return await _distant.creerEvaluation(avecId);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.evaluationCreation, avecId.id),
+        entite: EntitesDifferees.evaluationCreation,
+        operation: 'insert',
+        payload: jsonEncode(avecId.versJsonCache()..remove('nom_matiere')),
+      ));
+      return avecId;
+    }
+  }
 
   @override
-  Future<void> publierEvaluation(String evaluationId) => avecCode('Publier les notes', () => _distant.publierEvaluation(evaluationId));
+  Future<void> publierEvaluation(String evaluationId) => avecCode('Publier les notes', () async {
+        try {
+          await _distant.publierEvaluation(evaluationId);
+        } catch (e) {
+          if (!estErreurReseau(e)) rethrow;
+          await _syncRepo.enfiler(SyncEntree(
+            id: EntitesDifferees.identifiant(EntitesDifferees.evaluationPublication, evaluationId),
+            entite: EntitesDifferees.evaluationPublication,
+            operation: 'update',
+            payload: jsonEncode({'id': evaluationId, 'publie_le': DateTime.now().toUtc().toIso8601String()}),
+          ));
+        }
+      });
 
   /// Exige la connectivité, comme [creerEvaluation]/[publierEvaluation] :
   /// une action admin explicite, jamais mise en file hors-ligne.

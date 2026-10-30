@@ -51,7 +51,7 @@ attendue), `clos`.
 | REG-32 | Espaces par école : un rôle dans une école (enseignant ici, parent là-bas) ; tout adulte peut relier son enfant | **P0** | **livré** (2026-10-29) — migration 1578 à appliquer ; à vérifier sur un téléphone Android |
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
-| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1, 2 et 3 livrés (2026-10-30) ; migrations 1581 et 1582 à appliquer |
+| REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **en cours** — lots 1 à 4 livrés (2026-10-30) ; migrations 1581 et 1582 à appliquer |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2013,7 +2013,7 @@ route ». Dimensionnement : écoles de 980 à 1 400 élèves, jusqu'à environ
 | 1 | Lecture « appareil d'abord » : si une copie existe, le serveur est attendu 3 s au plus (`delaiPatienceLecture`), puis la copie est affichée et la réponse tardive gardée en arrière-plan. Commun à `LectureHorsLigne` et aux dépôts M5–M11 (`lireListeAvecCache`) | livré (2026-10-30) |
 | 2 | Amorçage par rôle et par école : à l'ouverture, au changement d'espace et au retour du réseau, lecture d'avance par classe (Direction, personnel : élèves, emploi du temps, évaluations, enseignants ; personnel, tarifs, agenda, encaissements), par classe de l'enseignant, par enfant (parent) ou pour l'élève lui-même. 4 lectures à la fois, arrêt après 3 pannes de réseau, relancé au plus toutes les 6 h. Environ 200 lectures pour une école de 2 000 élèves (50 classes). Option « Wi-Fi seulement » reportée au lot 5 | livré (2026-10-30) |
 | 3 | Synchronisation par différences : journal des portées côté serveur (école, classe, élève ; déclencheurs sur 20 tables, suppressions comprises), fonction `portees_modifiees` (marge de 10 min contre les transactions validées en retard), suivi des dates de lecture à l'heure du serveur sur le téléphone ; l'amorçage saute les portées inchangées, relit tout au-delà de 7 jours, relancé au plus toutes les 30 min. Migration 1581, test pgTAP 99 | livré (2026-10-30) — migration 1581 à appliquer |
-| 4 | Écritures restantes en file d'attente, clé unique par envoi | ouvert |
+| 4 | Écritures restantes en file d'attente : création d'évaluation et publication des notes, proposition, validation et changement d'état d'une sanction, décision sur un congé, statut boursier, progression pédagogique, retrait d'un article du panier. Création = identifiant tiré sur le téléphone (jamais deux fois) ; décision = appliquée seulement si l'état est encore celui vu par l'utilisateur, sinon refus visible. Restent en ligne : paiements et commandes, contrats et fiches employé, mise à jour complète d'une fiche élève, calculs et IA | livré (2026-10-30) |
 | 5 | Écran « État de la synchronisation » | ouvert |
 | 6 | Tests mode avion et réseau 2G simulé, par rôle | ouvert |
 
@@ -2051,4 +2051,22 @@ REG-26 avait ouvert à l'Administrateur GSG douze actions de l'école
 crédits SMS, agrément des vendeurs, déblocage des codes) ;
 `a_permission_ecole` les réserve de nouveau à la Direction et aux postes de
 l'école.
+
+**Décision sur la déconnexion** (2026-10-30, déléguée par le porteur de
+projet après recherche : DHIS2, CommCare, OWASP MASVS) : les copies d'écran
+de chaque compte restent sur l'appareil, **chiffrées avec la clé du compte**
+(celle de la file d'envoi REG-18) — le même compte les retrouve sans tout
+retélécharger, aucun autre compte ne peut les lire. Les anciennes copies en
+clair ne sont plus servies à un compte connecté. Les réglages de l'appareil
+(thème, identifiant, copie de session) restent en clair. Option « Appareil
+partagé ? Se déconnecter et effacer mes données » : copies du compte
+effacées et clé détruite, refusée tant que des saisies attendent d'être
+envoyées. Fichiers : `core/db/scelleur_copies.dart`,
+`core/securite/scelleur_par_compte.dart`, `cache_document_store.dart`.
+
+Lot 4 — fichiers : `core/sync/entites_differees.dart`,
+`features/coquille/application/rejeu_actions_differees.dart` ; mise en file
+dans six dépôts (notes, vie scolaire, RH, scolarité, planification,
+boutique). Références : clés d'idempotence de Stripe, identifiants de
+mutation de Replicache.
 

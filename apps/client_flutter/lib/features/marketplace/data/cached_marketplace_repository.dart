@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../core/sync/entites_differees.dart';
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
@@ -166,7 +168,19 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
   }
 
   @override
-  Future<void> supprimerLignePanier(String ligneId) => _distant.supprimerLignePanier(ligneId);
+  Future<void> supprimerLignePanier(String ligneId) async {
+    try {
+      await _distant.supprimerLignePanier(ligneId);
+    } catch (e) {
+      if (!estErreurReseau(e)) rethrow;
+      await _syncRepo.enfiler(SyncEntree(
+        id: EntitesDifferees.identifiant(EntitesDifferees.lignePanierSuppression, ligneId),
+        entite: EntitesDifferees.lignePanierSuppression,
+        operation: 'delete',
+        payload: jsonEncode({'id': ligneId}),
+      ));
+    }
+  }
 
   @override
   Future<Commande> creerCommande(Commande commande) => _distant.creerCommande(commande);
