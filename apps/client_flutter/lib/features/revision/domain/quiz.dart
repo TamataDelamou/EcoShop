@@ -144,21 +144,22 @@ class ConfigQuiz {
     this.matiereId,
     this.chapitreId,
     this.difficultes = const {},
-    int? nombre,
+    this.nombre,
     this.petitesClasses = false,
-  }) : _nombre = nombre;
+  });
 
   final ModeQuiz mode;
   final String? matiereId;
   final String? chapitreId;
   final Set<Difficulte> difficultes;
-  final int? _nombre;
+  /// Nombre demandé ; [taille] applique le plafond.
+  final int? nombre;
 
   /// CP1 à CE2 : 5 questions au plus (cahier 11.1).
   final bool petitesClasses;
 
-  int get nombre {
-    final n = (_nombre ?? mode.nombreParDefaut).clamp(1, 50);
+  int get taille {
+    final n = (nombre ?? mode.nombreParDefaut).clamp(1, 50);
     return petitesClasses ? min(n, 5) : n;
   }
 }
@@ -198,7 +199,7 @@ List<QuestionQuiz> choisirQuestions(
   }
 
   final classees = [...candidates]..sort((a, b) => priorite(b).compareTo(priorite(a)));
-  if (config.mode != ModeQuiz.melange) return classees.take(config.nombre).toList();
+  if (config.mode != ModeQuiz.melange) return classees.take(config.taille).toList();
 
   // Mêlée : tour à tour dans chaque chapitre, puis mélange de l'ordre.
   final parChapitre = <String, List<QuestionQuiz>>{};
@@ -208,7 +209,7 @@ List<QuestionQuiz> choisirQuestions(
   final files = parChapitre.values.toList();
   final choisies = <QuestionQuiz>[];
   var i = 0;
-  while (choisies.length < config.nombre && files.any((f) => f.isNotEmpty)) {
+  while (choisies.length < config.taille && files.any((f) => f.isNotEmpty)) {
     final f = files[i % files.length];
     if (f.isNotEmpty) choisies.add(f.removeAt(0));
     i++;

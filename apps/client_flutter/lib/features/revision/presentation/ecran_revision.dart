@@ -133,7 +133,7 @@ class EcranRevision extends ConsumerWidget {
         : const <ConseilParent>[];
     final aRevoir = [
       for (final id in r.competencesARevoir())
-        if (e.paquet.competences.where((k) => k.id == id).firstOrNull case final k?) k,
+        ?e.paquet.competences.where((k) => k.id == id).firstOrNull,
     ];
 
     Widget bouton(String cle, IconData icone, String titre, String sous, ConfigQuiz config, {bool principal = false}) {
