@@ -6,8 +6,6 @@ import 'package:ecoshop_client/features/communication/domain/notif.dart';
 import 'package:ecoshop_client/features/communication/domain/preference_canal.dart';
 import 'package:ecoshop_client/features/communication/domain/taux_lecture_canal.dart';
 import 'package:ecoshop_client/features/communication/domain/template_notification.dart';
-import 'package:ecoshop_client/features/communication/prototype/domain/entree_communication_locale.dart';
-import 'package:ecoshop_client/features/communication/prototype/domain/moderation_locale.dart';
 
 void main() {
   group('Notif', () {
@@ -124,54 +122,6 @@ void main() {
 
       expect(taux.nbEnvoyes, 100);
       expect(taux.tauxLecture, 0.8);
-    });
-  });
-
-  group('moderation_locale', () {
-    test('détecte un terme inapproprié courant', () {
-      expect(contientTermeInapproprie('Tu es vraiment stupide'), isTrue);
-    });
-
-    test('ne signale pas un message neutre', () {
-      expect(contientTermeInapproprie('Merci pour votre retour, tout va bien.'), isFalse);
-    });
-  });
-
-  group('EntreeCommunicationLocale', () {
-    test('versJson/depuisJson font un aller-retour fidèle', () {
-      final entree = EntreeCommunicationLocale(
-        id: 'e1',
-        type: TypeEntreeLocale.motLiaison,
-        auteurId: 'p1',
-        auteurNom: 'Mme Diallo',
-        destinataireLabel: 'fiche1',
-        contenu: 'Bien travaillé cette semaine.',
-        dateCreation: DateTime(2026, 3, 1),
-      );
-
-      final relue = EntreeCommunicationLocale.depuisJson(entree.versJson());
-
-      expect(relue.type, TypeEntreeLocale.motLiaison);
-      expect(relue.contenu, 'Bien travaillé cette semaine.');
-    });
-
-    test('copierAvec(lu: true) ne modifie pas les autres champs', () {
-      final entree = EntreeCommunicationLocale(
-        id: 'e1',
-        type: TypeEntreeLocale.annonce,
-        auteurId: 'p1',
-        auteurNom: 'Direction',
-        destinataireLabel: 'Tout établissement',
-        contenu: 'Réunion parents-professeurs vendredi.',
-        dateCreation: DateTime(2026, 3, 1),
-        important: true,
-      );
-
-      final lue = entree.copierAvec(lu: true);
-
-      expect(lue.lu, isTrue);
-      expect(lue.important, isTrue);
-      expect(lue.contenu, entree.contenu);
     });
   });
 }

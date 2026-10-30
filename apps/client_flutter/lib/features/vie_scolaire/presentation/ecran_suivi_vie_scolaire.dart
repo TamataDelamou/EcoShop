@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../justificatifs/presentation/ecran_justifier_absence.dart';
 import '../../../core/widgets/barre_actions.dart';
 
 import 'package:ecoshop_client/core/theme/app_palette.dart';
@@ -34,6 +35,14 @@ class EcranSuiviVieScolaire extends ConsumerWidget {
         // Actions visibles, avec leur libellé, sous le titre (REG-28).
         bottom: BarreActions(
           actions: [
+            // REG-36 : justifier une absence, ou prévenir d'une absence à venir.
+            ActionEcran(
+              icone: Icons.note_add_outlined,
+              libelle: 'Justifier',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => EcranJustifierAbsence(fiche: fiche)),
+              ),
+            ),
             ActionEcran(
               icone: Icons.gavel_outlined,
               libelle: 'Sanctions',
@@ -141,7 +150,7 @@ class _Contenu extends ConsumerWidget {
                 : Column(
                     children: [
                       for (var i = 0; i < liste.length; i++)
-                        EntreeAnimee(index: i, enfant: _CartePresence(presence: liste[i])),
+                        EntreeAnimee(index: i, enfant: _CartePresence(presence: liste[i], fiche: fiche)),
                     ],
                   ),
           ),
@@ -267,7 +276,9 @@ class _CarteTauxPresence extends StatelessWidget {
 }
 
 class _CartePresence extends ConsumerWidget {
-  const _CartePresence({required this.presence});
+  const _CartePresence({required this.presence, required this.fiche});
+
+  final FicheEleve fiche;
 
   final Presence presence;
 
@@ -297,20 +308,8 @@ class _CartePresence extends ConsumerWidget {
   }
 
   void _afficherJustification(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Justifier une absence'),
-        content: const Text(
-          "Le dépôt direct d'un justificatif par un parent n'est pas encore "
-          "ouvert côté serveur (aucune RPC ni règle d'accès ne l'autorise "
-          "pour l'instant). Rapprochez-vous de la vie scolaire de "
-          "l'établissement en attendant cette fonctionnalité.",
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Compris')),
-        ],
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => EcranJustifierAbsence(fiche: fiche, date: presence.datePresence)),
     );
   }
 

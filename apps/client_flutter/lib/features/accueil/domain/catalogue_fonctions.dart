@@ -24,6 +24,7 @@ import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
 import '../../groupes_classe/presentation/ecran_groupes_classe.dart';
 import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
+import '../../justificatifs/presentation/ecran_justificatifs_ecole.dart';
 import '../../ecoles_gsg/presentation/ecran_ecoles_gsg.dart';
 import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
 import '../../inscription_en_ligne/presentation/ecran_inscriptions_famille.dart';
@@ -33,6 +34,7 @@ import '../../marketplace/presentation/ecran_marketplace.dart';
 import '../../notes/presentation/ecran_carnet_notes.dart';
 import '../../notes/presentation/ecran_evaluations_classe.dart';
 import '../../paiement_mobile/presentation/ecran_orange_money_etablissement.dart';
+import '../../parametres_gsg/presentation/ecran_parametres_gsg.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_activation.dart';
 import '../../parent_ia/presentation/ecran_parent_ia_historique.dart';
 import '../../planification/presentation/ecran_agenda_evenements.dart';
@@ -48,6 +50,7 @@ import '../../pointage/presentation/ecran_portail.dart';
 import '../../pointage/presentation/ecran_presence_jour.dart';
 import '../../pointage/presentation/ecran_relances_impayes.dart';
 import '../../postes/presentation/ecran_postes.dart';
+import '../../premium_eleve/presentation/ecran_premium_eleve.dart';
 import '../../rapports/presentation/ecran_rapports.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
@@ -215,6 +218,14 @@ final List<Fonction> catalogueFonctions = [
     visible: _familleAvecFiche,
     ouvrir: (context, ref, c) => _aller(context, EcranMesRapports(ficheEleveId: c.fiche!.id)),
   ),
+  // REG-36 : abonnement Premium de l'élève, payé par lui ou un parent relié.
+  Fonction(
+    id: 'premium_eleve', libelle: 'Premium', icone: Icons.workspace_premium_outlined, teinte: Teinte.jaune, groupe: _tout,
+    motsCles: ['abonnement', 'tuteur', 'ia', 'payer', 'mobile money', 'orange money'],
+    visible: _familleAvecFiche,
+    ouvrir: (context, ref, c) => _aller(
+        context, EcranPremiumEleve(ficheEleveId: c.fiche!.id, prenom: c.fiche!.prenom, parent: c.parent)),
+  ),
   // ---------------------------------------------------------------- enseignants
   Fonction(
     id: 'faire_appel', libelle: 'Faire l’appel', icone: Icons.fact_check_outlined, teinte: Teinte.vert, groupe: _vie,
@@ -251,6 +262,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _vie, motsCles: ['arrivée', 'absents', 'retards', 'cartes', 'imprimer'], ancienne: 'Présence au portail',
     visible: (c) => c.ecole && c.peut(['scolarite.presence.gerer']),
     ouvrir: (context, ref, c) => _aller(context, EcranPresenceJour(etablissement: c.etablissement!)),
+  ),
+  // REG-36 : justificatifs déposés par les familles, à accepter ou refuser.
+  Fonction(
+    id: 'justificatifs_ecole', libelle: 'Justificatifs d’absence', icone: Icons.assignment_turned_in_outlined,
+    teinte: Teinte.violet, groupe: _vie, motsCles: ['absence', 'justifier', 'certificat', 'parents', 'motif'],
+    visible: (c) => c.ecole && c.peut(['scolarite.presence.gerer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranJustificatifsEcole(etablissementId: c.etablissement!.id)),
   ),
   Fonction(
     id: 'portail_scanner', libelle: 'Scanner au portail', icone: Icons.qr_code_scanner, teinte: Teinte.gris, groupe: _vie,
@@ -584,6 +602,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, ancienne: 'Validation des vendeurs',
     visible: (c) => c.role == RoleRacine.adminGsg,
     ouvrir: (context, ref, c) => _aller(context, const EcranValidationVendeursGsg()),
+  ),
+  // REG-36 : paramètres de la plateforme (tarifs, quotas IA, seuils), historisés.
+  Fonction(
+    id: 'gsg_parametres', libelle: 'Paramètres de la plateforme', icone: Icons.tune, teinte: Teinte.gris,
+    groupe: _plateforme, motsCles: ['tarif', 'premium', 'quota', 'ia', 'seuil', 'commission', 'devise'],
+    visible: (c) => c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranParametresGsg()),
   ),
   Fonction(
     id: 'gsg_debloquer', libelle: 'Débloquer un code', icone: Icons.lock_open_outlined, teinte: Teinte.rose,
