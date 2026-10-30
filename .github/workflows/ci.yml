@@ -37,7 +37,15 @@ jobs:
         run: supabase db reset
 
       - name: Tests pgTAP (tous les scripts de tests/rls)
-        run: supabase test db --local tests/rls
+        # Les échecs remontent aussi en annotations (lisibles sans le journal).
+        run: |
+          set +e
+          supabase test db --local tests/rls 2>&1 | tee pgtap.txt
+          statut=${PIPESTATUS[0]}
+          # GitHub garde 10 annotations par étape : d'abord les erreurs SQL et
+          # les scripts en échec, puis le détail des tests.
+          { grep -E "ERROR|psql:|Parse errors|Dubious|Wstat" pgtap.txt; grep -E "not ok|# +(Failed|got|expected|caught|wanted)" pgtap.txt; } | head -10 | sed 's/^/::error title=pgTAP::/'
+          exit $statut
 
       - name: Appliquer les seeds complémentaires (M4→M14)
         run: |
@@ -82,10 +90,18 @@ jobs:
         run: flutter pub get
 
       - name: Analyse statique
-        run: flutter analyze
+        # Chaque remarque devient une annotation sur le fichier concerné.
+        run: |
+          set +e
+          flutter analyze 2>&1 | tee analyse.txt
+          statut=${PIPESTATUS[0]}
+          sed -nE 's/^ *(info|warning|error) • (.*) • ([^:]+):([0-9]+):([0-9]+) • (.*)$/::error file=apps\/client_flutter\/\3,line=\4,col=\5,title=\6::\2/p' analyse.txt
+          exit $statut
 
       - name: Tests unitaires
-        run: flutter test
+        # Lancés même si l'analyse a des remarques : un échec n'en cache pas un autre.
+        if: success() || failure()
+        run: flutter test --reporter github
 
   edge_functions:
     name: Edge Functions (vérification de types + tests Deno)
