@@ -37,14 +37,25 @@ void main() {
     await monter(tester, RoleRacine.direction);
     expect(find.text('Mariama Sow'), findsOneWidget);
     expect(find.text('Identifiant EC-7K4M-2Q9'), findsOneWidget);
-    for (final section in ['MON COMPTE', 'SÉCURITÉ', 'PRÉFÉRENCES']) {
-      expect(find.text(section), findsOneWidget, reason: section);
+    // La liste ne construit que ce qui est à l'écran (REG-32 a ajouté
+    // « Relier mon enfant ») : défiler jusqu'à chaque élément avant de le vérifier.
+    final liste = find.byType(Scrollable).first;
+    // Dans l'ordre de la page, de haut en bas.
+    final attendus = <Finder>[
+      find.text('MON COMPTE'),
+      find.byKey(const Key('profil_mes_informations')),
+      find.byKey(const Key('profil_mes_invitations')),
+      find.byKey(const Key('profil_relier_enfant')),
+      find.text('SÉCURITÉ'),
+      find.byKey(const Key('menu_code_secret')),
+      find.byKey(const Key('menu_mes_appareils')),
+      find.text('PRÉFÉRENCES'),
+      find.byKey(const Key('menu_langue_affichage')),
+    ];
+    for (final f in attendus) {
+      await tester.scrollUntilVisible(f, 200, scrollable: liste);
+      expect(f, findsOneWidget, reason: f.toString());
     }
-    expect(find.byKey(const Key('profil_mes_informations')), findsOneWidget);
-    expect(find.byKey(const Key('profil_mes_invitations')), findsOneWidget);
-    expect(find.byKey(const Key('menu_code_secret')), findsOneWidget);
-    expect(find.byKey(const Key('menu_mes_appareils')), findsOneWidget);
-    expect(find.byKey(const Key('menu_langue_affichage')), findsOneWidget);
     // Plus aucun outil de travail : ils sont sur l'accueil.
     for (final travail in ['Comptabilité', 'Cahier des encaissements', 'Transport scolaire', 'Personnel & RH',
                            'Inscriptions en ligne', 'Boutique']) {
@@ -73,6 +84,7 @@ void main() {
 
   testWidgets('parent : l’avis du portail reste dans les préférences', (tester) async {
     await monter(tester, RoleRacine.parent);
+    await tester.scrollUntilVisible(find.text('PRÉFÉRENCES'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('PRÉFÉRENCES'), findsOneWidget);
     expect(find.text('Scan-Exercice'), findsNothing);
   });
