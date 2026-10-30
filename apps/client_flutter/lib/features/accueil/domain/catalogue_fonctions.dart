@@ -24,6 +24,7 @@ import '../../comptabilite/presentation/ecran_comptabilite.dart';
 import '../../creation_etablissement/presentation/ecran_demande_etablissement.dart';
 import '../../groupes_classe/presentation/ecran_groupes_classe.dart';
 import '../../creation_etablissement/presentation/ecran_validation_etablissements_gsg.dart';
+import '../../justificatifs/presentation/ecran_justificatifs_ecole.dart';
 import '../../ecoles_gsg/presentation/ecran_ecoles_gsg.dart';
 import '../../inscription_en_ligne/presentation/ecran_campagne_inscription.dart';
 import '../../inscription_en_ligne/presentation/ecran_inscriptions_famille.dart';
@@ -251,6 +252,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _vie, motsCles: ['arrivée', 'absents', 'retards', 'cartes', 'imprimer'], ancienne: 'Présence au portail',
     visible: (c) => c.ecole && c.peut(['scolarite.presence.gerer']),
     ouvrir: (context, ref, c) => _aller(context, EcranPresenceJour(etablissement: c.etablissement!)),
+  ),
+  // REG-36 : justificatifs déposés par les familles, à accepter ou refuser.
+  Fonction(
+    id: 'justificatifs_ecole', libelle: 'Justificatifs d’absence', icone: Icons.assignment_turned_in_outlined,
+    teinte: Teinte.violet, groupe: _vie, motsCles: ['absence', 'justifier', 'certificat', 'parents', 'motif'],
+    visible: (c) => c.ecole && c.peut(['scolarite.presence.gerer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranJustificatifsEcole(etablissementId: c.etablissement!.id)),
   ),
   Fonction(
     id: 'portail_scanner', libelle: 'Scanner au portail', icone: Icons.qr_code_scanner, teinte: Teinte.gris, groupe: _vie,

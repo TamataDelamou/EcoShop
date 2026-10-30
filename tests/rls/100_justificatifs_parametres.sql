@@ -39,6 +39,8 @@ SELECT pg_temp.compte('gsg100@exemple.org', 'admin_gsg') AS gsg \gset
 INSERT INTO public.etablissements_membres (profile_id, etablissement_id, role_dans_etablissement) VALUES
   (:'dir', 'a0000000-0000-0000-0000-00000000000a', 'direction'),
   (:'dir_b', 'a0000000-0000-0000-0000-00000000000b', 'direction');
+INSERT INTO public.inscriptions (etablissement_id, fiche_eleve_id, classe_id, annee_scolaire_id) VALUES
+  ('a0000000-0000-0000-0000-00000000000a', 'a0000000-0000-0000-0000-0000000000e1', 'a0000000-0000-0000-0000-0000000000c1', 'a0000000-0000-0000-0000-0000000000a1');
 INSERT INTO public.relations_parent_eleve (etablissement_id, parent_profile_id, fiche_eleve_id, type_relation, statut, autorise) VALUES
   ('a0000000-0000-0000-0000-00000000000a', :'mere', 'a0000000-0000-0000-0000-0000000000e1', 'parent', 'confirmee', true);
 INSERT INTO public.presences (etablissement_id, annee_scolaire_id, classe_id, fiche_eleve_id, saisi_par, date_presence, statut) VALUES
