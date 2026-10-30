@@ -135,7 +135,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masquer'));
     await tester.pumpAndSettle();
 
-    expect(faux.appels, ['masquer:r1:Propos déplacés']);
+    // La réponse du parent, ouverte par la direction, est aussi marquée lue (REG-34).
+    expect(faux.appels, ['lu:r1', 'masquer:r1:Propos déplacés']);
   });
 
   testWidgets('choix de l’élève : badge des messages à lire', (tester) async {

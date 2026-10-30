@@ -215,6 +215,10 @@ void main() {
       await tester.pumpAndSettle();
       Future<void> toucher(String cle) async {
         await tester.scrollUntilVisible(find.byKey(Key(cle)), 120, scrollable: find.descendant(of: find.byKey(const Key('liste_choix_raccourcis')), matching: find.byType(Scrollable)));
+        // La liste construit d'avance les cases juste sous le bord : les
+        // amener à l'écran avant de toucher.
+        await tester.ensureVisible(find.byKey(Key(cle)));
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(Key(cle)));
         await tester.pump();
       }
