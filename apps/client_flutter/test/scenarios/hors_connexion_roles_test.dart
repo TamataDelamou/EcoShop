@@ -144,9 +144,18 @@ class _Telephone {
 
   set enLigne(bool v) => container.read(_enLigne.notifier).state = v;
 
-  Future<EtatAmorcage> amorcer(RoleRacine role, String compte) => executerAmorcage(
-        planAmorcage(role: role, etablissementId: _ecole, profileId: compte, sources: lire(_sources)),
-      );
+  /// Lectures refusées au dernier amorçage (diagnostic des scénarios).
+  final refusees = <String>[];
+
+  Future<EtatAmorcage> amorcer(RoleRacine role, String compte) {
+    refusees.clear();
+    return executerAmorcage(
+      planAmorcage(role: role, etablissementId: _ecole, profileId: compte, sources: lire(_sources)),
+      apres: (tache, reussie) {
+        if (!reussie) refusees.add(tache.libelle);
+      },
+    );
+  }
 
   Future<int> synchroniser() => lire(syncEngineProvider).synchroniser();
 
@@ -169,7 +178,7 @@ void main() {
     // Le matin, avec réseau : l'application prépare ses classes.
     final amorcage = await tel.amorcer(RoleRacine.enseignant, 'prof');
     expect(amorcage.issue, IssueAmorcage.termine);
-    expect(amorcage.refusees, 0);
+    expect(tel.refusees, isEmpty, reason: 'lectures refusées : ${tel.refusees}');
 
     // En classe, sans réseau.
     serveur.reseau = Reseau.coupe;
