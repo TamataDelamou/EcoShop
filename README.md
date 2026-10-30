@@ -43,7 +43,7 @@ décrite dans [`ANALYSE_GLOBALE.md`](./ANALYSE_GLOBALE.md) et
 │           ├── core/            # Socle : config, thème, base locale, sync, auth
 │           └── features/        # Verticaux : scolarité, notes, boutique, paiement…
 ├── supabase/
-│   ├── migrations/              # Migrations SQL Postgres (schéma, RLS) — 50 fichiers
+│   ├── migrations/              # Migrations SQL Postgres (schéma, RLS) — 101 fichiers
 │   ├── functions/               # Edge Functions (IA, paiements, courriels, Kernel)
 │   ├── config.toml              # Configuration projet Supabase
 │   └── seed.sql                 # Données de développement
@@ -83,6 +83,7 @@ aucun appel réseau n'est tenté et l'écran de socle s'affiche.
 supabase login
 supabase link --project-ref <ref>
 supabase db push                    # applique supabase/migrations dans l'ordre
+# ou, sous Windows : scripts\deployer_supabase.ps1 (-SansFonctions : base seule)
 
 # Edge Functions
 supabase functions deploy creer_profil_marketplace
@@ -97,6 +98,9 @@ supabase functions deploy recevoir_notification_orange_money
 supabase functions deploy relancer_paiements_orange_money
 supabase functions deploy envoyer_notifications
 supabase functions deploy pas_moi       # lien « Ce n'est pas moi » des courriels (REG-22)
+supabase functions deploy connexion_identifiant   # connexion par identifiant EcoShop (REG-18)
+supabase functions deploy envoyer_sms_auth        # codes de connexion par SMS (REG-12)
+supabase functions deploy envoyer_push            # notifications push (REG-11)
 supabase functions deploy kernel-export
 supabase functions deploy kernel-control-plane
 ```
@@ -151,7 +155,7 @@ dans EcoShop n'en dépend.
 ### 3. Tests & analyse statique
 
 ```bash
-# Client Flutter — 440 tests
+# Client Flutter — environ 810 tests
 cd apps/client_flutter
 flutter analyze
 flutter test
@@ -159,17 +163,18 @@ flutter test
 # Edge Functions (Deno) — inter-services, Orange Money, courriels
 deno test --allow-env supabase/functions/_shared/
 
-# Base de données — 62 scripts pgTAP (exécutés par la CI)
+# Base de données — 100 scripts pgTAP (exécutés par la CI)
 #   voir tests/rls/README.md
 ```
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) rejoue les migrations, les
 tests pgTAP, les tests Deno, la vérification de types des Edge Functions et
-`flutter analyze` / `flutter test`.
+`flutter analyze` / `flutter test`. Les erreurs remontent en annotations sur
+la demande de fusion (pas besoin d'ouvrir les journaux).
 
 ## État d'avancement
 
-État au **17 octobre 2026**. *Chaque module est clos, testé et validé avant
+État au **30 octobre 2026**. *Chaque module est clos, testé et validé avant
 le passage au suivant (règle d'or du séquençage strict).*
 
 ### Modules du cahier de conception
@@ -198,8 +203,8 @@ le passage au suivant (règle d'or du séquençage strict).*
 | M16 | IA à rôles (Tuteur IA, Directeur-Adviser, Parent IA, risque d'échec, scan d'exercice) | ✅ livré (7 sous-livrables, clôture formelle 2026-09-12) |
 | M17 | Bibliothèque & Ressources | 🟡 partiel — bibliothèque physique livrée (2026-10-22 : catalogue, étiquettes QR, prêt et retour sans réseau, statuts retard/perdu, réservations, relances, inventaire) ; bibliothèque numérique et flashcards (ch. 26) à venir |
 | M18 | Transport scolaire | ✅ livré (2026-10-22) — circuits, arrêts, affectation, trajets du chauffeur sans réseau, carte QR à la montée et à la descente, avis aux familles, enfants restés à bord, facturation |
-| M19 | Réseau d'établissements & Backoffice GSG | 🟡 partiel — réseaux d'établissements livrés (2026-10-22 : demande validée par GSG, invitations, tableau de bord consolidé, circulaires, calendrier commun, retrait et dissolution) ; validation des vendeurs et des établissements livrées ; paramètres globaux et CMS pédagogique à venir |
-| M20 | Reporting, Tableaux de bord & Premium | 🟡 partiel — Premium élève et quotas Tuteur IA livrés (facturation) ; tableaux de bord centraux portés par le Control Plane du Kernel |
+| M19 | Réseau d'établissements & Backoffice GSG | 🟡 partiel — réseaux d'établissements livrés (2026-10-22 : demande validée par GSG, invitations, tableau de bord consolidé, circulaires, calendrier commun, retrait et dissolution) ; validation des vendeurs et des établissements livrées ; paramètres globaux réglables par l'Administrateur GSG avec historique (REG-36) ; CMS pédagogique à venir |
+| M20 | Reporting, Tableaux de bord & Premium | 🟡 partiel — Premium élève et quotas Tuteur IA livrés (facturation), écran d'abonnement de l'élève et du parent (REG-36) ; tableaux de bord centraux portés par le Control Plane du Kernel |
 
 ### Chantiers transverses livrés
 
@@ -213,14 +218,30 @@ le passage au suivant (règle d'or du séquençage strict).*
 | REG-02 Orange Money | Paiement en direct, suivi temps réel, relance automatique, rapprochement, espace Direction | 2026-10-17 |
 | REG-04 Établissements | Demande d'ouverture par le fondateur, validation GSG, courriels de confirmation | 2026-10-17 |
 | REG-07 Thèmes | Charte arabophone, identité visuelle par établissement (logo, couleur), ambiances personnelles | 2026-10-17 |
+| REG-08 à REG-12 | Inscriptions en ligne, pointage au portail et notifications, encaissement au guichet hors connexion, notifications push, kit de mise en service | 2026-10-18 → 22 |
+| REG-13 à REG-17 | Réseaux d'établissements (M19), transport scolaire (M18), bibliothèque physique (M17), connexion par e-mail et Google, frais et transferts entre écoles d'un réseau | 2026-10-22 |
+| REG-18, REG-22, REG-26 | Sécurité d'accès : inscription en étapes, code secret, identifiant EcoShop, code du compte sur tout nouvel appareil, postes du personnel et délégation des actions de la Direction | 2026-10-23 → 28 |
+| REG-19, REG-34 | Annonces, cahier de liaison, messagerie famille ↔ école, heures de messagerie, groupes de classe modérés | 2026-10-23 → 30 |
+| REG-20, REG-33 | Référentiel pédagogique en production, séries du lycée (multi-pays), programme de l'école, moyenne pondérée | 2026-10-24 → 29 |
+| REG-21, REG-25, REG-28 | Accueil en pastilles, barre du bas, profil allégé, actions des écrans visibles | 2026-10-26 → 29 |
+| REG-23, REG-24 | Retours du premier test sur téléphone, emploi du temps dynamique et automatisé | 2026-10-28 |
+| REG-27, REG-29, REG-32 | Un seul compte pour toutes les écoles : espaces par école (enseignant ici, parent là-bas), code d'invitation, sélecteur Google unique | 2026-10-28 → 29 |
+| REG-31 | Pages de confidentialité et de conditions, suppression du compte (Play Store) | 2026-10-29 |
+| REG-35 | Hors connexion complet : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures en file, écran d'état, copies chiffrées par compte | 2026-10-30 |
+| REG-36 | Avant le pilote : justificatifs d'absence déposés par les familles, écran Premium, paramètres de la plateforme, retrait du prototype de messagerie | 2026-10-30 |
 
 ### Prochaines étapes
 
-1. **REG-03** — comptabilité au choix de l'établissement : plan simplifié
+La feuille de route tenue à jour est [`docs/REGISTRE.md`](./docs/REGISTRE.md)
+REG-30. En bref :
+
+1. **Pilote Bambino Emmaüs** — base de production Supabase Pro, mise en
+   route de l'école (classes, élèves, enseignants), vérification complète
+   sur téléphone, premier paiement Orange Money réel.
+2. **REG-03** — comptabilité au choix de l'établissement : plan simplifié
    actuel **ou** SYSCOHADA révisé.
-2. **Pilote Bambino Emmaüs** — création de la base de production, test réel
-   Orange Money, mise en service des courriels et des tâches planifiées.
-3. **M17 numérique (ch. 26), M19 paramètres globaux et CMS, M20** selon l'ordre arbitré par le porteur de projet.
+3. **M17 numérique (ch. 26), CMS pédagogique (M19), M20** selon l'ordre
+   arbitré par le porteur de projet.
 
 ## Documentation
 

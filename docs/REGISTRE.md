@@ -52,6 +52,7 @@ attendue), `clos`.
 | REG-33 | Séries du lycée (multi-pays), programme de l'école (matières et coefficients), moyenne générale pondérée | **P0** | **livré** (2026-10-29) — migration 1579 appliquée ; coefficients fixés par chaque établissement (décision du 2026-10-30) |
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
 | REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **livré** (2026-10-30) — lots 1 à 6, migrations 1581 et 1582 appliquées ; à vérifier sur téléphone (APK de test) |
+| REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -121,7 +122,8 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
     README).
 18. **[code]** **iOS** : notifications, connexion Google, publication
     (compte Apple développeur à ouvrir côté GSG).
-19. **[code]** **README** à resynchroniser avec REG-13 à REG-29.
+19. ~~**[code]** **README** à resynchroniser avec REG-13 à REG-29~~ —
+    **fait par REG-36** (état au 2026-10-30, REG-13 à REG-36).
 
 ---
 
@@ -2070,3 +2072,30 @@ dans six dépôts (notes, vie scolaire, RH, scolarité, planification,
 boutique). Références : clés d'idempotence de Stripe, identifiants de
 mutation de Replicache.
 
+---
+
+## REG-36 — Avant le pilote : justificatifs, Premium, paramètres de la plateforme
+
+**Reçu le** : 2026-10-30 (choix du porteur de projet : « Restes avant
+pilote »). **Priorité** : P0. **Statut** : livré (demande de fusion n°5) —
+migrations 1583 et 1584 à appliquer ; vérifications sur téléphone groupées
+avec la mise en route de l'école.
+
+| Partie | Contenu | Références |
+|---|---|---|
+| Justificatifs d'absence | La famille justifie une absence passée ou prévient d'une absence à venir (motif, commentaire, photo du certificat, 60 jours au plus). La vie scolaire accepte ou refuse avec une raison lue par la famille ; accepté, les absences et retards de la période deviennent justifiés, y compris ceux saisis après (prévenance). Dépôt et décision possibles sans réseau, envoyés une seule fois au retour. Pièces dans un espace privé (2 Mo, image ou PDF), visibles de la famille et de l'école seulement. | Pronote (motifs, prévenance), ÉcoleDirecte |
+| Premium élève | Écran « Premium » de l'élève et du parent relié : état (actif jusqu'au…, jours restants), prix mensuel et annuel avec l'économie, rappel 7 jours avant la fin, prolongation sans perte des jours restants, paiement mobile money par CinetPay, relecture au retour de la page de paiement. Pas de prélèvement automatique. | Google Play, forfaits prépayés (« top-up ») |
+| Paramètres de la plateforme | L'Administrateur GSG règle tarifs, quotas IA, seuils et devise depuis l'application : valeur simple ou JSON, confirmation avant/après, historique de chaque changement. Seuls les paramètres existants se modifient et une valeur garde son type. En ligne seulement (un réglage touche toutes les écoles). | — |
+| Code mort | Prototype local de la messagerie (`features/communication/prototype/`) retiré ; la messagerie réelle est celle de REG-34. Les copies de l'ancien prototype sont effacées à la déconnexion. | — |
+| README | Resynchronisé avec REG-13 à REG-36 (point 19 de REG-30). | — |
+
+Fichiers serveur : `supabase/migrations/20260906001583_parametres_globaux_gsg.sql`
+(`definir_parametre_global`, `historique_parametres_globaux`),
+`20260906001584_justificatifs_absence.sql` (table, droits, `traiter_justificatif`,
+justification d'avance, espace de stockage `justificatifs-absence`) ; test
+`tests/rls/100_justificatifs_parametres.sql`. Fichiers application :
+`features/justificatifs/`, `features/premium_eleve/`, `features/parametres_gsg/`,
+pastilles `justificatifs_ecole`, `premium_eleve` et `gsg_parametres`.
+
+Le traitement des justificatifs suit la permission `scolarite.presence.gerer`
+de l'école (`a_permission_ecole`) : jamais ouvert à l'Administrateur GSG.
