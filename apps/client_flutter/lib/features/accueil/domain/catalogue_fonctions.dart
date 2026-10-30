@@ -56,6 +56,7 @@ import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
+import '../../revision/presentation/ecran_banque_questions.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
@@ -602,6 +603,26 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, ancienne: 'Validation des vendeurs',
     visible: (c) => c.role == RoleRacine.adminGsg,
     ouvrir: (context, ref, c) => _aller(context, const EcranValidationVendeursGsg()),
+  ),
+  // REG-37 : banque de questions du moteur de révision (Administrateur de
+  // contenu pédagogique, cahier 4.4 et 30.5).
+  Fonction(
+    id: 'contenu_banque', libelle: 'Banque de questions', icone: Icons.quiz_outlined, teinte: Teinte.violet,
+    groupe: _plateforme, motsCles: ['question', 'quiz', 'révision', 'matière', 'programme', 'compétence'],
+    visible: (c) => c.role == RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(context, const EcranPaysPedagogiques()),
+  ),
+  Fonction(
+    id: 'contenu_a_valider', libelle: 'Questions à valider', icone: Icons.fact_check_outlined, teinte: Teinte.vert,
+    groupe: _plateforme, motsCles: ['validation', 'publier', 'révision pédagogique'],
+    visible: (c) => c.role == RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(context, const EcranQuestionsATraiter()),
+  ),
+  Fonction(
+    id: 'contenu_signalements', libelle: 'Questions signalées', icone: Icons.report_outlined, teinte: Teinte.rose,
+    groupe: _plateforme, motsCles: ['signalement', 'erreur', 'suspendue'],
+    visible: (c) => c.role == RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(context, const EcranQuestionsSignalees()),
   ),
   // REG-36 : paramètres de la plateforme (tarifs, quotas IA, seuils), historisés.
   Fonction(
