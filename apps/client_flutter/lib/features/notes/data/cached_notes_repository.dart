@@ -101,7 +101,9 @@ class CachedNotesRepository implements NotesRepository {
       );
       await _cache.ecrireDocument(_typeMoyenneEleve, cle, {'valeur': moyenne});
       return moyenne;
-    } on ErreurNotes {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurNotes && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeMoyenneEleve, cle);
       if (document == null) rethrow;
       return (document['valeur'] as num?)?.toDouble();
@@ -123,7 +125,9 @@ class CachedNotesRepository implements NotesRepository {
       );
       await _cache.ecrireDocument(_typeMoyenneClasse, cle, {'valeur': moyenne});
       return moyenne;
-    } on ErreurNotes {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurNotes && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeMoyenneClasse, cle);
       if (document == null) rethrow;
       return (document['valeur'] as num?)?.toDouble();
@@ -155,7 +159,9 @@ class CachedNotesRepository implements NotesRepository {
             .toList(growable: false),
       });
       return liste;
-    } on ErreurNotes {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurNotes && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeAppreciations, cle);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -299,7 +305,7 @@ class CachedNotesRepository implements NotesRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurNotes,
+      estPanne: (e) => e is ErreurNotes || estErreurReseau(e),
     );
   }
 }

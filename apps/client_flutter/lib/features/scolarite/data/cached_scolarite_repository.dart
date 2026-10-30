@@ -69,7 +69,9 @@ class CachedScolariteRepository implements ScolariteRepository {
       );
       await _cache.ecrireDocument(_typeStructure, cle, structure.versJson());
       return structure;
-    } on ErreurScolarite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurScolarite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeStructure, cle);
       if (document == null) rethrow;
       return StructureEtablissement.depuisJson(document);
@@ -139,7 +141,9 @@ class CachedScolariteRepository implements ScolariteRepository {
         await _cache.ecrireDocument(_typeFiche, ficheId, fiche.versJson());
       }
       return fiche;
-    } on ErreurScolarite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurScolarite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeFiche, ficheId);
       if (document == null) rethrow;
       return FicheEleve.depuisJson(document);
@@ -160,7 +164,9 @@ class CachedScolariteRepository implements ScolariteRepository {
         await _cache.ecrireDocument(_typeMaFiche, CacheDocumentStore.cleUnique, fiche.versJson());
       }
       return fiche;
-    } on ErreurScolarite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurScolarite && !estErreurReseau(erreur)) rethrow;
       final document =
           await _cache.lireDocument(_typeMaFiche, CacheDocumentStore.cleUnique);
       if (document == null) rethrow;
@@ -383,7 +389,9 @@ class CachedScolariteRepository implements ScolariteRepository {
         await _cache.ecrireDocument(_typeFicheParMatricule, cle, fiche.versJson());
       }
       return fiche;
-    } on ErreurScolarite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurScolarite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeFicheParMatricule, cle);
       if (document == null) rethrow;
       return FicheEleve.depuisJson(document);
@@ -451,7 +459,9 @@ class CachedScolariteRepository implements ScolariteRepository {
         'montant_paye': solde.montantPaye,
         'solde': solde.solde,
       });
-    } on ErreurScolarite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurScolarite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeSolde, inscriptionId);
       if (document == null) rethrow;
       solde = SoldeScolarite.depuisJson(document);
@@ -511,7 +521,7 @@ class CachedScolariteRepository implements ScolariteRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurScolarite,
+      estPanne: (e) => e is ErreurScolarite || estErreurReseau(e),
     );
   }
 }

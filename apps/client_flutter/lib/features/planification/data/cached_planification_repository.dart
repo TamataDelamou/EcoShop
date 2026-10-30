@@ -301,7 +301,7 @@ class CachedPlanificationRepository implements PlanificationRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurPlanification,
+      estPanne: (e) => e is ErreurPlanification || estErreurReseau(e),
     );
   }
 }

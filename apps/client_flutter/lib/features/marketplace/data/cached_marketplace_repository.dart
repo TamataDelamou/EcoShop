@@ -55,7 +55,9 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
         'lignes': liste.map((c) => c.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurMarketplace {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurMarketplace && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeCommercants, CacheDocumentStore.cleUnique);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -73,7 +75,9 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
         'lignes': liste.map((p) => p.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurMarketplace {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurMarketplace && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeProduits, cle);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -89,7 +93,9 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
     try {
       base = await _distant.panierActifPourProfil(profileId, etablissementId);
       if (base != null) await _cache.ecrireDocument(_typePanier, cle, base.versJsonCache());
-    } on ErreurMarketplace {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurMarketplace && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typePanier, cle);
       base = document == null ? null : Panier.depuisJsonCache(document);
     }
@@ -131,7 +137,9 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
       await _cache.ecrireDocument(_typeLignesPanier, panierId, {
         'lignes': base.map((l) => l.versJsonCache()).toList(growable: false),
       });
-    } on ErreurMarketplace {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurMarketplace && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeLignesPanier, panierId);
       if (document == null) rethrow;
       base = (document['lignes'] as List<dynamic>)
@@ -197,7 +205,9 @@ class CachedMarketplaceRepository implements MarketplaceRepository {
         'lignes': liste.map((c) => c.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurMarketplace {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurMarketplace && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeCommandes, cle);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)

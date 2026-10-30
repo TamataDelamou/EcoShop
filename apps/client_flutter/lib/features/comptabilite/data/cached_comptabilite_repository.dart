@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../core/offline/lecture_hors_ligne.dart' show estErreurReseau;
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
@@ -48,7 +49,9 @@ class CachedComptabiliteRepository implements ComptabiliteRepository {
         'lignes': liste.map((c) => c.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurComptabilite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurComptabilite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typePlan, etablissementId);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -68,7 +71,9 @@ class CachedComptabiliteRepository implements ComptabiliteRepository {
         'lignes': liste.map((j) => j.versJsonCache()).toList(growable: false),
       });
       return liste;
-    } on ErreurComptabilite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurComptabilite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeJournaux, etablissementId);
       if (document == null) rethrow;
       return (document['lignes'] as List<dynamic>)
@@ -88,7 +93,9 @@ class CachedComptabiliteRepository implements ComptabiliteRepository {
       await _cache.ecrireDocument(_typeEcritures, etablissementId, {
         'lignes': base.map((e) => e.versJsonCache()).toList(growable: false),
       });
-    } on ErreurComptabilite {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurComptabilite && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeEcritures, etablissementId);
       if (document == null) rethrow;
       base = (document['lignes'] as List<dynamic>)

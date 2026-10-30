@@ -68,7 +68,9 @@ class CachedRhRepository implements RhRepository {
       final employe = await _distant.employeParProfil(profileId);
       if (employe != null) await _cache.ecrireDocument(_typeEmployeParProfil, profileId, employe.versJsonCache());
       return employe;
-    } on ErreurRh {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurRh && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeEmployeParProfil, profileId);
       return document == null ? null : domaine.Employe.depuisJsonCache(document);
     }
@@ -80,7 +82,9 @@ class CachedRhRepository implements RhRepository {
       final employe = await _distant.employe(employeId);
       if (employe != null) await _cache.ecrireDocument(_typeEmploye, employeId, employe.versJsonCache());
       return employe;
-    } on ErreurRh {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurRh && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeEmploye, employeId);
       return document == null ? null : domaine.Employe.depuisJsonCache(document);
     }
@@ -151,7 +155,9 @@ class CachedRhRepository implements RhRepository {
       final charge = await _distant.chargeHoraire(employeId);
       await _cache.ecrireDocument(_typeChargeHoraire, employeId, {'valeur': charge});
       return charge;
-    } on ErreurRh {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurRh && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeChargeHoraire, employeId);
       if (document == null) rethrow;
       return (document['valeur'] as num).toInt();
@@ -180,7 +186,9 @@ class CachedRhRepository implements RhRepository {
       final score = await _distant.scoreTurnover(employeId);
       await _cache.ecrireDocument(_typeTurnover, employeId, {'valeur': score});
       return score;
-    } on ErreurRh {
+    } catch (erreur) {
+      // Copie servie aussi sur une coupure brute (lot 6, REG-35).
+      if (erreur is! ErreurRh && !estErreurReseau(erreur)) rethrow;
       final document = await _cache.lireDocument(_typeTurnover, employeId);
       if (document == null) rethrow;
       return (document['valeur'] as num).toDouble();
@@ -314,7 +322,7 @@ class CachedRhRepository implements RhRepository {
       lire: lire,
       versJson: versJson,
       depuisJson: depuisJson,
-      estPanne: (e) => e is ErreurRh,
+      estPanne: (e) => e is ErreurRh || estErreurReseau(e),
     );
   }
 
