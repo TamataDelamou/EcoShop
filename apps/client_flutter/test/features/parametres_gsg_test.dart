@@ -30,6 +30,18 @@ void main() {
       expect(ParametreGlobal.objetDepuisJson('pas du json'), isNull);
     });
 
+    test('valeur nue (true, false) : lue et réglée sans objet autour', () {
+      final nue = ParametreGlobal.depuisJson({'cle': 'code_compte_obligatoire', 'valeur': false});
+      expect(nue.estSimple, isTrue);
+      expect(nue.estNue, isTrue);
+      expect(nue.apercu, 'Non');
+      expect(nue.valeurDepuisSaisie(true), true);
+      final liste = ParametreGlobal.depuisJson({'cle': 'x', 'valeur': [1, 2]});
+      expect(liste.estSimple, isFalse);
+      expect(liste.jsonDeMemeForme('[3]'), [3]);
+      expect(liste.jsonDeMemeForme('{"a": 1}'), isNull);
+    });
+
     test('clé inconnue : nom lisible', () {
       expect(p({'valeur': 1}, 'nouveau_seuil_test').libelle, 'Nouveau seuil test');
     });

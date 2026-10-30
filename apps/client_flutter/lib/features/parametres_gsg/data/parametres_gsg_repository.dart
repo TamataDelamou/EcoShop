@@ -31,7 +31,7 @@ class ParametresGsgRepository {
     return [for (final l in lignes) ChangementParametre.depuisJson(l)];
   }
 
-  Future<ParametreGlobal> definir(String cle, Map<String, dynamic> valeur) async {
+  Future<ParametreGlobal> definir(String cle, Object valeur) async {
     try {
       final ligne = await _client.rpc<dynamic>('definir_parametre_global', params: {'p_cle': cle, 'p_valeur': valeur});
       return ParametreGlobal.depuisJson((ligne as Map).cast<String, dynamic>());

@@ -129,9 +129,9 @@ class _EcranModifierParametreState extends ConsumerState<EcranModifierParametre>
     super.dispose();
   }
 
-  Map<String, dynamic>? _nouvelle() {
+  Object? _nouvelle() {
     if (_p.estSimple) return _p.valeurDepuisSaisie(_p.valeurSimple is bool ? _oui : _texte.text);
-    return ParametreGlobal.objetDepuisJson(_texte.text);
+    return _p.jsonDeMemeForme(_texte.text);
   }
 
   Future<void> _enregistrer() async {
