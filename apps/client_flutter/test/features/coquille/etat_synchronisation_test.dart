@@ -107,15 +107,17 @@ void main() {
 
     testWidgets('l\'option Wi-Fi seulement se garde', (tester) async {
       await ouvrir(tester);
-      await allerA(tester, find.byKey(const Key('interrupteur_wifi_seulement')));
-      await tester.tap(find.byKey(const Key('interrupteur_wifi_seulement')));
+      final interrupteur = find.byKey(const Key('interrupteur_wifi_seulement'));
+      await allerA(tester, interrupteur);
+      await tester.ensureVisible(interrupteur);
       await tester.pump();
-      expect(tester.widget<SwitchListTile>(find.byKey(const Key('interrupteur_wifi_seulement'))).value, isTrue);
+      await tester.tap(find.descendant(of: interrupteur, matching: find.byType(Switch)));
       // Écriture dans la base (vraie, hors horloge simulée).
       for (var i = 0; i < 5; i++) {
         await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
         await tester.pump();
       }
+      expect(tester.widget<SwitchListTile>(interrupteur).value, isTrue);
       final doc = await tester.runAsync(
           () => CacheDocumentStore(db, 'preferences').lireDocument('amorcage_wifi_seulement', 'appareil'));
       expect(doc, {'actif': true});

@@ -239,6 +239,9 @@ class WifiSeulementController extends AsyncNotifier<bool> {
   }
 
   Future<void> definir(bool actif) async {
+    // La lecture initiale, si elle est encore en cours, ne doit pas écraser
+    // le choix qui suit.
+    await future.catchError((_) => false);
     state = AsyncData(actif);
     try {
       await ref.read(_preferencesAppareilProvider).ecrireDocument(_type, 'appareil', {'actif': actif});
