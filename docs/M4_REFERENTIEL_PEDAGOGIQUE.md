@@ -73,7 +73,11 @@ par pays, jamais montrée à l'utilisateur.
 ## 5. Spécifications techniques
 
 - **RLS** : lecture publique des données publiées ; **aucune** policy d'écriture
-  client (écriture `service_role` uniquement, via Edge Function/back-office).
+  client. Depuis REG-38 E2b (migration 1592), l'Administrateur de contenu et
+  l'Administrateur GSG écrivent par des fonctions contrôlées (back-office
+  « Pays et programmes ») : `enregistrer_*_referentiel`,
+  `enregistrer_programme_national`, `enregistrer_matiere_nationale`,
+  `controle_referentiel`, `publier_pays_referentiel`.
 - **Intégrité** : unicité par clé naturelle ; `grade_level_normalise > 0` ;
   `isced` borné 0-8 ; cascade `on delete` pour les hiérarchies pays→cycle→niveau.
 - **Continuité du grade** : garantie d'unicité et de positivité en base ; la
@@ -92,6 +96,12 @@ Livrées en production par `supabase/migrations/20260906001560_referentiel_produ
 | Guinée (GN) | francophone_cfa | préscolaire (PS→GS), primaire (CP1→CM2), collège (7e→10e), lycée (11e→Terminale) | CEE, BEPC, BAC |
 | Sénégal (SN) | francophone_cfa | primaire (CI→CM2), moyen (6e→3e), secondaire (2nde→Terminale) | CFEE, BFEM, BAC |
 | Ghana (GH) | anglophone_waec | primary (P1→P6), JHS (JHS1→3), SHS (SHS1→3) | BECE, WASSCE |
+
+Ajoutés **en brouillon** par la migration 1592 (invisibles tant qu'ils ne
+sont pas publiés, chacun avec ses points à vérifier) : Côte d'Ivoire, Bénin,
+Togo, Nigeria, Sierra Leone, Liberia, Gambie, Cap-Vert et Guinée-Bissau
+(fiche seule, niveaux à saisir) pour la CEDEAO ; Mali, Burkina Faso, Niger
+(zone AES, sortis de la CEDEAO en janvier 2025).
 
 Préscolaire : `grade_level_normalise` de -2 (Petite section) à 0 (Grande
 section) ; 1 reste la première année du primaire dans tous les pays. Le
