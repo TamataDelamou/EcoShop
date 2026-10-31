@@ -53,7 +53,7 @@ attendue), `clos`.
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
 | REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **livré** (2026-10-30) — lots 1 à 6, migrations 1581 et 1582 appliquées ; à vérifier sur téléphone (APK de test) |
 | REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
-| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **lots R1, R2 et R3 livrés** (2026-10-30), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1588 à appliquer ; lot R4 à venir |
+| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **livré** (lots R1 à R4, 2026-10-30 et 31), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1589 à appliquer ; à vérifier sur téléphone avec une école et des questions publiées |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2106,7 +2106,7 @@ de l'école (`a_permission_ecole`) : jamais ouvert à l'Administrateur GSG.
 ## REG-37 — Moteur de révision
 
 **Reçu le** : 2026-10-30 (choix du porteur de projet). **Priorité** : P1.
-**Statut** : lots R1 (demande de fusion n°6), R2 (n°8) et R3 (n°9) livrés ; R4 à venir.
+**Statut** : livré — lots R1 (demande de fusion n°6), R2 (n°8), R3 (n°9) et R4 (n°10).
 
 Troisième pilier du produit (cahier ch. 10 à 15), presque absent du code
 jusqu'ici. Recherche préalable : Moodle (une version par modification, la
@@ -2121,7 +2121,7 @@ réseau), interactions de la norme QTI (types corrigés automatiquement).
 | R2b | Bilan du dimanche 18 h au parent (notification : temps, quiz, réussite, compétence à travailler, action concrète), le même bilan dans l'application ; lecture à voix haute (synthèse vocale du téléphone, sans réseau) du bilan, des conseils, des questions et des explications. | **livré** (2026-10-30) |
 | R3 | Mode examen : chronomètre, navigation libre, remise automatique à la fin du temps, correction après la clôture seulement, note sur 20, points forts et à renforcer. | **livré** (2026-10-30) |
 | Classement | Classement de la semaine par classe ou école (cahier 22.3, 23.1) sur les points d'effort du cahier 22.1, remis à zéro le lundi ; vue relative (5 premiers, l'élève et ses voisins) ; prénom et initiale ; retrait par l'élève ou le parent ; désactivé du CP1 au CE2 ; tentatives trop rapides et parfaites écartées (23.4). | **livré** (2026-10-30) |
-| R4 | Profil de maîtrise par compétence (ch. 14) et répétition espacée (ch. 15). | à venir |
+| R4 | Profil de maîtrise par compétence (14.1 : récent pondéré, a priori 50 %, sous 50 % : point faible ; du CP1 au CE2, des mots pour l'enfant, les chiffres pour le parent) ; recommandation du jour (14.2 : révisions dues, retour à la leçon, exercice similaire, nouvelle compétence, défi ; 20 % de consolidation) ; répétition espacée (15.1 : paliers J1, J2, J4, J7, J14, J30, échec : palier précédent, file plafonnée) ; plan vers un examen (15.2 : mission du jour, coefficients et points faibles, examen blanc chaque semaine et la veille, retard réparti) ; vue de classe pour l'enseignant et la direction (compétences à reprendre, élèves concernés). | **livré** (2026-10-31) |
 
 Règle 12.6 : ces résultats d'entraînement n'entrent jamais dans la moyenne
 officielle ni dans le bulletin.
@@ -2169,3 +2169,17 @@ les élèves (moins de pression). Fichiers :
 `presentation/ecran_examen.dart`, `champ_reponse.dart`. Langues nationales
 (pular, malinké, soussou) : la synthèse vocale ne les parle pas ; il faudra
 des enregistrements.
+
+Lot R4 — recherche : écart optimal entre révisions croissant avec la durée
+à retenir (Cepeda et al. 2008, 1 354 participants), d'où les paliers du
+cahier ; FSRS (algorithme d'Anki) plus précis mais à entraîner sur
+l'historique de chaque élève : piste quand les données le permettront ;
+modèle Elo de Pelánek pour ajuster la difficulté (piste) ; rapports aux
+enseignants d'ASSISTments (essai randomisé, 63 écoles, effet de 0,1 un an
+après). Fichiers : `supabase/migrations/20260906001589_maitrise_repetition_plan.sql`
+(`cartes_revision` et son déclencheur, `revisions_du_jour`,
+`profil_maitrise`, `maitrise_classe`, `classes_suivi_revision`,
+`definir_plan_revision`), `tests/rls/105_maitrise_repetition.sql` ;
+`revision/domain/maitrise.dart`, `presentation/progression.dart` ;
+pastille `revision_classes`. Test 51 corrigé (fin de mois : 31/10 + 1 mois
++ 1 mois = 30/12).
