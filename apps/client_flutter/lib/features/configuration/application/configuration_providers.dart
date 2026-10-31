@@ -128,6 +128,7 @@ class EntreesCalcul {
               minutesParSemaine: (a.heuresParSemaine ?? 0) * 60,
               dureeSeance: a.dureeSeance,
               coefficient: a.coefficient ?? 1.0,
+              semaine: a.alternance,
             ),
       ],
       seancesFixes: [
@@ -141,6 +142,7 @@ class EntreesCalcul {
               jour: s.jourSemaine,
               debut: s.heureDebut,
               fin: s.heureFin,
+              semaine: s.semaine,
             ),
       ],
       indisponibilites: [for (final i in indisponibilites) i.versMoteur()],

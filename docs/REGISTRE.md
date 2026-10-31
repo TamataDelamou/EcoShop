@@ -57,6 +57,7 @@ attendue), `clos`.
 | REG-38 | **Préparation aux examens nationaux** (cahier ch. 13), pour tous les pays du référentiel : espaces par examen, épreuves blanches, annales, statistiques dédiées ; concours et olympiades ensuite (lot E2) | **P1** | **lots E1, E2a et E2b livrés** (2026-10-31) — migrations 1590-1592 et fonction publique `verifier_certificat` à déployer ; épreuves, coefficients et dates de session à saisir par l'Administrateur de contenu d'après les textes officiels. E2a : concours de l'école (direction), concours inter-écoles et olympiades nationales ou internationales (GSG), manches à variantes corrigées par le serveur, classements par pays et école, certificats vérifiables sans compte (page `site_gsg/certificat/`). E2b : back-office « Pays et programmes » (pays, cycles, niveaux, examens, programmes nationaux sans coefficients, contrôle et publication) ; 12 pays en brouillon — CEDEAO : CI, BJ, TG, NG, SL, LR, GM, CV, GW ; AES : ML, BF, NE — chacun avec ses points à vérifier sur les textes officiels avant publication (migration 1592) |
 | REG-39 | **Retours du test sur téléphone du 2026-10-31** : hors connexion (écran « Pas de connexion », bandeau qui reste, opération en attente), pastilles, badges, fiche d'inscription complète, frais par classe et répartition automatique, enseignant et ses classes, nom modifiable, albums photo, tableau d'honneur, accueil regroupé par thème | P1 | **livré** (2026-10-31) — migrations 1593 à 1595 à appliquer ; à vérifier sur téléphone |
 | REG-40 | **Cahier de texte numérique, travail à faire et devoirs numériques** (cahier 9.2, 10.1, 14.1) — recherche comparative Pronote, Google Classroom, Khan Academy, Quizizz, Kolibri | P1 | **livré** (2026-10-31) — migration 1596 à appliquer ; à vérifier sur téléphone |
+| REG-41 | **Absences des enseignants, remplacements, cours assurés, semaines A/B, emploi du temps en PDF** (feuille de route, point 15) | P1 | **livré** (2026-10-31) — migration 1597 à appliquer ; à vérifier sur téléphone |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -116,9 +117,9 @@ Trois natures de travaux : **[code]** ce que Claude réalise dans le dépôt ;
 
 ### P2 — ensuite
 
-15. **[code]** Emploi du temps, suites de REG-24 : remplacement d'un
+15. ~~**[code]** Emploi du temps, suites de REG-24 : remplacement d'un
     enseignant absent, semaines A/B, export PDF par classe et par
-    enseignant.
+    enseignant~~ — **livré par REG-41** (avec les cours assurés).
 16. **[code]** **M17 — bibliothèque numérique** (cahier ch. 26), après la
     bibliothèque physique (REG-15).
 17. **[code]** **M19** et **M20** : parties restantes du cahier (pages
@@ -2281,4 +2282,43 @@ envoyée ; travail donné (notification reçue par l'élève et le parent) ;
 échéance proposée au prochain cours ; alerte de charge ; devoir numérique
 téléchargé, fait en mode avion, remis au retour ; suivi et relance ; vue du
 parent et case « Fait » ; suivi de la direction.
+
+## REG-41 — Absences des enseignants, remplacements, cours assurés
+
+**Reçue le** : 2026-10-31 (proposition validée par le porteur de projet).
+**Priorité** : P1. **Statut** : livré le 2026-10-31. Recherche et choix :
+`docs/propositions/REG-41_REMPLACEMENTS_COURS_ASSURES.md` (Untis, aSc
+Timetables, Pronote ; enquêtes SDI de la Banque mondiale).
+
+**Décisions du porteur de projet (2026-10-31)** : la direction déclare les
+absences, l'enseignant peut prévenir à l'avance et la direction valide ;
+compteur d'heures de remplacement, montant calculé si l'école paie les
+remplacements (réglage, tarif de l'heure) ; parents prévenus quand un cours
+est annulé, en étude ou déplacé, élèves seulement pour un remplacement.
+
+| Partie | Contenu |
+|---|---|
+| Absences | Direction : pastille « Remplacements » › Plan du jour, « Déclarer une absence » (journée ou heures, plusieurs jours). Enseignant : pastille « Absences et remplacements » › « Prévenir d'une absence » (à venir seulement) ; la direction reçoit une notification, valide ou refuse ; badge et ligne « À faire » |
+| Remplacements | Pour chaque cours d'un enseignant absent : remplaçant, étude surveillée, déplacement ou annulation. Remplaçants classés comme Untis : **libres à cette heure** (aucun cours, sauf cours annulé ou déplacé, ni autre remplacement), puis **même matière**, puis **connaît la classe**, puis **le moins sollicité ce mois** ; le premier est marqué « conseillé ». Notifications au remplaçant, aux élèves, et aux parents selon la décision 3. Écrit sans réseau, envoyé au retour |
+| Familles et personnel | « Changements d'emploi du temps » (menu de l'emploi du temps de la classe et pastille « Changements de cours » des familles, badge sur 2 jours) |
+| Cours assurés | Onglet de la direction : taux sur la semaine, le mois ou 30 jours ; un cours est assuré quand l'appel ou le cahier de texte est fait, ou qu'il est remplacé ; heures perdues ; **alerte au-delà de 10 %** par classe et matière ; taux par enseignant |
+| Heures | Compteur par enseignant (remplacements, études, heures faites, cours manqués), montant si l'école paie (réglage) |
+| Semaines A/B | « Cours et enseignants » › Fréquence : chaque semaine, semaine A ou semaine B ; le calcul automatique de l'emploi du temps superpose une séance A et une séance B ; semaine A de référence réglable (par défaut celle de la rentrée) ; « (sem. A) » affiché |
+| PDF | Emploi du temps de la classe (menu de la classe) et de l'enseignant (« Absences et remplacements »), A4 paysage, logo et couleur de l'école |
+
+**Migration** : `20260906001597_remplacements_cours_assures` (tables
+`absences_enseignants`, `seances_modifiees`, colonnes A/B et réglages,
+13 fonctions, badges). Tests : `tests/rls/110_remplacements_cours_assures.sql`,
+moteur d'emploi du temps (semaines A/B).
+
+**Limites connues** : les compteurs « appels à faire » et « Aujourd'hui »
+de l'accueil ne tiennent pas encore compte des semaines A/B ni des cours
+remplacés ; la paie n'est pas alimentée automatiquement (montant affiché
+au compteur).
+
+**À vérifier sur un téléphone Android** : enseignant qui prévient ; validation
+par la direction ; remplaçant conseillé ; notifications (remplaçant, élève,
+parent selon la décision) ; changements vus par la famille ; taux de cours
+assurés après une semaine d'appels ; PDF de la classe ; semaines A/B dans le
+calcul automatique.
 

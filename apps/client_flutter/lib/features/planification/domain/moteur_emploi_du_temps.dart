@@ -277,6 +277,7 @@ class MoteurEmploiDuTemps {
         salle: f.salleId == null ? -1 : _salles[f.salleId]!,
         minutes: f.finMinutes - f.debutMinutes,
         fixe: true,
+        semaine: _semaine(f.semaine),
       );
       u.cases = _casesFixes(f);
       _unites.add(u);
@@ -292,6 +293,7 @@ class MoteurEmploiDuTemps {
           enseignant: c.enseignantId == null ? -1 : _enseignants[c.enseignantId]!,
           salle: c.salleId == null ? -1 : _salles[c.salleId]!,
           minutes: duree,
+          semaine: _semaine(c.semaine),
         ));
       }
     }
@@ -360,7 +362,16 @@ class MoteurEmploiDuTemps {
 
   // ============================================================ occupation
 
-  void _marquer(_Unite u, List<int> cases, int delta) {
+  // Semaines A/B (REG-41) : chaque compteur d'occupation porte la semaine A
+  // dans ses unités et la semaine B par milliers. Une séance de chaque
+  // semaine compte des deux côtés ; « > 0 » reste « occupé » pour le reste
+  // du moteur.
+  static int _poids(int semaine) => semaine == 1 ? 1 : (semaine == 2 ? 1000 : 1001);
+  static bool _gene(int compteur, int semaine) =>
+      semaine == 1 ? compteur % 1000 > 0 : (semaine == 2 ? compteur >= 1000 : compteur > 0);
+
+  void _marquer(_Unite u, List<int> cases, int signe) {
+    final delta = signe * _poids(u.semaine);
     for (final x in cases) {
       if (u.groupe < 0) {
         _classeEntiere[u.classe][x] += delta;
@@ -404,16 +415,16 @@ class MoteurEmploiDuTemps {
     for (var j = 0; j < k; j++) {
       final x = position + j;
       if (_bloqueTous[x] || _classeBloquee[u.classe][x]) return false;
-      if (_classeEntiere[u.classe][x] > 0) return false;
+      if (_gene(_classeEntiere[u.classe][x], u.semaine)) return false;
       if (u.groupe < 0) {
-        if (_classeGroupes[u.classe][x] > 0) return false;
-      } else if (_groupeOccupe[u.groupe][x] > 0) {
+        if (_gene(_classeGroupes[u.classe][x], u.semaine)) return false;
+      } else if (_gene(_groupeOccupe[u.groupe][x], u.semaine)) {
         return false;
       }
-      if (u.enseignant >= 0 && (_enseignantOccupe[u.enseignant][x] > 0 || _enseignantBloque[u.enseignant][x])) {
+      if (u.enseignant >= 0 && (_gene(_enseignantOccupe[u.enseignant][x], u.semaine) || _enseignantBloque[u.enseignant][x])) {
         return false;
       }
-      if (u.salle >= 0 && (_salleOccupee[u.salle][x] > 0 || _salleBloquee[u.salle][x])) return false;
+      if (u.salle >= 0 && (_gene(_salleOccupee[u.salle][x], u.semaine) || _salleBloquee[u.salle][x])) return false;
     }
     return true;
   }
@@ -673,7 +684,9 @@ class MoteurEmploiDuTemps {
       if (u.salle >= 0 && _salleBloquee[u.salle][c]) return null;
     }
     final gene = <int>{};
-    bool chevauche(_Unite v) => v.cases.any(cases.contains);
+    // Semaines A et B (REG-41) : une séance A et une séance B ne se gênent pas.
+    bool chevauche(_Unite v) =>
+        (u.semaine == 0 || v.semaine == 0 || u.semaine == v.semaine) && v.cases.any(cases.contains);
     for (final j in _parClasse[u.classe]) {
       final v = _unites[j];
       if (j == i || v.position < 0 && !v.fixe) continue;
@@ -904,12 +917,14 @@ class MoteurEmploiDuTemps {
             (u.enseignant >= 0 && _enseignantBloque[u.enseignant][c]) ||
             (u.salle >= 0 && _salleBloquee[u.salle][c])) {
           raison = 'indispo';
-        } else if (_classeEntiere[u.classe][c] > 0 ||
-            (u.groupe < 0 ? _classeGroupes[u.classe][c] > 0 : _groupeOccupe[u.groupe][c] > 0)) {
+        } else if (_gene(_classeEntiere[u.classe][c], u.semaine) ||
+            (u.groupe < 0
+                ? _gene(_classeGroupes[u.classe][c], u.semaine)
+                : _gene(_groupeOccupe[u.groupe][c], u.semaine))) {
           raison = 'classe';
-        } else if (u.enseignant >= 0 && _enseignantOccupe[u.enseignant][c] > 0) {
+        } else if (u.enseignant >= 0 && _gene(_enseignantOccupe[u.enseignant][c], u.semaine)) {
           raison = 'enseignant';
-        } else if (u.salle >= 0 && _salleOccupee[u.salle][c] > 0) {
+        } else if (u.salle >= 0 && _gene(_salleOccupee[u.salle][c], u.semaine)) {
           raison = 'salle';
         }
       }
@@ -945,6 +960,9 @@ class MoteurEmploiDuTemps {
   }
 }
 
+/// 0 : chaque semaine ; 1 : semaine A ; 2 : semaine B (REG-41).
+int _semaine(String? s) => s == 'A' ? 1 : (s == 'B' ? 2 : 0);
+
 class _Unite {
   _Unite({
     required this.activite,
@@ -954,7 +972,10 @@ class _Unite {
     required this.salle,
     required this.minutes,
     this.fixe = false,
+    this.semaine = 0,
   });
+
+  final int semaine;
 
   final int activite;
   final int classe;
@@ -1096,7 +1117,11 @@ class CoursAPlacer {
     required this.minutesParSemaine,
     this.dureeSeance = 60,
     this.coefficient = 1,
+    this.semaine,
   });
+
+  /// Une semaine sur deux : « A » ou « B » ; nul = chaque semaine (REG-41).
+  final String? semaine;
 
   /// Identifiant de l'affectation d'origine.
   final String id;
@@ -1140,12 +1165,14 @@ class SeanceFixeEmploi {
     required this.jour,
     required this.debut,
     required this.fin,
+    this.semaine,
   });
 
   final String classeId;
   final String? groupeId;
   final String? enseignantId;
   final String? salleId;
+  final String? semaine;
   final int jour;
   final String debut;
   final String fin;
@@ -1219,6 +1246,7 @@ class SeancePlacee {
         'jour_semaine': jour,
         'heure_debut': debut,
         'heure_fin': fin,
+        'semaine': cours.semaine,
       };
 }
 

@@ -1,3 +1,5 @@
+import '../../remplacements/presentation/ecran_mes_remplacements.dart';
+import '../../remplacements/presentation/ecran_remplacements.dart';
 import '../../cahier_texte/presentation/ecran_avancement_cahier.dart';
 import '../../cahier_texte/presentation/ecran_cahier_classe.dart';
 import '../../cahier_texte/presentation/ecran_travail_eleve.dart';
@@ -189,6 +191,14 @@ final List<Fonction> catalogueFonctions = [
       }
     },
   ),
+  // REG-41 : cours remplacés, déplacés ou annulés.
+  Fonction(
+    id: 'changements_cours', libelle: 'Changements de cours', icone: Icons.swap_horiz, teinte: Teinte.rose,
+    groupe: _tout, motsCles: ['cours annulé', 'remplacé', 'étude', 'emploi du temps', 'changement'],
+    badge: 'cours_modifies', libelleBadge: 'cours changé',
+    visible: _familleAvecFiche,
+    ouvrir: (context, ref, c) => _aller(context, EcranChangementsClasse(ficheId: c.fiche!.id)),
+  ),
   // REG-40 : travail à faire et cahier de texte, pour l'élève et le parent.
   Fonction(
     id: 'travail_eleve', libelle: 'Travail à faire', icone: Icons.assignment_outlined, teinte: Teinte.orange,
@@ -302,6 +312,22 @@ final List<Fonction> catalogueFonctions = [
     ouvrir: (context, ref, c) =>
         _choisirClasse(context, 'Notes', (classe) => EcranEvaluationsClasse(classe: classe),
             seulementMesClasses: true),
+  ),
+  // REG-41 : absences des enseignants, remplacements, cours assurés.
+  Fonction(
+    id: 'remplacements', libelle: 'Remplacements', icone: Icons.swap_horiz, teinte: Teinte.rose, groupe: _personnel,
+    motsCles: ['absence', 'enseignant absent', 'remplacer', 'cours annulé', 'étude', 'cours assurés'],
+    badge: 'cours_a_remplacer', libelleBadge: 'cours à remplacer',
+    visible: (c) => c.ecole && c.peut(['planification.generer']),
+    ouvrir: (context, ref, c) => _aller(context, EcranRemplacements(etablissementId: c.etablissement!.id)),
+  ),
+  Fonction(
+    id: 'mes_remplacements', libelle: 'Absences et remplacements', icone: Icons.event_busy_outlined, teinte: Teinte.rose,
+    groupe: _vie, motsCles: ['absence', 'prévenir', 'remplacement', 'étude'],
+    badge: 'remplacements_a_assurer', libelleBadge: 'remplacement à assurer',
+    visible: (c) => c.ecole && c.enseignant,
+    ouvrir: (context, ref, c) => _aller(context,
+        EcranMesRemplacements(etablissementId: c.etablissement!.id, profileId: c.profil.id, anneeId: c.anneeId)),
   ),
   // REG-40 : cahier de texte et travail à faire de la classe.
   Fonction(

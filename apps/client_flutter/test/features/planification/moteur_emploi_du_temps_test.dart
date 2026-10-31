@@ -102,6 +102,41 @@ void main() {
       }
     });
 
+    // REG-41 : une séance de semaine A et une séance de semaine B partagent
+    // le même créneau (classe, enseignant et salle).
+    test('semaines A et B : deux cours une semaine sur deux occupent le même créneau', () {
+      // Un seul créneau dans la semaine : les deux cours (même classe, même
+      // enseignant, même salle) ne passent que superposés, l'un en semaine A,
+      // l'autre en semaine B.
+      final donnees = DonneesEmploi(
+        jours: const [1],
+        creneaux: const [CreneauEmploi(debut: '08:00', fin: '09:00')],
+        budget: const Duration(milliseconds: 500),
+        cours: const [
+          CoursAPlacer(id: 'TP A', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP A',
+              nomMatiere: 'TP A', salleId: 'LABO', minutesParSemaine: 60, semaine: 'A'),
+          CoursAPlacer(id: 'TP B', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP B',
+              nomMatiere: 'TP B', salleId: 'LABO', minutesParSemaine: 60, semaine: 'B'),
+        ],
+      );
+      final r = MoteurEmploiDuTemps(donnees).resoudre(departs: 1);
+      expect(r.nonPlacees, isEmpty);
+      final a = r.seances.firstWhere((s) => s.cours.id == 'TP A');
+      expect(a.versJsonServeur()['semaine'], 'A');
+
+      // Sans alternance, le second cours ne trouve pas de place.
+      final sansAlternance = DonneesEmploi(
+        jours: const [1],
+        creneaux: const [CreneauEmploi(debut: '08:00', fin: '09:00')],
+        budget: const Duration(milliseconds: 500),
+        cours: const [
+          CoursAPlacer(id: 'TP 1', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', minutesParSemaine: 60),
+          CoursAPlacer(id: 'TP 2', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', minutesParSemaine: 60),
+        ],
+      );
+      expect(MoteurEmploiDuTemps(sansAlternance).resoudre(departs: 1).nonPlacees, hasLength(1));
+    });
+
     test('deux groupes d’une même classe peuvent avoir cours en même temps', () {
       // 18 h de grille (3 jours x 6 h) : 6 h de tronc commun + 2 x 10 h de
       // langues ne passent que si les deux groupes sont en parallèle.
