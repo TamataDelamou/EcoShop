@@ -54,6 +54,7 @@ import '../../postes/presentation/ecran_postes.dart';
 import '../../premium_eleve/presentation/ecran_premium_eleve.dart';
 import '../../rapports/presentation/ecran_rapports.dart';
 import '../../rapports/presentation/ecran_tableau_bord_rapports.dart';
+import '../../referentiel/back_office/ecran_back_office_referentiel.dart';
 import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
@@ -639,6 +640,14 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, motsCles: ['question', 'quiz', 'révision', 'matière', 'programme', 'compétence'],
     visible: (c) => c.role == RoleRacine.adminContenu,
     ouvrir: (context, ref, c) => _aller(context, const EcranPaysPedagogiques()),
+  ),
+  // REG-38 lot E2b : référentiel de chaque pays (cycles, niveaux, examens,
+  // programmes nationaux), brouillons compris, et sa publication.
+  Fonction(
+    id: 'contenu_referentiel', libelle: 'Pays et programmes', icone: Icons.public_outlined, teinte: Teinte.vert,
+    groupe: _plateforme, motsCles: ['pays', 'cedeao', 'niveaux', 'cycles', 'programme', 'matières', 'référentiel'],
+    visible: (c) => c.role == RoleRacine.adminContenu || c.role == RoleRacine.adminGsg,
+    ouvrir: (context, ref, c) => _aller(context, const EcranBackOfficeReferentiel()),
   ),
   // REG-38 : examens nationaux de chaque pays (sessions, épreuves, annales).
   Fonction(
