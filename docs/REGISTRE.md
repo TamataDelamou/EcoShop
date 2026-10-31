@@ -56,6 +56,7 @@ attendue), `clos`.
 | REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **livré** (lots R1 à R4, 2026-10-30 et 31), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1589 à appliquer ; à vérifier sur téléphone avec une école et des questions publiées |
 | REG-38 | **Préparation aux examens nationaux** (cahier ch. 13), pour tous les pays du référentiel : espaces par examen, épreuves blanches, annales, statistiques dédiées ; concours et olympiades ensuite (lot E2) | **P1** | **lots E1, E2a et E2b livrés** (2026-10-31) — migrations 1590-1592 et fonction publique `verifier_certificat` à déployer ; épreuves, coefficients et dates de session à saisir par l'Administrateur de contenu d'après les textes officiels. E2a : concours de l'école (direction), concours inter-écoles et olympiades nationales ou internationales (GSG), manches à variantes corrigées par le serveur, classements par pays et école, certificats vérifiables sans compte (page `site_gsg/certificat/`). E2b : back-office « Pays et programmes » (pays, cycles, niveaux, examens, programmes nationaux sans coefficients, contrôle et publication) ; 12 pays en brouillon — CEDEAO : CI, BJ, TG, NG, SL, LR, GM, CV, GW ; AES : ML, BF, NE — chacun avec ses points à vérifier sur les textes officiels avant publication (migration 1592) |
 | REG-39 | **Retours du test sur téléphone du 2026-10-31** : hors connexion (écran « Pas de connexion », bandeau qui reste, opération en attente), pastilles, badges, fiche d'inscription complète, frais par classe et répartition automatique, enseignant et ses classes, nom modifiable, albums photo, tableau d'honneur, accueil regroupé par thème | P1 | **livré** (2026-10-31) — migrations 1593 à 1595 à appliquer ; à vérifier sur téléphone |
+| REG-40 | **Cahier de texte numérique, travail à faire et devoirs numériques** (cahier 9.2, 10.1, 14.1) — recherche comparative Pronote, Google Classroom, Khan Academy, Quizizz, Kolibri | P1 | **livré** (2026-10-31) — migration 1596 à appliquer ; à vérifier sur téléphone |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2249,4 +2250,35 @@ inscription complète avec photo ; frais par niveau et répartition en 3
 tranches puis en 9 mois ; albums (création, photos, plein écran) ; tableau
 d'honneur après publication des bulletins ; regroupement de l'accueil ;
 compte enseignant (classes confiées seulement) ; modification du nom.
+
+## REG-40 — Cahier de texte numérique, travail à faire, devoirs numériques
+
+**Reçue le** : 2026-10-31 (feu vert du porteur de projet sur la proposition
+tirée de la feuille de route : phase 2 du cahier, « vue enseignant du moteur
+de révision »). **Priorité** : P1. **Statut** : livré le 2026-10-31.
+
+Méthode GSG : recherche comparative, synthèse, construction —
+`docs/propositions/REG-40_CAHIER_TEXTE_DEVOIRS.md` (Pronote, Google
+Classroom, Khan Academy, Quizizz, Kolibri ; EEF et Université de Limerick :
+devoirs courts et fréquents, retour rapide, au-delà d'1 h 30 par jour le gain
+diminue).
+
+| Partie | Contenu |
+|---|---|
+| Cahier de texte (enseignant, direction) | Pastille « Cahier de texte » : classe (seulement les siennes pour l'enseignant), onglets Séances et Travail à faire. Séance : date, matière, chapitre du programme officiel, notion vue, ce qui a été fait, pièces jointes (5, 5 Mo) ; « donner du travail pour cette séance ». Écrit sans réseau, envoyé au retour (« en attente d'envoi ») |
+| Travail à faire | 7 types (leçon, exercices, rédaction, exposé, révision, devoir numérique, évaluation annoncée) ; échéance par défaut au **prochain cours de la matière** (emploi du temps) ; temps estimé ; **charge de la classe ce jour-là** affichée, alerte au-delà de 90 min ; notification aux élèves et aux parents aux heures de messagerie de l'école |
+| Devoir numérique | Questions publiées de la banque (tirage automatique de 5, 10 ou 15, ou choix à la main ; tout le chapitre ou toute la matière) ; sans durée : téléchargé puis fait **sans réseau**, remis au retour ; chronométré : réseau requis pour commencer ; **corrigé par le serveur** ; correction tout de suite ou après la date limite ; alimente le profil de maîtrise (jamais la moyenne du bulletin) |
+| Suivi de l'enseignant | Faits ou remis / effectif, en retard, moyenne sur 20, **questions de la plus ratée à la mieux réussie** avec les élèves à aider, bouton **Relancer** (élèves et parents qui n'ont pas fait), retrait |
+| Élève et parent | Pastille « Travail à faire » (badge : travaux d'ici après-demain, ligne « À faire » de l'accueil) : À faire regroupé par échéance avec le temps prévu chaque jour, retards en rouge, case **Fait** (même sans réseau), Cahier de texte de la classe, Fait (avec la note des devoirs) |
+| Direction | Pastille « Suivi du cahier de texte » : par classe et matière, séances notées sur 14 jours / cours prévus à l'emploi du temps, dernière séance, travaux donnés, filtre des retards |
+
+**Migration** : `20260906001596_cahier_texte_devoirs` (tables `cahier_texte`,
+`travaux`, `travaux_eleves`, bucket `cahier-texte`, 10 fonctions, badge de
+l'accueil). Test : `tests/rls/109_cahier_texte_devoirs.sql`.
+
+**À vérifier sur un téléphone Android** : séance écrite en mode avion puis
+envoyée ; travail donné (notification reçue par l'élève et le parent) ;
+échéance proposée au prochain cours ; alerte de charge ; devoir numérique
+téléchargé, fait en mode avion, remis au retour ; suivi et relance ; vue du
+parent et case « Fait » ; suivi de la direction.
 
