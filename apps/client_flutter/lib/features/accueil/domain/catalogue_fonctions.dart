@@ -161,14 +161,6 @@ final List<Fonction> catalogueFonctions = [
     ouvrir: (context, ref, c) =>
         _aller(context, EcranAlbums(etablissementId: c.etablissement!.id, peutCreer: c.direction || c.enseignant)),
   ),
-  // REG-39 : tableau d'honneur (meilleurs élèves, distinctions).
-  Fonction(
-    id: 'tableau_honneur', libelle: 'Tableau d’honneur', icone: Icons.emoji_events_outlined, teinte: Teinte.jaune,
-    groupe: _eleves, motsCles: ['honneur', 'meilleur', 'prix', 'excellence', 'classement', 'professeur'],
-    visible: (c) => c.ecole && c.anneeId != null && c.role != RoleRacine.adminGsg && c.role != RoleRacine.adminContenu,
-    ouvrir: (context, ref, c) => _aller(
-        context, EcranTableauHonneur(etablissementId: c.etablissement!.id, anneeId: c.anneeId!, direction: c.direction)),
-  ),
   // REG-34 : groupe de la classe. Élèves et enseignants de la classe ;
   // direction et postes de modération. Jamais les parents (règles M9).
   Fonction(
@@ -373,6 +365,14 @@ final List<Fonction> catalogueFonctions = [
     ancienne: 'Comptes liés aux élèves',
     visible: (c) => c.ecole && c.direction,
     ouvrir: (context, ref, c) => _aller(context, EcranLiaisonsComptes(etablissementId: c.etablissement!.id)),
+  ),
+  // REG-39 : tableau d'honneur (meilleurs élèves, distinctions).
+  Fonction(
+    id: 'tableau_honneur', libelle: 'Tableau d’honneur', icone: Icons.emoji_events_outlined, teinte: Teinte.jaune,
+    groupe: _eleves, motsCles: ['honneur', 'meilleur', 'prix', 'excellence', 'classement', 'professeur'],
+    visible: (c) => c.ecole && c.anneeId != null && c.role != RoleRacine.adminGsg && c.role != RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(
+        context, EcranTableauHonneur(etablissementId: c.etablissement!.id, anneeId: c.anneeId!, direction: c.direction)),
   ),
   // ---------------------------------------------------------------- finances
   Fonction(

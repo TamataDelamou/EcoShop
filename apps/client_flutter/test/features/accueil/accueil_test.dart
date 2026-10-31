@@ -64,7 +64,7 @@ void main() {
         parGroupe.putIfAbsent(f.groupe, () => []).add(f.id);
       }
       expect(parGroupe['Vie de l’école'], containsAll(['annonces', 'cahier_liaison', 'groupes_classe', 'presence_portail', 'alertes_decrochage']));
-      expect(parGroupe['Élèves'], ['inscriptions_en_ligne', 'nouvelle_inscription', 'reinscription', 'comptes_lies']);
+      expect(parGroupe['Élèves'], ['inscriptions_en_ligne', 'nouvelle_inscription', 'reinscription', 'comptes_lies', 'tableau_honneur']);
       expect(parGroupe['Finances'], containsAll(['encaissements', 'relances', 'comptabilite', 'orange_money',
         'parametres_financiers', 'credits_sms']));
       expect(parGroupe['Personnel'], containsAll(['invitations_personnel', 'personnel_rh', 'numeros_a_confirmer']));
