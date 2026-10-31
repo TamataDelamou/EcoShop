@@ -92,6 +92,7 @@ class _EcranQuizState extends ConsumerState<EcranQuiz> {
       if (mounted) setState(() => _recu = false);
     }
     ref.invalidate(espaceRevisionProvider(_s.ficheId));
+    ref.invalidate(progressionRevisionProvider);
   }
 
   Future<void> _quitter() async {

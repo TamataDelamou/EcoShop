@@ -14,6 +14,7 @@ import '../domain/question.dart';
 import '../domain/quiz.dart';
 import 'ecran_examen.dart';
 import 'ecran_quiz.dart';
+import 'progression.dart';
 
 /// Révisions d'un élève (REG-37 lot R2). Pour l'élève : « Mes révisions ».
 /// Pour le parent : ce que fait son enfant, un conseil concret, et « Réviser
@@ -111,6 +112,11 @@ class EcranRevision extends ConsumerWidget {
       builder: (_) => _DialogueExamen(espace: e),
     );
     if (reglage == null || !context.mounted) return;
+    _demarrerExamen(context, e, reglage.matiereId, reglage.nombre, reglage.minutes);
+  }
+
+  void _demarrerExamen(BuildContext context, EspaceRevision e, String? matiereId, int nombre, int? minutes) {
+    final reglage = (matiereId: matiereId, nombre: nombre, minutes: minutes);
     final questions = choisirQuestions(
       e.paquet,
       ConfigQuiz(mode: ModeQuiz.examen, matiereId: reglage.matiereId, nombre: reglage.nombre),
@@ -214,6 +220,14 @@ class EcranRevision extends ConsumerWidget {
         const SizedBox(height: 12),
         _CarteResume(resume: r, paquet: e.paquet),
         if (parent) _CarteBilan(ficheId: ficheId),
+        SectionProgression(
+          ficheId: ficheId,
+          prenom: prenom,
+          parent: parent,
+          espace: e,
+          lancer: (config) => _lancer(context, ref, e, config),
+          lancerExamen: (matiereId, nombre) => _demarrerExamen(context, e, matiereId, nombre, null),
+        ),
         for (final c in conseils)
           Card(
             color: schema.secondaryContainer,
