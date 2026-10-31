@@ -392,10 +392,11 @@ create or replace function public.normaliser_reponse(p text)
 returns text
 language sql immutable set search_path = public
 as $$
-  select btrim(regexp_replace(regexp_replace(
+  -- Espaces réduits, puis ponctuation finale ôtée (« Conakry. » = « conakry »).
+  select btrim(regexp_replace(btrim(regexp_replace(
            translate(replace(replace(lower(coalesce(p, '')), 'œ', 'oe'), 'æ', 'ae'),
                      'àâäáéèêëîïíôöóùûüúçÿ', 'aaaaeeeeiiiooouuuucy'),
-           '\s+', ' ', 'g'), '[.!?;:]+$', ''));
+           '\s+', ' ', 'g')), '[.!?;:]+$', ''));
 $$;
 
 create or replace function public.corriger_reponse(

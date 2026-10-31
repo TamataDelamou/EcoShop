@@ -140,6 +140,7 @@ void main() {
       expect(find.text('VIE DE L’ÉCOLE'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('FINANCES'), 300, scrollable: find.byType(Scrollable).first);
       expect(find.text('FINANCES'), findsOneWidget);
+      await tester.scrollUntilVisible(find.byKey(const Key('raccourci_relances')), 200, scrollable: find.byType(Scrollable).first);
       expect(find.descendant(of: find.byKey(const Key('raccourci_relances')), matching: find.text('12')), findsOneWidget,
           reason: 'badge Relances (raccourci)');
     });
