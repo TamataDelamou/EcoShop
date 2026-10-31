@@ -30,7 +30,7 @@ BEGIN
   VALUES (v_t, p_question, 1, 0, p_score);
 END $$;
 
-SELECT plan(14);
+SELECT plan(16);
 
 SELECT pg_temp.compte('mere.105@exemple.org', 'parent') AS mere \gset
 SELECT pg_temp.compte('prof.105@exemple.org', 'enseignant') AS prof \gset
@@ -130,7 +130,11 @@ SELECT is((SELECT (x ->> 'sous_seuil')::int FROM jsonb_array_elements(:'classe':
             WHERE x ->> 'libelle' = 'Géométrie'), 1, 'l''enseignant voit une élève sous le seuil en géométrie');
 SELECT is((SELECT x -> 'eleves_sous_seuil' ->> 0 FROM jsonb_array_elements(:'classe'::jsonb -> 'competences') x
             WHERE x ->> 'libelle' = 'Géométrie'), 'Awa BAH', 'et qui, pour l''aider');
+SELECT is((SELECT count(*)::int FROM public.classes_suivi_revision('e0000000-0000-0000-0000-00000000000a')), 1,
+  'l''enseignant retrouve sa classe');
 SELECT pg_temp.sur(:'autreprof');
+SELECT is((SELECT count(*)::int FROM public.classes_suivi_revision('e0000000-0000-0000-0000-00000000000a')), 0,
+  'pas les classes des autres');
 SELECT throws_ok($$ SELECT public.maitrise_classe('e0000000-0000-0000-0000-0000000000c1') $$,
   '42501', NULL, 'un enseignant qui n''a pas la classe ne la voit pas');
 

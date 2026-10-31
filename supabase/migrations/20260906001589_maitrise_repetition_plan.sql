@@ -226,6 +226,24 @@ begin
 end;
 $$;
 
+-- Classes que l'appelant peut suivre dans une école (les siennes ; toutes
+-- pour la direction), année en cours.
+create or replace function public.classes_suivi_revision(p_etablissement uuid)
+returns table (classe_id uuid, nom text, eleves int)
+language sql stable security definer set search_path = public
+as $$
+  select c.id, c.nom,
+         (select count(*)::int from public.inscriptions i
+           where i.classe_id = c.id and i.deleted_at is null and i.statut = 'active')
+    from public.classes c
+    join public.annees_scolaires a on a.id = c.annee_scolaire_id and a.courante
+   where c.etablissement_id = p_etablissement and c.deleted_at is null
+     and (coalesce(public.est_direction(p_etablissement), false) or coalesce(public.enseigne_classe(c.id), false))
+   order by c.nom;
+$$;
+revoke all on function public.classes_suivi_revision(uuid) from public, anon;
+grant execute on function public.classes_suivi_revision(uuid) to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- 4. Plan de révision vers une échéance
 -- ---------------------------------------------------------------------------
