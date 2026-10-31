@@ -35,8 +35,8 @@ void main() {
   group('pastilles visibles selon le rôle et les droits', () {
     test('parent : l’ordre des maquettes, rien de l’école', () {
       final ids = _ids(_ctx(RoleRacine.parent));
-      expect(ids.take(10), ['annonces', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'revision', 'scolarite',
-        'bus', 'parent_ia', 'inscriptions_famille', 'boutique']);
+      expect(ids.take(11), ['annonces', 'travail_eleve', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'revision',
+        'scolarite', 'bus', 'parent_ia', 'inscriptions_famille', 'boutique']);
       expect(ids, isNot(contains('encaissements')));
       expect(ids, isNot(contains('comptes_lies')));
       expect(ids, isNot(contains('groupes_classe')), reason: 'aucun parent dans les groupes de classe (REG-34)');
@@ -44,15 +44,16 @@ void main() {
 
     test('élève : emploi du temps, notes, Scan-Exercice, bibliothèque', () {
       final ids = _ids(_ctx(RoleRacine.eleve));
-      expect(ids.take(6), ['emploi_du_temps', 'revision', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice']);
+      expect(ids.take(7),
+          ['emploi_du_temps', 'travail_eleve', 'revision', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice']);
       expect(ids, containsAll(['bibliotheque_famille', 'mes_rapports', 'bus']));
       expect(ids, isNot(contains('cahier_liaison')));
     });
 
     test('enseignant : appel, notes, cahier, classes, progression, dossier RH', () {
       final ids = _ids(_ctx(RoleRacine.enseignant));
-      expect(ids.take(7),
-          ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces', 'progression']);
+      expect(ids.take(8), ['faire_appel', 'notes_enseignant', 'cahier_texte', 'cahier_liaison', 'groupes_classe',
+          'mes_classes', 'annonces', 'progression']);
       expect(ids, isNot(contains('encaissements')));
       expect(ids, isNot(contains('postes')));
     });

@@ -1,3 +1,7 @@
+import '../../cahier_texte/presentation/ecran_avancement_cahier.dart';
+import '../../cahier_texte/presentation/ecran_cahier_classe.dart';
+import '../../cahier_texte/presentation/ecran_travail_eleve.dart';
+import '../../scolarite/domain/classe.dart';
 import '../../albums/presentation/ecran_albums.dart';
 import '../../tableau_honneur/presentation/ecran_tableau_honneur.dart';
 import 'package:flutter/material.dart';
@@ -185,6 +189,15 @@ final List<Fonction> catalogueFonctions = [
       }
     },
   ),
+  // REG-40 : travail à faire et cahier de texte, pour l'élève et le parent.
+  Fonction(
+    id: 'travail_eleve', libelle: 'Travail à faire', icone: Icons.assignment_outlined, teinte: Teinte.orange,
+    groupe: _tout, motsCles: ['devoir', 'travail', 'cahier de texte', 'leçon', 'exercice'], badge: 'travaux_a_faire',
+    libelleBadge: 'travail à faire',
+    visible: _familleAvecFiche,
+    ouvrir: (context, ref, c) => _aller(
+        context, EcranTravailEleve(ficheId: c.fiche!.id, prenom: c.fiche!.prenom, parent: c.parent)),
+  ),
   Fonction(
     id: 'notes_bulletins', libelle: 'Notes et bulletins', icone: Icons.grade_outlined, teinte: Teinte.vert,
     groupe: _tout, motsCles: ['note', 'bulletin', 'moyenne', 'résultats'], badge: 'nouvelles_notes', libelleBadge: 'nouvelle note',
@@ -289,6 +302,21 @@ final List<Fonction> catalogueFonctions = [
     ouvrir: (context, ref, c) =>
         _choisirClasse(context, 'Notes', (classe) => EcranEvaluationsClasse(classe: classe),
             seulementMesClasses: true),
+  ),
+  // REG-40 : cahier de texte et travail à faire de la classe.
+  Fonction(
+    id: 'cahier_texte', libelle: 'Cahier de texte', icone: Icons.edit_note_outlined, teinte: Teinte.orange,
+    groupe: _vie, motsCles: ['cahier', 'séance', 'devoir', 'travail', 'leçon', 'exercice'],
+    visible: (c) => c.ecole && (c.enseignant || c.direction),
+    ouvrir: (context, ref, c) => _choisirClasse(context, 'Cahier de texte',
+        (classe) => EcranCahierClasse(classe: classe as Classe, direction: c.direction),
+        seulementMesClasses: c.enseignant),
+  ),
+  Fonction(
+    id: 'avancement_cahier', libelle: 'Suivi du cahier de texte', icone: Icons.fact_check_outlined, teinte: Teinte.vert,
+    groupe: _vie, motsCles: ['cahier', 'avancement', 'séances', 'enseignants', 'suivi'],
+    visible: (c) => c.ecole && c.direction,
+    ouvrir: (context, ref, c) => _aller(context, EcranAvancementCahier(etablissementId: c.etablissement!.id)),
   ),
   Fonction(
     id: 'mes_classes', libelle: 'Mes classes', icone: Icons.class_outlined, teinte: Teinte.sarcelle, groupe: _vie,
@@ -729,11 +757,11 @@ final List<Fonction> catalogueFonctions = [
 /// Ordre d'affichage pour un rôle (maquettes) ; les autres fonctions
 /// visibles suivent.
 const ordreParRole = <RoleRacine, List<String>>{
-  RoleRacine.parent: ['annonces', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'revision', 'scolarite', 'bus',
+  RoleRacine.parent: ['annonces', 'travail_eleve', 'cahier_liaison', 'emploi_du_temps', 'notes_bulletins', 'revision', 'scolarite', 'bus',
     'parent_ia', 'inscriptions_famille', 'boutique'],
-  RoleRacine.eleve: ['emploi_du_temps', 'revision', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice', 'bibliotheque_famille', 'bus',
+  RoleRacine.eleve: ['emploi_du_temps', 'travail_eleve', 'revision', 'notes_bulletins', 'annonces', 'groupes_classe', 'scan_exercice', 'bibliotheque_famille', 'bus',
     'mes_rapports', 'boutique'],
-  RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces',
+  RoleRacine.enseignant: ['faire_appel', 'notes_enseignant', 'cahier_texte', 'cahier_liaison', 'groupes_classe', 'mes_classes', 'annonces',
     'progression', 'dossier_rh', 'emploi_du_temps'],
   // Administration GSG (REG-23) : les écoles d'abord.
   RoleRacine.adminGsg: ['gsg_ecoles', 'gsg_etablissements', 'gsg_referentiel', 'gsg_reseaux', 'gsg_sms',

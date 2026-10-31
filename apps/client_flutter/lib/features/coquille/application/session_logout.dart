@@ -152,7 +152,7 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   }
   // Albums photo et tableau d'honneur (REG-39) : copies pour la lecture
   // sans réseau.
-  for (final domaine in const ['albums_hl', 'albums_photos', 'tableau_honneur_hl']) {
+  for (final domaine in const ['albums_hl', 'albums_photos', 'tableau_honneur_hl', 'cahier_texte_hl']) {
     try {
       await CacheDocumentStore(lire(databaseProvider), domaine).purgerTout();
     } catch (_) {
