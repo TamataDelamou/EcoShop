@@ -16,7 +16,10 @@ enum ModeQuiz {
   melange('melange', 'Révision mêlée', 10),
   personnalise('personnalise', 'Personnalisé', 10),
   erreurs('erreurs', 'Refaire mes erreurs', 10),
-  examen('examen', 'Examen blanc', 20);
+  examen('examen', 'Examen blanc', 20),
+  repetition('repetition', 'Révisions du jour', 20),
+  competence('competence', 'Travailler une compétence', 8),
+  plan('plan', 'Mission du jour', 10);
 
   const ModeQuiz(this.code, this.libelle, this.nombreParDefaut);
 
@@ -144,6 +147,8 @@ class ConfigQuiz {
     required this.mode,
     this.matiereId,
     this.chapitreId,
+    this.competenceId,
+    this.questionIds = const [],
     this.difficultes = const {},
     this.nombre,
     this.petitesClasses = false,
@@ -152,6 +157,13 @@ class ConfigQuiz {
   final ModeQuiz mode;
   final String? matiereId;
   final String? chapitreId;
+
+  /// Compétence travaillée (14.2) : 80 % de ses questions, 20 % de
+  /// consolidation sur des acquis.
+  final String? competenceId;
+
+  /// Questions imposées (révisions du jour), dans cet ordre.
+  final List<String> questionIds;
   final Set<Difficulte> difficultes;
   /// Nombre demandé ; [taille] applique le plafond.
   final int? nombre;
@@ -178,6 +190,13 @@ List<QuestionQuiz> choisirQuestions(
 }) {
   final now = maintenant ?? DateTime.now();
   final rnd = hasard ?? Random();
+  if (config.questionIds.isNotEmpty) {
+    final parId = {for (final q in paquet.questions) q.id: q};
+    return [
+      for (final id in config.questionIds)
+        if (parId[id] case final q? when !config.petitesClasses || q.contenu.type.petitesClasses) q,
+    ].take(config.taille).toList();
+  }
   var candidates = paquet.questions.where((q) {
     if (config.matiereId != null && q.matiereId != config.matiereId) return false;
     if (config.chapitreId != null && q.contenu.chapitreId != config.chapitreId) return false;
@@ -200,6 +219,16 @@ List<QuestionQuiz> choisirQuestions(
   }
 
   final classees = [...candidates]..sort((a, b) => priorite(b).compareTo(priorite(a)));
+  if (config.competenceId != null) {
+    // Compétence ciblée, plus une part d'acquis à consolider (14.2).
+    final cible = [for (final q in classees) if (q.contenu.competenceId == config.competenceId) q];
+    final acquis = [
+      for (final q in classees)
+        if (q.contenu.competenceId != config.competenceId && (traces[q.id]?.dernierScore ?? 0) >= 1) q,
+    ];
+    final nbAcquis = min(acquis.length, max(0, (config.taille * 0.2).floor()));
+    return [...cible.take(config.taille - nbAcquis), ...acquis.take(nbAcquis)]..shuffle(rnd);
+  }
   if (config.mode != ModeQuiz.melange) return classees.take(config.taille).toList();
 
   // Mêlée : tour à tour dans chaque chapitre, puis mélange de l'ordre.

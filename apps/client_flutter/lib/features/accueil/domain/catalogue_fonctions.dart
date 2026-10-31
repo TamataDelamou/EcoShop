@@ -59,6 +59,7 @@ import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../revision/presentation/ecran_banque_questions.dart';
 import '../../revision/presentation/ecran_revision.dart';
+import '../../revision/presentation/progression.dart';
 import '../../rh_personnel/application/rh_providers.dart';
 import '../../rh_personnel/presentation/ecran_annuaire_personnel.dart';
 import '../../rh_personnel/presentation/ecran_fiche_employe.dart';
@@ -229,6 +230,13 @@ final List<Fonction> catalogueFonctions = [
     visible: _familleAvecFiche,
     ouvrir: (context, ref, c) =>
         _aller(context, EcranRevision(ficheId: c.fiche!.id, prenom: c.fiche!.prenom, parent: c.parent)),
+  ),
+  // REG-37 lot R4 : maîtrise des compétences par classe (enseignant, direction).
+  Fonction(
+    id: 'revision_classes', libelle: 'Révisions des classes', icone: Icons.insights_outlined, teinte: Teinte.violet,
+    groupe: _vie, motsCles: ['compétences', 'maîtrise', 'quiz', 'reprise', 'lacunes'],
+    visible: (c) => c.ecole && (c.enseignant || c.direction),
+    ouvrir: (context, ref, c) => _aller(context, EcranMaitriseClasses(etablissementId: c.etablissement!.id)),
   ),
   // REG-36 : abonnement Premium de l'élève, payé par lui ou un parent relié.
   Fonction(

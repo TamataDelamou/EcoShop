@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../data/revision_repository.dart';
 import '../domain/classement.dart';
+import '../domain/maitrise.dart';
 import '../domain/quiz.dart';
 
 final revisionRepositoryProvider = Provider<RevisionRepository>((ref) {
@@ -47,4 +48,57 @@ final classementRevisionProvider =
 
 final bilanRevisionProvider = FutureProvider.autoDispose.family<String?, String>(
   (ref, ficheId) => ref.watch(revisionRepositoryProvider).bilan(ficheId),
+);
+
+/// Progression (lot R4) : profil, révisions du jour, plan. Vide si le
+/// serveur n'est pas joignable et qu'aucune copie n'existe.
+class ProgressionRevision {
+  const ProgressionRevision({
+    this.profil = const ProfilMaitrise(),
+    this.revisions = const RevisionsDuJour(),
+    this.plan,
+    this.coefficients = const {},
+  });
+
+  final ProfilMaitrise profil;
+  final RevisionsDuJour revisions;
+  final PlanRevision? plan;
+  final Map<String, num> coefficients;
+}
+
+final progressionRevisionProvider = FutureProvider.autoDispose.family<ProgressionRevision, ({String fiche, bool petites})>(
+  (ref, cle) async {
+    ref.watch(suiviSyncProvider);
+    final depot = ref.watch(revisionRepositoryProvider);
+    Future<T> ou<T>(Future<T> f, T defaut) async {
+      try {
+        return await f;
+      } catch (_) {
+        return defaut;
+      }
+    }
+
+    final traces = await ou(depot.traces(cle.fiche), const <String, TraceQuestion>{});
+    final profil = await ou(depot.profil(cle.fiche), const ProfilMaitrise());
+    final revisions = await ou(
+      depot.revisionsDuJour(cle.fiche, limite: plafondRevisions(petitesClasses: cle.petites)),
+      const RevisionsDuJour(),
+    );
+    final plan = await ou(depot.plan(cle.fiche), null);
+    final coefficients = plan == null ? const <String, num>{} : await ou(depot.coefficients(plan.matieres), const <String, num>{});
+    return ProgressionRevision(
+      profil: profil,
+      revisions: revisions.sansDejaRevues(traces, DateTime.now()),
+      plan: plan,
+      coefficients: coefficients,
+    );
+  },
+);
+
+final classesSuiviesProvider = FutureProvider.autoDispose.family<List<({String id, String nom, int eleves})>, String>(
+  (ref, etablissementId) => ref.watch(revisionRepositoryProvider).classesSuivies(etablissementId),
+);
+
+final maitriseClasseProvider = FutureProvider.autoDispose.family<MaitriseClasse, String>(
+  (ref, classeId) => ref.watch(revisionRepositoryProvider).maitriseClasse(classeId),
 );

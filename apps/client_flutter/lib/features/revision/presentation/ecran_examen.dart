@@ -78,6 +78,7 @@ class _EcranExamenState extends ConsumerState<EcranExamen> {
       if (mounted) setState(() => _recu = false);
     }
     ref.invalidate(espaceRevisionProvider(_e.ficheId));
+    ref.invalidate(progressionRevisionProvider);
   }
 
   Future<void> _confirmerRemise() async {

@@ -8,6 +8,7 @@ import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../domain/classement.dart';
 import '../domain/examen.dart';
+import '../domain/maitrise.dart';
 import '../domain/quiz.dart';
 
 /// Niveau de révision d'un élève (classe de son inscription).
@@ -201,6 +202,82 @@ class RevisionRepository {
       return null;
     }
   }
+
+  // ------------------------------------------------------------- lot R4
+
+  Future<T> _lireR4<T>(String type, String cle, Future<Object?> Function() source, T Function(Object?) decoder) async {
+    try {
+      return await _lecture.lire(type: type, cle: cle, source: source, decoder: decoder);
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  Future<ProfilMaitrise> profil(String ficheId) => _lireR4('profil', ficheId,
+      () => _client.rpc<dynamic>('profil_maitrise', params: {'p_fiche': ficheId}), ProfilMaitrise.depuisJson);
+
+  Future<RevisionsDuJour> revisionsDuJour(String ficheId, {int limite = 20}) => _lireR4(
+        'repetition',
+        '$ficheId|$limite',
+        () => _client.rpc<dynamic>('revisions_du_jour', params: {'p_fiche': ficheId, 'p_limite': limite}),
+        (json) => RevisionsDuJour.depuisJson(((json as Map?) ?? const {}).cast<String, dynamic>()),
+      );
+
+  Future<PlanRevision?> plan(String ficheId) => _lireR4(
+        'plan',
+        ficheId,
+        () => _client.from('plans_revision').select().eq('fiche_eleve_id', ficheId).maybeSingle(),
+        (json) => json == null ? null : PlanRevision.depuisJson((json as Map).cast<String, dynamic>()),
+      );
+
+  Future<Map<String, num>> coefficients(List<String> matieres) => _lireR4(
+        'coefficients',
+        (List.of(matieres)..sort()).join(','),
+        () => _client.rpc<dynamic>('coefficients_matieres', params: {'p_matieres': matieres}),
+        (json) => {for (final e in ((json as Map?) ?? const {}).entries) '${e.key}': (e.value as num?) ?? 1},
+      );
+
+  Future<void> definirPlan(String ficheId, PlanRevision p) async {
+    try {
+      await _client.rpc<dynamic>('definir_plan_revision', params: {
+        'p_fiche': ficheId,
+        'p_titre': p.titre,
+        'p_echeance': '${p.echeance.year.toString().padLeft(4, '0')}-${p.echeance.month.toString().padLeft(2, '0')}-'
+            '${p.echeance.day.toString().padLeft(2, '0')}',
+        'p_matieres': p.matieres,
+        'p_questions_par_jour': p.questionsParJour,
+      });
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  Future<void> supprimerPlan(String ficheId) async {
+    try {
+      await _client.rpc<dynamic>('supprimer_plan_revision', params: {'p_fiche': ficheId});
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  /// Enseignant ou direction : classes suivies et maîtrise d'une classe.
+  Future<List<({String id, String nom, int eleves})>> classesSuivies(String etablissementId) => _lireR4(
+        'classes_suivi',
+        etablissementId,
+        () => _client.rpc<dynamic>('classes_suivi_revision', params: {'p_etablissement': etablissementId}),
+        (json) => [
+          for (final l in (json as List?) ?? const [])
+            (
+              id: '${(l as Map)['classe_id']}',
+              nom: '${l['nom'] ?? ''}',
+              eleves: (l['eleves'] as num?)?.toInt() ?? 0,
+            ),
+        ],
+      );
+
+  Future<MaitriseClasse> maitriseClasse(String classeId) => _lireR4('maitrise_classe', classeId,
+      () => _client.rpc<dynamic>('maitrise_classe', params: {'p_classe': classeId}),
+      (json) => MaitriseClasse.depuisJson(((json as Map?) ?? const {}).cast<String, dynamic>()));
 
   /// Résumé des révisions (élève ou parent), quiz de cet appareil compris.
   Future<ResumeRevision> resume(String ficheId, {int jours = 30, PaquetRevision? paquet}) async {

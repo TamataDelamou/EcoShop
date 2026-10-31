@@ -335,7 +335,7 @@ SELECT is(
 
 SELECT is(
   (SELECT expire_le FROM public.abonnements_premium_eleve WHERE fiche_eleve_id = '51000000-0000-0000-0000-000000000011'),
-  (now() + interval '2 months'),
+  (now() + interval '1 month' + interval '1 month'),  -- deux mois successifs (fin de mois : 31/10 → 30/11 → 30/12)
   'CORRECTION : renouvellement anticipé -> expire_le = ancienne échéance + 1 mois (now() + 2 mois), jamais now() + 1 mois seul (aucun temps déjà payé perdu)'
 );
 
