@@ -59,6 +59,7 @@ import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../revision/presentation/ecran_banque_questions.dart';
 import '../../revision/presentation/ecran_examens_contenu.dart';
+import '../../revision/presentation/ecran_concours_organisateur.dart';
 import '../../revision/presentation/ecran_revision.dart';
 import '../../revision/presentation/progression.dart';
 import '../../rh_personnel/application/rh_providers.dart';
@@ -238,6 +239,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _vie, motsCles: ['compétences', 'maîtrise', 'quiz', 'reprise', 'lacunes'],
     visible: (c) => c.ecole && (c.enseignant || c.direction),
     ouvrir: (context, ref, c) => _aller(context, EcranMaitriseClasses(etablissementId: c.etablissement!.id)),
+  ),
+  // REG-38 lot E2a : concours internes de l'école (direction).
+  Fonction(
+    id: 'concours_ecole', libelle: 'Concours de l’école', icone: Icons.emoji_events_outlined, teinte: Teinte.jaune,
+    groupe: _vie, motsCles: ['concours', 'olympiade', 'compétition', 'quiz', 'certificat'],
+    visible: (c) => c.ecole && c.direction,
+    ouvrir: (context, ref, c) => _aller(context, EcranConcoursOrganises(etablissementId: c.etablissement!.id)),
   ),
   // REG-36 : abonnement Premium de l'élève, payé par lui ou un parent relié.
   Fonction(
@@ -650,6 +658,14 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, motsCles: ['signalement', 'erreur', 'suspendue'],
     visible: (c) => c.role == RoleRacine.adminContenu,
     ouvrir: (context, ref, c) => _aller(context, const EcranQuestionsSignalees()),
+  ),
+  // REG-38 lot E2a : concours inter-écoles et olympiades, nationaux ou
+  // internationaux, organisés par GSG.
+  Fonction(
+    id: 'gsg_concours', libelle: 'Concours et olympiades', icone: Icons.emoji_events_outlined, teinte: Teinte.jaune,
+    groupe: _plateforme, motsCles: ['concours', 'olympiade', 'tournoi', 'championnat', 'certificat', 'cedeao'],
+    visible: (c) => c.role == RoleRacine.adminGsg || c.role == RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(context, const EcranConcoursOrganises()),
   ),
   Fonction(
     id: 'gsg_admins_contenu', libelle: 'Administrateurs de contenu', icone: Icons.manage_accounts_outlined,

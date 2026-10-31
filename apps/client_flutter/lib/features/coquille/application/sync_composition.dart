@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../justificatifs/data/justificatifs_repository.dart';
 import '../../revision/data/banque_questions_repository.dart';
+import '../../revision/data/concours_repository.dart';
 import '../../revision/data/revision_repository.dart';
 import 'rejeu_actions_differees.dart';
 import '../../../core/sync/sync_engine.dart';
@@ -121,6 +122,10 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in RevisionRepository.entites) {
     gestionnaires[entite] = (entree) => RevisionRepository.rejouer(client, entree);
   }
+  // Copies de concours remises sans réseau (REG-38 lot E2a).
+  for (final entite in ConcoursRepository.entites) {
+    gestionnaires[entite] = (entree) => ConcoursRepository.rejouer(client, entree);
+  }
   // Justificatifs d'absence (REG-36) : dépôts et décisions faits sans réseau.
   for (final entite in JustificatifsRepository.entites) {
     gestionnaires[entite] = (entree) => JustificatifsRepository.rejouer(client, entree);
@@ -155,6 +160,7 @@ String libelleOperation(SyncEntree entree) {
   if (JustificatifsRepository.entites.contains(entree.entite)) return JustificatifsRepository.libelle(entree);
   if (BanqueQuestionsRepository.entites.contains(entree.entite)) return BanqueQuestionsRepository.libelle(entree);
   if (RevisionRepository.entites.contains(entree.entite)) return RevisionRepository.libelle(entree);
+  if (ConcoursRepository.entites.contains(entree.entite)) return ConcoursRepository.libelle(entree);
   try {
     return entree.entite == RejeuTelephone.entite
           ? RejeuTelephone.libelle(entree)

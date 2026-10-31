@@ -19,7 +19,7 @@ BEGIN
   RETURN v_id;
 END $$;
 
-SELECT plan(20);
+SELECT plan(23);
 
 SELECT pg_temp.compte('gsg.107@exemple.org', 'admin_gsg') AS gsg \gset
 SELECT pg_temp.compte('dir.107@exemple.org', 'direction') AS dir \gset
@@ -88,7 +88,13 @@ SELECT lives_ok($$ SELECT public.enregistrer_manche('a7700000-0000-0000-0000-000
     {"emplacement": 1, "question_id": "a7500000-0000-0000-0000-000000000002"},
     {"emplacement": 1, "question_id": "a7500000-0000-0000-0000-000000000003"},
     {"emplacement": 2, "question_id": "a7500000-0000-0000-0000-000000000004"}]') $$, 'manche à variantes');
+SELECT is(jsonb_array_length(public.questions_pour_concours('a7600000-0000-0000-0000-000000000001')), 4,
+  'questions publiées de la tranche de niveaux, tous pays');
 SELECT public.changer_statut_concours('a7600000-0000-0000-0000-000000000001', 'ouvert');
+
+SELECT pg_temp.sur(:'dir');
+SELECT throws_ok($$ SELECT public.questions_pour_concours('a7600000-0000-0000-0000-000000000001') $$,
+  '42501', NULL, 'la direction ne compose pas les manches de GSG');
 
 -- ---------------------------------------------------------------------------
 -- 2. Élèves de deux pays
@@ -129,6 +135,9 @@ SELECT is((public.classement_concours('a7600000-0000-0000-0000-000000000001', 'a
   -> 'lignes' -> 0 ->> 'nom'), 'Awa B.', 'classement général : Awa en tête');
 SELECT is((public.classement_concours('a7600000-0000-0000-0000-000000000001', 'a7000000-0000-0000-0000-0000000000e2', 'SN')
   ->> 'participants')::int, 1, 'classement du Sénégal : seulement ses élèves');
+
+SELECT is((public.classement_concours('a7600000-0000-0000-0000-000000000001', 'a7000000-0000-0000-0000-0000000000e2')
+  ->> 'mon_pays'), 'SN', 'le classement dit le pays de l''élève (filtre « mon pays »)');
 
 SELECT pg_temp.sur(:'mere');
 SELECT throws_ok($$ SELECT public.classement_concours('a7600000-0000-0000-0000-000000000001', 'a7000000-0000-0000-0000-0000000000e2') $$,

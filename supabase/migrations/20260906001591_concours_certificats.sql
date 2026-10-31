@@ -258,6 +258,37 @@ begin
 end;
 $$;
 
+-- Questions publiées utilisables dans un concours : niveaux de sa tranche,
+-- de son pays (tous les pays si international). Pour composer les manches.
+create or replace function public.questions_pour_concours(p_concours uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public
+as $$
+declare
+  v public.concours;
+begin
+  select * into v from public.concours where id = p_concours;
+  if not found or not public.organise_concours(v.etablissement_id) then
+    raise exception 'PERMISSION_REFUSEE' using errcode = '42501';
+  end if;
+  return coalesce((
+    select jsonb_agg(x order by x ->> 'pays', (x ->> 'grade')::int, x ->> 'matiere', x ->> 'enonce')
+      from (
+        select jsonb_build_object(
+                 'id', q.id, 'pays', n.pays_code, 'grade', n.grade_level_normalise, 'niveau', n.nom,
+                 'matiere', m.nom, 'enonce', left(qv.enonce, 200), 'type', qv.type, 'difficulte', qv.difficulte) as x
+          from public.questions q
+          join public.questions_versions qv on qv.question_id = q.id and qv.version = q.version_publiee
+          join public.programmes_matieres m on m.id = q.matiere_id
+          join public.programmes_officiels po on po.id = m.programme_id
+          join public.niveaux_educatifs n on n.id = po.niveau_id
+         where q.version_publiee is not null and q.suspendue_le is null
+           and n.grade_level_normalise between v.grade_min and v.grade_max
+           and (v.pays_code is null or n.pays_code = v.pays_code)
+         limit 800) t), '[]'::jsonb);
+end;
+$$;
+
 create or replace function public.changer_statut_concours(p_concours uuid, p_statut public.statut_concours)
 returns public.concours
 language plpgsql security definer set search_path = public
@@ -620,6 +651,11 @@ begin
     select jsonb_build_object(
       'concours', v_c.titre,
       'participants', (select count(*) from publics),
+      -- Situation de l'élève, pour filtrer « mon pays », « mon école ».
+      'mon_pays', (select i.pays_code from public.inscriptions_concours i
+                    where i.concours_id = p_concours and i.fiche_eleve_id = p_fiche),
+      'mon_etablissement', (select i.etablissement_id from public.inscriptions_concours i
+                             where i.concours_id = p_concours and i.fiche_eleve_id = p_fiche),
       'en_verification', case when v_organisateur
                               then (select count(*) from totaux where en_verification) else null end,
       'lignes', coalesce((
@@ -768,6 +804,7 @@ revoke all on function public.organise_concours(uuid) from public, anon;
 revoke all on function public.enregistrer_concours(uuid, text, public.type_concours, uuid, text, int, int, text, text, timestamptz, int) from public, anon;
 revoke all on function public.enregistrer_manche(uuid, uuid, int, text, timestamptz, timestamptz, int, jsonb) from public, anon;
 revoke all on function public.changer_statut_concours(uuid, public.statut_concours) from public, anon;
+revoke all on function public.questions_pour_concours(uuid) from public, anon;
 revoke all on function public.concours_eleve(uuid) from public, anon;
 revoke all on function public.inscrire_concours(uuid, uuid) from public, anon;
 revoke all on function public.commencer_manche(uuid, uuid) from public, anon;
@@ -780,6 +817,7 @@ grant execute on function public.organise_concours(uuid) to authenticated;
 grant execute on function public.enregistrer_concours(uuid, text, public.type_concours, uuid, text, int, int, text, text, timestamptz, int) to authenticated;
 grant execute on function public.enregistrer_manche(uuid, uuid, int, text, timestamptz, timestamptz, int, jsonb) to authenticated;
 grant execute on function public.changer_statut_concours(uuid, public.statut_concours) to authenticated;
+grant execute on function public.questions_pour_concours(uuid) to authenticated;
 grant execute on function public.concours_eleve(uuid) to authenticated;
 grant execute on function public.inscrire_concours(uuid, uuid) to authenticated;
 grant execute on function public.commencer_manche(uuid, uuid) to authenticated;

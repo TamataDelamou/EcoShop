@@ -12,6 +12,7 @@ import '../domain/conseils.dart';
 import '../domain/examen.dart';
 import '../domain/question.dart';
 import '../domain/quiz.dart';
+import 'ecran_concours.dart';
 import 'ecran_espace_examen.dart';
 import 'ecran_examen.dart';
 import 'ecran_quiz.dart';
@@ -222,6 +223,7 @@ class EcranRevision extends ConsumerWidget {
         _CarteResume(resume: r, paquet: e.paquet),
         if (parent) _CarteBilan(ficheId: ficheId),
         CartesEspacesExamens(ficheId: ficheId, prenom: prenom, parent: parent),
+        CarteConcours(ficheId: ficheId, prenom: prenom, parent: parent),
         SectionProgression(
           ficheId: ficheId,
           prenom: prenom,
