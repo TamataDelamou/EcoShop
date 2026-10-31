@@ -105,31 +105,36 @@ void main() {
     // REG-41 : une séance de semaine A et une séance de semaine B partagent
     // le même créneau (classe, enseignant et salle).
     test('semaines A et B : deux cours une semaine sur deux occupent le même créneau', () {
-      // 30 h de grille (5 jours x 6 h) : 29 h chaque semaine + 2 x 1 h une
-      // semaine sur deux ne passent que si les cours A et B sont superposés.
+      // Un seul créneau dans la semaine : les deux cours (même classe, même
+      // enseignant, même salle) ne passent que superposés, l'un en semaine A,
+      // l'autre en semaine B.
       final donnees = DonneesEmploi(
-        jours: const [1, 2, 3, 4, 5],
-        creneaux: _grille,
-        budget: const Duration(milliseconds: 2000),
-        cours: [
-          _cours('Maths 6A', '6A', 'Diallo', 5),
-          _cours('Français 6A', '6A', 'Camara', 5),
-          _cours('Anglais 6A', '6A', 'Bah', 5),
-          _cours('Histoire 6A', '6A', 'Barry', 5),
-          _cours('Physique 6A', '6A', 'Conde', 5),
-          _cours('EPS 6A', '6A', 'Keita', 4),
-          const CoursAPlacer(id: 'TP A', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP A',
+        jours: const [1],
+        creneaux: const [CreneauEmploi(debut: '08:00', fin: '09:00')],
+        budget: const Duration(milliseconds: 500),
+        cours: const [
+          CoursAPlacer(id: 'TP A', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP A',
               nomMatiere: 'TP A', salleId: 'LABO', minutesParSemaine: 60, semaine: 'A'),
-          const CoursAPlacer(id: 'TP B', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP B',
+          CoursAPlacer(id: 'TP B', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', matiereId: 'TP B',
               nomMatiere: 'TP B', salleId: 'LABO', minutesParSemaine: 60, semaine: 'B'),
         ],
       );
-      final r = MoteurEmploiDuTemps(donnees).resoudre(departs: 2);
+      final r = MoteurEmploiDuTemps(donnees).resoudre(departs: 1);
       expect(r.nonPlacees, isEmpty);
       final a = r.seances.firstWhere((s) => s.cours.id == 'TP A');
-      final b = r.seances.firstWhere((s) => s.cours.id == 'TP B');
-      expect((a.jour, a.debut), (b.jour, b.debut), reason: 'A et B au même créneau');
       expect(a.versJsonServeur()['semaine'], 'A');
+
+      // Sans alternance, le second cours ne trouve pas de place.
+      final sansAlternance = DonneesEmploi(
+        jours: const [1],
+        creneaux: const [CreneauEmploi(debut: '08:00', fin: '09:00')],
+        budget: const Duration(milliseconds: 500),
+        cours: const [
+          CoursAPlacer(id: 'TP 1', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', minutesParSemaine: 60),
+          CoursAPlacer(id: 'TP 2', classeId: '6A', nomClasse: '6A', enseignantId: 'Sow', minutesParSemaine: 60),
+        ],
+      );
+      expect(MoteurEmploiDuTemps(sansAlternance).resoudre(departs: 1).nonPlacees, hasLength(1));
     });
 
     test('deux groupes d’une même classe peuvent avoir cours en même temps', () {

@@ -96,7 +96,7 @@ SET LOCAL ROLE authenticated;
 
 -- Direction : tous ses compteurs.
 SELECT pg_temp.en_tant_que(:'dir_a');
-SELECT is(pg_temp.cles(), 'alertes_ouvertes,annonces_non_lues,cahier_non_lu,dossiers_inscription,familles_en_retard,groupes_non_lus,liaisons_a_valider,numeros_a_confirmer',
+SELECT is(pg_temp.cles(), 'absences_a_valider,alertes_ouvertes,annonces_non_lues,cahier_non_lu,cours_a_remplacer,dossiers_inscription,familles_en_retard,groupes_non_lus,liaisons_a_valider,numeros_a_confirmer',
   'direction : liaisons, numéros, dossiers, retards de paiement, alertes, annonces, cahier');
 SELECT is(pg_temp.n('liaisons_a_valider'), 1, 'direction : une demande de liaison à valider');
 
