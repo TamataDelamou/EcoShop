@@ -55,6 +55,7 @@ attendue), `clos`.
 | REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
 | REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **livré** (lots R1 à R4, 2026-10-30 et 31), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1589 à appliquer ; à vérifier sur téléphone avec une école et des questions publiées |
 | REG-38 | **Préparation aux examens nationaux** (cahier ch. 13), pour tous les pays du référentiel : espaces par examen, épreuves blanches, annales, statistiques dédiées ; concours et olympiades ensuite (lot E2) | **P1** | **lots E1, E2a et E2b livrés** (2026-10-31) — migrations 1590-1592 et fonction publique `verifier_certificat` à déployer ; épreuves, coefficients et dates de session à saisir par l'Administrateur de contenu d'après les textes officiels. E2a : concours de l'école (direction), concours inter-écoles et olympiades nationales ou internationales (GSG), manches à variantes corrigées par le serveur, classements par pays et école, certificats vérifiables sans compte (page `site_gsg/certificat/`). E2b : back-office « Pays et programmes » (pays, cycles, niveaux, examens, programmes nationaux sans coefficients, contrôle et publication) ; 12 pays en brouillon — CEDEAO : CI, BJ, TG, NG, SL, LR, GM, CV, GW ; AES : ML, BF, NE — chacun avec ses points à vérifier sur les textes officiels avant publication (migration 1592) |
+| REG-39 | **Retours du test sur téléphone du 2026-10-31** : hors connexion (écran « Pas de connexion », bandeau qui reste, opération en attente), pastilles, badges, fiche d'inscription complète, frais par classe et répartition automatique, enseignant et ses classes, nom modifiable, albums photo, tableau d'honneur, accueil regroupé par thème | P1 | **livré** (2026-10-31) — migrations 1593 à 1595 à appliquer ; à vérifier sur téléphone |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2211,3 +2212,41 @@ date de la session 2027 — l'application n'en invente aucun. Fichiers :
 `data/examens_contenu_repository.dart` (paquet `file_picker`),
 `presentation/ecran_espace_examen.dart`, `ecran_examens_contenu.dart` ;
 pastille `contenu_examens`.
+
+## REG-39 — Retours du test sur téléphone (2026-10-31)
+
+**Reçue le** : 2026-10-31 (notes du porteur de projet). **Priorité** : P1.
+**Statut** : livré le 2026-10-31.
+
+| Retour | Cause | Correction |
+|---|---|---|
+| Sans connexion, bloqué sur « Pas de connexion. Vos informations s'afficheront dès le retour du réseau » | L'ouverture exige une copie de quatre lectures (profil, établissements, fiche, CGU) ; s'il en manque une, l'écran bloque, même pour un compte qui a déjà utilisé l'application sur ce téléphone | Marque « accueil déjà atteint » gardée par compte sur le téléphone (effacée à la déconnexion) : hors connexion, une lecture sans copie ne bloque plus ce compte ; l'accueil s'ouvre avec ce qui est gardé, la relance au retour du réseau complète |
+| « Réseau indisponible » affiché alors que le réseau est revenu | La réponse du serveur arrivée après une relance (lecture abandonnée) ne retirait plus le bandeau ; le bandeau « Réseau absent ou lent » des écrans hors connexion attendait la prochaine ouverture | Le retrait du bandeau passe toujours ; au retour du réseau, le bandeau des données de l'appareil est retiré |
+| Comptabilité : « 1 opération en attente d'envoi automatique au retour du réseau » alors que le réseau est revenu ; on ne sait pas laquelle | Après 5 essais ratés, une opération restait « en attente » sans jamais repartir ; une erreur qui ne vient pas du réseau était réessayée sans fin en silence ; le retour du réseau n'est pas toujours signalé par le téléphone | Le bandeau devient un lien (« Voir ») vers l'écran Synchronisation (liste des opérations, « Synchroniser maintenant ») ; ouverture, retour du réseau et bouton redonnent un budget d'essais ; nouvel essai chaque minute tant qu'une opération attend ; une erreur non réseau répétée passe en « refusée » avec son message ; deux envois simultanés ne rejouent plus deux fois |
+| Images des pastilles mal alignées (centrées ou à gauche) | La colonne de la pastille prenait la largeur de son libellé : centrée quand il remplissait la ligne, à gauche sinon | Contenu sur toute la largeur, icône et libellé alignés à gauche |
+| Fiche d'inscription incomplète | L'écran ne demandait que nom, prénom, date de naissance, sexe et classe | Inscription en sections : photo de l'élève, téléphone de l'élève (conseillé dès le secondaire), père et mère avec téléphone et profession, tuteur (le père, la mère ou une autre personne — prévenu en cas d'urgence), situation de handicap, quartier, école d'origine, lieu de naissance, nationalité, **matricule national** (écoles de Guinée). Une seule transaction serveur (`creer_inscription_eleve_complete`) ; photo dans le bucket privé `photos-eleves` (dossier de l'école) ; fiche de l'élève enrichie |
+| Albums photo par classe ou personnalisés | N'existaient pas | Pastille « Albums photo » (Vie de l'école) : albums d'une classe (élèves, parents de la classe, personnel) ou de toute l'école ; mosaïque, plein écran avec glissement et zoom, couverture ; direction et enseignants de la classe ajoutent des photos (réduites à 1 600 px) ; listes et photos déjà vues gardées sur le téléphone |
+| Tableau d'honneur (meilleurs élèves, meilleurs professeurs…) | N'existait pas | Pastille « Tableau d'honneur » (Élèves) : les 3 premiers de chaque classe d'après les bulletins **publiés** de la période (jamais avant publication), et les distinctions décernées par la direction à un enseignant, un membre du personnel ou un élève (meilleur professeur, prix d'excellence, meilleure conduite…) |
+| Accueil de plus en plus chargé : regrouper les pastilles d'une catégorie | — | « Personnaliser l'accueil » › **Regrouper les pastilles par thème** (activable, désactivable) : une pastille par thème avec son texte descriptif et le total des badges ; touchée, elle déplie ses pastilles. Les 4 raccourcis restent affichés |
+| Frais de scolarité : en fonction des classes, répartition automatique en tranches ou en mois | Seul un tarif par défaut était géré ; l'enregistrement passait par un `upsert` que l'index d'unicité (sur une expression) ne permet pas ; les paliers s'ajoutaient un par un en pourcentage | Écran « Frais de scolarité » : tarif par défaut, puis un tarif par niveau (vaut pour toutes ses classes, 7e A, 7e B…) ; répartition en une fois, en N tranches égales ou par mois (premier mois, nombre de mois, échéance le 10) ; aperçu par classe et par échéance, arrondi au franc. Fonctions `enregistrer_frais_niveau` et `repartir_paliers` (le verrou de la grille commune du réseau reste appliqué) |
+| Badges : rien ne signale ce qui a changé quand on revient dans l'application | Les compteurs de l'accueil n'étaient relus qu'en tirant l'écran vers le bas | Relus au retour dans l'application et au retour sur l'accueil après une fonction |
+| Enseignant : voit la structure de l'école, l'appel et les notes de classes qui ne lui sont pas confiées ; absent de la liste des enseignants | Le choix de classe montrait toutes les classes de l'école ; la liste du personnel servait la copie du téléphone au bout de 3 s sur un réseau lent (un enseignant arrivé depuis n'y figurait pas) | Appel, notes et progression : seulement les classes confiées (cours ou professeur principal), message sinon ; « Structures » réservée à la direction ; liste du personnel : attente du serveur jusqu'à 15 s, bouton d'actualisation, enseignants au compte inactif affichés grisés |
+| Profil › Mes informations : impossible de modifier le nom | Le nom n'était demandé qu'une fois | Nom touchable : écran « Modifier mon nom » |
+
+**Migrations** : `20260906001593_fiche_inscription_complete`,
+`20260906001594_frais_par_niveau_repartition`,
+`20260906001595_albums_tableau_honneur`.
+
+**Limites connues** : l'ajout de photos (inscription, albums) demande le
+réseau — l'écran le dit ; l'inscription en ligne par les familles (REG-08)
+garde son formulaire actuel ; une école en grille commune de réseau ne
+modifie pas ses tarifs elle-même.
+
+**À vérifier sur un téléphone Android** : trois ouvertures en mode avion ;
+retour du réseau (bandeau qui disparaît, opération en attente qui part) ;
+« Voir » sur le bandeau d'opération en attente ; pastilles alignées ;
+inscription complète avec photo ; frais par niveau et répartition en 3
+tranches puis en 9 mois ; albums (création, photos, plein écran) ; tableau
+d'honneur après publication des bulletins ; regroupement de l'accueil ;
+compte enseignant (classes confiées seulement) ; modification du nom.
+

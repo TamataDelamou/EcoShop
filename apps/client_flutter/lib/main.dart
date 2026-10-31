@@ -103,6 +103,7 @@ class EcoShopApp extends ConsumerWidget {
       supportedLocales: const [Locale('fr', 'FR'), Locale('fr'), Locale('ar'), Locale('en')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       navigatorKey: cleNavigateurRacine,
+      navigatorObservers: [observateurRoutes],
       // Taille de texte (D4, §34.9) : appliquée globalement via le
       // `textScaler` ambiant plutôt qu'écran par écran — un seul point
       // d'application, cohérent avec tout le reste de l'app (y compris les

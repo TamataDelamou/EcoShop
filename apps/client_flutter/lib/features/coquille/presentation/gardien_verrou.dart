@@ -14,6 +14,10 @@ import 'pave_code.dart';
 /// couvrir aussi les pages ouvertes par-dessus l'accueil.
 final cleNavigateurRacine = GlobalKey<NavigatorState>();
 
+/// Retours sur un écran (page fermée au-dessus) : l'accueil relit ses badges
+/// quand on revient d'une fonction (REG-39).
+final observateurRoutes = RouteObserver<ModalRoute<void>>();
+
 /// Branche le verrou (REG-18) sur toute l'application (`MaterialApp.builder`,
 /// au-dessus du navigateur) :
 ///

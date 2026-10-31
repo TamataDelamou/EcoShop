@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/supabase_auth_provider.dart';
 import '../../../core/db/cache_document_store.dart';
 import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/providers.dart';
@@ -85,8 +86,13 @@ Future<T> lireAvecCopieLocale<T>(
     lues.add(cle);
     var actif = true;
     ref.onDispose(() => actif = false);
+    // Retenu avant l'attente : une relecture qui arrive après l'abandon de
+    // cette lecture (relance, changement de jeton) doit quand même retirer
+    // le bandeau. Il restait affiché alors que le réseau était revenu
+    // (retour du porteur de projet, 2026-10-31).
+    final perimees = ref.read(donneesSessionPerimeesProvider.notifier);
     void signalerHorsConnexion(bool valeur) {
-      if (actif) ref.read(donneesSessionPerimeesProvider.notifier).state = valeur;
+      if (actif || !valeur) perimees.state = valeur;
     }
 
     // Aucune connexion : la copie suffit, bandeau tout de suite ; la relance
@@ -144,6 +150,30 @@ Future<T> lireAvecCopieLocale<T>(
 /// acceptées…) : la prochaine ouverture n'affiche pas l'ancien état.
 Future<void> ecrireCopieLocale(Ref ref, {required String type, required String compteId, required Object? json}) =>
     _ecrire(ref.read(storeSessionLocaleProvider), type, compteId, json);
+
+/// Marque « accueil déjà atteint » pour ce compte sur ce téléphone : une
+/// ouverture hors connexion ne bloque plus sur « Pas de connexion » quand
+/// une des lectures d'orientation n'a pas de copie (REG-39).
+Future<void> marquerAccueilAtteint(Ref ref, String compteId) async {
+  try {
+    await _ecrire(ref.read(storeSessionLocaleProvider), 'accueil_atteint', compteId, true);
+  } catch (_) {
+    // Base locale indisponible (tests, appareil sans stockage) : rien à garder.
+  }
+}
+
+/// Vrai si ce compte a déjà atteint l'accueil sur ce téléphone (copie
+/// effacée à la déconnexion).
+final accueilDejaAtteintProvider = FutureProvider<bool>((ref) async {
+  String? compte;
+  try {
+    compte = ref.watch(sessionProvider.select((s) => s?.user.id));
+  } catch (_) {
+    return false;
+  }
+  if (compte == null) return false;
+  return await _lire(ref.read(storeSessionLocaleProvider), 'accueil_atteint', compte) == true;
+});
 
 /// Efface la copie (déconnexion).
 Future<void> purgerSessionLocale(CacheDocumentStore store) async {

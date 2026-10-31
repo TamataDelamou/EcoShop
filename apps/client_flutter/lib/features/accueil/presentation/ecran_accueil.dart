@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../configuration/presentation/ecran_configuration_etablissement.dart';
+import '../../coquille/presentation/gardien_verrou.dart';
 import '../application/accueil_providers.dart';
 import '../domain/catalogue_fonctions.dart';
 import '../domain/fonction.dart';
@@ -56,14 +57,50 @@ class EcranAccueil extends ConsumerStatefulWidget {
   ConsumerState<EcranAccueil> createState() => _EcranAccueilState();
 }
 
-class _EcranAccueilState extends ConsumerState<EcranAccueil> {
+class _EcranAccueilState extends ConsumerState<EcranAccueil> with RouteAware {
   final _recherche = TextEditingController();
   String _texte = '';
+
+  /// Thèmes ouverts quand les pastilles sont regroupées (REG-39).
+  final _themesOuverts = <String>{};
+
+  /// Retour dans l'application : badges relus (REG-39).
+  AppLifecycleListener? _cycle;
+  ModalRoute<void>? _route;
 
   List<Fonction>? get catalogue => widget.catalogue;
 
   @override
+  void initState() {
+    super.initState();
+    _cycle = AppLifecycleListener(onResume: _relireBadges);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null && route != _route) {
+      if (_route != null) observateurRoutes.unsubscribe(this);
+      _route = route;
+      observateurRoutes.subscribe(this, route);
+    }
+  }
+
+  /// Retour sur l'accueil après une fonction : ce qui vient d'être fait
+  /// (annonce lue, appel fait, dossier traité…) se voit sur les badges.
+  @override
+  void didPopNext() => _relireBadges();
+
+  void _relireBadges() {
+    if (!mounted) return;
+    ref.invalidate(resumeAccueilProvider);
+  }
+
+  @override
   void dispose() {
+    observateurRoutes.unsubscribe(this);
+    _cycle?.dispose();
     _recherche.dispose();
     super.dispose();
   }
@@ -116,6 +153,29 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
         ..add(trouvees.isEmpty
             ? const Text('Essayez un autre mot : « reçu », « inscription », « bus »…', key: Key('recherche_vide'))
             : grille([for (final f in trouvees) pastille(f)], parTheme: false));
+    } else if (avecOutils && affichage.regroupe && _plusieursThemes(fonctions)) {
+      // Une pastille par thème, avec son texte ; touchée, elle déplie ses
+      // pastilles (REG-39). Les raccourcis, au-dessus, restent affichés.
+      sections.add(const TitreSection('Par thème'));
+      for (final g in groupesDirection) {
+        final duGroupe = [for (final f in fonctions) if (f.groupe == g) f];
+        if (duGroupe.isEmpty) continue;
+        final ouvert = _themesOuverts.contains(g);
+        final badges = duGroupe.fold<int>(0, (n, f) => n + (f.badge == null ? 0 : resume[f.badge] ?? 0));
+        sections.add(_CarteTheme(
+          theme: g,
+          fonctions: duGroupe,
+          badge: badges,
+          ouvert: ouvert,
+          onTap: () => setState(() => ouvert ? _themesOuverts.remove(g) : _themesOuverts.add(g)),
+        ));
+        if (ouvert) {
+          sections.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: grille([for (final f in duGroupe) pastille(f)], parTheme: false),
+          ));
+        }
+      }
     } else if (c.direction) {
       for (final g in groupesDirection) {
         final duGroupe = [for (final f in fonctions) if (f.groupe == g) f];
@@ -226,6 +286,116 @@ class _EcranAccueilState extends ConsumerState<EcranAccueil> {
         enfants: [for (final f in choisis.take(4)) KeyedSubtree(key: Key('raccourci_${f.id}'), child: pastille(f))],
       ),
     ];
+  }
+}
+
+bool _plusieursThemes(List<Fonction> fonctions) =>
+    {for (final f in fonctions) if (groupesDirection.contains(f.groupe)) f.groupe}.length > 1;
+
+/// Texte et icône de chaque thème regroupé (REG-39).
+const _descriptionsThemes = <String, (String, IconData)>{
+  'Vie de l’école': ('Annonces, cahier de liaison, groupes de classe, absences, discipline, albums', Icons.school_outlined),
+  'Élèves': ('Inscriptions, fiches des élèves, classes, transferts, tableau d’honneur', Icons.groups_outlined),
+  'Finances': ('Frais de scolarité, encaissements, relances, comptabilité', Icons.account_balance_wallet_outlined),
+  'Personnel': ('Comptes du personnel, postes, congés, paie', Icons.badge_outlined),
+  'Organisation': ('Année scolaire, programme, emploi du temps, salles', Icons.event_note_outlined),
+  'Établissement': ('Identité de l’école, paramètres, paiement mobile', Icons.apartment_outlined),
+  'Tout EcoShop': ('Les autres fonctions de l’application', Icons.apps_outlined),
+};
+
+/// Pastille d'un thème regroupé : titre, description, nombre de fonctions
+/// et total des badges ; elle déplie ses pastilles.
+class _CarteTheme extends StatelessWidget {
+  const _CarteTheme({
+    required this.theme,
+    required this.fonctions,
+    required this.badge,
+    required this.ouvert,
+    required this.onTap,
+  });
+
+  final String theme;
+  final List<Fonction> fonctions;
+  final int badge;
+  final bool ouvert;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final schema = Theme.of(context).colorScheme;
+    final sombre = Theme.of(context).brightness == Brightness.dark;
+    final infos = _descriptionsThemes[theme];
+    // Description : celle du thème, sinon les premières fonctions.
+    final description = infos?.$1 ?? fonctions.take(4).map((f) => f.libelle).join(', ');
+    final t = fonctions.first.teinte;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Semantics(
+        button: true,
+        expanded: ouvert,
+        label: '$theme, ${fonctions.length} fonctions${badge > 0 ? ', $badge nouveautés' : ''}',
+        excludeSemantics: true,
+        child: Material(
+          color: sombre ? schema.surfaceContainerHigh : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: sombre ? schema.outlineVariant : const Color(0xFFE3E7E2)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: Key('theme_$theme'),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: sombre ? t.fondSombre : t.fondClair,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(infos?.$2 ?? fonctions.first.icone, color: sombre ? t.iconeSombre : t.iconeClair),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(theme, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: schema.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 2),
+                        Text('${fonctions.length} fonction${_s(fonctions.length)}',
+                            style: TextStyle(fontSize: 12, color: schema.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                  if (badge > 0)
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 22),
+                      height: 22,
+                      margin: const EdgeInsets.only(left: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(color: const Color(0xFFB9480F), borderRadius: BorderRadius.circular(11)),
+                      alignment: Alignment.center,
+                      child: Text(badge > 99 ? '99+' : '$badge',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  Icon(ouvert ? Icons.expand_less : Icons.expand_more),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

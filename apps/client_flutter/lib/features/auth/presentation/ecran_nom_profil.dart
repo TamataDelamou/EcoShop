@@ -12,7 +12,11 @@ import '../domain/inscription_en_cours.dart';
 /// étapes 2 à 6 » que l'inscription, sans choix d'espace). Pré-remplis
 /// depuis Google quand c'est possible.
 class EcranNomProfil extends ConsumerStatefulWidget {
-  const EcranNomProfil({super.key});
+  const EcranNomProfil({super.key, this.modification = false});
+
+  /// Depuis « Mes informations » : changer son nom à tout moment (REG-39).
+  /// L'écran se referme une fois le nom enregistré.
+  final bool modification;
 
   @override
   ConsumerState<EcranNomProfil> createState() => _EcranNomProfilState();
@@ -50,6 +54,10 @@ class _EcranNomProfilState extends ConsumerState<EcranNomProfil> {
     try {
       await ref.read(authRepositoryProvider).definirMonNom(prenom: _prenom.text.trim(), nom: _nom.text.trim());
       ref.rafraichirSession();
+      if (widget.modification && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nom enregistré.')));
+        Navigator.of(context).pop(true);
+      }
     } on ErreurAuth catch (e) {
       if (mounted) setState(() => _codeErreur = e.code);
     } finally {
@@ -61,7 +69,7 @@ class _EcranNomProfilState extends ConsumerState<EcranNomProfil> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Votre nom')),
+      appBar: AppBar(title: Text(widget.modification ? 'Modifier mon nom' : 'Votre nom')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -102,7 +110,7 @@ class _EcranNomProfilState extends ConsumerState<EcranNomProfil> {
                       key: const Key('bouton_valider_nom'),
                       style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                       onPressed: _enCours ? null : _valider,
-                      child: const Text('Continuer'),
+                      child: Text(widget.modification ? 'Enregistrer' : 'Continuer'),
                     ),
                   ],
                 ),

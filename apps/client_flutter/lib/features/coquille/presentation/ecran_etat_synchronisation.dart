@@ -60,7 +60,7 @@ class _EcranEtatSynchronisationState extends ConsumerState<EcranEtatSynchronisat
   Future<void> _synchroniser() async {
     setState(() => _enCours = true);
     try {
-      await ref.read(syncEngineProvider).synchroniser();
+      await ref.read(syncEngineProvider).synchroniser(forcer: true);
       await ref.read(amorcageProvider.notifier).lancerSiNecessaire(force: true);
     } catch (_) {
       // Le bandeau et cet écran montrent ce qui reste à faire.

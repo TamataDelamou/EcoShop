@@ -1,3 +1,5 @@
+import '../../albums/presentation/ecran_albums.dart';
+import '../../tableau_honneur/presentation/ecran_tableau_honneur.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -89,10 +91,16 @@ import 'fonction.dart';
 void _aller(BuildContext context, Widget ecran) =>
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => ecran));
 
-void _choisirClasse(BuildContext context, String titre, Widget Function(dynamic classe) suite) => _aller(
-  context,
-  EcranChoixClasse(titre: titre, onSelectionner: (ctx, classe) => _aller(ctx, suite(classe))),
-);
+void _choisirClasse(BuildContext context, String titre, Widget Function(dynamic classe) suite,
+        {bool seulementMesClasses = false}) =>
+    _aller(
+      context,
+      EcranChoixClasse(
+        titre: titre,
+        seulementMesClasses: seulementMesClasses,
+        onSelectionner: (ctx, classe) => _aller(ctx, suite(classe)),
+      ),
+    );
 
 Future<void> _emploiFiche(BuildContext context, WidgetRef ref, String ficheId, String titre) async {
   final inscriptions = await ref.read(inscriptionsDeFicheProvider(ficheId).future);
@@ -144,6 +152,22 @@ final List<Fonction> catalogueFonctions = [
     visible: (c) => c.parent || (c.ecole && (c.enseignant || c.peut(['scolarite.liaison.ecrire']))),
     ouvrir: (context, ref, c) => _aller(context,
         c.parent ? const EcranElevesLiaison() : EcranElevesLiaison(etablissementId: c.etablissement!.id, direction: c.direction)),
+  ),
+  // REG-39 : albums photo, par classe ou pour toute l'école.
+  Fonction(
+    id: 'albums', libelle: 'Albums photo', icone: Icons.photo_library_outlined, teinte: Teinte.rose, groupe: _vie,
+    motsCles: ['photo', 'album', 'souvenir', 'fête', 'galerie'],
+    visible: (c) => c.ecole && c.role != RoleRacine.adminGsg && c.role != RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) =>
+        _aller(context, EcranAlbums(etablissementId: c.etablissement!.id, peutCreer: c.direction || c.enseignant)),
+  ),
+  // REG-39 : tableau d'honneur (meilleurs élèves, distinctions).
+  Fonction(
+    id: 'tableau_honneur', libelle: 'Tableau d’honneur', icone: Icons.emoji_events_outlined, teinte: Teinte.jaune,
+    groupe: _eleves, motsCles: ['honneur', 'meilleur', 'prix', 'excellence', 'classement', 'professeur'],
+    visible: (c) => c.ecole && c.anneeId != null && c.role != RoleRacine.adminGsg && c.role != RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(
+        context, EcranTableauHonneur(etablissementId: c.etablissement!.id, anneeId: c.anneeId!, direction: c.direction)),
   ),
   // REG-34 : groupe de la classe. Élèves et enseignants de la classe ;
   // direction et postes de modération. Jamais les parents (règles M9).
@@ -262,7 +286,8 @@ final List<Fonction> catalogueFonctions = [
     motsCles: ['présence', 'absence', 'appel', 'retard'], badge: 'appels_a_faire', libelleBadge: 'appel à faire',
     ancienne: '(nouveau raccourci : classe › appel)',
     visible: (c) => c.enseignant && c.ecole,
-    ouvrir: (context, ref, c) => _choisirClasse(context, 'Faire l’appel', (classe) => EcranAppelClasse(classe: classe)),
+    ouvrir: (context, ref, c) => _choisirClasse(context, 'Faire l’appel', (classe) => EcranAppelClasse(classe: classe),
+        seulementMesClasses: true),
   ),
   Fonction(
     id: 'notes_enseignant', libelle: 'Notes', icone: Icons.grade_outlined, teinte: Teinte.bleu, groupe: _vie,
@@ -270,7 +295,8 @@ final List<Fonction> catalogueFonctions = [
     ancienne: '(nouveau raccourci : classe › évaluations)',
     visible: (c) => c.enseignant && c.ecole,
     ouvrir: (context, ref, c) =>
-        _choisirClasse(context, 'Notes', (classe) => EcranEvaluationsClasse(classe: classe)),
+        _choisirClasse(context, 'Notes', (classe) => EcranEvaluationsClasse(classe: classe),
+            seulementMesClasses: true),
   ),
   Fonction(
     id: 'mes_classes', libelle: 'Mes classes', icone: Icons.class_outlined, teinte: Teinte.sarcelle, groupe: _vie,
@@ -284,7 +310,8 @@ final List<Fonction> catalogueFonctions = [
     motsCles: ['programme', 'chapitre', 'avancement'], ancienne: 'Classes — emploi du temps & progression',
     visible: (c) => c.enseignant && c.ecole && c.anneeId != null,
     ouvrir: (context, ref, c) => _choisirClasse(context, 'Progression', (classe) => EcranProgressionPedagogique(
-        etablissementId: c.etablissement!.id, classeId: classe.id as String, anneeId: c.anneeId!)),
+        etablissementId: c.etablissement!.id, classeId: classe.id as String, anneeId: c.anneeId!),
+        seulementMesClasses: true),
   ),
   // ---------------------------------------------------------------- vie de l'école
   Fonction(
@@ -535,7 +562,9 @@ final List<Fonction> catalogueFonctions = [
   Fonction(
     id: 'structures', libelle: 'Structures', icone: Icons.apartment_outlined, teinte: Teinte.gris, groupe: _organisation,
     motsCles: ['campus', 'année', 'période', 'classes', 'annuaire'], ancienne: 'Structures & annuaire (et onglet Scolarité de la direction)',
-    visible: (c) => c.direction || c.enseignant,
+    // Enseignant : ses classes sont dans « Mes classes » ; la structure de
+    // toute l'école reste à la direction (REG-39).
+    visible: (c) => c.direction,
     ouvrir: (context, ref, c) => _aller(context, const EcranStructureEtablissement()),
   ),
   // ---------------------------------------------------------------- établissement

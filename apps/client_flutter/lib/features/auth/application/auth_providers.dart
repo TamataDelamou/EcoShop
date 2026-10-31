@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/supabase_auth_provider.dart';
@@ -151,6 +153,11 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   // Accueil déjà atteint pour ce compte depuis le lancement : une relecture
   // en cours ou en échec (réseau coupé, serveur muet) ne le retire plus.
   // Le compte reste orienté par le serveur dès qu'une réponse arrive.
+  // Hors connexion, un compte qui a déjà atteint l'accueil sur ce téléphone
+  // n'est plus arrêté sur « Pas de connexion » parce qu'une lecture n'a pas
+  // de copie : l'accueil s'ouvre avec ce qui est gardé, et la relance au
+  // retour du réseau complète (retour du porteur de projet, 2026-10-31).
+  final dejaAtteint = ref.watch(accueilDejaAtteintProvider).valueOrNull ?? false;
   bool garderAccueil() => memoire.compte != null && memoire.compte == compte && memoire.destination == DestinationSession.accueil;
 
   if (premierChargement(profil) ||
@@ -168,7 +175,7 @@ final destinationProvider = Provider<DestinationSession>((ref) {
   }
 
   if (inconnu(profil) || inconnu(fiche) || inconnu(etablissements) || inconnu(cguStatut)) {
-    return garderAccueil() ? DestinationSession.accueil : DestinationSession.horsLigneSansCopie;
+    return garderAccueil() || dejaAtteint ? DestinationSession.accueil : DestinationSession.horsLigneSansCopie;
   }
 
   final statutCgu = cguStatut.valueOrNull;
@@ -185,6 +192,9 @@ final destinationProvider = Provider<DestinationSession>((ref) {
     invitationsAPresenter: (invitations.valueOrNull ?? const []).isNotEmpty,
     codeCompteAConfirmer: codeCompteAConfirmer,
   );
+  if (destination == DestinationSession.accueil && !dejaAtteint && compte != null) {
+    unawaited(marquerAccueilAtteint(ref, compte));
+  }
   memoire
     ..compte = compte
     ..destination = destination;

@@ -96,9 +96,28 @@ class EcranFicheEleve extends ConsumerWidget {
                     _LigneInfo(libelle: 'Nationalité', valeur: fiche.nationalite!),
                   if (fiche.numeroClasse != null)
                     _LigneInfo(libelle: 'N° dans la classe', valeur: '${fiche.numeroClasse}'),
-                  if (fiche.nomPere != null) _LigneInfo(libelle: 'Nom du père', valeur: fiche.nomPere!),
-                  if (fiche.nomMere != null) _LigneInfo(libelle: 'Nom de la mère', valeur: fiche.nomMere!),
+                  if (fiche.matriculeNational != null)
+                    _LigneInfo(libelle: 'Matricule national', valeur: fiche.matriculeNational!),
+                  if (fiche.telephoneEleve != null) _LigneInfo(libelle: 'Téléphone de l’élève', valeur: fiche.telephoneEleve!),
+                  if (fiche.nomPere != null)
+                    _LigneInfo(
+                      libelle: 'Père',
+                      valeur: '${fiche.nomPere}${fiche.telephonePere != null ? ' (${fiche.telephonePere})' : ''}',
+                    ),
+                  if (fiche.nomMere != null)
+                    _LigneInfo(
+                      libelle: 'Mère',
+                      valeur: '${fiche.nomMere}${fiche.telephoneMere != null ? ' (${fiche.telephoneMere})' : ''}',
+                    ),
+                  if (fiche.tuteurNom != null)
+                    _LigneInfo(
+                      libelle: 'Tuteur',
+                      valeur: '${fiche.tuteurNom}${fiche.tuteurTelephone != null ? ' (${fiche.tuteurTelephone})' : ''}',
+                    ),
                   if (fiche.quartier != null) _LigneInfo(libelle: 'Quartier', valeur: fiche.quartier!),
+                  if (fiche.ecoleOrigine != null) _LigneInfo(libelle: 'École d’origine', valeur: fiche.ecoleOrigine!),
+                  if (fiche.situationHandicap)
+                    _LigneInfo(libelle: 'Situation de handicap', valeur: fiche.handicapPrecision ?? 'Oui'),
                   if (fiche.personneUrgenceNom != null)
                     _LigneInfo(
                       libelle: 'Contact d\'urgence',

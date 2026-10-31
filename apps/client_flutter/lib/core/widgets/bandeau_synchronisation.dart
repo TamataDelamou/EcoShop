@@ -16,6 +16,12 @@ String _dateHeure(DateTime d) {
 class BandeauSynchronisation extends ConsumerWidget {
   const BandeauSynchronisation({super.key});
 
+  /// Ouverture de l'écran « Synchronisation », fournie par la coquille (le
+  /// socle ne connaît pas les écrans). La ligne « opération(s) en attente »
+  /// devient un lien : on voit laquelle et on peut l'envoyer tout de suite
+  /// (REG-39).
+  static void Function(BuildContext context)? ouvrirEtat;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final suivi = ref.watch(suiviSyncProvider).valueOrNull;
@@ -40,6 +46,13 @@ class BandeauSynchronisation extends ConsumerWidget {
             cle: const Key('bandeau_en_attente'),
             icone: Icons.schedule_send_outlined,
             texte: '${suivi.enAttente} opération(s) en attente d\'envoi — envoi automatique au retour du réseau.',
+            action: ouvrirEtat == null
+                ? null
+                : TextButton(
+                    key: const Key('bandeau_en_attente_voir'),
+                    onPressed: () => ouvrirEtat!(context),
+                    child: const Text('Voir'),
+                  ),
           ));
         }
         if (suivi != null && suivi.rejetees > 0) {
@@ -79,12 +92,18 @@ class _Ligne extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teinte = couleur ?? Theme.of(context).colorScheme.onTertiaryContainer;
-    return Row(key: cle, children: [
+    final ligne = Row(key: cle, children: [
       Icon(icone, size: 18, color: teinte),
       const SizedBox(width: 8),
       Expanded(child: Text(texte, style: TextStyle(color: teinte))),
       ?action,
     ]);
+    // Toute la ligne est touchable quand elle mène quelque part.
+    final bouton = action;
+    if (bouton is TextButton && bouton.onPressed != null) {
+      return InkWell(onTap: bouton.onPressed, child: ligne);
+    }
+    return ligne;
   }
 }
 
