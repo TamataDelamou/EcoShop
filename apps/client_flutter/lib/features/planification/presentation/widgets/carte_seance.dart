@@ -32,7 +32,8 @@ class CarteSeance extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    emploi.nomMatiere ?? emploi.type.libelle,
+                    // Semaines A/B (REG-41).
+                    '${emploi.nomMatiere ?? emploi.type.libelle}${emploi.semaine == null ? '' : ' (sem. ${emploi.semaine})'}',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   if (libelleSecondaire != null)

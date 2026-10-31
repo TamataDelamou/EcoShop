@@ -310,6 +310,7 @@ class _FormulaireCoursState extends ConsumerState<_FormulaireCours> {
   late String? _salleId = widget.existant?.salleId;
   late int _heures = widget.existant?.heuresParSemaine ?? _heuresProgramme();
   late int _duree = widget.existant?.dureeSeance ?? 60;
+  late String? _alternance = widget.existant?.alternance;
   bool _enCours = false;
 
   int _heuresProgramme() {
@@ -335,6 +336,7 @@ class _FormulaireCoursState extends ConsumerState<_FormulaireCours> {
       heuresParSemaine: _heures,
       dureeSeance: _duree,
       salleId: _salleId,
+      alternance: _alternance,
     );
     setState(() => _enCours = true);
     final ok = await executer(context, () => ref.read(configurationRepositoryProvider).enregistrerAffectation(a),
@@ -425,6 +427,20 @@ class _FormulaireCoursState extends ConsumerState<_FormulaireCours> {
               ],
             ),
             const SizedBox(height: 8),
+            // Semaines A et B (REG-41) : travaux pratiques, demi-groupes.
+            const Text('Fréquence', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            SegmentedButton<String>(
+              key: const Key('choix_alternance'),
+              segments: const [
+                ButtonSegment(value: '', label: Text('Chaque semaine')),
+                ButtonSegment(value: 'A', label: Text('Semaine A')),
+                ButtonSegment(value: 'B', label: Text('Semaine B')),
+              ],
+              selected: {_alternance ?? ''},
+              onSelectionChanged: (v) => setState(() => _alternance = v.first.isEmpty ? null : v.first),
+            ),
+            const SizedBox(height: 12),
             const Text('Durée d’une séance', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
             SegmentedButton<int>(

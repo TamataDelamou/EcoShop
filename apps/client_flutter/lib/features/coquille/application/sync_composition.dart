@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/providers.dart';
 import '../../cahier_texte/data/cahier_repository.dart';
+import '../../remplacements/data/remplacements_repository.dart';
 import '../../justificatifs/data/justificatifs_repository.dart';
 import '../../referentiel/back_office/referentiel_back_office_repository.dart';
 import '../../revision/data/banque_questions_repository.dart';
@@ -133,6 +134,10 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   for (final entite in ConcoursRepository.entites) {
     gestionnaires[entite] = (entree) => ConcoursRepository.rejouer(client, entree);
   }
+  // Absences et remplacements (REG-41) : déclarations et décisions sans réseau.
+  for (final entite in RemplacementsRepository.entites) {
+    gestionnaires[entite] = (entree) => RemplacementsRepository.rejouer(client, entree);
+  }
   // Cahier de texte et devoirs (REG-40) : séances, travaux, « fait », copies.
   for (final entite in CahierRepository.entites) {
     gestionnaires[entite] = (entree) => CahierRepository.rejouer(client, entree);
@@ -169,6 +174,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
 String libelleOperation(SyncEntree entree) {
   final simple = _libellesSimples[entree.entite];
   if (simple != null) return simple;
+  if (RemplacementsRepository.entites.contains(entree.entite)) return RemplacementsRepository.libelle(entree);
   if (CahierRepository.entites.contains(entree.entite)) return CahierRepository.libelle(entree);
   if (JustificatifsRepository.entites.contains(entree.entite)) return JustificatifsRepository.libelle(entree);
   if (BanqueQuestionsRepository.entites.contains(entree.entite)) return BanqueQuestionsRepository.libelle(entree);

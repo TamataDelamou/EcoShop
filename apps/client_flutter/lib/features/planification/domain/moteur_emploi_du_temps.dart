@@ -277,6 +277,7 @@ class MoteurEmploiDuTemps {
         salle: f.salleId == null ? -1 : _salles[f.salleId]!,
         minutes: f.finMinutes - f.debutMinutes,
         fixe: true,
+        semaine: _semaine(f.semaine),
       );
       u.cases = _casesFixes(f);
       _unites.add(u);
@@ -292,6 +293,7 @@ class MoteurEmploiDuTemps {
           enseignant: c.enseignantId == null ? -1 : _enseignants[c.enseignantId]!,
           salle: c.salleId == null ? -1 : _salles[c.salleId]!,
           minutes: duree,
+          semaine: _semaine(c.semaine),
         ));
       }
     }
@@ -673,7 +675,9 @@ class MoteurEmploiDuTemps {
       if (u.salle >= 0 && _salleBloquee[u.salle][c]) return null;
     }
     final gene = <int>{};
-    bool chevauche(_Unite v) => v.cases.any(cases.contains);
+    // Semaines A et B (REG-41) : une séance A et une séance B ne se gênent pas.
+    bool chevauche(_Unite v) =>
+        (u.semaine == 0 || v.semaine == 0 || u.semaine == v.semaine) && v.cases.any(cases.contains);
     for (final j in _parClasse[u.classe]) {
       final v = _unites[j];
       if (j == i || v.position < 0 && !v.fixe) continue;
@@ -945,6 +949,9 @@ class MoteurEmploiDuTemps {
   }
 }
 
+/// 0 : chaque semaine ; 1 : semaine A ; 2 : semaine B (REG-41).
+int _semaine(String? s) => s == 'A' ? 1 : (s == 'B' ? 2 : 0);
+
 class _Unite {
   _Unite({
     required this.activite,
@@ -954,7 +961,10 @@ class _Unite {
     required this.salle,
     required this.minutes,
     this.fixe = false,
+    this.semaine = 0,
   });
+
+  final int semaine;
 
   final int activite;
   final int classe;
@@ -1096,7 +1106,11 @@ class CoursAPlacer {
     required this.minutesParSemaine,
     this.dureeSeance = 60,
     this.coefficient = 1,
+    this.semaine,
   });
+
+  /// Une semaine sur deux : « A » ou « B » ; nul = chaque semaine (REG-41).
+  final String? semaine;
 
   /// Identifiant de l'affectation d'origine.
   final String id;
@@ -1140,12 +1154,14 @@ class SeanceFixeEmploi {
     required this.jour,
     required this.debut,
     required this.fin,
+    this.semaine,
   });
 
   final String classeId;
   final String? groupeId;
   final String? enseignantId;
   final String? salleId;
+  final String? semaine;
   final int jour;
   final String debut;
   final String fin;
@@ -1219,6 +1235,7 @@ class SeancePlacee {
         'jour_semaine': jour,
         'heure_debut': debut,
         'heure_fin': fin,
+        'semaine': cours.semaine,
       };
 }
 

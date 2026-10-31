@@ -26,6 +26,7 @@ class EmploiDuTemps {
     this.groupeId,
     this.verrouille = false,
     this.automatique = false,
+    this.semaine,
   });
 
   factory EmploiDuTemps.depuisJson(Map<String, dynamic> json) {
@@ -56,6 +57,7 @@ class EmploiDuTemps {
       groupeId: json['groupe_id'] as String?,
       verrouille: json['verrouille'] as bool? ?? false,
       automatique: json['origine'] == 'automatique',
+      semaine: json['semaine'] as String?,
     );
   }
 
@@ -80,6 +82,7 @@ class EmploiDuTemps {
         groupeId: json['groupe_id'] as String?,
         verrouille: json['verrouille'] as bool? ?? false,
         automatique: json['origine'] == 'automatique',
+        semaine: json['semaine'] as String?,
       );
 
   Map<String, dynamic> versJsonCache() => {
@@ -103,6 +106,7 @@ class EmploiDuTemps {
         'groupe_id': groupeId,
         'verrouille': verrouille,
         'origine': automatique ? 'automatique' : 'manuelle',
+        'semaine': semaine,
       };
 
   /// Colonnes réelles de `public.emplois_du_temps` — pour l'upsert
@@ -171,6 +175,9 @@ class EmploiDuTemps {
 
   /// Placée par le calcul automatique (sinon saisie à la main).
   final bool automatique;
+
+  /// Semaines A ou B seulement ; nulle = chaque semaine (REG-41).
+  final String? semaine;
 
   static String _tronquerHeure(String heure) => heure.length >= 5 ? heure.substring(0, 5) : heure;
 }

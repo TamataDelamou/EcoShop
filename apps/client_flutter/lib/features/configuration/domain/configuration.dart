@@ -178,6 +178,7 @@ class AffectationCours {
     this.nomEnseignant,
     this.nomMatiere,
     this.coefficient,
+    this.alternance,
   });
 
   factory AffectationCours.depuisJson(Map<String, dynamic> j) {
@@ -194,6 +195,7 @@ class AffectationCours {
       heuresParSemaine: j['volume_horaire_hebdo'] as int?,
       dureeSeance: j['duree_seance'] as int? ?? 60,
       salleId: j['salle_id'] as String?,
+      alternance: j['alternance'] as String?,
       nomEnseignant: p == null
           ? j['nom_enseignant'] as String?
           : [p['prenom'], p['nom']].where((v) => v != null && (v as String).isNotEmpty).join(' '),
@@ -216,6 +218,7 @@ class AffectationCours {
         'nom_enseignant': nomEnseignant,
         'nom_matiere': nomMatiere,
         'coefficient': coefficient,
+        'alternance': alternance,
       };
 
   Map<String, dynamic> versJsonEcriture() => {
@@ -230,6 +233,7 @@ class AffectationCours {
         'duree_seance': dureeSeance,
         'salle_id': salleId,
         'role_affectation': 'enseignant',
+        'alternance': alternance,
       };
 
   final String id;
@@ -245,6 +249,9 @@ class AffectationCours {
   final String? nomEnseignant;
   final String? nomMatiere;
   final double? coefficient;
+
+  /// Une semaine sur deux : « A » ou « B » ; nul = chaque semaine (REG-41).
+  final String? alternance;
 }
 
 /// Membre du personnel (liste `membres_personnel`).

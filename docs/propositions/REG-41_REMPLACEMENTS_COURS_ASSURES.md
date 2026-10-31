@@ -1,7 +1,7 @@
 # REG-41 — Absences des enseignants, remplacements et cours assurés : proposition
 
-**Établi le** : 2026-10-31. **Statut** : proposition — en attente du feu
-vert du porteur de projet. **Feuille de route** : REG-30 point 15 (suites
+**Établi le** : 2026-10-31. **Statut** : validé par le porteur de projet
+le 2026-10-31 (les trois décisions du §4 telles que proposées) ; livré. **Feuille de route** : REG-30 point 15 (suites
 de l'emploi du temps : remplacement d'un enseignant absent, semaines A/B,
 export PDF).
 
