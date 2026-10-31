@@ -53,7 +53,7 @@ attendue), `clos`.
 | REG-34 | Messagerie famille ↔ école (le parent écrit à l'enseignant ou à la direction), heures de messagerie, groupes de classe modérés | **P1** | **livré** (2026-10-30) — migration 1580 à appliquer ; à vérifier sur téléphone |
 | REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **livré** (2026-10-30) — lots 1 à 6, migrations 1581 et 1582 appliquées ; à vérifier sur téléphone (APK de test) |
 | REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
-| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **lots R1 et R2 livrés** (2026-10-30) — migrations 1585 à 1587 à appliquer ; lots R3 et R4 à venir |
+| REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **lots R1, R2 et R3 livrés** (2026-10-30), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1588 à appliquer ; lot R4 à venir |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2106,7 +2106,7 @@ de l'école (`a_permission_ecole`) : jamais ouvert à l'Administrateur GSG.
 ## REG-37 — Moteur de révision
 
 **Reçu le** : 2026-10-30 (choix du porteur de projet). **Priorité** : P1.
-**Statut** : lots R1 (demande de fusion n°6) et R2 (n°8) livrés ; R3 et R4 à venir.
+**Statut** : lots R1 (demande de fusion n°6), R2 (n°8) et R3 (n°9) livrés ; R4 à venir.
 
 Troisième pilier du produit (cahier ch. 10 à 15), presque absent du code
 jusqu'ici. Recherche préalable : Moodle (une version par modification, la
@@ -2118,7 +2118,9 @@ réseau), interactions de la norme QTI (types corrigés automatiquement).
 |---|---|---|
 | R1 | Banque de questions : chapitres, leçons, compétences par matière du programme officiel ; 8 types (QCM à une et à plusieurs réponses, vrai ou faux, réponse courte, texte à trous, association, classement, calcul), image possible ; versions ; circuit brouillon → à valider → validée → publiée (validation par une autre personne sauf si l'auteur est Administrateur de contenu) ; pas d'enregistrement sans compétence, difficulté ni explication ; CP1 à CE2 : types adaptés, trois choix au plus ; trois signalements de personnes distinctes suspendent la question (seuil réglable dans les paramètres de la plateforme). Écrans de l'Administrateur de contenu : banque par matière (depuis les programmes officiels), chapitres et compétences, éditeur, file de validation, questions signalées ; brouillons enregistrés sans réseau. | **livré** (2026-10-30) |
 | R2 | Quiz et entraînement hors connexion : questions publiées téléchargées par niveau, quiz rapide, standard, intensif, par chapitre et personnalisé, correction immédiate avec explication, tentatives gardées sur l'appareil puis envoyées, règles du CP1 au CE2 (5 questions, encouragement), signalement par l'élève. Parent : révisions de l'enfant, conseil concret, « Réviser avec » sur son propre téléphone (crédité à l'enfant). | **livré** (2026-10-30) |
-| R3 | Mode examen : chronomètre, navigation libre, remise automatique à la fin du temps, correction après la clôture seulement, note sur 20, points forts et à renforcer. | à venir |
+| R2b | Bilan du dimanche 18 h au parent (notification : temps, quiz, réussite, compétence à travailler, action concrète), le même bilan dans l'application ; lecture à voix haute (synthèse vocale du téléphone, sans réseau) du bilan, des conseils, des questions et des explications. | **livré** (2026-10-30) |
+| R3 | Mode examen : chronomètre, navigation libre, remise automatique à la fin du temps, correction après la clôture seulement, note sur 20, points forts et à renforcer. | **livré** (2026-10-30) |
+| Classement | Classement de la semaine par classe ou école (cahier 22.3, 23.1) sur les points d'effort du cahier 22.1, remis à zéro le lundi ; vue relative (5 premiers, l'élève et ses voisins) ; prénom et initiale ; retrait par l'élève ou le parent ; désactivé du CP1 au CE2 ; tentatives trop rapides et parfaites écartées (23.4). | **livré** (2026-10-30) |
 | R4 | Profil de maîtrise par compétence (ch. 14) et répétition espacée (ch. 15). | à venir |
 
 Règle 12.6 : ces résultats d'entraînement n'entrent jamais dans la moyenne
@@ -2152,3 +2154,18 @@ Correctifs du 2026-10-30 (demande de fusion n°7, migration 1586) : écran
 des paramètres de la plateforme (valeurs nues `true`/`false` de REG-22) ;
 désignation de l'Administrateur de contenu par l'Administrateur GSG
 (pastille « Administrateurs de contenu », compte dédié exigé).
+
+Lot R3, bilan et classement — recherche : la pratique en conditions
+d'examen rend moins anxieux (Agarwal et al. 2014 : 72 % des élèves moins
+nerveux avant les contrôles) ; messages aux parents en Côte d'Ivoire
+(gains surtout pour les élèves en difficulté ; texte aussi efficace que
+l'audio, l'audio reste utile aux parents qui lisent peu) ; ligues de
+Duolingo (hebdomadaires, sur l'effort) ; classement relatif préféré par
+les élèves (moins de pression). Fichiers :
+`supabase/migrations/20260906001588_bilan_classement_examen.sql`,
+`tests/rls/104_bilan_classement.sql`, tâche `bilans-revision` (dimanche
+18 h) dans `taches_planifiees.modele.sql` ; `core/audio/lecteur_vocal.dart`
+(paquet `flutter_tts`), `revision/domain/examen.dart`, `classement.dart`,
+`presentation/ecran_examen.dart`, `champ_reponse.dart`. Langues nationales
+(pular, malinké, soussou) : la synthèse vocale ne les parle pas ; il faudra
+des enregistrements.

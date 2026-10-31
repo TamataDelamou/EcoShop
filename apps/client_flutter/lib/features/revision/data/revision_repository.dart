@@ -6,6 +6,8 @@ import '../../../core/db/cache_document_store.dart';
 import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
+import '../domain/classement.dart';
+import '../domain/examen.dart';
 import '../domain/quiz.dart';
 
 /// Niveau de révision d'un élève (classe de son inscription).
@@ -133,6 +135,71 @@ class RevisionRepository {
       payload: jsonEncode(tentative),
     ));
     return false;
+  }
+
+  /// Remet un examen blanc : traces mises à jour, envoi ou mise en file.
+  Future<bool> enregistrerExamen(SessionExamen e) async {
+    final fin = e.remisLe ?? DateTime.now();
+    final anciennes = await traces(e.ficheId);
+    for (var i = 0; i < e.questions.length; i++) {
+      final q = e.questions[i];
+      final t = anciennes[q.id];
+      anciennes[q.id] = TraceQuestion(vues: (t?.vues ?? 0) + 1, dernierScore: e.corrections[i].score, derniereFois: fin);
+    }
+    await _copies.ecrireDocument('traces', e.ficheId, {for (final x in anciennes.entries) x.key: x.value.versJson()});
+    final tentative = e.versTentative();
+    try {
+      await _client.rpc<dynamic>('enregistrer_tentative_revision', params: {'p_tentative': tentative});
+      return true;
+    } catch (err) {
+      if (!estErreurReseau(err)) throw _traduire(err);
+    }
+    await _file.enfiler(SyncEntree(
+      id: '$entiteTentative:${e.id}',
+      entite: entiteTentative,
+      operation: 'rpc',
+      payload: jsonEncode(tentative),
+    ));
+    return false;
+  }
+
+  /// Classement de la semaine (classe ou école) ; copie de l'appareil
+  /// sans réseau.
+  Future<ClassementRevision> classement(String ficheId, {String echelle = 'classe'}) async {
+    try {
+      return await _lecture.lire(
+        type: 'classement',
+        cle: '$ficheId|$echelle',
+        source: () => _client.rpc<dynamic>('classement_revision', params: {'p_fiche': ficheId, 'p_echelle': echelle}),
+        decoder: (json) => ClassementRevision.depuisJson(((json as Map?) ?? const {}).cast<String, dynamic>()),
+      );
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  /// Apparaître ou non dans le classement (l'élève ou son parent).
+  Future<void> definirClassementVisible(String ficheId, bool visible) async {
+    try {
+      await _client.rpc<dynamic>('definir_classement_visible', params: {'p_fiche': ficheId, 'p_visible': visible});
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  /// Bilan de la semaine, en mots simples (le même que la notification du
+  /// dimanche) ; null sans réseau ni copie.
+  Future<String?> bilan(String ficheId) async {
+    try {
+      return await _lecture.lire(
+        type: 'bilan',
+        cle: ficheId,
+        source: () => _client.rpc<dynamic>('bilan_revision', params: {'p_fiche': ficheId}),
+        decoder: (json) => json is String ? json : null,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Résumé des révisions (élève ou parent), quiz de cet appareil compris.

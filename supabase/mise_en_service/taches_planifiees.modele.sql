@@ -69,6 +69,9 @@ select pg_temp.planifier('purger-notifications', '15 3 * * *',
 -- REG-31 : comptes dont le délai de 7 jours est échu ; traces de sécurité > 1 an.
 select pg_temp.planifier('effectuer-suppressions-comptes', '35 3 * * *',
   'select public.effectuer_suppressions_comptes()');
+-- REG-37 : bilan des révisions aux parents, le dimanche à 18 h.
+select pg_temp.planifier('bilans-revision', '0 18 * * 0',
+  'select public.envoyer_bilans_revision()');
 select pg_temp.planifier('purger-historique-taches', '45 3 * * *',
   $$delete from cron.job_run_details where end_time < now() - interval '7 days'$$);
 

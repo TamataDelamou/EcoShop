@@ -91,6 +91,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Lecture à voix haute (REG-37) : moteur de synthèse vocale. -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
         <!-- Appeler le chauffeur du bus (suivi du transport). -->
         <intent>
             <action android:name="android.intent.action.DIAL"/>

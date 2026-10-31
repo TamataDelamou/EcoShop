@@ -6,6 +6,7 @@ import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/providers.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../data/revision_repository.dart';
+import '../domain/classement.dart';
 import '../domain/quiz.dart';
 
 final revisionRepositoryProvider = Provider<RevisionRepository>((ref) {
@@ -37,3 +38,13 @@ final espaceRevisionProvider = FutureProvider.autoDispose.family<EspaceRevision,
   final resume = await depot.resume(ficheId, paquet: paquet);
   return EspaceRevision(niveau: niveau, paquet: paquet, traces: traces, resume: resume);
 });
+
+final classementRevisionProvider =
+    FutureProvider.autoDispose.family<ClassementRevision, ({String fiche, String echelle})>((ref, cle) {
+  ref.watch(suiviSyncProvider);
+  return ref.watch(revisionRepositoryProvider).classement(cle.fiche, echelle: cle.echelle);
+});
+
+final bilanRevisionProvider = FutureProvider.autoDispose.family<String?, String>(
+  (ref, ficheId) => ref.watch(revisionRepositoryProvider).bilan(ficheId),
+);

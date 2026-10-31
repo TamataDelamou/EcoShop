@@ -15,7 +15,8 @@ enum ModeQuiz {
   matiere('matiere', 'Par matière', 10),
   melange('melange', 'Révision mêlée', 10),
   personnalise('personnalise', 'Personnalisé', 10),
-  erreurs('erreurs', 'Refaire mes erreurs', 10);
+  erreurs('erreurs', 'Refaire mes erreurs', 10),
+  examen('examen', 'Examen blanc', 20);
 
   const ModeQuiz(this.code, this.libelle, this.nombreParDefaut);
 

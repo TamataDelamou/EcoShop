@@ -69,6 +69,10 @@ dependencies:
   # Modèle du téléphone (« Samsung Galaxy A14 ») pour la liste des appareils
   # et l'invite « Autoriser ce nouvel appareil ? » (REG-22). Version figée.
   device_info_plus: 13.3.0
+  # Lecture à voix haute (REG-37) : questions pour les petites classes,
+  # bilan et conseils pour les parents qui lisent peu. Synthèse vocale du
+  # téléphone, sans réseau. Version figée.
+  flutter_tts: 4.2.5
 
 dev_dependencies:
   flutter_test:
