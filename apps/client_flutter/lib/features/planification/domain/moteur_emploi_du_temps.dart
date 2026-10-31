@@ -362,7 +362,16 @@ class MoteurEmploiDuTemps {
 
   // ============================================================ occupation
 
-  void _marquer(_Unite u, List<int> cases, int delta) {
+  // Semaines A/B (REG-41) : chaque compteur d'occupation porte la semaine A
+  // dans ses unités et la semaine B par milliers. Une séance de chaque
+  // semaine compte des deux côtés ; « > 0 » reste « occupé » pour le reste
+  // du moteur.
+  static int _poids(int semaine) => semaine == 1 ? 1 : (semaine == 2 ? 1000 : 1001);
+  static bool _gene(int compteur, int semaine) =>
+      semaine == 1 ? compteur % 1000 > 0 : (semaine == 2 ? compteur >= 1000 : compteur > 0);
+
+  void _marquer(_Unite u, List<int> cases, int signe) {
+    final delta = signe * _poids(u.semaine);
     for (final x in cases) {
       if (u.groupe < 0) {
         _classeEntiere[u.classe][x] += delta;
@@ -406,16 +415,16 @@ class MoteurEmploiDuTemps {
     for (var j = 0; j < k; j++) {
       final x = position + j;
       if (_bloqueTous[x] || _classeBloquee[u.classe][x]) return false;
-      if (_classeEntiere[u.classe][x] > 0) return false;
+      if (_gene(_classeEntiere[u.classe][x], u.semaine)) return false;
       if (u.groupe < 0) {
-        if (_classeGroupes[u.classe][x] > 0) return false;
-      } else if (_groupeOccupe[u.groupe][x] > 0) {
+        if (_gene(_classeGroupes[u.classe][x], u.semaine)) return false;
+      } else if (_gene(_groupeOccupe[u.groupe][x], u.semaine)) {
         return false;
       }
-      if (u.enseignant >= 0 && (_enseignantOccupe[u.enseignant][x] > 0 || _enseignantBloque[u.enseignant][x])) {
+      if (u.enseignant >= 0 && (_gene(_enseignantOccupe[u.enseignant][x], u.semaine) || _enseignantBloque[u.enseignant][x])) {
         return false;
       }
-      if (u.salle >= 0 && (_salleOccupee[u.salle][x] > 0 || _salleBloquee[u.salle][x])) return false;
+      if (u.salle >= 0 && (_gene(_salleOccupee[u.salle][x], u.semaine) || _salleBloquee[u.salle][x])) return false;
     }
     return true;
   }
@@ -908,12 +917,14 @@ class MoteurEmploiDuTemps {
             (u.enseignant >= 0 && _enseignantBloque[u.enseignant][c]) ||
             (u.salle >= 0 && _salleBloquee[u.salle][c])) {
           raison = 'indispo';
-        } else if (_classeEntiere[u.classe][c] > 0 ||
-            (u.groupe < 0 ? _classeGroupes[u.classe][c] > 0 : _groupeOccupe[u.groupe][c] > 0)) {
+        } else if (_gene(_classeEntiere[u.classe][c], u.semaine) ||
+            (u.groupe < 0
+                ? _gene(_classeGroupes[u.classe][c], u.semaine)
+                : _gene(_groupeOccupe[u.groupe][c], u.semaine))) {
           raison = 'classe';
-        } else if (u.enseignant >= 0 && _enseignantOccupe[u.enseignant][c] > 0) {
+        } else if (u.enseignant >= 0 && _gene(_enseignantOccupe[u.enseignant][c], u.semaine)) {
           raison = 'enseignant';
-        } else if (u.salle >= 0 && _salleOccupee[u.salle][c] > 0) {
+        } else if (u.salle >= 0 && _gene(_salleOccupee[u.salle][c], u.semaine)) {
           raison = 'salle';
         }
       }
