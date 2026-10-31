@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vérifier un certificat — Global Service Groupe</title>
+  <meta name="description" content="Vérifier l'authenticité d'un certificat de maîtrise EcoShop, sans créer de compte.">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="canonical" href="https://globalservicegroupe.com/certificat/">
+</head>
+<body>
+  <header class="bandeau">
+    <div class="contenu">
+      <a class="marque" href="/">Global Service <span>Groupe</span></a>
+      <nav aria-label="Pages">
+        <a href="/confidentialite/">Confidentialité</a>
+        <a href="/conditions/">Conditions</a>
+        <a href="/certificat/" aria-current="page">Vérifier un certificat</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenu">
+    <h1>Vérifier un certificat EcoShop</h1>
+    <p class="chapeau">
+      Un élève vous présente un certificat de concours ou d'olympiade délivré sur EcoShop ?
+      Saisissez son code pour vérifier qu'il est authentique. Aucun compte n'est nécessaire.
+    </p>
+    <!-- Formulaire envoyé à la fonction publique « verifier_certificat ».
+         ⟦URL_PROJET⟧ : adresse du projet Supabase de production, par
+         exemple https://abcd1234.supabase.co (voir README, « Avant de publier »). -->
+    <form method="get" action="⟦URL_PROJET⟧/functions/v1/verifier_certificat">
+      <p>
+        <label for="code">Code du certificat</label><br>
+        <input id="code" name="code" placeholder="GSG-XXXX-XXXX-XXXX" required maxlength="18" autocomplete="off"
+               style="font-size:1.1rem;padding:.6rem;width:100%;max-width:22rem;text-transform:uppercase">
+      </p>
+      <p><button type="submit" style="font-size:1rem;padding:.7rem 1.4rem">Vérifier</button></p>
+    </form>
+    <p>
+      La réponse indique le titulaire (prénom et initiale du nom), le concours, la mention et la date.
+      Un certificat EcoShop valorise un parcours de révision ou un concours : ce n'est pas un diplôme
+      ni un résultat officiel d'examen.
+    </p>
+  </main>
+</body>
+</html>

@@ -138,10 +138,11 @@ void main() {
       expect(find.text('12 familles en retard de paiement'), findsOneWidget);
       expect(find.text('4 annonces à lire'), findsNothing, reason: 'les annonces ont déjà leur badge');
       expect(find.text('VIE DE L’ÉCOLE'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('FINANCES'), 300, scrollable: find.byType(Scrollable).first);
-      expect(find.text('FINANCES'), findsOneWidget);
+      // Raccourcis en haut de l'accueil : vérifiés avant de descendre.
       expect(find.descendant(of: find.byKey(const Key('raccourci_relances')), matching: find.text('12')), findsOneWidget,
           reason: 'badge Relances (raccourci)');
+      await tester.scrollUntilVisible(find.text('FINANCES'), 300, scrollable: find.byType(Scrollable).first);
+      expect(find.text('FINANCES'), findsOneWidget);
     });
 
     testWidgets('badge lu par TalkBack : « Annonces, 4 nouvelles »', (tester) async {

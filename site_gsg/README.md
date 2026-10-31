@@ -10,6 +10,7 @@ quel dans le dépôt du futur site.
 | `/confidentialite/` | `confidentialite/index.html` | Politique de confidentialité — déclarée sur l'écran de consentement Google et à déclarer au Play Store |
 | `/conditions/` | `conditions/index.html` | Conditions d'utilisation — déclarées sur l'écran de consentement Google |
 | `/suppression-compte/` | `suppression-compte/index.html` | Lien « suppression de compte » exigé par le formulaire *Sécurité des données* du Play Store |
+| `/certificat/` | `certificat/index.html` | Vérifier un certificat de maîtrise EcoShop sans compte (REG-38) : formulaire vers la fonction publique `verifier_certificat` — remplacer `⟦URL_PROJET⟧` par l'adresse du projet Supabase de production |
 
 Une seule politique et une seule page de conditions pour tout GSG : une partie
 commune (nos promesses, vos droits), puis **une section par application**
