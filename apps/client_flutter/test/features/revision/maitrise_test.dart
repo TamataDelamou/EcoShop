@@ -1,6 +1,7 @@
 import 'package:ecoshop_client/features/revision/application/revision_providers.dart';
 import 'package:ecoshop_client/features/revision/data/revision_repository.dart';
 import 'package:ecoshop_client/features/revision/domain/maitrise.dart';
+import 'package:ecoshop_client/features/revision/domain/question.dart';
 import 'package:ecoshop_client/features/revision/domain/quiz.dart';
 import 'package:ecoshop_client/features/revision/presentation/progression.dart';
 import 'package:flutter/material.dart';
