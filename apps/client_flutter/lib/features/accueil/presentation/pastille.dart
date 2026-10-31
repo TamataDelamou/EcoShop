@@ -45,10 +45,17 @@ class Pastille extends StatelessWidget {
             constraints: BoxConstraints(minHeight: grande ? 116 : 96),
             child: Stack(
               children: [
-                Padding(
-                  padding: grande ? const EdgeInsets.fromLTRB(8, 16, 8, 14) : const EdgeInsets.fromLTRB(6, 14, 6, 12),
+                // Toute la largeur, contenu aligné à gauche : l'icône était
+                // centrée quand le libellé remplissait la ligne et à gauche
+                // quand il était court (retour du porteur de projet,
+                // 2026-10-31).
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                  padding: grande ? const EdgeInsets.fromLTRB(14, 16, 10, 14) : const EdgeInsets.fromLTRB(12, 14, 8, 12),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         width: grande ? 56 : 44,
@@ -62,12 +69,13 @@ class Pastille extends StatelessWidget {
                       SizedBox(height: grande ? 10 : 8),
                       Text(
                         fonction.libelle,
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.start,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: grande ? 15 : 13, fontWeight: FontWeight.w600, height: 1.2),
                       ),
                     ],
+                  ),
                   ),
                 ),
                 if (badge > 0)

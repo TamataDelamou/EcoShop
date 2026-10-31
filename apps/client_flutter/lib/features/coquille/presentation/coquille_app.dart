@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../accueil/presentation/profil_allege.dart';
 import '../../accueil/application/accueil_providers.dart';
 import '../../accueil/presentation/ecran_accueil.dart';
@@ -12,6 +14,9 @@ import '../../suppression_compte/presentation/ecran_suppression_compte.dart';
 import '../../../core/auth/role_racine.dart';
 import '../../../core/config/env.dart';
 import '../../../core/providers.dart';
+import '../../../core/sync/sync_providers.dart';
+import '../../../core/widgets/bandeau_synchronisation.dart';
+import 'ecran_etat_synchronisation.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/session_locale.dart';
 import '../../auth/domain/profil.dart';
@@ -91,9 +96,26 @@ class CoquilleApp extends ConsumerStatefulWidget {
 class _CoquilleAppState extends ConsumerState<CoquilleApp> {
   int _index = 0;
 
+  /// Relance tant que des opérations attendent (REG-39) : le retour du
+  /// réseau n'est pas toujours signalé par le téléphone (Wi-Fi sans
+  /// Internet devenu fonctionnel, réseau mobile qui revient sans changer
+  /// d'état).
+  Timer? _relanceEnvois;
+
+  @override
+  void dispose() {
+    _relanceEnvois?.cancel();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    // Le bandeau « opération(s) en attente » ouvre l'écran de
+    // synchronisation (REG-39).
+    BandeauSynchronisation.ouvrirEtat = (context) => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const EcranEtatSynchronisation()),
+        );
     // Amorce une resynchronisation dès l'entrée dans l'application — les
     // écritures hors-ligne d'une session précédente ne doivent pas attendre
     // un futur changement de connectivité si le réseau est déjà disponible.
@@ -101,7 +123,17 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     // un client Supabase initialisé (jamais le cas en test ni en mode
     // diagnostic sans --dart-define).
     if (Env.estConfigure) {
-      Future.microtask(() => ref.read(syncEngineProvider).synchroniser());
+      Future.microtask(() => ref.read(syncEngineProvider).synchroniser(forcer: true));
+      ref.listenManual<int>(suiviSyncProvider.select((v) => v.valueOrNull?.enAttente ?? 0), (_, enAttente) {
+        if (enAttente > 0) {
+          _relanceEnvois ??= Timer.periodic(const Duration(minutes: 1), (_) {
+            if (ref.read(estEnLigneProvider)) ref.read(syncEngineProvider).synchroniser();
+          });
+        } else {
+          _relanceEnvois?.cancel();
+          _relanceEnvois = null;
+        }
+      }, fireImmediately: true);
       // REG-35 lot 2 : lecture d'avance de l'espace utilisé.
       Future.microtask(() => ref.read(amorcageProvider.notifier).lancerSiNecessaire());
     }
@@ -112,7 +144,11 @@ class _CoquilleAppState extends ConsumerState<CoquilleApp> {
     if (Env.estConfigure) {
       ref.listen<bool>(estEnLigneProvider, (etaitEnLigne, estEnLigne) {
         if (estEnLigne && etaitEnLigne == false) {
-          ref.read(syncEngineProvider).synchroniser();
+          ref.read(syncEngineProvider).synchroniser(forcer: true);
+          // Les écrans affichés avec la copie de l'appareil se relisent à
+          // leur prochaine ouverture : le bandeau « Réseau absent ou lent »
+          // n'a plus lieu d'être (REG-39).
+          ref.read(fraicheurHorsLigneProvider).value = null;
           ref.read(amorcageProvider.notifier).lancerSiNecessaire();
         }
       });

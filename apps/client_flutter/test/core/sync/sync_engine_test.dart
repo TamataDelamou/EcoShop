@@ -81,6 +81,72 @@ void main() {
     });
   });
 
+  // REG-39 (retour du 2026-10-31) : « 1 opération en attente » restait
+  // affichée, réseau revenu.
+  group('SyncEngine — opérations bloquées', () {
+    test('forcer redonne un budget de tentatives et rejoue', () async {
+      final repo = _FakeRepo([_entree(tentatives: 5)]);
+      var rejouees = 0;
+      final moteur = SyncEngine(
+        repository: repo,
+        estConnecte: () async => true,
+        rejouer: (_) async => rejouees++,
+        maxTentatives: 5,
+      );
+
+      expect(await moteur.synchroniser(forcer: true), 1);
+      expect(rejouees, 1);
+      expect(repo.marquages.last.statut, SyncStatut.termine);
+    });
+
+    test('une erreur qui ne vient pas du réseau, répétée, passe en refusée avec son message', () async {
+      final repo = _FakeRepo([_entree(tentatives: 4)]);
+      final refus = <RejetDefinitif>[];
+      final moteur = SyncEngine(
+        repository: repo,
+        estConnecte: () async => true,
+        rejouer: (_) async => throw StateError('colonne inconnue'),
+        estPanneReseau: (_) => false,
+        surRejet: (_, rejet) async => refus.add(rejet),
+        maxTentatives: 5,
+      );
+
+      await moteur.synchroniser();
+      expect(repo.marquages.last.statut, SyncStatut.rejete);
+      expect(refus.single.message, contains('colonne inconnue'));
+    });
+
+    test('une panne de réseau reste en attente', () async {
+      final repo = _FakeRepo([_entree(tentatives: 4)]);
+      final moteur = SyncEngine(
+        repository: repo,
+        estConnecte: () async => true,
+        rejouer: (_) async => throw Exception('SocketException'),
+        estPanneReseau: (_) => true,
+        maxTentatives: 5,
+      );
+
+      await moteur.synchroniser();
+      expect(repo.marquages.last.statut, SyncStatut.echec);
+    });
+
+    test('deux appels rapprochés ne rejouent qu’une fois', () async {
+      final repo = _FakeRepo([_entree()]);
+      var rejouees = 0;
+      final moteur = SyncEngine(
+        repository: repo,
+        estConnecte: () async => true,
+        rejouer: (_) async {
+          rejouees++;
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        },
+      );
+
+      await Future.wait([moteur.synchroniser(), moteur.synchroniser()]);
+      expect(rejouees, 1);
+    });
+  });
+
   group('SyncEngine.delaiReessai', () {
     test('est exponentiel et plafonné', () {
       final moteur = SyncEngine(

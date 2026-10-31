@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../auth/presentation/ecran_nom_profil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,7 @@ import '../../../core/liens_legaux.dart';
 import '../../../core/widgets/choisir_date.dart';
 import '../../appareil/presentation/ecran_mes_appareils.dart';
 import '../../appareil/presentation/ecran_securite.dart';
+import '../../auth/application/auth_providers.dart';
 import '../../auth/application/telephone_profil_providers.dart';
 import '../../auth/domain/profil.dart';
 import '../../auth/presentation/avatar_profil.dart';
@@ -313,14 +315,26 @@ class EcranMesInformations extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tel = ref.watch(telephoneProfilProvider).valueOrNull;
+    // Relu après une modification du nom.
+    final actuel = ref.watch(profilProvider).valueOrNull ?? profil;
     return Scaffold(
       appBar: AppBar(title: const Text('Mes informations')),
       body: ListView(
         children: [
-          ListTile(leading: const Icon(Icons.person_outline), title: Text(profil.nomAffiche), subtitle: const Text('Nom')),
+          // Nom modifiable (retour du porteur de projet, 2026-10-31).
+          ListTile(
+            key: const Key('profil_nom'),
+            leading: const Icon(Icons.person_outline),
+            title: Text(actuel.nomAffiche),
+            subtitle: const Text('Nom — touchez pour modifier'),
+            trailing: const Icon(Icons.edit_outlined),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<bool>(builder: (_) => const EcranNomProfil(modification: true)),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.alternate_email),
-            title: Text(profil.identifiantCanonique),
+            title: Text(actuel.identifiantCanonique),
             subtitle: const Text('Adresse de connexion'),
           ),
           ListTile(
@@ -335,7 +349,7 @@ class EcranMesInformations extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.badge_outlined),
-            title: Text(profil.roleRacine?.libelle ?? 'Non défini'),
+            title: Text(actuel.roleRacine?.libelle ?? 'Non défini'),
             subtitle: const Text('Rôle'),
           ),
         ],

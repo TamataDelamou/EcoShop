@@ -191,9 +191,14 @@ class ConfigurationRepository {
 
   // ----------------------------------------------------------- personnel
 
+  // Patience longue : la copie de l'appareil ne précède plus la réponse du
+  // serveur après 3 s. Un enseignant qui venait d'accepter son invitation
+  // manquait dans « Cours et enseignants » sur un réseau mobile lent
+  // (retour du porteur de projet, 2026-10-31).
   Future<List<MembrePersonnel>> personnel(String etablissementId) => _lecture.lire(
         type: 'personnel',
         cle: etablissementId,
+        patience: const Duration(seconds: 15),
         source: () async {
           final lignes = await _client.rpc<dynamic>('membres_personnel', params: {'p_etablissement': etablissementId});
           return [for (final l in lignes as List) MembrePersonnel.depuisJson((l as Map).cast<String, dynamic>()).versJson()];

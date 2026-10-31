@@ -64,6 +64,18 @@ class _ReglagesAffichage extends ConsumerWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
+            SwitchListTile(
+              key: const Key('interrupteur_regrouper_accueil'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Regrouper les pastilles par thème'),
+              subtitle: const Text(
+                'Une pastille par thème (Vie de l’école, Finances…) avec sa description ; '
+                'touchez-la pour voir ses pastilles. Vos raccourcis restent affichés.',
+              ),
+              value: a.regroupe,
+              onChanged: (v) => definir(a.copier(regroupe: v)),
+            ),
+            const SizedBox(height: 12),
             _Apercu(affichage: a),
           ],
         ),

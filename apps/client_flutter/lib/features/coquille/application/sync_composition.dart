@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/offline/lecture_hors_ligne.dart';
 import '../../../core/providers.dart';
 import '../../justificatifs/data/justificatifs_repository.dart';
 import '../../referentiel/back_office/referentiel_back_office_repository.dart';
@@ -144,6 +145,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   return SyncEngine(
     repository: ref.watch(syncRepositoryProvider),
     estConnecte: () async => ref.read(estEnLigneProvider),
+    estPanneReseau: estErreurReseau,
     rejouer: (entree) {
       final gestionnaire = gestionnaires[entree.entite];
       return gestionnaire == null ? Future.value() : gestionnaire(entree);

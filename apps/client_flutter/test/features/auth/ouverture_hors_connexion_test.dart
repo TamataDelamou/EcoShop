@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:ecoshop_client/core/auth/role_racine.dart';
 import 'package:ecoshop_client/core/auth/supabase_auth_provider.dart';
 import 'package:ecoshop_client/core/db/app_database.dart';
+import 'package:ecoshop_client/core/db/cache_document_store.dart';
 import 'package:ecoshop_client/core/providers.dart';
 import 'package:ecoshop_client/features/auth/application/auth_providers.dart';
 import 'package:ecoshop_client/features/auth/application/relance_reseau.dart';
@@ -209,5 +210,25 @@ void main() {
     await attendre(() => c.read(profilProvider).value?.prenom == 'Awa Mariama');
 
     expect(c.read(profilProvider).value?.prenom, 'Awa Mariama');
+  });
+
+  // REG-39 (retour du 2026-10-31) : bloqué sur « Pas de connexion » alors que
+  // le compte avait déjà ouvert l'application sur ce téléphone.
+  test('sans réseau, une lecture sans copie ne bloque plus un compte qui a déjà atteint l’accueil', () async {
+    final enLigne = lancer();
+    expect(await destinationStable(enLigne), DestinationSession.accueil);
+    // Le temps d'écrire la marque « accueil atteint » sur le téléphone.
+    await attendre(() => false);
+    enLigne.dispose();
+
+    // La copie des CGU manque (version précédente, écriture ratée…).
+    await CacheDocumentStore(db, 'session_locale').supprimerDocument('cgu', _compte);
+
+    serveur.enLigne = false;
+    final c = lancer();
+    c.read(reseau.notifier).state = false;
+    await attendre(() => c.read(destinationProvider) == DestinationSession.accueil);
+
+    expect(c.read(destinationProvider), DestinationSession.accueil);
   });
 }

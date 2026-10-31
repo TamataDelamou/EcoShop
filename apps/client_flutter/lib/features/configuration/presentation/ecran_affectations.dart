@@ -355,6 +355,11 @@ class _FormulaireCoursState extends ConsumerState<_FormulaireCours> {
     final personnel = ref.watch(personnelProvider(widget.etablissement.id));
     final enseignants = (personnel.valueOrNull ?? const <MembrePersonnel>[]).where((p) => p.peutEnseigner).toList()
       ..sort((a, b) => a.nomComplet.compareTo(b.nomComplet));
+    // Enseignants rattachés mais pas encore actifs : visibles, grisés, pour
+    // qu'on sache pourquoi on ne peut pas encore les choisir.
+    final enAttente = (personnel.valueOrNull ?? const <MembrePersonnel>[])
+        .where((p) => !p.actif && p.role == 'enseignant')
+        .toList();
     final salles = ref.watch(sallesEtablissementProvider(widget.etablissement.id)).valueOrNull ?? const <Salle>[];
     final bas = MediaQuery.viewInsetsOf(context).bottom;
     return SafeArea(
@@ -376,9 +381,33 @@ class _FormulaireCoursState extends ConsumerState<_FormulaireCours> {
               key: const Key('choix_enseignant'),
               initialValue: enseignants.any((e) => e.profileId == _enseignantId) ? _enseignantId : null,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Enseignant', border: OutlineInputBorder()),
-              items: [for (final e in enseignants) DropdownMenuItem<String?>(value: e.profileId, child: Text(e.nomComplet))],
+              decoration: InputDecoration(
+                labelText: 'Enseignant',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  key: const Key('actualiser_enseignants'),
+                  tooltip: 'Actualiser la liste',
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => ref.invalidate(personnelProvider(widget.etablissement.id)),
+                ),
+              ),
+              items: [
+                for (final e in enseignants) DropdownMenuItem<String?>(value: e.profileId, child: Text(e.nomComplet)),
+                for (final e in enAttente)
+                  DropdownMenuItem<String?>(
+                    value: 'attente_${e.profileId}',
+                    enabled: false,
+                    child: Text('${e.nomComplet} (compte inactif)'),
+                  ),
+              ],
               onChanged: (v) => setState(() => _enseignantId = v),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Un enseignant manque ? Il doit avoir accepté son invitation ; touchez ↻ pour actualiser.',
+                style: TextStyle(fontSize: 12),
+              ),
             ),
             const SizedBox(height: 16),
             Row(

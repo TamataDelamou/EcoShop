@@ -25,6 +25,17 @@ class FicheEleve {
     this.personneUrgenceNom,
     this.personneUrgenceTelephone,
     this.redoublant = false,
+    this.telephoneEleve,
+    this.telephonePere,
+    this.telephoneMere,
+    this.tuteurNom,
+    this.tuteurLien,
+    this.tuteurTelephone,
+    this.handicapPrecision,
+    this.ecoleOrigine,
+    this.matriculeNational,
+    this.photoChemin,
+    this.situationHandicap = false,
   });
 
   factory FicheEleve.depuisJson(Map<String, dynamic> json) {
@@ -49,6 +60,17 @@ class FicheEleve {
       personneUrgenceNom: json['personne_urgence_nom'] as String?,
       personneUrgenceTelephone: json['personne_urgence_telephone'] as String?,
       redoublant: json['redoublant'] as bool? ?? false,
+      telephoneEleve: json['telephone_eleve'] as String?,
+      telephonePere: json['telephone_pere'] as String?,
+      telephoneMere: json['telephone_mere'] as String?,
+      tuteurNom: json['tuteur_nom'] as String?,
+      tuteurLien: json['tuteur_lien'] as String?,
+      tuteurTelephone: json['tuteur_telephone'] as String?,
+      handicapPrecision: json['handicap_precision'] as String?,
+      ecoleOrigine: json['ecole_origine'] as String?,
+      matriculeNational: json['matricule_national'] as String?,
+      photoChemin: json['photo_chemin'] as String?,
+      situationHandicap: json['situation_handicap'] as bool? ?? false,
     );
   }
 
@@ -73,6 +95,17 @@ class FicheEleve {
         'personne_urgence_nom': personneUrgenceNom,
         'personne_urgence_telephone': personneUrgenceTelephone,
         'redoublant': redoublant,
+        'telephone_eleve': telephoneEleve,
+        'telephone_pere': telephonePere,
+        'telephone_mere': telephoneMere,
+        'tuteur_nom': tuteurNom,
+        'tuteur_lien': tuteurLien,
+        'tuteur_telephone': tuteurTelephone,
+        'handicap_precision': handicapPrecision,
+        'ecole_origine': ecoleOrigine,
+        'matricule_national': matriculeNational,
+        'photo_chemin': photoChemin,
+        'situation_handicap': situationHandicap,
       };
 
   /// Colonnes modifiables par une mise à jour administrative du dossier
@@ -109,6 +142,19 @@ class FicheEleve {
   final String? personneUrgenceNom;
   final String? personneUrgenceTelephone;
   final bool redoublant;
+
+  // Fiche d'inscription complète (REG-39).
+  final String? telephoneEleve;
+  final String? telephonePere;
+  final String? telephoneMere;
+  final String? tuteurNom;
+  final String? tuteurLien;
+  final String? tuteurTelephone;
+  final String? handicapPrecision;
+  final String? ecoleOrigine;
+  final String? matriculeNational;
+  final String? photoChemin;
+  final bool situationHandicap;
 
   String get nomComplet => '$prenom $nom';
   bool get estActive => statut == 'actif';

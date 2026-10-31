@@ -99,6 +99,7 @@ class SyncEngine {
     required this.estConnecte,
     required this.rejouer,
     this.surRejet,
+    this.estPanneReseau,
     this.maxTentatives = 5,
     this.delaiBase = const Duration(seconds: 2),
     this.delaiMax = const Duration(minutes: 5),
@@ -111,8 +112,18 @@ class SyncEngine {
   /// Appelé quand le serveur refuse définitivement une entrée (journal des
   /// refus présenté à l'utilisateur).
   final Future<void> Function(SyncEntree entree, RejetDefinitif rejet)? surRejet;
+  /// Distingue une panne de réseau (on réessaiera) d'une autre erreur
+  /// (bogue, refus non prévu). Une autre erreur qui atteint le plafond de
+  /// tentatives passe en « refusée » avec son message, au lieu de rester
+  /// « en attente » sans fin (REG-39). Sans cette fonction, toute erreur est
+  /// traitée comme une panne de réseau.
+  final bool Function(Object erreur)? estPanneReseau;
   final int maxTentatives;
   final Duration delaiBase;
+
+  /// Passage en cours : deux appels rapprochés (retour du réseau, bouton,
+  /// relance périodique) ne rejouent pas deux fois la même opération.
+  Future<int>? _passage;
   final Duration delaiMax;
 
   /// Délai d'attente avant une nouvelle tentative (backoff exponentiel plafonné).
@@ -124,13 +135,28 @@ class SyncEngine {
   }
 
   /// Rejoue les entrées en attente ; renvoie le nombre d'entrées traitées.
-  Future<int> synchroniser() async {
+  ///
+  /// [forcer] (ouverture de l'application, retour du réseau, bouton
+  /// « Synchroniser maintenant ») redonne un budget de tentatives neuf aux
+  /// entrées qui l'avaient épuisé : sans cela, une opération qui avait
+  /// échoué 5 fois restait « en attente d'envoi » pour toujours, même réseau
+  /// revenu (retour du porteur de projet, 2026-10-31).
+  Future<int> synchroniser({bool forcer = false}) {
+    final enCours = _passage;
+    if (enCours != null) return enCours;
+    final passage = _synchroniser(forcer).whenComplete(() => _passage = null);
+    _passage = passage;
+    return passage;
+  }
+
+  Future<int> _synchroniser(bool forcer) async {
     if (!await estConnecte()) return 0;
 
     final entrees = await repository.entreesEnAttente();
     var traitees = 0;
 
-    for (final entree in entrees) {
+    for (final lue in entrees) {
+      final entree = forcer && lue.tentatives >= maxTentatives ? lue.copierAvec(tentatives: 0) : lue;
       final prochainesTentatives = entree.tentatives + 1;
 
       if (entree.tentatives >= maxTentatives) {
@@ -162,7 +188,17 @@ class SyncEngine {
           ),
         );
         await surRejet?.call(entree, rejet);
-      } catch (_) {
+      } catch (e) {
+        final panne = estPanneReseau?.call(e) ?? true;
+        if (!panne && prochainesTentatives >= maxTentatives) {
+          // Erreur qui ne vient pas du réseau, répétée : on la montre à
+          // l'utilisateur plutôt que de la garder « en attente ».
+          await repository.marquer(
+            entree.copierAvec(tentatives: prochainesTentatives, statut: SyncStatut.rejete),
+          );
+          await surRejet?.call(entree, RejetDefinitif('ERREUR_REPETEE', _messageErreur(e)));
+          continue;
+        }
         await repository.marquer(
           entree.copierAvec(
             tentatives: prochainesTentatives,
@@ -174,4 +210,10 @@ class SyncEngine {
 
     return traitees;
   }
+}
+
+String _messageErreur(Object e) {
+  final brut = e.toString().replaceFirst(RegExp(r'^[A-Za-z]*Exception:?\s*'), '');
+  final court = brut.length > 160 ? '${brut.substring(0, 160)}…' : brut;
+  return 'Le serveur n’a pas accepté cette opération après plusieurs essais ($court).';
 }

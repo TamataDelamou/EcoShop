@@ -150,6 +150,15 @@ Future<void> _deconnecterEtPurgerDonneesLocales({
   } catch (_) {
     // Base locale indisponible : rien à purger.
   }
+  // Albums photo et tableau d'honneur (REG-39) : copies pour la lecture
+  // sans réseau.
+  for (final domaine in const ['albums_hl', 'albums_photos', 'tableau_honneur_hl']) {
+    try {
+      await CacheDocumentStore(lire(databaseProvider), domaine).purgerTout();
+    } catch (_) {
+      // Base locale indisponible : rien à purger.
+    }
+  }
   // Copie du profil, des établissements, de la fiche et des CGU (REG-18).
   try {
     await purgerSessionLocale(lire(storeSessionLocaleProvider));

@@ -203,17 +203,27 @@ final raccourcisProvider = AsyncNotifierProvider<RaccourcisController, List<Stri
 /// pastilles, de haut en bas) ou fixe (une ligne par thème, qu'on fait
 /// glisser de côté) ; deux grandes pastilles ou trois par ligne.
 class AffichageAccueil {
-  const AffichageAccueil({this.fixe = false, this.colonnes = 3});
+  const AffichageAccueil({this.fixe = false, this.colonnes = 3, this.regroupe = false});
 
   factory AffichageAccueil.depuisJson(Map<String, dynamic>? j) => AffichageAccueil(
         fixe: j?['disposition'] == 'fixe',
         colonnes: (j?['colonnes'] as num?)?.toInt() == 2 ? 2 : 3,
+        regroupe: j?['regrouper'] == true,
       );
 
-  Map<String, dynamic> versJson() => {'disposition': fixe ? 'fixe' : 'defilante', 'colonnes': colonnes};
+  Map<String, dynamic> versJson() =>
+      {'disposition': fixe ? 'fixe' : 'defilante', 'colonnes': colonnes, 'regrouper': regroupe};
 
-  AffichageAccueil copier({bool? fixe, int? colonnes}) =>
-      AffichageAccueil(fixe: fixe ?? this.fixe, colonnes: colonnes ?? this.colonnes);
+  AffichageAccueil copier({bool? fixe, int? colonnes, bool? regroupe}) => AffichageAccueil(
+        fixe: fixe ?? this.fixe,
+        colonnes: colonnes ?? this.colonnes,
+        regroupe: regroupe ?? this.regroupe,
+      );
+
+  /// Une pastille par thème (« Vie de l'école », « Finances »…) avec son
+  /// texte descriptif ; on la touche pour voir ses pastilles (REG-39).
+  /// Les raccourcis restent affichés.
+  final bool regroupe;
 
   /// Une ligne par thème, qu'on fait glisser à l'horizontale.
   final bool fixe;
