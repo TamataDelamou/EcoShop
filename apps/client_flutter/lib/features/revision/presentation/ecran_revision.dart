@@ -12,6 +12,7 @@ import '../domain/conseils.dart';
 import '../domain/examen.dart';
 import '../domain/question.dart';
 import '../domain/quiz.dart';
+import 'ecran_espace_examen.dart';
 import 'ecran_examen.dart';
 import 'ecran_quiz.dart';
 import 'progression.dart';
@@ -220,6 +221,7 @@ class EcranRevision extends ConsumerWidget {
         const SizedBox(height: 12),
         _CarteResume(resume: r, paquet: e.paquet),
         if (parent) _CarteBilan(ficheId: ficheId),
+        CartesEspacesExamens(ficheId: ficheId, prenom: prenom, parent: parent),
         SectionProgression(
           ficheId: ficheId,
           prenom: prenom,

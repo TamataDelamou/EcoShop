@@ -60,7 +60,7 @@ class _EcranExamenState extends ConsumerState<EcranExamen> {
 
   void _tic() {
     if (!mounted || _e.remis) return;
-    if (_e.tempsEcoule(_maintenant())) {
+    if (_e.tempsEcoule(_maintenant()) && _e.remiseAutomatique) {
       _remettre(automatique: true);
     } else {
       setState(() {});
@@ -140,7 +140,9 @@ class _EcranExamenState extends ConsumerState<EcranExamen> {
                 padding: const EdgeInsets.only(right: 16),
                 child: Center(
                   child: Text(
-                    chrono(restant),
+                    !_e.remiseAutomatique && restant == 0
+                        ? '+${chrono(_e.depassementS(_maintenant()))}'
+                        : chrono(restant),
                     key: const Key('examen_chrono'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
@@ -186,6 +188,17 @@ class _EcranExamenState extends ConsumerState<EcranExamen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
+            if (!_e.remiseAutomatique)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _e.restantS(_maintenant()) == 0
+                      ? 'Le temps conseillé est passé : prends le temps de finir, puis remets ta copie.'
+                      : 'Chronomètre indicatif : ta copie n’est pas ramassée à la fin du temps.',
+                  key: const Key('examen_chrono_indicatif'),
+                  style: TextStyle(color: schema.tertiary),
+                ),
+              ),
             Text('Question ${_index + 1} sur ${_e.questions.length}', style: TextStyle(color: schema.onSurfaceVariant)),
             const SizedBox(height: 8),
             Text(
@@ -247,7 +260,7 @@ class _EcranExamenState extends ConsumerState<EcranExamen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
       children: [
-        if (_e.remiseAutomatique)
+        if (_e.remiseParLeTemps)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text('Temps écoulé : ta copie a été remise automatiquement.',

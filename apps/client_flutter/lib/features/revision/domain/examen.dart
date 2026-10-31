@@ -34,12 +34,23 @@ class SessionExamen {
     required this.questions,
     required this.dureeLimiteS,
     this.matiereId,
+    this.examenId,
+    this.epreuveId,
+    this.remiseAutomatique = true,
     DateTime? commenceLe,
   }) : commenceLe = commenceLe ?? DateTime.now();
 
   final String id;
   final String ficheId;
   final String? matiereId;
+
+  /// Épreuve blanche d'un examen national (REG-38) : statistiques dédiées.
+  final String? examenId;
+  final String? epreuveId;
+
+  /// Remise automatique à la fin du temps ; faux : chronomètre indicatif
+  /// (fin de primaire, cahier 13.3).
+  final bool remiseAutomatique;
   final List<QuestionQuiz> questions;
   final int dureeLimiteS;
   final DateTime commenceLe;
@@ -49,7 +60,7 @@ class SessionExamen {
   final Map<int, Object?> reponses = {};
   final Set<int> completes = {};
   DateTime? remisLe;
-  bool remiseAutomatique = false;
+  bool remiseParLeTemps = false;
   List<Correction>? _corrections;
 
   bool get remis => remisLe != null;
@@ -71,7 +82,7 @@ class SessionExamen {
   void remettre(DateTime quand, {bool automatique = false}) {
     if (remis) return;
     remisLe = quand;
-    remiseAutomatique = automatique;
+    remiseParLeTemps = automatique;
     _corrections = [
       for (var i = 0; i < questions.length; i++)
         completes.contains(i) ? questions[i].contenu.corriger(reponses[i]) : const Correction(0),
@@ -87,7 +98,13 @@ class SessionExamen {
   /// Note sur 20, au quart de point.
   double get noteSur20 => questions.isEmpty ? 0 : (points / questions.length * 20 * 4).round() / 4;
 
-  int get dureeS => min(dureeLimiteS, max(0, (remisLe ?? DateTime.now()).difference(commenceLe).inSeconds));
+  int get dureeS {
+    final d = max(0, (remisLe ?? DateTime.now()).difference(commenceLe).inSeconds);
+    return remiseAutomatique ? min(dureeLimiteS, d) : d;
+  }
+
+  /// Chronomètre indicatif : temps dépassé (sans remise forcée).
+  int depassementS(DateTime maintenant) => max(0, maintenant.difference(commenceLe).inSeconds - dureeLimiteS);
 
   List<BilanCompetence> parCompetence() {
     final m = <String, ({int n, double p})>{};
@@ -111,6 +128,8 @@ class SessionExamen {
         'fiche_eleve_id': ficheId,
         'mode': ModeQuiz.examen.code,
         'matiere_id': matiereId,
+        'examen_id': examenId,
+        'epreuve_id': epreuveId,
         'nb_questions': questions.length,
         'duree_s': dureeS,
         'termine': true,

@@ -8,6 +8,7 @@ import '../../../core/sync/drift_sync_repository.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../domain/classement.dart';
 import '../domain/examen.dart';
+import '../domain/examen_national.dart';
 import '../domain/maitrise.dart';
 import '../domain/quiz.dart';
 
@@ -255,6 +256,28 @@ class RevisionRepository {
   Future<void> supprimerPlan(String ficheId) async {
     try {
       await _client.rpc<dynamic>('supprimer_plan_revision', params: {'p_fiche': ficheId});
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  /// Espaces de préparation aux examens nationaux de l'élève (REG-38).
+  Future<List<EspaceExamen>> espacesExamens(String ficheId) => _lireR4('espaces_examens', ficheId,
+      () => _client.rpc<dynamic>('espaces_preparation', params: {'p_fiche': ficheId}), EspaceExamen.liste);
+
+  /// Fin de primaire : remise automatique de la copie à la fin du temps.
+  Future<void> definirChronoStrict(String ficheId, bool strict) async {
+    try {
+      await _client.rpc<dynamic>('definir_chrono_strict', params: {'p_fiche': ficheId, 'p_strict': strict});
+    } catch (e) {
+      throw _traduire(e);
+    }
+  }
+
+  /// Lien temporaire vers un sujet ou un corrigé d'annale.
+  Future<Uri> lienAnnale(String chemin) async {
+    try {
+      return Uri.parse(await _client.storage.from('annales').createSignedUrl(chemin, 3600));
     } catch (e) {
       throw _traduire(e);
     }
