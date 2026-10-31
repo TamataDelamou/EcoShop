@@ -210,6 +210,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('examen_remise_auto')), findsOneWidget);
     expect(find.text('20 / 20'), findsOneWidget);
-    expect(depot.examens.single.remiseAutomatique, isTrue);
+    expect(depot.examens.single.remiseParLeTemps, isTrue);
   });
 }

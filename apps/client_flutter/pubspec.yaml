@@ -73,6 +73,9 @@ dependencies:
   # bilan et conseils pour les parents qui lisent peu. Synthèse vocale du
   # téléphone, sans réseau. Version figée.
   flutter_tts: 4.2.5
+  # Sujets et corrigés d'annales en PDF (REG-38, Administrateur de contenu).
+  # Version figée.
+  file_picker: 13.1.0
 
 dev_dependencies:
   flutter_test:

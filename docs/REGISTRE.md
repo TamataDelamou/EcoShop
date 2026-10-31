@@ -54,6 +54,7 @@ attendue), `clos`.
 | REG-35 | **Hors connexion complet** (feuille de route du 2026-10-30) : lecture « appareil d'abord », amorçage par école, synchronisation par différences, écritures restantes en file, écran d'état, tests réseau lent | **P0** | **livré** (2026-10-30) — lots 1 à 6, migrations 1581 et 1582 appliquées ; à vérifier sur téléphone (APK de test) |
 | REG-36 | **Avant le pilote** : justificatifs d'absence déposés par les familles, écran d'abonnement Premium, écran des paramètres de la plateforme (GSG), retrait du prototype de messagerie, README à jour | **P0** | **livré** (2026-10-30) — migrations 1583 et 1584 à appliquer ; à vérifier sur téléphone avec l'école configurée |
 | REG-37 | **Moteur de révision** (cahier ch. 10 à 15) : banque de questions, quiz et entraînement hors connexion, mode examen, profil de maîtrise et répétition espacée — en quatre lots | **P1** | **livré** (lots R1 à R4, 2026-10-30 et 31), avec bilan hebdomadaire, lecture à voix haute et classement de la semaine — migrations 1585 à 1589 à appliquer ; à vérifier sur téléphone avec une école et des questions publiées |
+| REG-38 | **Préparation aux examens nationaux** (cahier ch. 13), pour tous les pays du référentiel : espaces par examen, épreuves blanches, annales, statistiques dédiées ; concours et olympiades ensuite (lot E2) | **P1** | **lot E1 livré** (2026-10-31) — migration 1590 à appliquer ; épreuves, coefficients et dates de session à saisir par l'Administrateur de contenu d'après les textes officiels |
 | REG-05 | README et état d'avancement à resynchroniser (M16, D1-D6, facturation, lancement) | P2 | clos (2026-10-17) |
 | REG-06 | Branches locales non publiées sur le dépôt distant | P2 | clos (2026-10-17) — 2 branches distantes à supprimer au push |
 
@@ -2183,3 +2184,30 @@ après). Fichiers : `supabase/migrations/20260906001589_maitrise_repetition_plan
 `revision/domain/maitrise.dart`, `presentation/progression.dart` ;
 pastille `revision_classes`. Test 51 corrigé (fin de mois : 31/10 + 1 mois
 + 1 mois = 30/12).
+
+---
+
+## REG-38 — Préparation aux examens nationaux
+
+**Reçu le** : 2026-10-31 (étape fixée selon la priorité ; le porteur de
+projet demande de penser à la sous-région et au-delà). **Priorité** : P1.
+**Statut** : lot E1 livré (demande de fusion n°11) ; lot E2 à venir.
+
+Recherche : document repère, « Préparation aux examens nationaux —
+synthèse de recherche » (595 449 candidats en Guinée en 2026, BEPC à
+58,9 % ; WAECKonnect, plateforme officielle du WAEC ; choix des sujets au
+Sénégal ; effets des examens blancs réalistes).
+
+| Lot | Contenu | Statut |
+|---|---|---|
+| E1 | Un espace par examen déclaré au référentiel, visible des élèves de la classe d'examen du même pays (isolation par pays : un examen régional comme le WASSCE reste déclaré pays par pays). Sessions (compte à rebours, date estimée sinon), épreuves (matière, durée, coefficient, série), épreuves blanches à la durée réelle, annales publiées seulement si le droit de diffusion est établi (RG-013-01) et après validation (sujet, corrigé, version interactive), statistiques propres à l'examen et note prévisionnelle pondérée (RG-013-02), plan pré-rempli, fin de primaire en chronomètre indicatif avec remise automatique activable par le parent (RG-013-03). Écran « Examens et annales » de l'Administrateur de contenu. | **livré** (2026-10-31) |
+| E2 | Concours d'entrée, concours internes aux écoles, olympiades et examens au-delà de la CEDEAO (concours_evenement, cahier 13.2 et 23) ; ajout des examens des autres pays de la CEDEAO au référentiel. | à venir |
+
+À faire par GSG (Administrateur de contenu) : saisir pour le CEE, le BEPC
+et le BAC de Guinée les épreuves, durées et coefficients officiels et la
+date de la session 2027 — l'application n'en invente aucun. Fichiers :
+`supabase/migrations/20260906001590_espaces_examens.sql`,
+`tests/rls/106_espaces_examens.sql` ; `revision/domain/examen_national.dart`,
+`data/examens_contenu_repository.dart` (paquet `file_picker`),
+`presentation/ecran_espace_examen.dart`, `ecran_examens_contenu.dart` ;
+pastille `contenu_examens`.

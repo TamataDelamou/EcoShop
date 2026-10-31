@@ -58,6 +58,7 @@ import '../../referentiel/presentation/ecran_pays_pedagogiques.dart';
 import '../../reseau/presentation/ecran_mes_reseaux.dart';
 import '../../reseau/presentation/ecran_reseaux_gsg.dart';
 import '../../revision/presentation/ecran_banque_questions.dart';
+import '../../revision/presentation/ecran_examens_contenu.dart';
 import '../../revision/presentation/ecran_revision.dart';
 import '../../revision/presentation/progression.dart';
 import '../../rh_personnel/application/rh_providers.dart';
@@ -630,6 +631,13 @@ final List<Fonction> catalogueFonctions = [
     groupe: _plateforme, motsCles: ['question', 'quiz', 'révision', 'matière', 'programme', 'compétence'],
     visible: (c) => c.role == RoleRacine.adminContenu,
     ouvrir: (context, ref, c) => _aller(context, const EcranPaysPedagogiques()),
+  ),
+  // REG-38 : examens nationaux de chaque pays (sessions, épreuves, annales).
+  Fonction(
+    id: 'contenu_examens', libelle: 'Examens et annales', icone: Icons.school_outlined, teinte: Teinte.bleu,
+    groupe: _plateforme, motsCles: ['bepc', 'bac', 'cee', 'examen', 'annales', 'épreuves', 'session'],
+    visible: (c) => c.role == RoleRacine.adminContenu,
+    ouvrir: (context, ref, c) => _aller(context, const EcranExamensContenu()),
   ),
   Fonction(
     id: 'contenu_a_valider', libelle: 'Questions à valider', icone: Icons.fact_check_outlined, teinte: Teinte.vert,

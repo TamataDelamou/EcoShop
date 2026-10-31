@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../../../core/sync/sync_providers.dart';
 import '../data/revision_repository.dart';
 import '../domain/classement.dart';
+import '../domain/examen_national.dart';
 import '../domain/maitrise.dart';
 import '../domain/quiz.dart';
 
@@ -102,3 +103,12 @@ final classesSuiviesProvider = FutureProvider.autoDispose.family<List<({String i
 final maitriseClasseProvider = FutureProvider.autoDispose.family<MaitriseClasse, String>(
   (ref, classeId) => ref.watch(revisionRepositoryProvider).maitriseClasse(classeId),
 );
+
+final espacesExamensProvider = FutureProvider.autoDispose.family<List<EspaceExamen>, String>((ref, ficheId) async {
+  ref.watch(suiviSyncProvider);
+  try {
+    return await ref.watch(revisionRepositoryProvider).espacesExamens(ficheId);
+  } catch (_) {
+    return const [];
+  }
+});
