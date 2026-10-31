@@ -553,7 +553,7 @@ class EcranPaysBackOffice extends ConsumerWidget {
                     e.publie ? 'Publié' : 'Brouillon',
                     if (r.nomCycle(e.cycleId) case final c?) 'fin du cycle $c',
                     if (e.mois case final m?) 'session en ${moisDeLAnnee[m - 1]}',
-                    if (e.organisme case final o?) o,
+                    ?e.organisme,
                   ].join(' · ')),
                   onTap: () => _examen(context, ref, r, e),
                   trailing: e.publie

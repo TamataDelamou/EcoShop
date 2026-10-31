@@ -98,9 +98,7 @@ void main() {
       await tester.pump();
       expect(find.byKey(const Key('bo_points_a_verifier')), findsOneWidget);
       expect(find.textContaining('BAC I est-il maintenu'), findsOneWidget);
-      final bouton = tester.widget<ButtonStyleButton>(
-        find.descendant(of: find.byKey(const Key('bo_publier_pays')), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton)),
-      );
+      final bouton = tester.widget<ButtonStyleButton>(find.byKey(const Key('bo_publier_pays')));
       expect(bouton.onPressed, isNull);
       expect(find.text('CEPD · Certificat d’Études du Premier Degré'), findsOneWidget);
     });
@@ -114,9 +112,7 @@ void main() {
         child: const MaterialApp(home: EcranPaysBackOffice(code: 'TG')),
       ));
       await tester.pump();
-      final bouton = tester.widget<ButtonStyleButton>(
-        find.descendant(of: find.byKey(const Key('bo_publier_pays')), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton)),
-      );
+      final bouton = tester.widget<ButtonStyleButton>(find.byKey(const Key('bo_publier_pays')));
       expect(bouton.onPressed, isNotNull);
     });
 
